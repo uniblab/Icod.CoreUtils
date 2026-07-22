@@ -13,7 +13,7 @@ using System.Text;
 /// uptime: show how long the system has been running (best-effort).
 /// On Unix tries /proc/uptime; otherwise falls back to Environment.TickCount64.
 /// </summary>
-public static class Command {
+public static partial class Command {
 
 	private const char SPACE = ' ';
 	private const char TAB = '\t';

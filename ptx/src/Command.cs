@@ -15,7 +15,7 @@ using System.Linq;
 ///   KEYWORD&lt;TAB&gt;left-context&lt;TAB&gt;right-context
 /// then sort by keyword.
 /// </summary>
-public static class Command {
+public static partial class Command {
 
 	private const char SPACE = ' ';
 	private const char TAB = '\t';

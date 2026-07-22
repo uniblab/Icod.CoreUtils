@@ -1,6 +1,6 @@
-﻿ï»¿// Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
+ï»¿// Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
 
-namespace Icod.CoreUtils.Logname;
+namespace Icod.CoreUtils.LogName;
 
 using System;
 using System.IO;

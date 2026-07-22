@@ -1,4 +1,4 @@
-﻿ï»¿// Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
+// Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
 
 namespace Icod.CoreUtils.Users;
 
@@ -9,7 +9,7 @@ using System.IO;
 /// $u: placeholder stub. Prints usage and supports -?/--help.
 /// Replace the implementation with the actual utility behavior.
 /// </summary>
-public static class Command {
+public static partial class Command {
     public static int Run(string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null) {
         stdout ??= Console.Out;
         stderr ??= Console.Error;

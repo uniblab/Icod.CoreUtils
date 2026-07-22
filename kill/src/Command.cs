@@ -9,7 +9,7 @@ using System.Diagnostics;
 /// Usage: kill &lt;pid&gt; [pid...], or kill -9 &lt;pid&gt;
 /// Note: on Windows, only Process.Kill() is used; on Unix this will send a termination.
 /// </summary>
-public static class Command {
+public static partial class Command {
 	public static int Run( string[] args, System.IO.TextReader? stdin = null, System.IO.TextWriter? stdout = null, System.IO.TextWriter? stderr = null ) {
 		stderr ??= Console.Error;
 		if ( args.Length == 0 ) {
@@ -18,7 +18,7 @@ public static class Command {
 		}
 
 		var exit = 0;
-		for ( ; idx < args.Length; idx++ ) {
+		for ( var idx = 0; idx < args.Length; idx++ ) {
 			if ( !int.TryParse( args[ idx ], out var pid ) ) {
 				stderr.WriteLine( $"kill: invalid pid: {args[ idx ]}" );
 				exit = 1;

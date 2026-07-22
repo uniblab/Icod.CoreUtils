@@ -18,10 +18,8 @@ using System.Text;
 ///   -v  kernel version
 ///   -m  machine
 /// </summary>
-public static class Command
-{
-	public static int Run(string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null)
-	{
+public static partial class Command {
+	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdin ??= Console.In;
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;
@@ -33,47 +31,29 @@ public static class Command
 		var showV = false;
 		var showM = false;
 
-		if (args.Length == 0)
-		{
+		if ( args.Length == 0 ) {
 			showS = true;
-		}
-		else
-		{
-			foreach (var a in args)
-			{
-				if (a == "-a")
-				{
+		} else {
+			foreach ( var a in args ) {
+				if ( a == "-a" ) {
 					showAll = true;
-				}
-				else if (a == "-s")
-				{
+				} else if ( a == "-s" ) {
 					showS = true;
-				}
-				else if (a == "-n")
-				{
+				} else if ( a == "-n" ) {
 					showN = true;
-				}
-				else if (a == "-r")
-				{
+				} else if ( a == "-r" ) {
 					showR = true;
-				}
-				else if (a == "-v")
-				{
+				} else if ( a == "-v" ) {
 					showV = true;
-				}
-				else if (a == "-m")
-				{
+				} else if ( a == "-m" ) {
 					showM = true;
-				}
-				else
-				{
+				} else {
 					// ignore unknown
 				}
 			}
 		}
 
-		if (showAll)
-		{
+		if ( showAll ) {
 			showS = true;
 			showN = true;
 			showR = true;
@@ -81,84 +61,64 @@ public static class Command
 			showM = true;
 		}
 
-		try
-		{
+		try {
 			var parts = new System.Collections.Generic.List<string>();
-			if (showS)
-			{
-				parts.Add(GetKernelName());
+			if ( showS ) {
+				parts.Add( GetKernelName() );
 			}
 
-			if (showN)
-			{
-				parts.Add(Environment.MachineName);
+			if ( showN ) {
+				parts.Add( Environment.MachineName );
 			}
 
-			if (showR)
-			{
-				parts.Add(GetKernelRelease());
+			if ( showR ) {
+				parts.Add( GetKernelRelease() );
 			}
 
-			if (showV)
-			{
-				parts.Add(GetKernelVersion());
+			if ( showV ) {
+				parts.Add( GetKernelVersion() );
 			}
 
-			if (showM)
-			{
-				parts.Add(RuntimeInformation.OSArchitecture.ToString());
+			if ( showM ) {
+				parts.Add( RuntimeInformation.OSArchitecture.ToString() );
 			}
 
-			stdout.WriteLine(string.Join(" ", parts));
+			stdout.WriteLine( string.Join( " ", parts ) );
 			return 0;
-		}
-		catch (Exception ex)
-		{
-			stderr.WriteLine($"uname: {ex.Message}");
+		} catch ( Exception ex ) {
+			stderr.WriteLine( $"uname: {ex.Message}" );
 			return 1;
 		}
 	}
 
-	private static string GetKernelName()
-	{
-		if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-		{
+	private static string GetKernelName() {
+		if ( RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) ) {
 			return "Windows";
 		}
 
-		if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-		{
+		if ( RuntimeInformation.IsOSPlatform( OSPlatform.Linux ) ) {
 			return "Linux";
 		}
 
-		if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-		{
+		if ( RuntimeInformation.IsOSPlatform( OSPlatform.OSX ) ) {
 			return "Darwin";
 		}
 
 		return RuntimeInformation.OSDescription;
 	}
 
-	private static string GetKernelRelease()
-	{
-		try
-		{
+	private static string GetKernelRelease() {
+		try {
 			return RuntimeInformation.OSDescription;
-		}
-		catch
-		{
+		} catch {
 			return "";
 		}
 	}
 
-	private static string GetKernelVersion()
-	{
-		try
-		{
+	private static string GetKernelVersion() {
+		try {
 			return Environment.OSVersion.VersionString;
-		}
-		catch
-		{
+		} catch {
 			return "";
 		}
 	}

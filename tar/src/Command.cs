@@ -15,123 +15,94 @@ using System.Formats.Tar;
 /// - Uses TarWriter(Stream) overloads available on older/newer runtimes.
 /// - Extraction uses the entry.DataStream fallback which is broadly available.
 /// </summary>
-public static class Command
-{
-	public static int Run(string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null)
-	{
+public static partial class Command {
+	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;
 
-		if (args.Length < 3)
-		{
-			stderr.WriteLine("Usage: tar -c|-x -f <archive> [files...]");
+		if ( args.Length < 3 ) {
+			stderr.WriteLine( "Usage: tar -c|-x -f <archive> [files...]" );
 			return 2;
 		}
 
-		var mode = args[0];
-		var flag = args[1];
-		var archive = args[2];
+		var mode = args[ 0 ];
+		var flag = args[ 1 ];
+		var archive = args[ 2 ];
 
-		if (mode == "-c")
-		{
-			var files = args.Skip(3).ToArray();
-			try
-			{
-				using var fs = File.Open(archive, FileMode.Create, FileAccess.Write);
-				using var writer = new TarWriter(fs, leaveOpen: false);
+		if ( mode == "-c" ) {
+			var files = args.Skip( 3 ).ToArray();
+			try {
+				using var fs = File.Open( archive, FileMode.Create, FileAccess.Write );
+				using var writer = new TarWriter( fs, leaveOpen: false );
 
-				foreach (var file in files)
-				{
-					if (Directory.Exists(file))
-					{
+				foreach ( var file in files ) {
+					if ( Directory.Exists( file ) ) {
 						// create directory entry
-						var dirEntry = new UstarTarEntry(TarEntryType.Directory, file);
+						var dirEntry = new UstarTarEntry( TarEntryType.Directory, file );
 						// option: normalize name to base name if needed:
 						// dirEntry.Name = Path.GetFileName(file);
-						writer.WriteEntry(dirEntry);
+						writer.WriteEntry( dirEntry );
 						// write contained files recursively
-						foreach (var path in Directory.EnumerateFiles(file, "*", SearchOption.AllDirectories))
-						{
+						foreach ( var path in Directory.EnumerateFiles( file, "*", SearchOption.AllDirectories ) ) {
 							var entry = new UstarTarEntry( TarEntryType.Directory, path );
-							writer.WriteEntry(entry);
+							writer.WriteEntry( entry );
 						}
-					}
-					else if (File.Exists(file))
-					{
+					} else if ( File.Exists( file ) ) {
 						var entry = new UstarTarEntry( TarEntryType.Directory, file );
-						writer.WriteEntry(entry);
-					}
-					else
-					{
+						writer.WriteEntry( entry );
+					} else {
 						// skip non-existent paths (GNU tar prints warning)
-						stderr.WriteLine($"tar: {file}: Cannot stat: No such file or directory");
+						stderr.WriteLine( $"tar: {file}: Cannot stat: No such file or directory" );
 					}
 				}
-			}
-			catch (Exception ex)
-			{
-				stderr.WriteLine($"tar: {ex.Message}");
+			} catch ( Exception ex ) {
+				stderr.WriteLine( $"tar: {ex.Message}" );
 				return 1;
 			}
 
 			return 0;
-		}
-		else if (mode == "-x")
-		{
-			try
-			{
-				using var fs = File.OpenRead(archive);
-				using var reader = new TarReader(fs, leaveOpen: false);
+		} else if ( mode == "-x" ) {
+			try {
+				using var fs = File.OpenRead( archive );
+				using var reader = new TarReader( fs, leaveOpen: false );
 				TarEntry? entry;
-				while ((entry = reader.GetNextEntry()) != null)
-				{
+				while ( ( entry = reader.GetNextEntry() ) != null ) {
 					var entryName = entry.Name ?? string.Empty;
 
-					if (entry.EntryType == TarEntryType.Directory)
-					{
-						if (!string.IsNullOrEmpty(entryName))
-						{
-							Directory.CreateDirectory(entryName);
+					if ( entry.EntryType == TarEntryType.Directory ) {
+						if ( !string.IsNullOrEmpty( entryName ) ) {
+							Directory.CreateDirectory( entryName );
 						}
 
 						continue;
 					}
 
-					if (entry.EntryType == TarEntryType.RegularFile)
-					{
+					if ( entry.EntryType == TarEntryType.RegularFile ) {
 						var outPath = entryName;
-						var dir = Path.GetDirectoryName(outPath);
-						if (!string.IsNullOrEmpty(dir))
-						{
-							Directory.CreateDirectory(dir);
+						var dir = Path.GetDirectoryName( outPath );
+						if ( !string.IsNullOrEmpty( dir ) ) {
+							Directory.CreateDirectory( dir );
 						}
 
-						using var outFs = File.Create(outPath);
+						using var outFs = File.Create( outPath );
 						// Use DataStream on the entry which is widely available
-						entry.DataStream?.CopyTo(outFs);
-					}
-					else
-					{
+						entry.DataStream?.CopyTo( outFs );
+					} else {
 						// For other entry types (symlink, etc.) best-effort: create directories or skip.
-						if (entry.EntryType == TarEntryType.SymbolicLink && !string.IsNullOrEmpty(entryName))
-						{
+						if ( entry.EntryType == TarEntryType.SymbolicLink && !string.IsNullOrEmpty( entryName ) ) {
 							// On Windows creating symlinks may require privileges; skip with a warning.
-							stderr.WriteLine($"tar: warning: skipping symbolic link {entryName}");
+							stderr.WriteLine( $"tar: warning: skipping symbolic link {entryName}" );
 						}
 					}
 				}
-			}
-			catch (Exception ex)
-			{
-				stderr.WriteLine($"tar: {ex.Message}");
+			} catch ( Exception ex ) {
+				stderr.WriteLine( $"tar: {ex.Message}" );
 				return 1;
 			}
 
 			return 0;
-		}
-		else
-		{
-			stderr.WriteLine("tar: unknown mode, use -c or -x");
+		} else {
+			stderr.WriteLine( "tar: unknown mode, use -c or -x" );
 			return 2;
 		}
 	}

@@ -17,10 +17,8 @@ using System.Globalization;
 ///   -n	numeric sort
 ///   -u	unique
 /// </summary>
-public static class Command
-{
-	public static int Run(string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null)
-	{
+public static partial class Command {
+	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdin ??= Console.In;
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;
@@ -29,104 +27,78 @@ public static class Command
 		var numeric = false;
 		var unique = false;
 		var i = 0;
-		for (; i < args.Length; i++)
-		{
-			if (!args[i].StartsWith('-'))
-			{
+		for ( ; i < args.Length; i++ ) {
+			if ( !args[ i ].StartsWith( '-' ) ) {
 				break;
 			}
 
-			if (args[i].Contains('r'))
-			{
+			if ( args[ i ].Contains( 'r' ) ) {
 				reverse = true;
 			}
 
-			if (args[i].Contains('n'))
-			{
+			if ( args[ i ].Contains( 'n' ) ) {
 				numeric = true;
 			}
 
-			if (args[i].Contains('u'))
-			{
+			if ( args[ i ].Contains( 'u' ) ) {
 				unique = true;
 			}
 		}
 
 		var files = new List<string>();
-		for (; i < args.Length; i++)
-		{
-			files.Add(args[i]);
+		for ( ; i < args.Length; i++ ) {
+			files.Add( args[ i ] );
 		}
 
-		try
-		{
+		try {
 			var lines = new List<string>();
-			if (files.Count == 0)
-			{
+			if ( files.Count == 0 ) {
 				string? line;
-				while ((line = stdin.ReadLine()) is not null)
-				{
-					lines.Add(line);
+				while ( ( line = stdin.ReadLine() ) is not null ) {
+					lines.Add( line );
 				}
-			}
-			else
-			{
-				foreach (var f in files)
-				{
-					if (f == "-")
-					{
+			} else {
+				foreach ( var f in files ) {
+					if ( f == "-" ) {
 						string? line;
-						while ((line = stdin.ReadLine()) is not null)
-						{
-							lines.Add(line);
+						while ( ( line = stdin.ReadLine() ) is not null ) {
+							lines.Add( line );
 						}
-					}
-					else
-					{
-						using var sr = new StreamReader(f, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+					} else {
+						using var sr = new StreamReader( f, Encoding.UTF8, detectEncodingFromByteOrderMarks: true );
 						string? line;
-						while ((line = sr.ReadLine()) is not null)
-						{
-							lines.Add(line);
+						while ( ( line = sr.ReadLine() ) is not null ) {
+							lines.Add( line );
 						}
 					}
 				}
 			}
 
 			IOrderedEnumerable<string> ordered;
-			if (numeric)
-			{
-				ordered = lines.OrderBy(s =>
-				{
-					if (double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out var v))
-					{
+			if ( numeric ) {
+				ordered = lines.OrderBy( s => {
+					if ( double.TryParse( s, NumberStyles.Float, CultureInfo.InvariantCulture, out var v ) ) {
 						return v;
 					}
 
 					return double.NaN;
-				});
-			}
-			else
-			{
-				ordered = lines.OrderBy(s => s, StringComparer.Ordinal);
+				} );
+			} else {
+				ordered = lines.OrderBy( s => s, StringComparer.Ordinal );
 			}
 
 			var result = reverse ? ordered.Reverse().ToList() : ordered.ToList();
-			if (unique)
-			{
-				result = result.Distinct(StringComparer.Ordinal).ToList();
+			if ( unique ) {
+				result = result.Distinct( StringComparer.Ordinal ).ToList();
 			}
 
-			foreach (var l in result)
-			{
-				stdout.WriteLine(l);
+			foreach ( var l in result ) {
+				stdout.WriteLine( l );
 			}
 
 			return 0;
-		}
-		catch (Exception ex)
-		{
-			stderr.WriteLine($"sort: {ex.Message}");
+		} catch ( Exception ex ) {
+			stderr.WriteLine( $"sort: {ex.Message}" );
 			return 1;
 		}
 	}

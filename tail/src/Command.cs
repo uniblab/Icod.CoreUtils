@@ -13,76 +13,58 @@ using System.Text;
 /// tail: output the last part of files.
 /// Supports: -n N (lines; default 10)
 /// </summary>
-public static class Command
-{
-	public static int Run(string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null)
-	{
+public static partial class Command {
+	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdin ??= Console.In;
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;
 
 		var lines = 10;
 		var i = 0;
-		for (; i < args.Length; i++)
-		{
-			if (args[i] == "-n" && i + 1 < args.Length)
-			{
+		for ( ; i < args.Length; i++ ) {
+			if ( args[ i ] == "-n" && i + 1 < args.Length ) {
 				i++;
-				if (!int.TryParse(args[i], out lines))
-				{
-					stderr.WriteLine($"tail: invalid number '{args[i]}'");
+				if ( !int.TryParse( args[ i ], out lines ) ) {
+					stderr.WriteLine( $"tail: invalid number '{args[ i ]}'" );
 					return 1;
 				}
-			}
-			else
-			{
+			} else {
 				break;
 			}
 		}
 
 		var rem = new List<string>();
-		for (; i < args.Length; i++)
-		{
-			rem.Add(args[i]);
+		for ( ; i < args.Length; i++ ) {
+			rem.Add( args[ i ] );
 		}
 
-		if (rem.Count == 0)
-		{
-			rem.Add("-");
+		if ( rem.Count == 0 ) {
+			rem.Add( "-" );
 		}
 
 		var exit = 0;
-		foreach (var path in rem)
-		{
-			try
-			{
+		foreach ( var path in rem ) {
+			try {
 				IEnumerable<string> source;
-				if (path == "-")
-				{
+				if ( path == "-" ) {
 					var list = new List<string>();
 					string? line;
-					while ((line = stdin.ReadLine()) is not null)
-					{
-						list.Add(line);
+					while ( ( line = stdin.ReadLine() ) is not null ) {
+						list.Add( line );
 					}
 
 					source = list;
-				}
-				else
-				{
-					source = File.ReadLines(path, Encoding.UTF8);
+				} else {
+					source = File.ReadLines( path, Encoding.UTF8 );
 				}
 
 				var temp = source as IList<string> ?? source.ToList();
-				var outLines = temp.Skip(Math.Max(0, temp.Count - lines));
-				foreach (var l in outLines)
-				{
-					stdout.WriteLine(l);
+				var outLines = temp.Skip( Math.Max( 0, temp.Count - lines ) );
+				foreach ( var l in outLines ) {
+					stdout.WriteLine( l );
 				}
-			}
-			catch (Exception ex)
-			{
-				stderr.WriteLine($"tail: {path}: {ex.Message}");
+			} catch ( Exception ex ) {
+				stderr.WriteLine( $"tail: {path}: {ex.Message}" );
 				exit = 1;
 			}
 		}

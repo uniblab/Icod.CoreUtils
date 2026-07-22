@@ -9,12 +9,10 @@ using System.IO;
 /// <summary>
 /// runcon: run program with specified SELinux context — not implementable portably with BCL-only.
 /// </summary>
-public static class Command
-{
-	public static int Run(string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null)
-	{
+public static partial class Command {
+	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stderr ??= Console.Error;
-		stderr.WriteLine("runcon: not implemented with BCL-only implementation");
-		throw new NotImplementedException("runcon requires platform-specific SELinux APIs and is not implemented in this portable port.");
+		stderr.WriteLine( "runcon: not implemented with BCL-only implementation" );
+		throw new NotImplementedException( "runcon requires platform-specific SELinux APIs and is not implemented in this portable port." );
 	}
 }

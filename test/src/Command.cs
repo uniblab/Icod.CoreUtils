@@ -20,95 +20,70 @@ using System.Runtime.InteropServices;
 /// If first argument is '[' the last argument must be ']' (POSIX [ ... ]).
 /// Returns exit code 0 for true, 1 for false, 2 for syntax error.
 /// </summary>
-public static class Command
-{
-	public static int Run(string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null)
-	{
+public static partial class Command {
+	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdin ??= Console.In;
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;
 
-		if (args is null || args.Length == 0)
-		{
+		if ( args is null || args.Length == 0 ) {
 			return 1;
 		}
 
 		// Support [ ... ] form
-		if (args.Length >= 1 && args[0] == "[")
-		{
-			if (args.Length < 3 || args[^1] != "]")
-			{
-				stderr.WriteLine("test: missing ']'");
+		if ( args.Length >= 1 && args[ 0 ] == "[" ) {
+			if ( args.Length < 3 || args[ ^1 ] != "]" ) {
+				stderr.WriteLine( "test: missing ']'" );
 				return 2;
 			}
 
 			// strip leading [ and trailing ]
-			var inner = new string[args.Length - 2];
-			Array.Copy(args, 1, inner, 0, inner.Length);
+			var inner = new string[ args.Length - 2 ];
+			Array.Copy( args, 1, inner, 0, inner.Length );
 			args = inner;
 		}
 
-		try
-		{
-			if (args.Length == 1)
-			{
+		try {
+			if ( args.Length == 1 ) {
 				// single arg: string non-empty => true
-				return string.IsNullOrEmpty(args[0]) ? 1 : 0;
+				return string.IsNullOrEmpty( args[ 0 ] ) ? 1 : 0;
 			}
 
-			if (args.Length == 2)
-			{
-				var op = args[0];
-				var operand = args[1];
-				if (op == "-e")
-				{
-					return File.Exists(operand) || Directory.Exists(operand) ? 0 : 1;
-				}
-				else if (op == "-f")
-				{
-					return File.Exists(operand) ? 0 : 1;
-				}
-				else if (op == "-d")
-				{
-					return Directory.Exists(operand) ? 0 : 1;
-				}
-				else if (op == "-z")
-				{
+			if ( args.Length == 2 ) {
+				var op = args[ 0 ];
+				var operand = args[ 1 ];
+				if ( op == "-e" ) {
+					return File.Exists( operand ) || Directory.Exists( operand ) ? 0 : 1;
+				} else if ( op == "-f" ) {
+					return File.Exists( operand ) ? 0 : 1;
+				} else if ( op == "-d" ) {
+					return Directory.Exists( operand ) ? 0 : 1;
+				} else if ( op == "-z" ) {
 					return operand.Length == 0 ? 0 : 1;
-				}
-				else
-				{
-					stderr.WriteLine($"test: unknown unary operator '{op}'");
+				} else {
+					stderr.WriteLine( $"test: unknown unary operator '{op}'" );
 					return 2;
 				}
 			}
 
-			if (args.Length == 3)
-			{
-				var left = args[0];
-				var op = args[1];
-				var right = args[2];
-				if (op == "=" || op == "==")
-				{
+			if ( args.Length == 3 ) {
+				var left = args[ 0 ];
+				var op = args[ 1 ];
+				var right = args[ 2 ];
+				if ( op == "=" || op == "==" ) {
 					return left == right ? 0 : 1;
-				}
-				else if (op == "!=")
-				{
+				} else if ( op == "!=" ) {
 					return left != right ? 0 : 1;
-				}
-				else
-				{
-					stderr.WriteLine($"test: unknown binary operator '{op}'");
+				} else {
+					stderr.WriteLine( $"test: unknown binary operator '{op}'" );
 					return 2;
 				}
 			}
 
-			stderr.WriteLine("test: too many arguments or unsupported expression");
+			stderr.WriteLine( "test: too many arguments or unsupported expression" );
 			return 2;
-		}
-		catch (Exception ex)
-		{
-			stderr.WriteLine($"test: {ex.Message}");
+		} catch ( Exception ex ) {
+			stderr.WriteLine( $"test: {ex.Message}" );
 			return 2;
 		}
 	}

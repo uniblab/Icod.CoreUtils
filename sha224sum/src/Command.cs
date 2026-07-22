@@ -1,6 +1,6 @@
-﻿ï»¿// Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
+ï»¿// Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
 
-namespace Icod.CoreUtils.Sha224sum;
+namespace Icod.CoreUtils.Sha224Sum;
 
 using System;
 using System.IO;

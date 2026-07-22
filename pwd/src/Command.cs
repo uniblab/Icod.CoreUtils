@@ -11,59 +11,42 @@ using System.Runtime.InteropServices;
 /// pwd: print name of current working directory.
 /// Supports: -P (physical) and -L (logical) where -P resolves symlinks (best-effort).
 /// </summary>
-public static class Command
-{
-	public static int Run(string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null)
-	{
+public static partial class Command {
+	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;
 
 		var physical = false;
-		foreach (var a in args)
-		{
-			if (a == "-P")
-			{
+		foreach ( var a in args ) {
+			if ( a == "-P" ) {
 				physical = true;
-			}
-			else if (a == "-L")
-			{
+			} else if ( a == "-L" ) {
 				physical = false;
 			}
 		}
 
-		try
-		{
+		try {
 			var cwd = Directory.GetCurrentDirectory();
-			if (physical)
-			{
+			if ( physical ) {
 				// Best-effort: attempt to resolve symlinks using realpath-like logic
-				var real = RealPath.ResolvePath(cwd);
-				stdout.WriteLine(real);
-			}
-			else
-			{
-				stdout.WriteLine(cwd);
+				var real = RealPath.ResolvePath( cwd );
+				stdout.WriteLine( real );
+			} else {
+				stdout.WriteLine( cwd );
 			}
 
 			return 0;
-		}
-		catch (Exception ex)
-		{
-			stderr.WriteLine($"pwd: {ex.Message}");
+		} catch ( Exception ex ) {
+			stderr.WriteLine( $"pwd: {ex.Message}" );
 			return 1;
 		}
 	}
 
-	private static class RealPath
-	{
-		public static string ResolvePath(string path)
-		{
-			try
-			{
-				return Path.GetFullPath(path);
-			}
-			catch
-			{
+	private static class RealPath {
+		public static string ResolvePath( string path ) {
+			try {
+				return Path.GetFullPath( path );
+			} catch {
 				return path;
 			}
 		}

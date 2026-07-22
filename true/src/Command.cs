@@ -9,10 +9,8 @@ using System.IO;
 /// <summary>
 /// true: do nothing, successful exit.
 /// </summary>
-public static class Command
-{
-	public static int Run(string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null)
-	{
+public static partial class Command {
+	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		return 0;
 	}
 }

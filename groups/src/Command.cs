@@ -22,7 +22,7 @@ using System.Security.Principal;
 ///   -l	print each group on its own line
 ///   -?	display this help/usage text
 /// </summary>
-public static class Command {
+public static partial class Command {
 
 	private const System.Char SPACE = ' ';
 	private const System.Char TAB = '\t';
@@ -174,7 +174,7 @@ public static class Command {
 					null,
 					CultureInfo.InvariantCulture
 				) ?? "",
-				_ => value.ToString() ?? ""
+			_ => value.ToString() ?? ""
 		};
 		if ( text.Contains( '"' ) ) {
 			text = text.Replace( "\"", "\"\"" );

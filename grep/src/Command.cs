@@ -20,10 +20,8 @@ using System.Text;
 ///   -H   print filename
 /// Patterns use .NET regular expressions (best-effort POSIX compatibility).
 /// </summary>
-public static class Command
-{
-	public static int Run(string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null)
-	{
+public static partial class Command {
+	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdin ??= Console.In;
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;
@@ -39,160 +37,120 @@ public static class Command
 
 		// simple option parsing
 		var i = 0;
-		for (; i < args.Length; i++)
-		{
-			var a = args[i];
-			if (!a.StartsWith( '-' ) || a == "-")
-			{
+		for ( ; i < args.Length; i++ ) {
+			var a = args[ i ];
+			if ( !a.StartsWith( '-' ) || a == "-" ) {
 				break;
 			}
 
-			if (a == "-i")
-			{
+			if ( a == "-i" ) {
 				ignoreCase = true;
-			}
-			else if (a == "-v")
-			{
+			} else if ( a == "-v" ) {
 				invert = true;
-			}
-			else if (a == "-n")
-			{
+			} else if ( a == "-n" ) {
 				printNumber = true;
-			}
-			else if (a == "-c")
-			{
+			} else if ( a == "-c" ) {
 				countOnly = true;
-			}
-			else if (a == "-l")
-			{
+			} else if ( a == "-l" ) {
 				listFiles = true;
-			}
-			else if (a == "-H")
-			{
+			} else if ( a == "-H" ) {
 				printFilename = true;
-			}
-			else if (a == "-e")
-			{
-				if (i + 1 < args.Length)
-				{
+			} else if ( a == "-e" ) {
+				if ( i + 1 < args.Length ) {
 					i++;
-					patterns.Add(args[i]);
+					patterns.Add( args[ i ] );
 				}
-			}
-			else
-			{
+			} else {
 				// unsupported option: ignore
 			}
 		}
 
 		// next arg is pattern if not provided by -e
-		if (patterns.Count == 0 && i < args.Length)
-		{
-			patterns.Add(args[i]);
+		if ( patterns.Count == 0 && i < args.Length ) {
+			patterns.Add( args[ i ] );
 			i++;
 		}
 
-		for (; i < args.Length; i++)
-		{
-			files.Add(args[i]);
+		for ( ; i < args.Length; i++ ) {
+			files.Add( args[ i ] );
 		}
 
-		if (patterns.Count == 0)
-		{
-			stderr.WriteLine("grep: missing pattern");
+		if ( patterns.Count == 0 ) {
+			stderr.WriteLine( "grep: missing pattern" );
 			return 2;
 		}
 
 		var options = RegexOptions.None;
-		if (ignoreCase)
-		{
+		if ( ignoreCase ) {
 			options |= RegexOptions.IgnoreCase;
 		}
 
-		var regex = new Regex(patterns[0], options);
+		var regex = new Regex( patterns[ 0 ], options );
 
-		if (files.Count == 0)
-		{
-			files.Add("-");
+		if ( files.Count == 0 ) {
+			files.Add( "-" );
 		}
 
 		var exit = 0;
-		foreach (var path in files)
-		{
-			try
-			{
+		foreach ( var path in files ) {
+			try {
 				TextReader reader;
-				if (path == "-")
-				{
+				if ( path == "-" ) {
 					reader = stdin;
-				}
-				else
-				{
-					reader = new StreamReader(path, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+				} else {
+					reader = new StreamReader( path, Encoding.UTF8, detectEncodingFromByteOrderMarks: true );
 				}
 
-				using (reader)
-				{
+				using ( reader ) {
 					string? line;
 					long num = 0;
 					var matchCount = 0;
 					var fileMatched = false;
-					while ((line = reader.ReadLine()) is not null)
-					{
+					while ( ( line = reader.ReadLine() ) is not null ) {
 						num++;
-						var isMatch = regex.IsMatch(line);
-						if (invert)
-						{
+						var isMatch = regex.IsMatch( line );
+						if ( invert ) {
 							isMatch = !isMatch;
 						}
 
-						if (isMatch)
-						{
+						if ( isMatch ) {
 							fileMatched = true;
 							matchCount++;
-							if (listFiles)
-							{
-								stdout.WriteLine(path);
+							if ( listFiles ) {
+								stdout.WriteLine( path );
 								break;
 							}
 
-							if (countOnly)
-							{
+							if ( countOnly ) {
 								continue;
 							}
 
 							var outLine = new StringBuilder();
-							if (printFilename && path != "-")
-							{
-								outLine.Append(path);
-								outLine.Append(':');
+							if ( printFilename && path != "-" ) {
+								outLine.Append( path );
+								outLine.Append( ':' );
 							}
 
-							if (printNumber)
-							{
-								outLine.Append(num);
-								outLine.Append(':');
+							if ( printNumber ) {
+								outLine.Append( num );
+								outLine.Append( ':' );
 							}
 
-							outLine.Append(line);
-							stdout.WriteLine(outLine.ToString());
+							outLine.Append( line );
+							stdout.WriteLine( outLine.ToString() );
 						}
 					}
 
-					if (countOnly)
-					{
-						stdout.WriteLine(matchCount);
+					if ( countOnly ) {
+						stdout.WriteLine( matchCount );
 					}
 
-					if (fileMatched)
-					{
+					if ( fileMatched ) {
 						exit = 0;
 					}
 				}
-			}
-			catch (Exception ex)
-			{
-				stderr.WriteLine($"grep: {path}: {ex.Message}");
+			} catch ( Exception ex ) {
+				stderr.WriteLine( $"grep: {path}: {ex.Message}" );
 				exit = 2;
 			}
 		}

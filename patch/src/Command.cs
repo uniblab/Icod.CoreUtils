@@ -13,80 +13,62 @@ using System.Collections.Generic;
 /// Notes: supports simple lines prefixed with "-", "+" produced by the companion diff above.
 /// Creates a .orig backup before applying.
 /// </summary>
-public static class Command
-{
-	public static int Run(string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null)
-	{
+public static partial class Command {
+	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stderr ??= Console.Error;
 		stdout ??= Console.Out;
 
-		if (args.Length < 2)
-		{
-			stderr.WriteLine("Usage: patch <target-file> <patch-file>");
+		if ( args.Length < 2 ) {
+			stderr.WriteLine( "Usage: patch <target-file> <patch-file>" );
 			return 2;
 		}
 
-		var target = args[0];
-		var patchFile = args[1];
+		var target = args[ 0 ];
+		var patchFile = args[ 1 ];
 
 		string[] lines;
-		try
-		{
-			lines = File.ReadAllLines(patchFile, Encoding.UTF8);
-		}
-		catch (Exception ex)
-		{
-			stderr.WriteLine($"patch: {patchFile}: {ex.Message}");
+		try {
+			lines = File.ReadAllLines( patchFile, Encoding.UTF8 );
+		} catch ( Exception ex ) {
+			stderr.WriteLine( $"patch: {patchFile}: {ex.Message}" );
 			return 1;
 		}
 
 		List<string> original;
-		try
-		{
-			original = new List<string>(File.ReadAllLines(target, Encoding.UTF8));
-		}
-		catch (Exception ex)
-		{
-			stderr.WriteLine($"patch: {target}: {ex.Message}");
+		try {
+			original = new List<string>( File.ReadAllLines( target, Encoding.UTF8 ) );
+		} catch ( Exception ex ) {
+			stderr.WriteLine( $"patch: {target}: {ex.Message}" );
 			return 1;
 		}
 
 		var result = new List<string>();
 		var i = 0;
-		while (i < lines.Length)
-		{
-			var line = lines[i];
-			if (line.Length == 0)
-			{
+		while ( i < lines.Length ) {
+			var line = lines[ i ];
+			if ( line.Length == 0 ) {
 				i++;
 				continue;
 			}
 
-			if (line[0] == '+')
-			{
+			if ( line[ 0 ] == '+' ) {
 				// added line
-				result.Add(line[2..]);
+				result.Add( line[ 2.. ] );
 				i++;
-			}
-			else if (line[0] == '-')
-			{
+			} else if ( line[ 0 ] == '-' ) {
 				// removed line: skip corresponding original line if it matches
-				var remove = line[2..];
-				if (original.Count > 0)
-				{
+				var remove = line[ 2.. ];
+				if ( original.Count > 0 ) {
 					// prefer removing first occurrence
-					original.RemoveAt(0);
+					original.RemoveAt( 0 );
 				}
 
 				i++;
-			}
-			else
-			{
+			} else {
 				// context or fallback: take next original line if any
-				if (original.Count > 0)
-				{
-					result.Add(original[0]);
-					original.RemoveAt(0);
+				if ( original.Count > 0 ) {
+					result.Add( original[ 0 ] );
+					original.RemoveAt( 0 );
 				}
 
 				i++;
@@ -94,20 +76,17 @@ public static class Command
 		}
 
 		// append remaining original
-		result.AddRange(original);
+		result.AddRange( original );
 
-		try
-		{
-			File.Copy(target, target + ".orig", overwrite: true);
-			File.WriteAllLines(target, result, Encoding.UTF8);
-		}
-		catch (Exception ex)
-		{
-			stderr.WriteLine($"patch: apply failed: {ex.Message}");
+		try {
+			File.Copy( target, target + ".orig", overwrite: true );
+			File.WriteAllLines( target, result, Encoding.UTF8 );
+		} catch ( Exception ex ) {
+			stderr.WriteLine( $"patch: apply failed: {ex.Message}" );
 			return 1;
 		}
 
-		stdout.WriteLine($"patch: applied to {target} (backup: {target}.orig)");
+		stdout.WriteLine( $"patch: applied to {target} (backup: {target}.orig)" );
 		return 0;
 	}
 }

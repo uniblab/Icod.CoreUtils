@@ -9,57 +9,43 @@ using System.IO;
 /// <summary>
 /// rmdir: remove empty directories. Supports -p to remove directory and its ancestors if they become empty.
 /// </summary>
-public static class Command
-{
-	public static int Run(string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null)
-	{
+public static partial class Command {
+	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stderr ??= Console.Error;
 		var parents = false;
 		var rem = new System.Collections.Generic.List<string>();
-		foreach (var a in args)
-		{
-			if (a == "-p")
-			{
+		foreach ( var a in args ) {
+			if ( a == "-p" ) {
 				parents = true;
-			}
-			else
-			{
-				rem.Add(a);
+			} else {
+				rem.Add( a );
 			}
 		}
 
-		if (rem.Count == 0)
-		{
-			stderr.WriteLine("rmdir: missing operand");
+		if ( rem.Count == 0 ) {
+			stderr.WriteLine( "rmdir: missing operand" );
 			return 1;
 		}
 
 		var exit = 0;
-		foreach (var d in rem)
-		{
-			try
-			{
-				if (!Directory.Exists(d))
-				{
-					stderr.WriteLine($"rmdir: failed to remove '{d}': No such file or directory");
+		foreach ( var d in rem ) {
+			try {
+				if ( !Directory.Exists( d ) ) {
+					stderr.WriteLine( $"rmdir: failed to remove '{d}': No such file or directory" );
 					exit = 1;
 					continue;
 				}
 
-				Directory.Delete(d);
-				if (parents)
-				{
-					var parent = Path.GetDirectoryName(d);
-					while (!string.IsNullOrEmpty(parent) && Directory.Exists(parent) && Directory.GetFileSystemEntries(parent).Length == 0)
-					{
-						Directory.Delete(parent);
-						parent = Path.GetDirectoryName(parent);
+				Directory.Delete( d );
+				if ( parents ) {
+					var parent = Path.GetDirectoryName( d );
+					while ( !string.IsNullOrEmpty( parent ) && Directory.Exists( parent ) && Directory.GetFileSystemEntries( parent ).Length == 0 ) {
+						Directory.Delete( parent );
+						parent = Path.GetDirectoryName( parent );
 					}
 				}
-			}
-			catch (Exception ex)
-			{
-				stderr.WriteLine($"rmdir: {d}: {ex.Message}");
+			} catch ( Exception ex ) {
+				stderr.WriteLine( $"rmdir: {d}: {ex.Message}" );
 				exit = 1;
 			}
 		}

@@ -1,4 +1,4 @@
-﻿ï»¿// Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
+// Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
 
 namespace Icod.CoreUtils.Pinky;
 
@@ -9,25 +9,25 @@ using System.IO;
 /// $u: placeholder stub. Prints usage and supports -?/--help.
 /// Replace the implementation with the actual utility behavior.
 /// </summary>
-public static class Command {
-    public static int Run(string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null) {
-        stdout ??= Console.Out;
-        stderr ??= Console.Error;
+public static partial class Command {
+	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
+		stdout ??= Console.Out;
+		stderr ??= Console.Error;
 
-        foreach (var a in args) {
-            if (a == "-?" || a == "--help") {
-                PrintUsage(stdout);
-                return 0;
-            }
-        }
+		foreach ( var a in args ) {
+			if ( a == "-?" || a == "--help" ) {
+				PrintUsage( stdout );
+				return 0;
+			}
+		}
 
-        // TODO: implement pinky behavior here.
-        PrintUsage(stdout);
-        return 0;
-    }
+		// TODO: implement pinky behavior here.
+		PrintUsage( stdout );
+		return 0;
+	}
 
-    private static void PrintUsage(TextWriter stdout) {
-        stdout.WriteLine($"Usage: pinky [-?]");
-        stdout.WriteLine("  -?    display this help and exit");
-    }
+	private static void PrintUsage( TextWriter stdout ) {
+		stdout.WriteLine( $"Usage: pinky [-?]" );
+		stdout.WriteLine( "  -?    display this help and exit" );
+	}
 }

@@ -16,10 +16,8 @@ using System.Text;
 ///   -u   only print unique lines
 /// Reads single file or stdin.
 /// </summary>
-public static class Command
-{
-	public static int Run(string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null)
-	{
+public static partial class Command {
+	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdin ??= Console.In;
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;
@@ -28,114 +26,79 @@ public static class Command
 		var dupOnly = false;
 		var uniqueOnly = false;
 		var rem = new List<string>();
-		foreach (var a in args)
-		{
-			if (a == "-c")
-			{
+		foreach ( var a in args ) {
+			if ( a == "-c" ) {
 				countFlag = true;
-			}
-			else if (a == "-d")
-			{
+			} else if ( a == "-d" ) {
 				dupOnly = true;
-			}
-			else if (a == "-u")
-			{
+			} else if ( a == "-u" ) {
 				uniqueOnly = true;
-			}
-			else
-			{
-				rem.Add(a);
+			} else {
+				rem.Add( a );
 			}
 		}
 
 		string? input = "-";
-		if (rem.Count > 0)
-		{
-			input = rem[0];
+		if ( rem.Count > 0 ) {
+			input = rem[ 0 ];
 		}
 
-		try
-		{
-			using var r = input == "-" ? stdin! : new StreamReader(input, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+		try {
+			using var r = input == "-" ? stdin! : new StreamReader( input, Encoding.UTF8, detectEncodingFromByteOrderMarks: true );
 			string? prev = null;
 			long count = 0;
 			string? line;
 			var first = true;
-			while ((line = r.ReadLine()) is not null)
-			{
-				if (first)
-				{
+			while ( ( line = r.ReadLine() ) is not null ) {
+				if ( first ) {
 					prev = line;
 					count = 1;
 					first = false;
 					continue;
 				}
 
-				if (line == prev)
-				{
+				if ( line == prev ) {
 					count++;
-				}
-				else
-				{
-					Emit(prev!, count, countFlag, dupOnly, uniqueOnly, stdout);
+				} else {
+					Emit( prev!, count, countFlag, dupOnly, uniqueOnly, stdout );
 					prev = line;
 					count = 1;
 				}
 			}
 
-			if (!first && prev is not null)
-			{
-				Emit(prev, count, countFlag, dupOnly, uniqueOnly, stdout);
+			if ( !first && prev is not null ) {
+				Emit( prev, count, countFlag, dupOnly, uniqueOnly, stdout );
 			}
 
 			return 0;
-		}
-		catch (Exception ex)
-		{
-			stderr.WriteLine($"uniq: {ex.Message}");
+		} catch ( Exception ex ) {
+			stderr.WriteLine( $"uniq: {ex.Message}" );
 			return 1;
 		}
 	}
 
-	private static void Emit(string line, long count, bool countFlag, bool dupOnly, bool uniqueOnly, TextWriter stdout)
-	{
-		if (dupOnly)
-		{
-			if (count > 1)
-			{
-				if (countFlag)
-				{
-					stdout.WriteLine($"{count,7} {line}");
-				}
-				else
-				{
-					stdout.WriteLine(line);
+	private static void Emit( string line, long count, bool countFlag, bool dupOnly, bool uniqueOnly, TextWriter stdout ) {
+		if ( dupOnly ) {
+			if ( count > 1 ) {
+				if ( countFlag ) {
+					stdout.WriteLine( $"{count,7} {line}" );
+				} else {
+					stdout.WriteLine( line );
 				}
 			}
-		}
-		else if (uniqueOnly)
-		{
-			if (count == 1)
-			{
-				if (countFlag)
-				{
-					stdout.WriteLine($"{count,7} {line}");
-				}
-				else
-				{
-					stdout.WriteLine(line);
+		} else if ( uniqueOnly ) {
+			if ( count == 1 ) {
+				if ( countFlag ) {
+					stdout.WriteLine( $"{count,7} {line}" );
+				} else {
+					stdout.WriteLine( line );
 				}
 			}
-		}
-		else
-		{
-			if (countFlag)
-			{
-				stdout.WriteLine($"{count,7} {line}");
-			}
-			else
-			{
-				stdout.WriteLine(line);
+		} else {
+			if ( countFlag ) {
+				stdout.WriteLine( $"{count,7} {line}" );
+			} else {
+				stdout.WriteLine( line );
 			}
 		}
 	}
