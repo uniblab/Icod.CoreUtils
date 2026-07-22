@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
@@ -7,8 +7,8 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<OutputPath>..\bin\$(Configuration)\</OutputPath>
-		<AssemblyName>df</AssemblyName>
-		<RootNamespace>Icod.CoreUtils.Df</RootNamespace>
+		<AssemblyName>comm</AssemblyName>
+		<RootNamespace>Icod.CoreUtils.Comm</RootNamespace>
 	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Shared\Icod.CoreUtils.Shared.csproj" />

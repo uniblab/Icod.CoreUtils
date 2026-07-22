@@ -1,6 +1,6 @@
-﻿ï»¿// Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
+// Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
 
-namespace Icod.CoreUtils.B2sum;
+namespace Icod.CoreUtils.Basenc;
 
 using System;
 using System.IO;
@@ -21,13 +21,13 @@ public static class Command {
             }
         }
 
-        // TODO: implement b2sum behavior here.
+        // TODO: implement basenc behavior here.
         PrintUsage(stdout);
         return 0;
     }
 
     private static void PrintUsage(TextWriter stdout) {
-        stdout.WriteLine($"Usage: b2sum [-?]");
+        stdout.WriteLine($"Usage: basenc [-?]");
         stdout.WriteLine("  -?    display this help and exit");
     }
 }
