@@ -7,8 +7,8 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<OutputPath>..\bin\$(Configuration)\</OutputPath>
-		<AssemblyName>arch</AssemblyName>
-		<RootNamespace>Icod.CoreUtils.Arch</RootNamespace>
+		<AssemblyName>sha224sum</AssemblyName>
+		<RootNamespace>Icod.CoreUtils.Sha224Sum</RootNamespace>
 	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Shared\Icod.CoreUtils.Shared.csproj" />

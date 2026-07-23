@@ -1,4 +1,4 @@
-namespace Icod.CoreUtils.Hostname;
+namespace Icod.CoreUtils.HostName;
 
 using System;
 

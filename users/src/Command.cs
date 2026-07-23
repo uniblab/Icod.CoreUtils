@@ -31,15 +31,8 @@ public static class Command {
 		}
 
 		try {
-			// Try `users` command first
-			if ( TryRunTool( "users", Array.Empty<string>(), out var outText ) ) {
-				stdout.Write( outText.Trim() );
-				stdout.WriteLine();
-				return 0;
-			}
-
 			// Try `who -q` which prints names followed by a line like: # users=2
-			if ( TryRunTool( "who", QSwitchArray, out outText ) ) {
+			if ( TryRunTool( "who", QSwitchArray, out var outText ) ) {
 				// who -q prints a names line and a trailing summary; take the first line
 				using var sr = new StringReader( outText );
 				var first = sr.ReadLine() ?? string.Empty;

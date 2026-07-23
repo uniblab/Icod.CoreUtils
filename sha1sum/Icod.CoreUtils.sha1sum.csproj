@@ -8,7 +8,7 @@
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	<OutputPath>..\bin\$(Configuration)\</OutputPath>
 	<AssemblyName>sha1sum</AssemblyName>
-	<RootNamespace>Icod.CoreUtils.Sha1sum</RootNamespace>
+	<RootNamespace>Icod.CoreUtils.Sha1Sum</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
 	<ProjectReference Include="..\Shared\Icod.CoreUtils.Shared.csproj" />
