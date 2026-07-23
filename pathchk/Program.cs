@@ -1,11 +1,9 @@
-namespace Icod.CoreUtils.Pathchk;
+namespace Icod.CoreUtils.PathChk;
 
 using System;
 
-public static class Program
-{
-	public static int Main(string[] args)
-	{
-		return Command.Run(args);
+public static class Program {
+	public static int Main( string[] args ) {
+		return Command.Run( args );
 	}
 }
