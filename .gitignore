@@ -19,7 +19,8 @@ mono_crash.*
 
 # Developer toool
 [Ss]cripts/
-
+[Tt]ools
+fs
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
