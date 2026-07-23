@@ -15,7 +15,7 @@ using System.Text.RegularExpressions;
 ///   - if no -l provided, splits at numeric line addresses (each pattern is a decimal number)
 /// Output files are named 'xx00', 'xx01', ...
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;

@@ -19,7 +19,7 @@ using System.Text;
 /// POSIX semantics are approximated where not directly available from BCL.
 /// Where true POSIX semantics are impossible to provide with BCL alone, best-effort fallbacks are used.
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;

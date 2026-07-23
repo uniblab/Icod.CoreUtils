@@ -17,7 +17,7 @@ using System.Text;
 /// If no files are specified, read from standard input.
 /// Encoded output is written as UTF-8 text. Decoded output is written as raw bytes.
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;

@@ -12,7 +12,7 @@ using System.Threading;
 /// sleep: delay for a specified amount of time (seconds, fractional supported).
 /// Usage: sleep NUMBER...  (sum of numbers interpreted as seconds)
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdin ??= Console.In;
 		stdout ??= Console.Out;

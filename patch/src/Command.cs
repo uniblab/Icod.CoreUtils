@@ -13,7 +13,7 @@ using System.Collections.Generic;
 /// Notes: supports simple lines prefixed with "-", "+" produced by the companion diff above.
 /// Creates a .orig backup before applying.
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stderr ??= Console.Error;
 		stdout ??= Console.Out;

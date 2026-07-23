@@ -12,7 +12,7 @@ using System.Collections.Generic;
 /// fmt: simple paragraph reflow. Default width 75.
 /// Usage: fmt [-w width] [file...]
 /// </summary>
-public static partial class Command {
+public static class Command {
 
 	private const char SPACE = ' ';
 	private static readonly System.Char[] SPACE_CHAR_ARRAY;

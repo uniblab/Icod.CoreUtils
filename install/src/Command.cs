@@ -170,8 +170,10 @@ public static class Command {
 		}
 	}
 
-	private static void CopyAndFinalize( string src, string dest, string? mode, string? owner, string? group, bool stripFlag,
-		TextWriter verboseOut, TextWriter? stderr, TextWriter? stdout ) {
+	private static void CopyAndFinalize(
+		string src, string dest, string? mode, string? owner, string? group, bool stripFlag,
+		bool verbose, TextWriter? stderr, TextWriter? stdout
+	) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;
 		try {
@@ -184,12 +186,10 @@ public static class Command {
 				Directory.CreateDirectory( dir );
 
 			File.Copy( src, dest, overwrite: true );
-			if ( verboseOut != null && verboseOut != Console.Out ) {
-			} // keep analyzer happy
 
 			// mode/owner/group/strip best-effort
 			if ( !string.IsNullOrEmpty( mode ) )
-				SetMode( dest, mode, stderr, verbose: false );
+				SetMode( dest, mode, stderr, verbose );
 			if ( !string.IsNullOrEmpty( owner ) || !string.IsNullOrEmpty( group ) )
 				SetOwnerGroup( dest, owner, group, stderr );
 			if ( stripFlag )

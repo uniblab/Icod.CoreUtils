@@ -12,7 +12,7 @@ using System.Globalization;
 /// Supports numeric octal modes to toggle the owner write bit (maps to FileAttributes.ReadOnly on Windows).
 /// Full POSIX mode semantics are not available via BCL and are approximated where possible.
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stderr ??= Console.Error;
 		if ( args.Length < 2 ) {

@@ -11,7 +11,7 @@ using System.Text;
 /// fold: wrap each input line to fit a specified width (default 80).
 /// Usage: fold [-w width] [file...]
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;

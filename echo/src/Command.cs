@@ -11,7 +11,7 @@ using System.Text;
 /// echo: display a line of text
 /// Supported options: -n (no trailing newline), -e (enable backslash escapes)
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;

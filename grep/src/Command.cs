@@ -20,7 +20,7 @@ using System.Text;
 ///   -H   print filename
 /// Patterns use .NET regular expressions (best-effort POSIX compatibility).
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdin ??= Console.In;
 		stdout ??= Console.Out;

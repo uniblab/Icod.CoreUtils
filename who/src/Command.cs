@@ -12,7 +12,7 @@ using System.Text;
 /// who: show who is logged on (best-effort).
 /// BCL-only port prints current user and hostname as a minimal approximation.
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdin ??= Console.In;
 		stdout ??= Console.Out;

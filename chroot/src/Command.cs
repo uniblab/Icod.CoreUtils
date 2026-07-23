@@ -10,7 +10,7 @@ using System.IO;
 /// chroot: change root directory (not implemented).
 /// Changing root requires OS-level privileges and platform-specific APIs; BCL-only approach cannot implement this safely.
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stderr ??= Console.Error;
 		stderr.WriteLine( "chroot: not implemented with BCL-only implementation" );

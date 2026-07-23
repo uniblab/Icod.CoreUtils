@@ -15,7 +15,7 @@ using System.Formats.Tar;
 /// - Uses TarWriter(Stream) overloads available on older/newer runtimes.
 /// - Extraction uses the entry.DataStream fallback which is broadly available.
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;

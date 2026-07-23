@@ -12,7 +12,7 @@ using System.Text;
 /// base32: encode/decode (supports -d decode).
 /// Encoded output uses the RFC 4648 alphabet (A-Z2-7) with '=' padding.
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;

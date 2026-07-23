@@ -15,7 +15,7 @@ using System.Text;
 ///   -b SIZE put SIZE bytes per output file (supports suffix k, m)
 /// Output files named 'xaa', 'xab', ...
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdin ??= Console.In;
 		stdout ??= Console.Out;

@@ -11,7 +11,7 @@ using System.Collections;
 /// printenv: print environment variables. With no arguments prints all variables.
 /// With one or more NAME arguments prints the values of those variables.
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;

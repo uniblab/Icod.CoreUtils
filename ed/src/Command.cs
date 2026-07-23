@@ -10,7 +10,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Runtime.CompilerServices; // Needed for GeneratedRegexAttribute
 
-public static partial class Command
+public static class Command
 {
 	private static readonly char[] SpaceSeparator = new[] { ' ' };
 

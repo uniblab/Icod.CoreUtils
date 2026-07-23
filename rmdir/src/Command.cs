@@ -9,7 +9,7 @@ using System.IO;
 /// <summary>
 /// rmdir: remove empty directories. Supports -p to remove directory and its ancestors if they become empty.
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stderr ??= Console.Error;
 		var parents = false;

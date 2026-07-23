@@ -12,7 +12,7 @@ using System.Text;
 /// - supports -l lines-per-page (default 66) and -h header.
 /// - prints pages with header showing file name and date.
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;

@@ -10,7 +10,7 @@ using System.IO;
 /// mv: move (rename) files.
 /// Supports -f force (overwrite) and -n no-clobber.
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;

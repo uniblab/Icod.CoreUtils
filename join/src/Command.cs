@@ -15,7 +15,7 @@ using System.Text;
 /// - Joins on first field (whitespace or specified delim).
 /// - If either file name is '-', read from stdin (only one stdin supported reliably).
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;

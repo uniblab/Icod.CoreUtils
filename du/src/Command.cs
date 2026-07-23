@@ -9,7 +9,7 @@ using System.Linq;
 /// Credit: Dennis Ritchie.
 /// Usage: du [path...]
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, System.IO.TextReader? stdin = null, System.IO.TextWriter? stdout = null, System.IO.TextWriter? stderr = null ) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;

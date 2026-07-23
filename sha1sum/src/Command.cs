@@ -11,7 +11,7 @@ using System.Text;
 /// <summary>
 /// sha1sum: compute SHA-1 checksum and file length. Outputs: "&lt;sha1&gt; &lt;length&gt; &lt;filename&gt;"."
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;

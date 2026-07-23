@@ -6,7 +6,7 @@ using System.IO;
 /// <summary>
 /// mkdir: create directories; supports -p.
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stderr ??= Console.Error;
 		var parents = false;

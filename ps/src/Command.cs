@@ -8,7 +8,7 @@ using System.Linq;
 /// ps: list processes (basic). Credit: Bell Labs.
 /// Usage: ps
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, System.IO.TextReader? stdin = null, System.IO.TextWriter? stdout = null, System.IO.TextWriter? stderr = null ) {
 		stdout ??= Console.Out;
 		try {

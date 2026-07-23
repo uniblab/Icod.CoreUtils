@@ -13,7 +13,7 @@ using System.Collections;
 /// If one or more NAME=VALUE assignments are provided without a command, sets them in the current process and prints environment.
 /// Running arbitrary commands is not implemented in this BCL-only port.
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;

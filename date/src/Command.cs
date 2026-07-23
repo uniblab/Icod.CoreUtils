@@ -17,7 +17,7 @@ using System.Diagnostics.CodeAnalysis;
 ///   +FORMAT	  format using .NET format string (best-effort; not full strftime)
 /// If FORMAT is omitted prints the current date/time in RFC1123 format.
 /// </summary>
-public static partial class Command {
+public static class Command {
 	[GeneratedRegex( "%[aAbBcdHIjmMpSUwWxXyYzZ]" )]
 	private static partial Regex StrftimeTokenRegex();
 

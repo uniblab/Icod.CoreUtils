@@ -16,7 +16,7 @@ using System.Text;
 ///   -s		 squeeze repeated characters in output (after translation)
 /// Note: character set expressions are treated as literal sequences; no ranges or classes.
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdin ??= Console.In;
 		stdout ??= Console.Out;

@@ -11,7 +11,7 @@ using System.IO;
 /// Best-effort implementation: Not implemented with BCL-only approach.
 /// True POSIX ownership changes require platform-specific APIs; this implementation throws NotImplementedException.
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stderr ??= Console.Error;
 		if ( args.Length < 2 ) {

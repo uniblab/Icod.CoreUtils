@@ -10,7 +10,7 @@ using System.IO;
 /// dirname: strip the last component from NAME, print directory portion.
 /// Usage: dirname NAME
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;

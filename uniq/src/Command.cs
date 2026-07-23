@@ -16,7 +16,7 @@ using System.Text;
 ///   -u   only print unique lines
 /// Reads single file or stdin.
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdin ??= Console.In;
 		stdout ??= Console.Out;

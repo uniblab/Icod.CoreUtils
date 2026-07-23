@@ -11,7 +11,7 @@ using System.Text;
 /// Ported to .NET by Timothy J. Bruce &lt;uniblab@hotmail.com&gt;
 /// Usage: diff &lt;file1&gt; &lt;file2&gt;
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;

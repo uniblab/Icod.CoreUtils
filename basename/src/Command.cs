@@ -11,7 +11,7 @@ using System.Text;
 /// basename: strip directory and suffix from filenames.
 /// Usage: basename NAME [SUFFIX]
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;

@@ -9,7 +9,7 @@ using System.IO;
 /// <summary>
 /// rm: remove files; -r recursive; -f ignore errors.
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stderr ??= Console.Error;
 		var recursive = false;

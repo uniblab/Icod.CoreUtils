@@ -16,7 +16,7 @@ using System.Globalization;
 /// Usage: timeout SECONDS COMMAND [ARG...]
 /// Returns 124 if the command times out, otherwise the command's exit code.
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdin ??= Console.In;
 		stdout ??= Console.Out;

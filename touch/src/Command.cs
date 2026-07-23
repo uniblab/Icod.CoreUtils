@@ -13,7 +13,7 @@ using System.Text.RegularExpressions;
 /// Supports options: -a (access), -m (modification), -c (no create), -t [[CC]YY]MMDDhhmm[.ss]
 /// Best-effort POSIX behavior using BCL only.
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdin ??= Console.In;
 		stdout ??= Console.Out;

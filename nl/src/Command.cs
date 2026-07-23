@@ -17,7 +17,7 @@ using Icod.CoreUtils.Shared;
 ///   -w &lt;width&gt;   number field width (default 6)
 ///   -n &lt;format&gt;  number format: 'rn' (right), 'ln' (left), 'rz' (leading zeros) (default 'rn')
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdin ??= Console.In;
 		stdout ??= Console.Out;

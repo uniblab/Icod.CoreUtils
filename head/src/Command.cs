@@ -11,7 +11,7 @@ using System.Text;
 /// head: output the first part of files.
 /// Supports: -n N	print first N lines (default 10)
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;

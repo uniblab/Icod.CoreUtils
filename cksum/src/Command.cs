@@ -11,7 +11,7 @@ using Icod.CoreUtils.Shared;
 /// <summary>
 /// cksum: compute CRC-32 and file length. Outputs: "&lt;crc&gt; &lt;length&gt; &lt;filename&gt;"."
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;

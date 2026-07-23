@@ -13,7 +13,7 @@ using System.Text;
 /// tail: output the last part of files.
 /// Supports: -n N (lines; default 10)
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdin ??= Console.In;
 		stdout ??= Console.Out;

@@ -12,7 +12,7 @@ using System.Text;
 /// Supports: -t o (octal bytes), -t x (hex 2-byte), -t c (ASCII chars)
 /// Default: octal bytes.
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;

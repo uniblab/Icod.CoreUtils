@@ -10,7 +10,7 @@ using System.Text;
 /// Credit: Colin Plumb.
 /// Usage: shred [-n passes] [-u] file
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, System.IO.TextReader? stdin = null, System.IO.TextWriter? stdout = null, System.IO.TextWriter? stderr = null ) {
 		stderr ??= Console.Error;
 		if ( args.Length == 0 ) {

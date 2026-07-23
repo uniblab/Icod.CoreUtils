@@ -12,7 +12,7 @@ using System.Collections.Generic;
 /// paste: merge lines of files horizontally.
 /// Usage: paste [-d delim] file...
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;

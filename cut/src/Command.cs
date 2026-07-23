@@ -17,7 +17,7 @@ using System.Linq;
 ///   -f list (fields) with -d delimiter (default TAB)
 /// Only one of -b, -c, -f may be specified.
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;

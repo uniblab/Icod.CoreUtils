@@ -69,7 +69,7 @@ public static class Command {
 					var linkPath = Path.Combine( targetDir, name );
 					if ( force && File.Exists( linkPath ) )
 						File.Delete( linkPath );
-					CreateLink( src, linkPath, symbolic, verbose, stderr, stdout );
+					CreateLink( src, linkPath, symbolic, stderr, stdout );
 				}
 				return 0;
 			}
@@ -96,7 +96,7 @@ public static class Command {
 					var linkPath = Path.Combine( destDir, Path.GetFileName( src )! );
 					if ( force && File.Exists( linkPath ) )
 						File.Delete( linkPath );
-					CreateLink( src, linkPath, symbolic, verbose, stderr, stdout );
+					CreateLink( src, linkPath, symbolic, stderr, stdout );
 				}
 				return 0;
 			}
@@ -109,11 +109,11 @@ public static class Command {
 				var linkPath = Path.Combine( linkName, Path.GetFileName( sourcePath )! );
 				if ( force && File.Exists( linkPath ) )
 					File.Delete( linkPath );
-				CreateLink( sourcePath, linkPath, symbolic, verbose, stderr, stdout );
+				CreateLink( sourcePath, linkPath, symbolic, stderr, stdout );
 			} else {
 				if ( force && File.Exists( linkName ) )
 					File.Delete( linkName );
-				CreateLink( sourcePath, linkName, symbolic, verbose, stderr, stdout );
+				CreateLink( sourcePath, linkName, symbolic, stderr, stdout );
 			}
 
 			return 0;

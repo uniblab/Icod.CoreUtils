@@ -11,7 +11,7 @@ using System.Collections.Generic;
 /// <summary>
 /// realpath: canonicalize by following every symlink in every component of the given path (best-effort).
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;

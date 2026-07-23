@@ -13,7 +13,7 @@ using Icod.CoreUtils.Shared;
 /// Supported flags (subset): -n (number all lines), -b (number nonempty lines),
 /// -E (display $ at end of each line), -T (display TAB as ^I), -s (squeeze repeated empty lines)
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdin ??= Console.In;
 		stdout ??= Console.Out;

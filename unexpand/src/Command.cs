@@ -14,7 +14,7 @@ using System.Text;
 ///   -t N   tab stops (default 8)
 /// Reads files or stdin.
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdin ??= Console.In;
 		stdout ??= Console.Out;

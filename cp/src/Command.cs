@@ -9,7 +9,7 @@ using System.IO;
 /// <summary>
 /// cp: simple copy. Supports -r for recursive directories.
 /// </summary>
-public static partial class Command {
+public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;

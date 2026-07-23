@@ -22,7 +22,7 @@ using System.Security.Principal;
 ///   -l	print each group on its own line
 ///   -?	display this help/usage text
 /// </summary>
-public static partial class Command {
+public static class Command {
 
 	private const System.Char SPACE = ' ';
 	private const System.Char TAB = '\t';
