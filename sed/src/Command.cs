@@ -20,7 +20,7 @@ using System.Diagnostics.CodeAnalysis;
 /// Multiple -e accepted; first script applied if none specified.
 /// This is a small, portable subset for common use cases.
 /// </summary>
-public static class Command
+public static partial class Command
 {
 	[GeneratedRegex(@"^s/(?<old>.*?)/(?<new>.*?)/(?<flags>.*)$")]
 	private static partial Regex SubstWithFlagsRegex();

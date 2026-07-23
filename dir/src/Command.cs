@@ -56,7 +56,7 @@ public static class Command {
 					var opts = new EnumerationOptions { RecurseSubdirectories = false };
 					foreach ( var e in Directory.EnumerateFileSystemEntries( p ) ) {
 						var name = Path.GetFileName( e ) ?? e;
-						if ( !showAll && name.StartsWith( "." ) ) {
+						if ( !showAll && name.StartsWith( '.' ) ) {
 							continue;
 						}
 						entries.Add( name );

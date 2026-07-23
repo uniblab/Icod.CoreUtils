@@ -7,8 +7,8 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<OutputPath>..\bin\$(Configuration)\</OutputPath>
-		<AssemblyName>uplink</AssemblyName>
-		<RootNamespace>Icod.CoreUtils.Uplink</RootNamespace>
+		<AssemblyName>unlink</AssemblyName>
+		<RootNamespace>Icod.CoreUtils.Unlink</RootNamespace>
 	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Shared\Icod.CoreUtils.Shared.csproj" />

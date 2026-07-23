@@ -8,75 +8,81 @@ using System.IO;
 using System.Text;
 
 /// <summary>
-/// echo: display a line of text
-/// Supported options: -n (no trailing newline), -e (enable backslash escapes)
+/// Minimal `echo` supporting -n (no newline) and -e (interpret backslash escapes).
 /// </summary>
 public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
+		stdin ??= Console.In;
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;
 
 		var noNewline = false;
-		var enableEscapes = false;
-		var i = 0;
-		for ( ; i < args.Length; i++ ) {
-			if ( !args[ i ].StartsWith( '-' ) ) {
-				break;
-			}
-
+		var interpret = false;
+		var start = 0;
+		for ( var i = 0; i < args.Length; i++ ) {
 			if ( args[ i ] == "-n" ) {
 				noNewline = true;
-			} else if ( args[ i ] == "-e" ) {
-				enableEscapes = true;
-			} else {
-				break;
+				start++;
+				continue;
 			}
+			if ( args[ i ] == "-e" ) {
+				interpret = true;
+				start++;
+				continue;
+			}
+			if ( args[ i ] == "-E" ) {
+				interpret = false;
+				start++;
+				continue;
+			}
+			break;
 		}
 
-		var rem = new System.Collections.Generic.List<string>();
-		for ( ; i < args.Length; i++ ) {
-			rem.Add( args[ i ] );
-		}
-
-		var output = string.Join( " ", rem );
-		if ( enableEscapes ) {
-			output = UnescapeCStyle( output );
-		}
-
-		if ( noNewline ) {
-			stdout.Write( output );
-		} else {
-			stdout.WriteLine( output );
-		}
-
+		var parts = args.Length > start ? args[ start.. ] : Array.Empty<string>();
+		var s = string.Join( " ", parts );
+		if ( interpret )
+			s = InterpretEscapes( s );
+		if ( noNewline )
+			stdout.Write( s );
+		else
+			stdout.WriteLine( s );
 		return 0;
 	}
 
-	private static string UnescapeCStyle( string s ) {
-		var sb = new StringBuilder( s.Length );
+	private static string InterpretEscapes( string s ) {
+		var sb = new StringBuilder();
 		for ( var i = 0; i < s.Length; i++ ) {
-			var c = s[ i ];
-			if ( c == '\\' && i + 1 < s.Length ) {
+			if ( s[ i ] == '\\' && i + 1 < s.Length ) {
 				i++;
-				var n = s[ i ];
-				if ( n == 'n' ) {
-					sb.Append( '\n' );
-				} else if ( n == 't' ) {
-					sb.Append( '\t' );
-				} else if ( n == 'r' ) {
-					sb.Append( '\r' );
-				} else if ( n == '0' ) {
-					sb.Append( '\0' );
-				} else if ( n == '\\' ) {
-					sb.Append( '\\' );
-				} else {
-					sb.Append( n );
+				switch ( s[ i ] ) {
+					case 'n':
+						sb.Append( '\n' );
+						break;
+					case 't':
+						sb.Append( '\t' );
+						break;
+					case 'r':
+						sb.Append( '\r' );
+						break;
+					case '\\':
+						sb.Append( '\\' );
+						break;
+					case 'a':
+						sb.Append( '\a' );
+						break;
+					case 'b':
+						sb.Append( '\b' );
+						break;
+					case '0':
+						sb.Append( '\0' );
+						break;
+					default:
+						sb.Append( s[ i ] );
+						break;
 				}
-			} else {
-				sb.Append( c );
-			}
+			} else
+				sb.Append( s[ i ] );
 		}
-
 		return sb.ToString();
 	}
 }

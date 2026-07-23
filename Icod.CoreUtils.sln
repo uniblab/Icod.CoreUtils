@@ -403,9 +403,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tsort", "tsort", "{E01A64D2
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.TSort", "tsort\Icod.CoreUtils.TSort.csproj", "{13F20C3A-863B-4165-91F6-08548EADC02B}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "uplink", "uplink", "{0319F135-B0A2-92FB-C06C-DF073EBC8CE1}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "unlink", "unlink", "{0319F135-B0A2-92FB-C06C-DF073EBC8CE1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Uplink", "uplink\Icod.CoreUtils.Uplink.csproj", "{E9E2211C-DEFA-4440-BB2D-F883059D7823}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Unlink", "unlink\Icod.CoreUtils.Unlink.csproj", "{E9E2211C-DEFA-4440-BB2D-F883059D7823}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "users", "users", "{A10C4C97-C1A1-C462-9A04-F253A6FEFC1E}"
 EndProject

@@ -10,17 +10,33 @@ using System.Runtime.InteropServices;
 using System.Text;
 
 /// <summary>
-/// chcon: change file SELinux security context wrapper.
-/// This implementation delegates to the system `chcon` when available on Unix-like systems.
-/// On Windows the operation is not supported and an error is returned.
-/// Supported options:
-///   -v, --verbose    print changed files (delegated behavior)
-///   -? --help        display this help and exit
+/// chcon: change file security context (SELinux) by delegating to the platform `chcon`.
+/// Supported options (delegated to system `chcon`):
+///   -v, --verbose        explain what is being done
+///   -R, --recursive      operate on files and directories recursively
+///   --reference=RFILE    use RFILE's context instead of CONTEXT
+///   -t TYPE              set SELinux file type to TYPE
+///   -u USER              set SELinux user to USER
+///   -r ROLE              set SELinux role to ROLE
+///   -h                   affect symbolic link itself (where supported)
+///   -?, --help           display this help and exit
 /// Usage:
-///   chcon CONTEXT FILE...
-/// Note: this is a minimal wrapper that calls out to the platform `chcon` binary.
+///   chcon [OPTION]... CONTEXT FILE...
+/// Notes:
+///   This implementation is a safe wrapper that invokes the system `chcon` on Unix-like systems.
+///   On Windows an error is returned because SELinux contexts are not supported.
 /// </summary>
 public static class Command {
+
+	private const System.Char SPACE = ' ';
+	private const System.Char TAB = '\t';
+	private const System.Char DQUOTE = '\"';
+	private static readonly System.Char[] SPACE_TAB_DQUOTE;
+
+	static Command() {
+		SPACE_TAB_DQUOTE = new[] { SPACE, TAB, DQUOTE };
+	}
+
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;
@@ -30,9 +46,9 @@ public static class Command {
 			return 1;
 		}
 
-		// handle help
+		// handle help quickly
 		foreach ( var a in args ) {
-			if ( a is "-?" or "--help" ) {
+			if ( a == "-?" || a == "--help" ) {
 				PrintUsage( stdout );
 				return 0;
 			}
@@ -43,50 +59,42 @@ public static class Command {
 			return 1;
 		}
 
-		// Ensure `chcon` is available on PATH
-		var chconExe = "chcon";
+		// Verify `chcon` exists by attempting to run it with --version (best-effort)
 		try {
-			var psiCheck = new ProcessStartInfo {
-				FileName = chconExe,
+			var check = new ProcessStartInfo {
+				FileName = "chcon",
 				Arguments = "--version",
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
 				UseShellExecute = false,
 				CreateNoWindow = true
 			};
-
-			using ( var p = Process.Start( psiCheck ) ) {
-				if ( p is null ) {
-					stderr.WriteLine( "chcon: unable to start chcon" );
-					return 1;
-				}
+			using ( var p = Process.Start( check ) ) {
+				if ( p is null )
+					throw new InvalidOperationException( "unable to start 'chcon'" );
+				// allow non-zero exit; presence is the more important check
 				p.WaitForExit();
-				if ( p.ExitCode != 0 ) {
-					// still allow: some platforms may not support --version; fallback to existence check below
-				}
 			}
 		} catch {
-			// chcon not found or cannot be executed
 			stderr.WriteLine( "chcon: system 'chcon' not found or not executable" );
 			return 1;
 		}
 
 		// Build argument string preserving quoting for arguments that contain spaces
-		var quotedArgs = new List<string>();
+		var quoted = new List<string>();
 		foreach ( var a in args ) {
 			if ( string.IsNullOrEmpty( a ) )
 				continue;
-			if ( a.IndexOfAny( new[] { ' ', '\t', '"' } ) >= 0 ) {
-				quotedArgs.Add( $"\"{a.Replace( "\"", "\\\"" )}\"" );
+			if ( a.IndexOfAny( SPACE_TAB_DQUOTE ) >= 0 ) {
+				quoted.Add( $"\"{a.Replace( "\"", "\\\"" )}\"" );
 			} else {
-				quotedArgs.Add( a );
+				quoted.Add( a );
 			}
 		}
-
-		var argString = string.Join( " ", quotedArgs );
+		var argString = string.Join( " ", quoted );
 
 		var psi = new ProcessStartInfo {
-			FileName = chconExe,
+			FileName = "chcon",
 			Arguments = argString,
 			RedirectStandardOutput = true,
 			RedirectStandardError = true,
@@ -95,13 +103,13 @@ public static class Command {
 		};
 
 		try {
-			using var proc = Process.Start( psi ) ?? throw new InvalidOperationException( "failed to start chcon" );
-			// forward output
-			var stdoutTask = proc.StandardOutput.BaseStream.CopyToAsync( Console.OpenStandardOutput() );
-			var stderrTask = proc.StandardError.BaseStream.CopyToAsync( Console.OpenStandardError() );
+			using var proc = Process.Start( psi ) ?? throw new InvalidOperationException( "failed to start 'chcon'" );
+			// forward stdout and stderr to the provided writers
+			var outTask = proc.StandardOutput.BaseStream.CopyToAsync( Console.OpenStandardOutput() );
+			var errTask = proc.StandardError.BaseStream.CopyToAsync( Console.OpenStandardError() );
 			proc.WaitForExit();
-			stdoutTask.Wait();
-			stderrTask.Wait();
+			outTask.Wait();
+			errTask.Wait();
 			return proc.ExitCode;
 		} catch ( Exception ex ) {
 			stderr.WriteLine( $"chcon: execution failed: {ex.Message}" );
@@ -111,7 +119,13 @@ public static class Command {
 
 	private static void PrintUsage( TextWriter stdout ) {
 		stdout.WriteLine( "Usage: chcon [OPTION]... CONTEXT FILE..." );
-		stdout.WriteLine( "  -v, --verbose    print verbose information" );
-		stdout.WriteLine( "  -?, --help       display this help and exit" );
+		stdout.WriteLine( "  -v, --verbose        explain what is being done" );
+		stdout.WriteLine( "  -R, --recursive      operate on files and directories recursively" );
+		stdout.WriteLine( "  --reference=RFILE    use RFILE's context instead of CONTEXT" );
+		stdout.WriteLine( "  -t TYPE              set SELinux file type to TYPE" );
+		stdout.WriteLine( "  -u USER              set SELinux user to USER" );
+		stdout.WriteLine( "  -r ROLE              set SELinux role to ROLE" );
+		stdout.WriteLine( "  -h                   affect symbolic link itself (where supported)" );
+		stdout.WriteLine( "  -?, --help           display this help and exit" );
 	}
 }

@@ -6,85 +6,75 @@ namespace Icod.CoreUtils.Cksum;
 using System;
 using System.IO;
 using System.Text;
-using Icod.CoreUtils.Shared;
 
+// TODO: expose as service in CoreUtils.Common
+// TODO: augment with other checksums (MD5, SHA*, etc.)
 /// <summary>
-/// cksum: compute CRC-32 and file length. Outputs: "&lt;crc&gt; &lt;length&gt; &lt;filename&gt;"."
+/// Compute CRC-32 (IEEE) checksum and length in bytes, similar to POSIX `cksum`.
 /// </summary>
 public static class Command {
+	private static readonly uint[] Table = CreateTable();
+
+	private static uint[] CreateTable() {
+		const uint poly = 0xEDB88320u;
+		var t = new uint[ 256 ];
+		for ( uint i = 0; i < 256; i++ ) {
+			var r = i;
+			for ( var j = 0; j < 8; j++ ) {
+				if ( ( r & 1 ) != 0 )
+					r = ( r >> 1 ) ^ poly;
+				else
+					r >>= 1;
+			}
+
+			t[ i ] = r;
+		}
+
+		return t;
+	}
+
+	/// <summary>
+	/// cksum: compute CRC-32 and file length. Outputs: "&lt;crc&gt; &lt;length&gt; &lt;filename&gt;"."
+	/// </summary>
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
+		stdin ??= Console.In;
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;
 
-		if ( args.Length == 0 ) {
-			try {
-				using var ms = new MemoryStream();
-				Console.OpenStandardInput().CopyTo( ms );
-				var data = ms.ToArray();
-				var crc = Crc32.Compute( data );
-				stdout.WriteLine( $"""{crc} {data.Length} -""" );
-				return 0;
-			} catch ( Exception ex ) {
-				stderr.WriteLine( $"cksum: {ex.Message}" );
-				return 1;
-			}
+		if ( args.Length == 1 && ( args[ 0 ] == "-h" || args[ 0 ] == "--help" ) ) {
+			PrintUsage( stdout );
+			return 0;
 		}
 
-		var exit = 0;
-		foreach ( var path in args ) {
-			if ( path == "-" ) {
-				try {
-					using var ms = new MemoryStream();
-					Console.OpenStandardInput().CopyTo( ms );
-					var data = ms.ToArray();
-					var crc = Crc32.Compute( data );
-					stdout.WriteLine( $"""{crc} {data.Length} -""" );
-				} catch ( Exception ex ) {
-					stderr.WriteLine( $"cksum: -: {ex.Message}" );
-					exit = 1;
+		var files = args.Length == 0 ? new[] { "-" } : args;
+		var exitCode = 0;
+		foreach ( var name in files ) {
+			try {
+				using var stream = name == "-" ? Console.OpenStandardInput() : File.OpenRead( name );
+				var buffer = new byte[ 8192 ];
+				long len = 0;
+				uint crc = 0xFFFFFFFFu;
+				int read;
+				while ( ( read = stream.Read( buffer, 0, buffer.Length ) ) > 0 ) {
+					len += read;
+					for ( var i = 0; i < read; i++ ) {
+						crc = ( crc >> 8 ) ^ Table[ ( crc ^ buffer[ i ] ) & 0xFF ];
+					}
 				}
 
-				continue;
-			}
-
-			try {
-				var bytes = File.ReadAllBytes( path );
-				var crc = Crc32.Compute( bytes );
-				stdout.WriteLine( $"""{crc} {bytes.Length} {path}""" );
+				crc ^= 0xFFFFFFFFu;
+				// cksum prints decimal CRC and decimal length
+				stdout.WriteLine( $"{crc} {len} {( name == "-" ? "-" : name )}" );
 			} catch ( Exception ex ) {
-				stderr.WriteLine( $"cksum: {path}: {ex.Message}" );
-				exit = 1;
+				stderr.WriteLine( $"cksum: {name}: {ex.Message}" );
+				exitCode = 1;
 			}
 		}
 
-		return exit;
+		return exitCode;
 	}
 
-	private static class Crc32 {
-		private static readonly uint[] Table = BuildTable();
-
-		private static uint[] BuildTable() {
-			var table = new uint[ 256 ];
-			const uint poly = 0xEDB88320u;
-			for ( uint i = 0; i < 256; i++ ) {
-				var crc = i;
-				for ( var j = 0; j < 8; j++ ) {
-					crc = ( crc & 1 ) != 0 ? ( poly ^ ( crc >> 1 ) ) : ( crc >> 1 );
-				}
-
-				table[ i ] = crc;
-			}
-
-			return table;
-		}
-
-		public static uint Compute( byte[] buffer ) {
-			var crc = 0xFFFFFFFFu;
-			foreach ( var b in buffer ) {
-				crc = ( crc >> 8 ) ^ Table[ ( crc ^ b ) & 0xFFu ];
-			}
-
-			return crc ^ 0xFFFFFFFFu;
-		}
+	private static void PrintUsage( TextWriter stdout ) {
+		stdout.WriteLine( "Usage: cksum [FILE]..." );
 	}
 }

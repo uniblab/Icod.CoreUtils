@@ -7,55 +7,98 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Diagnostics.CodeAnalysis;
 
 /// <summary>
-/// date: display or set the system date and time (display only in this port).
-/// Supported options:
-///   -u		   use UTC
-///   +FORMAT	  format using .NET format string (best-effort; not full strftime)
-/// If FORMAT is omitted prints the current date/time in RFC1123 format.
+/// Minimal `date`:
+///   date            print current date/time (local)
+///   date -u         print UTC
+///   date +FORMAT    print using format (supports a subset of strftime: %Y %m %d %H %M %S %F %T)
 /// </summary>
-public static class Command {
-	[GeneratedRegex( "%[aAbBcdHIjmMpSUwWxXyYzZ]" )]
-	private static partial Regex StrftimeTokenRegex();
-
+public static partial class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
+		stdin ??= Console.In;
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;
 
-		var useUtc = false;
+		var utc = false;
 		string? format = null;
 		foreach ( var a in args ) {
 			if ( a == "-u" ) {
-				useUtc = true;
-			} else if ( a.StartsWith( '+' ) ) {
-				format = a.Substring( 1 );
-			} else {
-				// ignore unknown args for display-only port
+				utc = true;
+				continue;
 			}
+			if ( a == "-h" || a == "--help" ) {
+				PrintUsage( stdout );
+				return 0;
+			}
+			if ( a.StartsWith( '+' ) )
+				format = a.Substring( 1 );
 		}
 
+		var now = utc ? DateTime.UtcNow : DateTime.Now;
 		try {
-			var now = useUtc ? DateTime.UtcNow : DateTime.Now;
 			if ( string.IsNullOrEmpty( format ) ) {
-				stdout.WriteLine( now.ToString( "r", CultureInfo.InvariantCulture ) );
+				// default: RFC1123-ish but similar to GNU date default
+				stdout.WriteLine( now.ToString( "ddd MMM dd HH:mm:ss yyyy", CultureInfo.InvariantCulture ) );
 				return 0;
 			}
 
-			// Sanitize simple format tokens to .NET where possible.
-			// This port accepts .NET format strings directly; warn if tokens look like strftime.
-			if ( StrftimeTokenRegex().IsMatch( format ) ) {
-				// user likely provided strftime; attempt basic replacements for common tokens
-				format = format.Replace( "%Y", "yyyy" ).Replace( "%m", "MM" ).Replace( "%d", "dd" ).Replace( "%H", "HH" ).Replace( "%M", "mm" ).Replace( "%S", "ss" );
-			}
-
-			stdout.WriteLine( now.ToString( format, CultureInfo.InvariantCulture ) );
+			var netFormat = ConvertStrftimeToDotNet( format );
+			var outText = now.ToString( netFormat, CultureInfo.InvariantCulture );
+			stdout.WriteLine( outText );
 			return 0;
 		} catch ( Exception ex ) {
 			stderr.WriteLine( $"date: {ex.Message}" );
 			return 1;
 		}
+	}
+
+	private static string ConvertStrftimeToDotNet( string fmt ) {
+		// Handle a small subset of strftime specifiers
+		var sb = new StringBuilder();
+		for ( var i = 0; i < fmt.Length; i++ ) {
+			if ( fmt[ i ] == '%' && i + 1 < fmt.Length ) {
+				i++;
+				var c = fmt[ i ];
+				switch ( c ) {
+					case 'Y':
+						sb.Append( "yyyy" );
+						break;
+					case 'm':
+						sb.Append( "MM" );
+						break;
+					case 'd':
+						sb.Append( "dd" );
+						break;
+					case 'H':
+						sb.Append( "HH" );
+						break;
+					case 'M':
+						sb.Append( "mm" );
+						break;
+					case 'S':
+						sb.Append( "ss" );
+						break;
+					case 'F':
+						sb.Append( "yyyy-MM-dd" );
+						break;
+					case 'T':
+						sb.Append( "HH:mm:ss" );
+						break;
+					default:
+						sb.Append( '%' ).Append( c );
+						break;
+				}
+			} else {
+				sb.Append( fmt[ i ] );
+			}
+		}
+		return sb.ToString();
+	}
+
+	private static void PrintUsage( TextWriter stdout ) {
+		stdout.WriteLine( "Usage: date [-u] [+FORMAT]" );
+		stdout.WriteLine( "  -u    display UTC time" );
+		stdout.WriteLine( "FORMAT supports a subset of strftime (e.g. %Y %m %d %H %M %S %F %T)." );
 	}
 }

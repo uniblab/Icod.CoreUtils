@@ -77,14 +77,14 @@ public static class Command {
 
 			var parts = lines
 				.Select( l => l.Trim() )
-				.Where( l => l.Length > 0 && !l.StartsWith( "#" ) )
+				.Where( l => l.Length > 0 && !l.StartsWith( '#' ) )
 				.ToArray();
 
 			// join with colon to produce LS_COLORS string
 			var sb = new StringBuilder();
 			for ( var i = 0; i < parts.Length; i++ ) {
 				if ( i > 0 )
-					sb.Append( ":" );
+					sb.Append( ':' );
 				sb.Append( parts[ i ] );
 			}
 

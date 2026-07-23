@@ -1,5 +1,5 @@
-// Port of the standard UNIX `sha1sum` utility to .NET
-namespace Icod.CoreUtils.Sha1Sum;
+// Port of the standard UNIX `sha384sum` utility to .NET
+namespace Icod.CoreUtils.Sha384Sum;
 
 using System;
 

@@ -1,5 +1,5 @@
-// Port of the standard UNIX `sha1sum` utility to .NET
-namespace Icod.CoreUtils.Sha1Sum;
+// Port of the standard UNIX `tee` utility to .NET
+namespace Icod.CoreUtils.Tee;
 
 using System;
 

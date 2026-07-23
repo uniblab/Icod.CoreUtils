@@ -4,30 +4,77 @@ namespace Icod.CoreUtils.Sha384Sum;
 
 using System;
 using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 
 /// <summary>
-/// $u: placeholder stub. Prints usage and supports -?/--help.
-/// Replace the implementation with the actual utility behavior.
+/// Compute SHA-384 checksums for files or standard input.
 /// </summary>
 public static class Command {
-    public static int Run(string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null) {
-        stdout ??= Console.Out;
-        stderr ??= Console.Error;
+	private static string ToHex( ReadOnlySpan<byte> bytes ) {
+		var sb = new StringBuilder( bytes.Length * 2 );
+		foreach ( var b in bytes ) {
+			sb.Append( b.ToString( "x2" ) );
+		}
+		return sb.ToString();
+	}
 
-        foreach (var a in args) {
-            if (a == "-?" || a == "--help") {
-                PrintUsage(stdout);
-                return 0;
-            }
-        }
+	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
+		stdin ??= Console.In;
+		stdout ??= Console.Out;
+		stderr ??= Console.Error;
 
-        // TODO: implement sha384sum behavior here.
-        PrintUsage(stdout);
-        return 0;
-    }
+		if ( args.Length == 0 ) {
+			try {
+				using var ms = new MemoryStream();
+				var buffer = new byte[ 8192 ];
+				int read;
+				using var input = Console.OpenStandardInput();
+				while ( ( read = input.Read( buffer, 0, buffer.Length ) ) > 0 )
+					ms.Write( buffer, 0, read );
+				var hash = ComputeSha384( ms.ToArray() );
+				stdout.WriteLine( $"{hash}  -" );
+				return 0;
+			} catch ( Exception ex ) {
+				stderr.WriteLine( $"sha384sum: {ex.Message}" );
+				return 1;
+			}
+		}
 
-    private static void PrintUsage(TextWriter stdout) {
-        stdout.WriteLine($"Usage: sha384sum [-?]");
-        stdout.WriteLine("  -?    display this help and exit");
-    }
+		var exitCode = 0;
+		foreach ( var name in args ) {
+			if ( name == "-" ) {
+				try {
+					using var ms = new MemoryStream();
+					var buffer = new byte[ 8192 ];
+					int read;
+					using var input = Console.OpenStandardInput();
+					while ( ( read = input.Read( buffer, 0, buffer.Length ) ) > 0 )
+						ms.Write( buffer, 0, read );
+					var hash = ComputeSha384( ms.ToArray() );
+					stdout.WriteLine( $"{hash}  -" );
+				} catch ( Exception ex ) {
+					stderr.WriteLine( $"sha384sum: -: {ex.Message}" );
+					exitCode = 1;
+				}
+				continue;
+			}
+
+			try {
+				var data = File.ReadAllBytes( name );
+				var hash = ComputeSha384( data );
+				stdout.WriteLine( $"{hash}  {name}" );
+			} catch ( Exception ex ) {
+				stderr.WriteLine( $"sha384sum: {name}: {ex.Message}" );
+				exitCode = 1;
+			}
+		}
+
+		return exitCode;
+	}
+
+	private static string ComputeSha384( byte[] data ) {
+		var hash = SHA384.HashData( data );
+		return ToHex( hash );
+	}
 }

@@ -8,7 +8,7 @@
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	<OutputPath>..\bin\$(Configuration)\</OutputPath>
 	<AssemblyName>md5sum</AssemblyName>
-	<RootNamespace>Icod.CoreUtils.Md5sum</RootNamespace>
+	<RootNamespace>Icod.CoreUtils.MD5Sum</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
 	<ProjectReference Include="..\Shared\Icod.CoreUtils.Shared.csproj" />

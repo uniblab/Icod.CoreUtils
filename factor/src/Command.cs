@@ -35,7 +35,7 @@ public static class Command {
 
 		var exitCode = 0;
 		foreach ( var token in inputs ) {
-			if ( token.StartsWith( "#" ) || string.IsNullOrWhiteSpace( token ) )
+			if ( token.StartsWith( '#' ) || string.IsNullOrWhiteSpace( token ) )
 				continue;
 			if ( !BigInteger.TryParse( token, out var n ) || n < 0 ) {
 				stderr.WriteLine( $"factor: invalid number: {token}" );

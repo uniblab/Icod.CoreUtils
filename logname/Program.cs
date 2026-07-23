@@ -1,5 +1,5 @@
-// Port of the standard UNIX `sha1sum` utility to .NET
-namespace Icod.CoreUtils.Sha1Sum;
+// Port of the standard UNIX `logname` utility to .NET
+namespace Icod.CoreUtils.LogName;
 
 using System;
 

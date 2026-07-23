@@ -1,5 +1,5 @@
-// Port of the standard UNIX `sha1sum` utility to .NET
-namespace Icod.CoreUtils.Sha1Sum;
+// Minimal port of the UNIX `users` utility to .NET (best-effort).
+namespace Icod.CoreUtils.Users;
 
 using System;
 

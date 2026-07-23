@@ -1,5 +1,5 @@
-// Port of the standard UNIX `sha1sum` utility to .NET
-namespace Icod.CoreUtils.Sha1Sum;
+// Port of the standard UNIX `unlink` utility to .NET
+namespace Icod.CoreUtils.Unlink;
 
 using System;
 

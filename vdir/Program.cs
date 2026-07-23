@@ -1,5 +1,5 @@
-// Port of the standard UNIX `sha1sum` utility to .NET
-namespace Icod.CoreUtils.Sha1Sum;
+// Minimal port of the UNIX `vdir` utility to .NET (prints long listing similar to `ls -l`).
+namespace Icod.CoreUtils.Vdir;
 
 using System;
 

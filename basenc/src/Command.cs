@@ -105,7 +105,7 @@ public static class Command {
 					}
 
 					var encoded = Convert.ToBase64String( data );
-					stdout.WriteLine( encoded );
+					stdout!.WriteLine( encoded );
 				}
 			} catch ( Exception ex ) {
 				stderr.WriteLine( $"basenc: {path}: {ex.Message}" );

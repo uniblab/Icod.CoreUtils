@@ -4,58 +4,87 @@
 namespace Icod.CoreUtils.Env;
 
 using System;
-using System.IO;
 using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Text;
 
 /// <summary>
-/// env: print or modify the environment.
-/// Behavior: with no arguments prints current environment variables.
-/// If one or more NAME=VALUE assignments are provided without a command, sets them in the current process and prints environment.
-/// Running arbitrary commands is not implemented in this BCL-only port.
+/// Minimal `env`:
+///  - print environment when run with no command or only assignments
+///  - support KEY=VALUE assignments followed by COMMAND to run with modified environment
 /// </summary>
 public static class Command {
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
+		stdin ??= Console.In;
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;
 
-		var assignments = new System.Collections.Generic.List<string>();
-		var rem = new System.Collections.Generic.List<string>();
-		foreach ( var a in args ) {
+		if ( args.Length == 0 ) {
+			PrintEnvironment( stdout );
+			return 0;
+		}
+
+		var assignments = new Dictionary<string, string>( StringComparer.Ordinal );
+		var i = 0;
+		for ( ; i < args.Length; i++ ) {
+			var a = args[ i ];
 			if ( a.Contains( '=' ) ) {
-				assignments.Add( a );
-			} else {
-				rem.Add( a );
-			}
+				var idx = a.IndexOf( '=' );
+				var k = a.Substring( 0, idx );
+				var v = a.Substring( idx + 1 );
+				assignments[ k ] = v;
+			} else
+				break;
 		}
 
-		foreach ( var assign in assignments ) {
-			var idx = assign.IndexOf( '=' );
-			if ( idx <= 0 ) {
-				stderr.WriteLine( $"env: invalid assignment '{assign}'" );
+		// no command -> print resulting environment
+		if ( i >= args.Length ) {
+			var env = new Dictionary<string, string>( StringComparer.Ordinal );
+			foreach ( DictionaryEntry de in Environment.GetEnvironmentVariables() )
+				env[ (string)de.Key ] = (string)de.Value!;
+			foreach ( var kv in assignments )
+				env[ kv.Key ] = kv.Value;
+			foreach ( var kv in env.OrderBy( k => k.Key ) )
+				stdout.WriteLine( $"{kv.Key}={kv.Value}" );
+			return 0;
+		}
+
+		// run command with modified environment
+		var cmd = args[ i ];
+		var cmdArgs = args.Length > i + 1 ? string.Join( " ", args[ ( i + 1 ).. ] ) : string.Empty;
+		try {
+			var psi = new ProcessStartInfo {
+				FileName = cmd,
+				Arguments = cmdArgs,
+				UseShellExecute = false,
+				RedirectStandardOutput = false,
+				RedirectStandardError = false,
+				RedirectStandardInput = false,
+				CreateNoWindow = true
+			};
+			// copy current environment and apply assignments
+			foreach ( DictionaryEntry de in Environment.GetEnvironmentVariables() )
+				psi.Environment[ de.Key!.ToString()! ] = de.Value?.ToString() ?? string.Empty;
+			foreach ( var kv in assignments )
+				psi.Environment[ kv.Key ] = kv.Value;
+			using var p = Process.Start( psi );
+			if ( p is null ) {
+				stderr.WriteLine( "env: failed to start command" );
 				return 1;
 			}
-
-			var name = assign.Substring( 0, idx );
-			var value = assign.Substring( idx + 1 );
-			try {
-				Environment.SetEnvironmentVariable( name, value );
-			} catch ( Exception ex ) {
-				stderr.WriteLine( $"env: cannot set '{name}': {ex.Message}" );
-				return 1;
-			}
+			p.WaitForExit();
+			return p.ExitCode;
+		} catch ( Exception ex ) {
+			stderr.WriteLine( $"env: {ex.Message}" );
+			return 1;
 		}
+	}
 
-		if ( rem.Count > 0 ) {
-			// Running commands is not implemented in the BCL-only portable port.
-			stderr.WriteLine( "env: executing commands is not implemented in this port" );
-			throw new NotImplementedException( "env: running external commands is not implemented in BCL-only port." );
-		}
-
-		// Print environment
-		foreach ( DictionaryEntry de in Environment.GetEnvironmentVariables() ) {
+	private static void PrintEnvironment( TextWriter stdout ) {
+		foreach ( DictionaryEntry de in Environment.GetEnvironmentVariables() )
 			stdout.WriteLine( $"{de.Key}={de.Value}" );
-		}
-
-		return 0;
 	}
 }
