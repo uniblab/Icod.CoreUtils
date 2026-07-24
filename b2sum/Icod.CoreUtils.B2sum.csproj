@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
@@ -9,6 +9,9 @@
 		<OutputPath>..\bin\$(Configuration)\</OutputPath>
 		<AssemblyName>b2sum</AssemblyName>
 		<RootNamespace>Icod.CoreUtils.B2Sum</RootNamespace>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
+		<PlatformTarget>AnyCPU</PlatformTarget>
 	</PropertyGroup>
 	<ItemGroup>
 	  <PackageReference Include="Konscious.Security.Cryptography.Blake2" Version="1.1.1" />

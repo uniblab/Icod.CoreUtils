@@ -10,6 +10,9 @@
 		<AssemblyName>stdbuf</AssemblyName>
 		<RootNamespace>Icod.CoreUtils.StdBuf</RootNamespace>
 	</PropertyGroup>
+	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
+		<PlatformTarget>AnyCPU</PlatformTarget>
+	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Shared\Icod.CoreUtils.Shared.csproj" />
 	</ItemGroup>
