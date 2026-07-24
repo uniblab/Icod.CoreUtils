@@ -19,13 +19,14 @@ using System.Text.RegularExpressions;
 /// Script forms supported (subset):
 ///   s/old/new/g   substitute (supports regex) with optional g flag
 ///   N i TEXT      insert TEXT before line N (example: "1i this is foo")
+///   N r FILE      read FILE and append its contents after line N (example: "2r file.txt")
 /// Multiple -e accepted; first script applied if none specified.
 /// This is a small, portable subset for common use cases.
 /// </summary>
 public static class Command {
 	private sealed class Script {
 		public enum KindT {
-			Substitute, Insert
+			Substitute, Insert, Read
 		}
 
 		public KindT Kind {
@@ -46,14 +47,18 @@ public static class Command {
 		public int LineNumber {
 			get;
 		}
+		public string? FileName {
+			get;
+		}
 
-		private Script( KindT k, string? text = null, string? pattern = null, string? replacement = null, string? flags = null, int lineNumber = 0 ) {
+		private Script( KindT k, string? text = null, string? pattern = null, string? replacement = null, string? flags = null, int lineNumber = 0, string? fileName = null ) {
 			Kind = k;
 			Text = text;
 			Pattern = pattern;
 			Replacement = replacement;
 			Flags = flags;
 			LineNumber = lineNumber;
+			FileName = fileName;
 		}
 
 		public static Script Subst( string pattern, string replacement, string? flags ) =>
@@ -61,6 +66,9 @@ public static class Command {
 
 		public static Script Insert( int lineNumber, string text ) =>
 			new Script( KindT.Insert, text: text, lineNumber: lineNumber );
+
+		public static Script Read( int lineNumber, string fileName ) =>
+			new Script( KindT.Read, lineNumber: lineNumber, fileName: fileName );
 	}
 
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
@@ -73,6 +81,7 @@ public static class Command {
 		var files = new List<string>();
 		var inPlace = false;
 		string? backupSuffix = null;
+		var exitCode = 0;
 
 		int i = 0;
 		for ( ; i < args.Length; i++ ) {
@@ -107,30 +116,21 @@ public static class Command {
 		}
 
 		// If no -e scripts provided, GNU sed treats first non-option arg as the script.
-		// Handle both single-argument scripts ("1i this") and split forms where the insert token
-		// ("1i") and the text are separate args (common on some shells / careless usage).
+		// Handle single-argument script and split forms (Ni TEXT, Nr FILE).
 		if ( scripts.Count == 0 && files.Count > 0 ) {
 			var candidate = files[ 0 ];
 
-			// Case: script provided as single arg (e.g. "1i this is foo" or "s/old/new/")
-			if ( candidate.StartsWith( "s/" ) || Regex.IsMatch( candidate, @"^[0-9]+i\b" ) ) {
-				// If the candidate is of form "Ni" with no text (e.g. "1i") and there are additional
-				// tokens, attempt to assemble the insert text from middle tokens and treat the last
-				// token as filename (common when users forget to quote). Only do this when there
-				// are at least three tokens (script-start, text..., filename).
-				var simpleInsertOnly = Regex.IsMatch( candidate, @"^[0-9]+i$" );
-				if ( simpleInsertOnly && files.Count >= 3 ) {
-					// join all tokens between the "Ni" token and the final token as the insert text
+			if ( candidate.StartsWith( "s/" ) || Regex.IsMatch( candidate, @"^[0-9]+[ir]\b" ) ) {
+				var simpleOnly = Regex.IsMatch( candidate, @"^[0-9]+[ir]$" );
+				if ( simpleOnly && files.Count >= 3 ) {
+					// assemble middle tokens as script payload, last token is filename (target)
 					var middle = string.Join( " ", files.GetRange( 1, files.Count - 2 ) );
 					var scriptText = candidate + " " + middle;
 					ParseAndAddScript( scriptText, scripts );
-					// remaining files are just the last token (filename). If user intended multiple files,
-					// they should quote the script; this heuristic is pragmatic.
 					var last = files[ files.Count - 1 ];
 					files.Clear();
 					files.Add( last );
 				} else {
-					// Normal single-argument script
 					ParseAndAddScript( candidate, scripts );
 					files.RemoveAt( 0 );
 				}
@@ -169,13 +169,14 @@ public static class Command {
 						int lineNo = 1;
 						string? line;
 						while ( ( line = reader.ReadLine() ) is not null ) {
-							// handle insert scripts: print inserted text(s) before the current line
+							// insert scripts: before current line
 							foreach ( var sc in scripts ) {
 								if ( sc.Kind == Script.KindT.Insert && sc.LineNumber == lineNo ) {
 									writer.WriteLine( sc.Text );
 								}
 							}
 
+							// apply substitutions
 							var outLine = line;
 							foreach ( var sc in scripts ) {
 								if ( sc.Kind == Script.KindT.Substitute ) {
@@ -191,11 +192,26 @@ public static class Command {
 							if ( !suppress ) {
 								writer.WriteLine( outLine );
 							}
+
+							// read-file scripts: append file contents AFTER the current line
+							foreach ( var sc in scripts ) {
+								if ( sc.Kind == Script.KindT.Read && sc.LineNumber == lineNo ) {
+									try {
+										using var rf = new StreamReader( sc.FileName ?? string.Empty, Encoding.UTF8 );
+										string? rline;
+										while ( ( rline = rf.ReadLine() ) is not null ) {
+											writer.WriteLine( rline );
+										}
+									} catch ( Exception ex ) {
+										stderr.WriteLine( $"sed: {sc.FileName}: {ex.Message}" );
+										exitCode = 1;
+									}
+								}
+							}
+
 							lineNo++;
 						}
 
-						// If any insert command targets a line after EOF (e.g. N > last line),
-						// we do not attempt to emulate sed 'i' after EOF. (Simple behavior.)
 						writer.Flush();
 					}
 
@@ -215,7 +231,7 @@ public static class Command {
 						int lineNo = 1;
 						string? line;
 						while ( ( line = reader.ReadLine() ) is not null ) {
-							// insert scripts write even when -n is specified
+							// insert scripts write before the current line
 							foreach ( var sc in scripts ) {
 								if ( sc.Kind == Script.KindT.Insert && sc.LineNumber == lineNo ) {
 									stdout.WriteLine( sc.Text );
@@ -237,13 +253,30 @@ public static class Command {
 							if ( !suppress ) {
 								stdout.WriteLine( outLine );
 							}
+
+							// read-file scripts append file contents after the current line
+							foreach ( var sc in scripts ) {
+								if ( sc.Kind == Script.KindT.Read && sc.LineNumber == lineNo ) {
+									try {
+										using var rf = new StreamReader( sc.FileName ?? string.Empty, Encoding.UTF8 );
+										string? rline;
+										while ( ( rline = rf.ReadLine() ) is not null ) {
+											stdout.WriteLine( rline );
+										}
+									} catch ( Exception ex ) {
+										stderr.WriteLine( $"sed: {sc.FileName}: {ex.Message}" );
+										exitCode = 1;
+									}
+								}
+							}
+
 							lineNo++;
 						}
 					}
 				}
 			}
 
-			return 0;
+			return exitCode;
 		} catch ( Exception ex ) {
 			stderr.WriteLine( $"sed: {ex.Message}" );
 			return 1;
@@ -251,7 +284,7 @@ public static class Command {
 	}
 
 	private static void ParseAndAddScript( string scriptText, List<Script> scripts ) {
-		// attempt substitution parse first
+		// substitution
 		var m = Regex.Match( scriptText, @"^s/(?<old>.*?)/(?<new>.*?)/(?<flags>.*)$" );
 		if ( !m.Success ) {
 			m = Regex.Match( scriptText, @"^s/(?<old>.*?)/(?<new>.*)$" );
@@ -260,25 +293,33 @@ public static class Command {
 			var oldPat = m.Groups[ "old" ].Value;
 			var newText = m.Groups[ "new" ].Value;
 			var flags = m.Groups[ "flags" ].Success ? m.Groups[ "flags" ].Value : string.Empty;
-			// support \n \r \t and \\ escapes in replacement text
 			newText = UnescapeSedString( newText );
 			scripts.Add( Script.Subst( oldPat, newText, flags ) );
 			return;
 		}
 
-		// attempt insert: form "<number>i[ ]TEXT"
+		// insert: "<number>i TEXT"
 		var im = Regex.Match( scriptText, @"^(?<ln>[0-9]+)i(?:\s+)(?<text>.*)$" );
 		if ( im.Success ) {
 			if ( int.TryParse( im.Groups[ "ln" ].Value, out var ln ) ) {
-				var text = im.Groups[ "text" ].Value;
-				// support \n \r \t and \\ escapes in insert text
-				text = UnescapeSedString( text );
+				var text = UnescapeSedString( im.Groups[ "text" ].Value );
 				scripts.Add( Script.Insert( ln, text ) );
 				return;
 			}
 		}
 
-		// unsupported script: ignore (preserve original behavior)
+		// read: "<number>r FILE"
+		var rm = Regex.Match( scriptText, @"^(?<ln>[0-9]+)r(?:\s+)(?<file>.*)$" );
+		if ( rm.Success ) {
+			if ( int.TryParse( rm.Groups[ "ln" ].Value, out var ln ) ) {
+				var file = rm.Groups[ "file" ].Value;
+				// do not unescape filenames
+				scripts.Add( Script.Read( ln, file ) );
+				return;
+			}
+		}
+
+		// unsupported script: ignore
 	}
 
 	private static string UnescapeSedString( string s ) {
@@ -292,10 +333,8 @@ public static class Command {
 				continue;
 			}
 
-			// escape beginning
 			i++;
 			if ( i >= s.Length ) {
-				// trailing backslash, append it
 				sb.Append( '\\' );
 				break;
 			}
@@ -327,7 +366,6 @@ public static class Command {
 					sb.Append( '\v' );
 					break;
 				default:
-					// unknown escape, preserve backslash + char
 					sb.Append( '\\' );
 					sb.Append( esc );
 					break;
