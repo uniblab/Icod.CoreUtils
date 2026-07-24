@@ -22,21 +22,32 @@ using System.Text.RegularExpressions;
 /// Multiple -e accepted; first script applied if none specified.
 /// This is a small, portable subset for common use cases.
 /// </summary>
-public static class Command
-{
-	private sealed class Script
-	{
-		public enum KindT { Substitute, Insert }
+public static class Command {
+	private sealed class Script {
+		public enum KindT {
+			Substitute, Insert
+		}
 
-		public KindT Kind { get; }
-		public string? Text { get; }
-		public string? Pattern { get; }
-		public string? Replacement { get; }
-		public string? Flags { get; }
-		public int LineNumber { get; }
+		public KindT Kind {
+			get;
+		}
+		public string? Text {
+			get;
+		}
+		public string? Pattern {
+			get;
+		}
+		public string? Replacement {
+			get;
+		}
+		public string? Flags {
+			get;
+		}
+		public int LineNumber {
+			get;
+		}
 
-		private Script( KindT k, string? text = null, string? pattern = null, string? replacement = null, string? flags = null, int lineNumber = 0 )
-		{
+		private Script( KindT k, string? text = null, string? pattern = null, string? replacement = null, string? flags = null, int lineNumber = 0 ) {
 			Kind = k;
 			Text = text;
 			Pattern = pattern;
@@ -52,8 +63,7 @@ public static class Command
 			new Script( KindT.Insert, text: text, lineNumber: lineNumber );
 	}
 
-	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null )
-	{
+	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
 		stdin ??= Console.In;
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;
@@ -65,69 +75,51 @@ public static class Command
 		string? backupSuffix = null;
 
 		int i = 0;
-		for ( ; i < args.Length; i++ )
-		{
+		for ( ; i < args.Length; i++ ) {
 			var a = args[ i ];
-			if ( !a.StartsWith( "-" ) )
-			{
+			if ( !a.StartsWith( "-" ) ) {
 				break;
 			}
 
-			if ( a == "-n" )
-			{
+			if ( a == "-n" ) {
 				suppress = true;
-			}
-			else if ( a == "-e" )
-			{
-				if ( i + 1 < args.Length )
-				{
+			} else if ( a == "-e" ) {
+				if ( i + 1 < args.Length ) {
 					i++;
 					ParseAndAddScript( args[ i ], scripts );
 				}
-			}
-			else if ( a == "-i" )
-			{
+			} else if ( a == "-i" ) {
 				inPlace = true;
 				backupSuffix = string.Empty; // no backup
-			}
-			else if ( a.StartsWith( "-i" ) && a.Length > 2 )
-			{
+			} else if ( a.StartsWith( "-i" ) && a.Length > 2 ) {
 				inPlace = true;
 				backupSuffix = a.Substring( 2 ); // -iSUFFIX
-			}
-			else if ( a == "-?" )
-			{
+			} else if ( a == "-?" ) {
 				PrintUsage( stdout );
 				return 0;
-			}
-			else
-			{
+			} else {
 				// ignore other options
 			}
 		}
 
-		for ( ; i < args.Length; i++ )
-		{
+		for ( ; i < args.Length; i++ ) {
 			files.Add( args[ i ] );
 		}
 
 		// If no -e scripts provided, GNU sed treats first non-option arg as the script.
 		// Handle both single-argument scripts ("1i this") and split forms where the insert token
 		// ("1i") and the text are separate args (common on some shells / careless usage).
-		if ( scripts.Count == 0 && files.Count > 0 )
-		{
+		if ( scripts.Count == 0 && files.Count > 0 ) {
 			var candidate = files[ 0 ];
 
 			// Case: script provided as single arg (e.g. "1i this is foo" or "s/old/new/")
-			if ( candidate.StartsWith( "s/" ) || Regex.IsMatch( candidate, @"^[0-9]+i\b" ) )
-			{
+			if ( candidate.StartsWith( "s/" ) || Regex.IsMatch( candidate, @"^[0-9]+i\b" ) ) {
 				// If the candidate is of form "Ni" with no text (e.g. "1i") and there are additional
 				// tokens, attempt to assemble the insert text from middle tokens and treat the last
 				// token as filename (common when users forget to quote). Only do this when there
 				// are at least three tokens (script-start, text..., filename).
 				var simpleInsertOnly = Regex.IsMatch( candidate, @"^[0-9]+i$" );
-				if ( simpleInsertOnly && files.Count >= 3 )
-				{
+				if ( simpleInsertOnly && files.Count >= 3 ) {
 					// join all tokens between the "Ni" token and the final token as the insert text
 					var middle = string.Join( " ", files.GetRange( 1, files.Count - 2 ) );
 					var scriptText = candidate + " " + middle;
@@ -137,9 +129,7 @@ public static class Command
 					var last = files[ files.Count - 1 ];
 					files.Clear();
 					files.Add( last );
-				}
-				else
-				{
+				} else {
 					// Normal single-argument script
 					ParseAndAddScript( candidate, scripts );
 					files.RemoveAt( 0 );
@@ -147,63 +137,48 @@ public static class Command
 			}
 		}
 
-		if ( scripts.Count == 0 )
-		{
+		if ( scripts.Count == 0 ) {
 			stderr.WriteLine( "sed: no scripts provided" );
 			return 2;
 		}
 
-		if ( files.Count == 0 )
-		{
+		if ( files.Count == 0 ) {
 			files.Add( "-" );
 		}
 
-		try
-		{
-			foreach ( var path in files )
-			{
-				if ( inPlace && path == "-" )
-				{
+		try {
+			foreach ( var path in files ) {
+				if ( inPlace && path == "-" ) {
 					stderr.WriteLine( "sed: cannot edit standard input in-place" );
 					return 2;
 				}
 
 				TextReader reader;
-				if ( path == "-" )
-				{
+				if ( path == "-" ) {
 					reader = stdin;
-				}
-				else
-				{
+				} else {
 					reader = new StreamReader( path, Encoding.UTF8, detectEncodingFromByteOrderMarks: true );
 				}
 
-				if ( inPlace && path != "-" )
-				{
+				if ( inPlace && path != "-" ) {
 					var dir = Path.GetDirectoryName( path ) ?? ".";
 					var tmp = Path.Combine( dir, $".sed.{Path.GetRandomFileName()}.tmp" );
 					using ( reader )
 					using ( var outStream = new FileStream( tmp, FileMode.CreateNew, FileAccess.Write, FileShare.None ) )
-					using ( var writer = new StreamWriter( outStream, ( (StreamReader)reader ).CurrentEncoding ?? Encoding.UTF8 ) )
-					{
+					using ( var writer = new StreamWriter( outStream, ( (StreamReader)reader ).CurrentEncoding ?? Encoding.UTF8 ) ) {
 						int lineNo = 1;
 						string? line;
-						while ( ( line = reader.ReadLine() ) is not null )
-						{
+						while ( ( line = reader.ReadLine() ) is not null ) {
 							// handle insert scripts: print inserted text(s) before the current line
-							foreach ( var sc in scripts )
-							{
-								if ( sc.Kind == Script.KindT.Insert && sc.LineNumber == lineNo )
-								{
+							foreach ( var sc in scripts ) {
+								if ( sc.Kind == Script.KindT.Insert && sc.LineNumber == lineNo ) {
 									writer.WriteLine( sc.Text );
 								}
 							}
 
 							var outLine = line;
-							foreach ( var sc in scripts )
-							{
-								if ( sc.Kind == Script.KindT.Substitute )
-								{
+							foreach ( var sc in scripts ) {
+								if ( sc.Kind == Script.KindT.Substitute ) {
 									var oldPat = sc.Pattern ?? string.Empty;
 									var newText = sc.Replacement ?? string.Empty;
 									var flags = sc.Flags ?? string.Empty;
@@ -213,8 +188,7 @@ public static class Command
 								}
 							}
 
-							if ( !suppress )
-							{
+							if ( !suppress ) {
 								writer.WriteLine( outLine );
 							}
 							lineNo++;
@@ -225,43 +199,32 @@ public static class Command
 						writer.Flush();
 					}
 
-					if ( backupSuffix is not null && backupSuffix.Length > 0 )
-					{
+					if ( backupSuffix is not null && backupSuffix.Length > 0 ) {
 						var bak = path + backupSuffix;
-						if ( File.Exists( bak ) )
-						{
+						if ( File.Exists( bak ) ) {
 							File.Delete( bak );
 						}
 						File.Move( path, bak );
 					}
-					if ( File.Exists( path ) )
-					{
+					if ( File.Exists( path ) ) {
 						File.Delete( path );
 					}
 					File.Move( tmp, path );
-				}
-				else
-				{
-					using ( reader )
-					{
+				} else {
+					using ( reader ) {
 						int lineNo = 1;
 						string? line;
-						while ( ( line = reader.ReadLine() ) is not null )
-						{
+						while ( ( line = reader.ReadLine() ) is not null ) {
 							// insert scripts write even when -n is specified
-							foreach ( var sc in scripts )
-							{
-								if ( sc.Kind == Script.KindT.Insert && sc.LineNumber == lineNo )
-								{
+							foreach ( var sc in scripts ) {
+								if ( sc.Kind == Script.KindT.Insert && sc.LineNumber == lineNo ) {
 									stdout.WriteLine( sc.Text );
 								}
 							}
 
 							var outLine = line;
-							foreach ( var sc in scripts )
-							{
-								if ( sc.Kind == Script.KindT.Substitute )
-								{
+							foreach ( var sc in scripts ) {
+								if ( sc.Kind == Script.KindT.Substitute ) {
 									var oldPat = sc.Pattern ?? string.Empty;
 									var newText = sc.Replacement ?? string.Empty;
 									var flags = sc.Flags ?? string.Empty;
@@ -271,8 +234,7 @@ public static class Command
 								}
 							}
 
-							if ( !suppress )
-							{
+							if ( !suppress ) {
 								stdout.WriteLine( outLine );
 							}
 							lineNo++;
@@ -282,38 +244,35 @@ public static class Command
 			}
 
 			return 0;
-		}
-		catch ( Exception ex )
-		{
+		} catch ( Exception ex ) {
 			stderr.WriteLine( $"sed: {ex.Message}" );
 			return 1;
 		}
 	}
 
-	private static void ParseAndAddScript( string scriptText, List<Script> scripts )
-	{
+	private static void ParseAndAddScript( string scriptText, List<Script> scripts ) {
 		// attempt substitution parse first
 		var m = Regex.Match( scriptText, @"^s/(?<old>.*?)/(?<new>.*?)/(?<flags>.*)$" );
-		if ( !m.Success )
-		{
+		if ( !m.Success ) {
 			m = Regex.Match( scriptText, @"^s/(?<old>.*?)/(?<new>.*)$" );
 		}
-		if ( m.Success )
-		{
+		if ( m.Success ) {
 			var oldPat = m.Groups[ "old" ].Value;
 			var newText = m.Groups[ "new" ].Value;
 			var flags = m.Groups[ "flags" ].Success ? m.Groups[ "flags" ].Value : string.Empty;
+			// support \n \r \t and \\ escapes in replacement text
+			newText = UnescapeSedString( newText );
 			scripts.Add( Script.Subst( oldPat, newText, flags ) );
 			return;
 		}
 
 		// attempt insert: form "<number>i[ ]TEXT"
 		var im = Regex.Match( scriptText, @"^(?<ln>[0-9]+)i(?:\s+)(?<text>.*)$" );
-		if ( im.Success )
-		{
-			if ( int.TryParse( im.Groups[ "ln" ].Value, out var ln ) )
-			{
+		if ( im.Success ) {
+			if ( int.TryParse( im.Groups[ "ln" ].Value, out var ln ) ) {
 				var text = im.Groups[ "text" ].Value;
+				// support \n \r \t and \\ escapes in insert text
+				text = UnescapeSedString( text );
 				scripts.Add( Script.Insert( ln, text ) );
 				return;
 			}
@@ -322,36 +281,83 @@ public static class Command
 		// unsupported script: ignore (preserve original behavior)
 	}
 
-	private static string RegexReplace( string input, string pattern, string replacement, RegexOptions options, int maxReplacements )
-	{
-		try
-		{
-			if ( maxReplacements == -1 )
-			{
+	private static string UnescapeSedString( string s ) {
+		if ( string.IsNullOrEmpty( s ) )
+			return s;
+		var sb = new StringBuilder( s.Length );
+		for ( var i = 0; i < s.Length; i++ ) {
+			var c = s[ i ];
+			if ( c != '\\' ) {
+				sb.Append( c );
+				continue;
+			}
+
+			// escape beginning
+			i++;
+			if ( i >= s.Length ) {
+				// trailing backslash, append it
+				sb.Append( '\\' );
+				break;
+			}
+
+			var esc = s[ i ];
+			switch ( esc ) {
+				case 'n':
+					sb.Append( '\n' );
+					break;
+				case 'r':
+					sb.Append( '\r' );
+					break;
+				case 't':
+					sb.Append( '\t' );
+					break;
+				case '\\':
+					sb.Append( '\\' );
+					break;
+				case 'a':
+					sb.Append( '\a' );
+					break;
+				case 'b':
+					sb.Append( '\b' );
+					break;
+				case 'f':
+					sb.Append( '\f' );
+					break;
+				case 'v':
+					sb.Append( '\v' );
+					break;
+				default:
+					// unknown escape, preserve backslash + char
+					sb.Append( '\\' );
+					sb.Append( esc );
+					break;
+			}
+		}
+		return sb.ToString();
+	}
+
+	private static string RegexReplace( string input, string pattern, string replacement, RegexOptions options, int maxReplacements ) {
+		try {
+			if ( maxReplacements == -1 ) {
 				return Regex.Replace( input, pattern, replacement, options );
 			}
 
 			var regex = new Regex( pattern, options );
 			var count = 0;
-			return regex.Replace( input, m =>
-			{
+			return regex.Replace( input, m => {
 				count++;
-				if ( count <= maxReplacements )
-				{
+				if ( count <= maxReplacements ) {
 					return replacement;
 				}
 
 				return m.Value;
 			} );
-		}
-		catch
-		{
+		} catch {
 			return input;
 		}
 	}
 
-	private static void PrintUsage( TextWriter stdout )
-	{
+	private static void PrintUsage( TextWriter stdout ) {
 		stdout.WriteLine( "Usage: sed [-n] [-e script]... [-i[SUFFIX]] [file...]" );
 		stdout.WriteLine( "  -n           suppress automatic printing of pattern space" );
 		stdout.WriteLine( "  -e script    add the script to the commands to be executed" );
