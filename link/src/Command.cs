@@ -15,7 +15,6 @@ using System.Text;
 ///   -s, --symbolic    create symbolic links instead of hard links
 ///   -f, --force       remove existing destination
 ///   -t DIR            create links in DIR for each SOURCE
-///   -v, --verbose     explain what is being done
 ///   -? --help         display this help and exit
 /// Notes:
 ///   On Unix this wrapper prefers the native `ln` utility when available for full feature parity.
@@ -31,7 +30,6 @@ public static class Command {
 
 		var symbolic = false;
 		var force = false;
-		var verbose = false;
 		var targetDir = (string?)null;
 		var remaining = new List<string>();
 
@@ -46,7 +44,6 @@ public static class Command {
 				continue;
 			}
 			if ( a is "-v" or "--verbose" ) {
-				verbose = true;
 				continue;
 			}
 			if ( a == "-t" && i + 1 < args.Length ) {
