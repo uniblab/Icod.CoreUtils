@@ -10,6 +10,9 @@
 		<AssemblyName>diff</AssemblyName>
 		<RootNamespace>Icod.CoreUtils.Diff</RootNamespace>
 	</PropertyGroup>
+	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
+		<PlatformTarget>AnyCPU</PlatformTarget>
+	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Shared\Icod.CoreUtils.Shared.csproj" />
 	</ItemGroup>

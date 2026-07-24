@@ -10,6 +10,9 @@
 		<AssemblyName>sha224sum</AssemblyName>
 		<RootNamespace>Icod.CoreUtils.Sha224Sum</RootNamespace>
 	</PropertyGroup>
+	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
+		<PlatformTarget>AnyCPU</PlatformTarget>
+	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Shared\Icod.CoreUtils.Shared.csproj" />
 	</ItemGroup>

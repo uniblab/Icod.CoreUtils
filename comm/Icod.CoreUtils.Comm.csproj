@@ -10,6 +10,9 @@
 		<AssemblyName>comm</AssemblyName>
 		<RootNamespace>Icod.CoreUtils.Comm</RootNamespace>
 	</PropertyGroup>
+	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
+		<PlatformTarget>AnyCPU</PlatformTarget>
+	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Shared\Icod.CoreUtils.Shared.csproj" />
 	</ItemGroup>

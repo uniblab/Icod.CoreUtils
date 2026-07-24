@@ -10,6 +10,9 @@
 		<AssemblyName>arch</AssemblyName>
 		<RootNamespace>Icod.CoreUtils.Arch</RootNamespace>
 	</PropertyGroup>
+	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
+		<PlatformTarget>AnyCPU</PlatformTarget>
+	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Shared\Icod.CoreUtils.Shared.csproj" />
 	</ItemGroup>

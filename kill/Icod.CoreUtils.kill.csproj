@@ -10,6 +10,9 @@
 		<AssemblyName>kill</AssemblyName>
 		<RootNamespace>Icod.CoreUtils.Kill</RootNamespace>
 	</PropertyGroup>
+	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
+		<PlatformTarget>AnyCPU</PlatformTarget>
+	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Shared\Icod.CoreUtils.Shared.csproj" />
 	</ItemGroup>
