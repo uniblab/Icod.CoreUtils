@@ -38,7 +38,7 @@ public static class Command {
 				else
 					content = File.ReadAllText( name );
 
-				var tokens = content.Split( (char[])null, StringSplitOptions.RemoveEmptyEntries );
+				var tokens = content.Split( (char[]?)null, StringSplitOptions.RemoveEmptyEntries );
 				if ( tokens.Length % 2 != 0 ) {
 					stderr.WriteLine( "tsort: input contains an odd number of fields" );
 					return 1;
