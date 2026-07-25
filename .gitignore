@@ -18,6 +18,7 @@
 mono_crash.*
 
 # Developer toool
+[Pp]roperties
 [Ss]cripts/
 [Tt]ools
 fs
@@ -26,14 +27,12 @@ fs
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/
-
 [Dd]ebug/x64/
 [Dd]ebugPublic/x64/
 [Rr]elease/x64/
 [Rr]eleases/x64/
 bin/x64/
 obj/x64/
-
 [Dd]ebug/x86/
 [Dd]ebugPublic/x86/
 [Rr]elease/x86/
