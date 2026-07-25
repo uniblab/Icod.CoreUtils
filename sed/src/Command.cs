@@ -26,7 +26,9 @@ using System.Text.RegularExpressions;
 public static class Command {
 	private sealed class Script {
 		public enum KindT {
-			Substitute, Insert, Read
+			Substitute,
+			Insert,
+			Read
 		}
 
 		public KindT Kind {
