@@ -27,7 +27,10 @@ public static class Command {
 		var i = 0;
 		for ( ; i < args.Length; i++ ) {
 			var a = args[ i ];
-			if ( a.StartsWith( "-n" ) ) {
+			if ( a == "-?" || a == "--help" ) {
+				PrintUsage( stdout );
+				return 0;
+			} else if ( a.StartsWith( "-n" ) ) {
 				string val;
 				if ( a == "-n" ) {
 					if ( i + 1 >= args.Length ) {
@@ -63,7 +66,7 @@ public static class Command {
 				continue;
 			}
 
-			// not an -n option: stop option parsing
+			// not an option: stop option parsing
 			break;
 		}
 
@@ -131,5 +134,18 @@ public static class Command {
 		}
 
 		return exit;
+	}
+	/// <summary>
+	/// tail: output the last part of files.
+	/// Supports:
+	///		-n N (lines; default 10)
+	///		-nNUM, -n=NUM, -n NUM		print last NUM lines (default 10)
+	///		-n +NUM, -n=+NUM, -n+NUM	start printing with line NUM (skip NUM-1 lines)
+	/// </summary>
+	private static void PrintUsage( TextWriter writer ) {
+		writer.WriteLine( "Usage: tail [(-n N) | (-n +NUM)] [file ...]" );
+		writer.WriteLine( "  -?, --help    display this help and exit" );
+		writer.WriteLine( "  -n N          print last N lines (default 10)" );
+		writer.WriteLine( "  -n +NUM       start printing with line NUM (skip NUM-1 lines)" );
 	}
 }
