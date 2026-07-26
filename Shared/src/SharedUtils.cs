@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 /// </summary>
 public static class SharedUtils
 {
+	/// <summary>Returns the final path component using the current platform separators.</summary>
 	public static string Basename(string path)
 	{
 		if (string.IsNullOrEmpty(path))
@@ -27,6 +28,8 @@ public static class SharedUtils
 		return Path.GetFileName(trimmed);
 	}
 
+	/// <summary>Parses the legacy short-option specification used by existing commands.</summary>
+	/// <remarks>New commands should use <see cref="Icod.CoreUtils.Shared.CommandLine.OptionParser"/>.</remarks>
 	public static (HashSet<char> flags, Dictionary<char, string?> optionValues, string[] rest) ParseOptions(string[] args, string optSpec)
 	{
 		var flags = new HashSet<char>();
@@ -92,6 +95,7 @@ public static class SharedUtils
 		return (flags, optionValues, rest.ToArray());
 	}
 
+	/// <summary>Parses NAME=VALUE operands into a case-insensitive dictionary.</summary>
 	public static Dictionary<string, string> ParseAssignments(string[] args)
 	{
 		var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -109,6 +113,7 @@ public static class SharedUtils
 		return dict;
 	}
 
+	/// <summary>Splits an in-memory line array at a regular-expression or numeric token.</summary>
 	public static IEnumerable<string[]> SplitByPatternOrLines(string[] allLines, string token)
 	{
 		if (string.IsNullOrEmpty(token))
