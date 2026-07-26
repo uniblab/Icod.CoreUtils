@@ -1,88 +1,376 @@
-// Original behavior/reference: GNU coreutils
-// Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
-
 namespace Icod.CoreUtils.Echo;
 
-using System;
-using System.IO;
 using System.Text;
 
 /// <summary>
-/// Minimal `echo` supporting -n (no newline) and -e (interpret backslash escapes).
+/// Implements the echo utility.
 /// </summary>
 public static class Command {
-	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
-		stdin ??= Console.In;
+	private const int BufferSize = 4096;
+	private const string VersionText = "echo (Icod.CoreUtils) 1.0";
+
+	/// <summary>Runs the command synchronously.</summary>
+	public static int Run(
+		string[] args,
+		TextReader? stdin = null,
+		TextWriter? stdout = null,
+		TextWriter? stderr = null
+	) {
+		return RunAsync(
+			args,
+			stdin,
+			stdout,
+			stderr
+		).GetAwaiter().GetResult();
+	}
+
+	/// <summary>Runs the command asynchronously.</summary>
+	public static async Task<int> RunAsync(
+		string[] args,
+		TextReader? stdin = null,
+		TextWriter? stdout = null,
+		TextWriter? stderr = null,
+		CancellationToken cancellationToken = default
+	) {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;
+		try {
+			cancellationToken.ThrowIfCancellationRequested();
+			var posixlyCorrect = null != Environment.GetEnvironmentVariable(
+				"POSIXLY_CORRECT"
+			);
+			if (
+				!posixlyCorrect
+				&& 1 == args.Length
+				&& "--help" == args[ 0 ]
+			) {
+				await PrintUsageAsync(
+					stdout,
+					cancellationToken
+				).ConfigureAwait( false );
+				return 0;
+			}
+			if (
+				!posixlyCorrect
+				&& 1 == args.Length
+				&& "--version" == args[ 0 ]
+			) {
+				await stdout.WriteLineAsync(
+					VersionText.AsMemory(),
+					cancellationToken
+				).ConfigureAwait( false );
+				return 0;
+			}
 
-		var noNewline = false;
-		var interpret = false;
-		var start = 0;
-		for ( var i = 0; i < args.Length; i++ ) {
-			if ( args[ i ] == "-n" ) {
-				noNewline = true;
-				start++;
-				continue;
+			var noNewline = false;
+			var interpretEscapes = posixlyCorrect;
+			var operandIndex = 0;
+			var scanOptions = !posixlyCorrect
+				|| ( 0 < args.Length && "-n" == args[ 0 ] )
+			;
+			while (
+				scanOptions
+				&& operandIndex < args.Length
+				&& IsShortOptionCluster( args[ operandIndex ] )
+			) {
+				foreach ( var option in args[ operandIndex ].AsSpan( 1 ) ) {
+					switch ( option ) {
+						case 'n':
+							noNewline = true;
+							break;
+						case 'e':
+							if ( !posixlyCorrect ) {
+								interpretEscapes = true;
+							}
+							break;
+						case 'E':
+							if ( !posixlyCorrect ) {
+								interpretEscapes = false;
+							}
+							break;
+					}
+				}
+				operandIndex++;
 			}
-			if ( args[ i ] == "-e" ) {
-				interpret = true;
-				start++;
-				continue;
+
+			if ( interpretEscapes ) {
+				return await WriteEscapedAsync(
+					args,
+					operandIndex,
+					noNewline,
+					stdout,
+					cancellationToken
+				).ConfigureAwait( false );
 			}
-			if ( args[ i ] == "-E" ) {
-				interpret = false;
-				start++;
-				continue;
+
+			for ( var index = operandIndex; index < args.Length; index++ ) {
+				cancellationToken.ThrowIfCancellationRequested();
+				if ( index > operandIndex ) {
+					await stdout.WriteAsync(
+						" ".AsMemory(),
+						cancellationToken
+					).ConfigureAwait( false );
+				}
+				await stdout.WriteAsync(
+					args[ index ].AsMemory(),
+					cancellationToken
+				).ConfigureAwait( false );
 			}
-			break;
+			if ( !noNewline ) {
+				await stdout.WriteAsync(
+					"\n".AsMemory(),
+					cancellationToken
+				).ConfigureAwait( false );
+			}
+			return 0;
+		} catch ( OperationCanceledException ) {
+			return 130;
+		} catch ( IOException exception ) {
+			await TryWriteErrorAsync(
+				stderr,
+				$"echo: write error: {exception.Message}\n"
+			).ConfigureAwait( false );
+			return 1;
 		}
+	}
 
-		var parts = args.Length > start ? args[ start.. ] : Array.Empty<string>();
-		var s = string.Join( " ", parts );
-		if ( interpret )
-			s = InterpretEscapes( s );
-		if ( noNewline )
-			stdout.Write( s );
-		else
-			stdout.WriteLine( s );
+	private static bool IsShortOptionCluster(
+		string argument
+	) {
+		if (
+			argument.Length < 2
+			|| '-' != argument[ 0 ]
+		) {
+			return false;
+		}
+		foreach ( var option in argument.AsSpan( 1 ) ) {
+			if (
+				'n' != option
+				&& 'e' != option
+				&& 'E' != option
+			) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private static async Task<int> WriteEscapedAsync(
+		string[] args,
+		int operandIndex,
+		bool noNewline,
+		TextWriter output,
+		CancellationToken cancellationToken
+	) {
+		var buffer = new StringBuilder( BufferSize );
+		var stop = false;
+		for ( var argumentIndex = operandIndex; argumentIndex < args.Length && !stop; argumentIndex++ ) {
+			if ( argumentIndex > operandIndex ) {
+				buffer.Append( ' ' );
+			}
+			var value = args[ argumentIndex ];
+			for ( var index = 0; index < value.Length; index++ ) {
+				cancellationToken.ThrowIfCancellationRequested();
+				var current = value[ index ];
+				if (
+					'\\' != current
+					|| index + 1 >= value.Length
+				) {
+					buffer.Append( current );
+					await FlushWhenFullAsync(
+						buffer,
+						output,
+						cancellationToken
+					).ConfigureAwait( false );
+					continue;
+				}
+
+				var escape = value[ ++index ];
+				switch ( escape ) {
+					case '\\':
+						buffer.Append( '\\' );
+						break;
+					case 'a':
+						buffer.Append( '\a' );
+						break;
+					case 'b':
+						buffer.Append( '\b' );
+						break;
+					case 'c':
+						stop = true;
+						break;
+					case 'e':
+						buffer.Append( '\u001B' );
+						break;
+					case 'f':
+						buffer.Append( '\f' );
+						break;
+					case 'n':
+						buffer.Append( '\n' );
+						break;
+					case 'r':
+						buffer.Append( '\r' );
+						break;
+					case 't':
+						buffer.Append( '\t' );
+						break;
+					case 'v':
+						buffer.Append( '\v' );
+						break;
+					case '0':
+						buffer.Append(
+							ParseByteEscape(
+								value,
+								ref index,
+								8,
+								3,
+								allowNoDigits: true
+							)
+						);
+						break;
+					case 'x': {
+						var before = index;
+						var parsed = ParseByteEscape(
+							value,
+							ref index,
+							16,
+							2,
+							allowNoDigits: false
+						);
+						if ( before == index ) {
+							buffer.Append( "\\x" );
+						} else {
+							buffer.Append( parsed );
+						}
+						break;
+					}
+					default:
+						buffer.Append( '\\' );
+						buffer.Append( escape );
+						break;
+				}
+				await FlushWhenFullAsync(
+					buffer,
+					output,
+					cancellationToken
+				).ConfigureAwait( false );
+			}
+		}
+		if (
+			!stop
+			&& !noNewline
+		) {
+			buffer.Append( '\n' );
+		}
+		if ( 0 < buffer.Length ) {
+			await output.WriteAsync(
+				buffer.ToString().AsMemory(),
+				cancellationToken
+			).ConfigureAwait( false );
+		}
 		return 0;
 	}
 
-	private static string InterpretEscapes( string s ) {
-		var sb = new StringBuilder();
-		for ( var i = 0; i < s.Length; i++ ) {
-			if ( s[ i ] == '\\' && i + 1 < s.Length ) {
-				i++;
-				switch ( s[ i ] ) {
-					case 'n':
-						sb.Append( '\n' );
-						break;
-					case 't':
-						sb.Append( '\t' );
-						break;
-					case 'r':
-						sb.Append( '\r' );
-						break;
-					case '\\':
-						sb.Append( '\\' );
-						break;
-					case 'a':
-						sb.Append( '\a' );
-						break;
-					case 'b':
-						sb.Append( '\b' );
-						break;
-					case '0':
-						sb.Append( '\0' );
-						break;
-					default:
-						sb.Append( s[ i ] );
-						break;
-				}
-			} else
-				sb.Append( s[ i ] );
+	private static char ParseByteEscape(
+		string value,
+		ref int index,
+		int radix,
+		int maximumDigits,
+		bool allowNoDigits
+	) {
+		var parsed = 0;
+		var digits = 0;
+		while (
+			digits < maximumDigits
+			&& index + 1 < value.Length
+		) {
+			var digit = DigitValue( value[ index + 1 ] );
+			if (
+				digit < 0
+				|| digit >= radix
+			) {
+				break;
+			}
+			index++;
+			parsed = ( parsed * radix ) + digit;
+			digits++;
 		}
-		return sb.ToString();
+		if (
+			0 == digits
+			&& !allowNoDigits
+		) {
+			return '\0';
+		}
+		return (char)( parsed & byte.MaxValue );
+	}
+
+	private static int DigitValue(
+		char value
+	) {
+		if ( value is >= '0' and <= '9' ) {
+			return value - '0';
+		}
+		if ( value is >= 'a' and <= 'f' ) {
+			return value - 'a' + 10;
+		}
+		if ( value is >= 'A' and <= 'F' ) {
+			return value - 'A' + 10;
+		}
+		return -1;
+	}
+
+	private static async Task FlushWhenFullAsync(
+		StringBuilder buffer,
+		TextWriter output,
+		CancellationToken cancellationToken
+	) {
+		if ( buffer.Length < BufferSize ) {
+			return;
+		}
+		await output.WriteAsync(
+			buffer.ToString().AsMemory(),
+			cancellationToken
+		).ConfigureAwait( false );
+		buffer.Clear();
+	}
+
+	private static async Task TryWriteErrorAsync(
+		TextWriter error,
+		string message
+	) {
+		try {
+			await error.WriteAsync( message ).ConfigureAwait( false );
+		} catch ( IOException ) {
+		}
+	}
+
+	private static async Task PrintUsageAsync(
+		TextWriter output,
+		CancellationToken cancellationToken
+	) {
+		const string text = """
+Usage: echo [SHORT-OPTION]... [STRING]...
+  or:  echo LONG-OPTION
+Echo the STRING(s) to standard output.
+
+  -n             do not output the trailing newline
+  -e             enable interpretation of backslash escapes
+  -E             disable interpretation of backslash escapes (default)
+      --help     display this help and exit
+      --version  output version information and exit
+
+If -e is in effect, the following sequences are recognized:
+  \\      backslash                 \\a     alert (BEL)
+  \\b     backspace                 \\c     produce no further output
+  \\e     escape                    \\f     form feed
+  \\n     new line                  \\r     carriage return
+  \\t     horizontal tab             \\v     vertical tab
+  \\0NNN  byte with octal value NNN (1 to 3 digits)
+  \\xHH   byte with hexadecimal value HH (1 to 2 digits)
+""";
+		await output.WriteAsync(
+			text.AsMemory(),
+			cancellationToken
+		).ConfigureAwait( false );
 	}
 }
