@@ -10,6 +10,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 /// <summary>
 /// Implements a portable, BSD-style <c>sed</c> stream editor using the .NET
@@ -20,7 +22,9 @@ using System.Text.RegularExpressions;
 /// The command processor implements addressed commands, inclusive address
 /// ranges, negation, command groups, labels and branches, pattern space,
 /// hold space, substitution, transliteration, explicit printing, file
-/// reads and writes, next-cycle commands, and in-place editing.
+/// reads and writes, next-cycle commands, and in-place editing. Primary
+/// input, script files, auxiliary files, and output are processed with TAP
+/// operations. Input uses one-record lookahead and is never fully materialized.
 /// </para>
 /// <para>
 /// In syntax descriptions, <c>M</c> and <c>N</c> are metavariables for
@@ -55,13 +59,15 @@ using System.Text.RegularExpressions;
 /// </remarks>
 public static class Command {
 
+	#region fields
 	private const int DefaultListWidth = 70;
 	private const int ErrorExitCode = 1;
 	private const int UsageExitCode = 2;
 	private const string VersionText = "Icod.CoreUtils.Sed 1.0";
+	#endregion fields
+
 
 	#region nested types
-
 	private sealed class Options {
 
 		public bool ExtendedRegularExpressions {
@@ -1755,17 +1761,99 @@ public static class Command {
 
 	}
 
+	private sealed class AsyncRecordReader : IDisposable {
+
+		private readonly char[] myBuffer;
+		private int myBufferCount;
+		private int myBufferOffset;
+		private readonly bool myNullData;
+		private readonly bool myOwnsReader;
+		private readonly TextReader myReader;
+
+		public AsyncRecordReader(
+			TextReader reader,
+			bool nullData,
+			bool ownsReader
+		) {
+			this.myReader = reader ?? throw new ArgumentNullException(
+				nameof( reader )
+			);
+			this.myNullData = nullData;
+			this.myOwnsReader = ownsReader;
+			this.myBuffer = new char[ 8192 ];
+		}
+
+		public async Task<string?> ReadAsync(
+			CancellationToken cancellationToken
+		) {
+			cancellationToken.ThrowIfCancellationRequested();
+
+			if ( !this.myNullData ) {
+				return await this.myReader.ReadLineAsync().ConfigureAwait( false );
+			}
+
+			var output = new StringBuilder();
+			while ( true ) {
+				if ( this.myBufferOffset < this.myBufferCount ) {
+					var separatorIndex = Array.IndexOf(
+						this.myBuffer,
+						'\0',
+						this.myBufferOffset,
+						this.myBufferCount - this.myBufferOffset
+					);
+					if ( 0 <= separatorIndex ) {
+						output.Append(
+							this.myBuffer,
+							this.myBufferOffset,
+							separatorIndex - this.myBufferOffset
+						);
+						this.myBufferOffset = separatorIndex + 1;
+						return output.ToString();
+					}
+
+					output.Append(
+						this.myBuffer,
+						this.myBufferOffset,
+						this.myBufferCount - this.myBufferOffset
+					);
+					this.myBufferOffset = this.myBufferCount;
+				}
+
+				cancellationToken.ThrowIfCancellationRequested();
+				this.myBufferCount = await this.myReader.ReadAsync(
+					this.myBuffer,
+					0,
+					this.myBuffer.Length
+				).ConfigureAwait( false );
+				this.myBufferOffset = 0;
+
+				if ( 0 == this.myBufferCount ) {
+					return 0 == output.Length
+						? null
+						: output.ToString()
+					;
+				}
+			}
+		}
+
+		public void Dispose() {
+			if ( this.myOwnsReader ) {
+				this.myReader.Dispose();
+			}
+		}
+
+	}
+
 	private sealed class InputSequence : IDisposable {
 
-		private readonly bool myNullData;
-		private readonly IReadOnlyList<SourceSpec> mySources;
-		private readonly TextReader myStandardInput;
-		private TextReader? myCurrentReader;
-		private bool myCurrentReaderOwned;
-		private int mySourceIndex = -1;
+		private AsyncRecordReader? myCurrentReader;
 		private bool myInitialized;
 		private string? myLookahead;
 		private bool myLookaheadAvailable;
+		private readonly bool myNullData;
+		private int mySourceIndex = -1;
+		private readonly IReadOnlyList<SourceSpec> mySources;
+		private readonly TextReader myStandardInput;
 
 		public string Current {
 			get;
@@ -1792,12 +1880,15 @@ public static class Command {
 			this.myNullData = nullData;
 		}
 
-		public bool MoveNext() {
+		public async Task<bool> MoveNextAsync(
+			CancellationToken cancellationToken
+		) {
 			if ( !this.myInitialized ) {
 				this.myInitialized = true;
-				this.myLookaheadAvailable = this.TryReadRaw(
-					out this.myLookahead
-				);
+				this.myLookahead = await this.ReadRawAsync(
+					cancellationToken
+				).ConfigureAwait( false );
+				this.myLookaheadAvailable = null != this.myLookahead;
 			}
 
 			if ( !this.myLookaheadAvailable ) {
@@ -1805,33 +1896,31 @@ public static class Command {
 			}
 
 			this.Current = this.myLookahead ?? string.Empty;
-			this.myLookaheadAvailable = this.TryReadRaw(
-				out this.myLookahead
-			);
+			this.myLookahead = await this.ReadRawAsync(
+				cancellationToken
+			).ConfigureAwait( false );
+			this.myLookaheadAvailable = null != this.myLookahead;
 			this.IsLast = !this.myLookaheadAvailable;
 			this.LineNumber++;
 			return true;
 		}
 
-		private bool TryReadRaw(
-			out string? value
+		private async Task<string?> ReadRawAsync(
+			CancellationToken cancellationToken
 		) {
 			while ( true ) {
-				if ( null == this.myCurrentReader ) {
-					if ( !this.OpenNextSource() ) {
-						value = null;
-						return false;
-					}
+				if (
+					null == this.myCurrentReader
+					&& !this.OpenNextSource()
+				) {
+					return null;
 				}
 
-				if (
-					TryReadRecord(
-						this.myCurrentReader,
-						this.myNullData,
-						out value
-					)
-				) {
-					return true;
+				var value = await this.myCurrentReader!.ReadAsync(
+					cancellationToken
+				).ConfigureAwait( false );
+				if ( null != value ) {
+					return value;
 				}
 
 				this.CloseCurrentReader();
@@ -1846,28 +1935,37 @@ public static class Command {
 
 			var source = this.mySources[ this.mySourceIndex ];
 			if ( "-" == source.Path ) {
-				this.myCurrentReader = this.myStandardInput;
-				this.myCurrentReaderOwned = false;
-			} else {
-				this.myCurrentReader = new StreamReader(
-					source.Path,
-					Encoding.UTF8,
-					detectEncodingFromByteOrderMarks: true
+				this.myCurrentReader = new AsyncRecordReader(
+					this.myStandardInput,
+					this.myNullData,
+					ownsReader: false
 				);
-				this.myCurrentReaderOwned = true;
+			} else {
+				this.myCurrentReader = new AsyncRecordReader(
+					new StreamReader(
+						new FileStream(
+							source.Path,
+							FileMode.Open,
+							FileAccess.Read,
+							FileShare.Read,
+							8192,
+							useAsync: true
+						),
+						Encoding.UTF8,
+						detectEncodingFromByteOrderMarks: true,
+						bufferSize: 8192,
+						leaveOpen: false
+					),
+					this.myNullData,
+					ownsReader: true
+				);
 			}
 			return true;
 		}
 
 		private void CloseCurrentReader() {
-			if (
-				this.myCurrentReaderOwned
-				&& null != this.myCurrentReader
-			) {
-				this.myCurrentReader.Dispose();
-			}
+			this.myCurrentReader?.Dispose();
 			this.myCurrentReader = null;
-			this.myCurrentReaderOwned = false;
 		}
 
 		public void Dispose() {
@@ -1876,18 +1974,36 @@ public static class Command {
 
 	}
 
-	private sealed class ExecutionEnvironment : IDisposable {
+	private enum DeferredOutputKind {
+		Text,
+		File
+	}
 
-		private readonly Dictionary<string, TextReader> myReadLineFiles;
-		private readonly Dictionary<string, TextWriter> myWriteFiles;
+	private sealed class DeferredOutputItem {
 
-		public IReadOnlyList<string> DeferredOutput {
-			get {
-				return this.myDeferredOutput;
-			}
+		public string Value {
+			get;
 		}
 
-		private readonly List<string> myDeferredOutput;
+		public DeferredOutputKind Kind {
+			get;
+		}
+
+		public DeferredOutputItem(
+			DeferredOutputKind kind,
+			string value
+		) {
+			this.Kind = kind;
+			this.Value = value;
+		}
+
+	}
+
+	private sealed class ExecutionEnvironment : IDisposable {
+
+		private readonly List<DeferredOutputItem> myDeferredOutput;
+		private readonly Dictionary<string, AsyncRecordReader> myReadLineFiles;
+		private readonly Dictionary<string, StreamWriter> myWriteFiles;
 
 		public string HoldSpace {
 			get;
@@ -1926,11 +2042,11 @@ public static class Command {
 			this.SuppressAutomaticPrint = suppressAutomaticPrint;
 			this.NullData = nullData;
 			this.ListWidth = listWidth;
-			this.myDeferredOutput = new List<string>();
-			this.myReadLineFiles = new Dictionary<string, TextReader>(
+			this.myDeferredOutput = new List<DeferredOutputItem>();
+			this.myReadLineFiles = new Dictionary<string, AsyncRecordReader>(
 				StringComparer.Ordinal
 			);
-			this.myWriteFiles = new Dictionary<string, TextWriter>(
+			this.myWriteFiles = new Dictionary<string, StreamWriter>(
 				StringComparer.Ordinal
 			);
 		}
@@ -1943,39 +2059,27 @@ public static class Command {
 			string value
 		) {
 			this.myDeferredOutput.Add(
-				value
+				new DeferredOutputItem(
+					DeferredOutputKind.Text,
+					value
+				)
 			);
 		}
 
 		public void DeferFile(
 			string fileName
 		) {
-			try {
-				using ( var reader = new StreamReader(
-					fileName,
-					Encoding.UTF8,
-					detectEncodingFromByteOrderMarks: true
-				) ) {
-					string? line;
-					while (
-						null != (
-							line = reader.ReadLine()
-						)
-					) {
-						this.myDeferredOutput.Add(
-							line
-						);
-					}
-				}
-			} catch ( Exception ex ) {
-				this.Error.WriteLine(
-					$"sed: {fileName}: {ex.Message}"
-				);
-			}
+			this.myDeferredOutput.Add(
+				new DeferredOutputItem(
+					DeferredOutputKind.File,
+					fileName
+				)
+			);
 		}
 
-		public void DeferFileLine(
-			string fileName
+		public async Task DeferFileLineAsync(
+			string fileName,
+			CancellationToken cancellationToken
 		) {
 			try {
 				if (
@@ -1984,10 +2088,23 @@ public static class Command {
 						out var reader
 					)
 				) {
-					reader = new StreamReader(
-						fileName,
-						Encoding.UTF8,
-						detectEncodingFromByteOrderMarks: true
+					reader = new AsyncRecordReader(
+						new StreamReader(
+							new FileStream(
+								fileName,
+								FileMode.Open,
+								FileAccess.Read,
+								FileShare.Read,
+								8192,
+								useAsync: true
+							),
+							Encoding.UTF8,
+							detectEncodingFromByteOrderMarks: true,
+							bufferSize: 8192,
+							leaveOpen: false
+						),
+						this.NullData,
+						ownsReader: true
 					);
 					this.myReadLineFiles.Add(
 						fileName,
@@ -1995,33 +2112,84 @@ public static class Command {
 					);
 				}
 
-				var line = reader.ReadLine();
+				var line = await reader.ReadAsync(
+					cancellationToken
+				).ConfigureAwait( false );
 				if ( null != line ) {
-					this.myDeferredOutput.Add(
+					this.Defer(
 						line
 					);
 				}
 			} catch ( Exception ex ) {
-				this.Error.WriteLine(
+				await this.Error.WriteLineAsync(
 					$"sed: {fileName}: {ex.Message}"
-				);
+				).ConfigureAwait( false );
 			}
 		}
 
-		public void FlushDeferredOutput() {
-			foreach ( var value in this.myDeferredOutput ) {
-				WriteRecord(
-					this.Output,
-					value,
-					this.NullData
-				);
+		public async Task FlushDeferredOutputAsync(
+			CancellationToken cancellationToken
+		) {
+			foreach ( var item in this.myDeferredOutput ) {
+				cancellationToken.ThrowIfCancellationRequested();
+
+				if ( DeferredOutputKind.Text == item.Kind ) {
+					await WriteRecordAsync(
+						this.Output,
+						item.Value,
+						this.NullData
+					).ConfigureAwait( false );
+					continue;
+				}
+
+				try {
+					using ( var reader = new AsyncRecordReader(
+						new StreamReader(
+							new FileStream(
+								item.Value,
+								FileMode.Open,
+								FileAccess.Read,
+								FileShare.Read,
+								8192,
+								useAsync: true
+							),
+							Encoding.UTF8,
+							detectEncodingFromByteOrderMarks: true,
+							bufferSize: 8192,
+							leaveOpen: false
+						),
+						this.NullData,
+						ownsReader: true
+					) ) {
+						string? line;
+						while (
+							null != (
+								line = await reader.ReadAsync(
+									cancellationToken
+								).ConfigureAwait( false )
+							)
+						) {
+							await WriteRecordAsync(
+								this.Output,
+								line,
+								this.NullData
+							).ConfigureAwait( false );
+						}
+					}
+				} catch ( Exception ex ) {
+					await this.Error.WriteLineAsync(
+						$"sed: {item.Value}: {ex.Message}"
+					).ConfigureAwait( false );
+				}
 			}
+
 			this.myDeferredOutput.Clear();
 		}
 
-		public void WriteFile(
+		public async Task WriteFileAsync(
 			string fileName,
-			string value
+			string value,
+			CancellationToken cancellationToken
 		) {
 			if (
 				!this.myWriteFiles.TryGetValue(
@@ -2034,11 +2202,15 @@ public static class Command {
 						fileName,
 						FileMode.Create,
 						FileAccess.Write,
-						FileShare.Read
+						FileShare.Read,
+						8192,
+						useAsync: true
 					),
 					new UTF8Encoding(
 						encoderShouldEmitUTF8Identifier: false
-					)
+					),
+					8192,
+					leaveOpen: false
 				);
 				this.myWriteFiles.Add(
 					fileName,
@@ -2046,21 +2218,33 @@ public static class Command {
 				);
 			}
 
-			WriteRecord(
+			cancellationToken.ThrowIfCancellationRequested();
+			await WriteRecordAsync(
 				writer,
 				value,
 				this.NullData
-			);
-			writer.Flush();
+			).ConfigureAwait( false );
+			await writer.FlushAsync().ConfigureAwait( false );
+		}
+
+		public async Task DisposeAsync() {
+			foreach ( var writer in this.myWriteFiles.Values ) {
+				await writer.FlushAsync().ConfigureAwait( false );
+			}
+			await this.Output.FlushAsync().ConfigureAwait( false );
+			this.Dispose();
 		}
 
 		public void Dispose() {
 			foreach ( var reader in this.myReadLineFiles.Values ) {
 				reader.Dispose();
 			}
+			this.myReadLineFiles.Clear();
+
 			foreach ( var writer in this.myWriteFiles.Values ) {
 				writer.Dispose();
 			}
+			this.myWriteFiles.Clear();
 		}
 
 	}
@@ -2087,6 +2271,7 @@ public static class Command {
 
 	#endregion nested types
 
+
 	#region public methods
 
 	public static int Run(
@@ -2094,6 +2279,22 @@ public static class Command {
 		TextReader? stdin = null,
 		TextWriter? stdout = null,
 		TextWriter? stderr = null
+	) {
+		return RunAsync(
+			args,
+			stdin,
+			stdout,
+			stderr,
+			CancellationToken.None
+		).GetAwaiter().GetResult();
+	}
+
+	public static async Task<int> RunAsync(
+		string[] args,
+		TextReader? stdin = null,
+		TextWriter? stdout = null,
+		TextWriter? stderr = null,
+		CancellationToken cancellationToken = default
 	) {
 		args ??= Array.Empty<string>();
 		stdin ??= Console.In;
@@ -2104,23 +2305,24 @@ public static class Command {
 			var options = new Options();
 			var scriptFragments = new List<string>();
 			var files = new List<string>();
-			var argumentResult = ParseArguments(
+			var argumentResult = await ParseArgumentsAsync(
 				args,
 				options,
 				scriptFragments,
 				files,
 				stdout,
-				stderr
-			);
+				stderr,
+				cancellationToken
+			).ConfigureAwait( false );
 			if ( argumentResult.HasValue ) {
 				return argumentResult.Value;
 			}
 
 			if ( 0 == scriptFragments.Count ) {
 				if ( 0 == files.Count ) {
-					stderr.WriteLine(
+					await stderr.WriteLineAsync(
 						"sed: no script was provided"
-					);
+					).ConfigureAwait( false );
 					return UsageExitCode;
 				}
 
@@ -2144,9 +2346,9 @@ public static class Command {
 					path => "-" == path
 				)
 			) {
-				stderr.WriteLine(
+				await stderr.WriteLineAsync(
 					"sed: cannot edit standard input in-place"
-				);
+				).ConfigureAwait( false );
 				return UsageExitCode;
 			}
 
@@ -2167,52 +2369,66 @@ public static class Command {
 				streamWriter.AutoFlush = true;
 			}
 
-			using ( var environment = new ExecutionEnvironment(
+			if ( options.InPlace ) {
+				foreach ( var path in files ) {
+					var result = await ProcessInPlaceAsync(
+						path,
+						options,
+						program,
+						stderr,
+						cancellationToken
+					).ConfigureAwait( false );
+					if ( result.Quit ) {
+						return result.ExitCode;
+					}
+				}
+				return 0;
+			}
+
+			if ( options.Separate ) {
+				foreach ( var path in files ) {
+					using ( var input = new InputSequence(
+						new SourceSpec[ 1 ] {
+							new SourceSpec(
+								path
+							)
+						},
+						stdin,
+						options.NullData
+					) ) {
+						var environment = new ExecutionEnvironment(
+							stdout,
+							stderr,
+							options.SuppressAutomaticPrint,
+							options.NullData,
+							options.ListWidth
+						);
+						try {
+							var result = await ExecuteAsync(
+								program,
+								input,
+								environment,
+								cancellationToken
+							).ConfigureAwait( false );
+							if ( result.Quit ) {
+								return result.ExitCode;
+							}
+						} finally {
+							await environment.DisposeAsync().ConfigureAwait( false );
+						}
+					}
+				}
+				return 0;
+			}
+
+			var sharedEnvironment = new ExecutionEnvironment(
 				stdout,
 				stderr,
 				options.SuppressAutomaticPrint,
 				options.NullData,
 				options.ListWidth
-			) ) {
-				if ( options.InPlace ) {
-					foreach ( var path in files ) {
-						var result = ProcessInPlace(
-							path,
-							options,
-							program,
-							environment
-						);
-						if ( result.Quit ) {
-							return result.ExitCode;
-						}
-					}
-					return 0;
-				}
-
-				if ( options.Separate ) {
-					foreach ( var path in files ) {
-						using ( var input = new InputSequence(
-							new SourceSpec[ 1 ] {
-								new SourceSpec(
-									path
-								)
-							},
-							stdin,
-							options.NullData
-						) ) {
-							var result = Execute(
-								program,
-								input,
-								environment
-							);
-							if ( result.Quit ) {
-								return result.ExitCode;
-							}
-						}
-					}
-					return 0;
-				}
-
+			);
+			try {
 				using ( var input = new InputSequence(
 					files.Select(
 						path => new SourceSpec(
@@ -2222,37 +2438,49 @@ public static class Command {
 					stdin,
 					options.NullData
 				) ) {
-					return Execute(
-						program,
-						input,
-						environment
+					return (
+						await ExecuteAsync(
+							program,
+							input,
+							sharedEnvironment,
+							cancellationToken
+						).ConfigureAwait( false )
 					).ExitCode;
 				}
+			} finally {
+				await sharedEnvironment.DisposeAsync().ConfigureAwait( false );
 			}
 		} catch ( ScriptParseException ex ) {
-			stderr.WriteLine(
+			await stderr.WriteLineAsync(
 				$"sed: {ex.Message}"
-			);
+			).ConfigureAwait( false );
 			return UsageExitCode;
+		} catch ( OperationCanceledException ) {
+			await stderr.WriteLineAsync(
+				"sed: operation canceled"
+			).ConfigureAwait( false );
+			return ErrorExitCode;
 		} catch ( Exception ex ) {
-			stderr.WriteLine(
+			await stderr.WriteLineAsync(
 				$"sed: {ex.Message}"
-			);
+			).ConfigureAwait( false );
 			return ErrorExitCode;
 		}
 	}
 
 	#endregion public methods
 
+
 	#region argument methods
 
-	private static int? ParseArguments(
+	private static async Task<int?> ParseArgumentsAsync(
 		string[] args,
 		Options options,
 		ICollection<string> scripts,
 		ICollection<string> files,
 		TextWriter stdout,
-		TextWriter stderr
+		TextWriter stderr,
+		CancellationToken cancellationToken
 	) {
 		var index = 0;
 		while ( index < args.Length ) {
@@ -2315,24 +2543,24 @@ public static class Command {
 
 				case "-?":
 				case "--help":
-					PrintUsage(
+					await PrintUsageAsync(
 						stdout
-					);
+					).ConfigureAwait( false );
 					return 0;
 
 				case "-V":
 				case "--version":
-					stdout.WriteLine(
+					await stdout.WriteLineAsync(
 						VersionText
-					);
+					).ConfigureAwait( false );
 					return 0;
 
 				case "-e":
 				case "--expression":
 					if ( args.Length <= index + 1 ) {
-						stderr.WriteLine(
+						await stderr.WriteLineAsync(
 							"sed: option requires a script"
-						);
+						).ConfigureAwait( false );
 						return UsageExitCode;
 					}
 					scripts.Add(
@@ -2344,15 +2572,16 @@ public static class Command {
 				case "-f":
 				case "--file":
 					if ( args.Length <= index + 1 ) {
-						stderr.WriteLine(
+						await stderr.WriteLineAsync(
 							"sed: option requires a script file"
-						);
+						).ConfigureAwait( false );
 						return UsageExitCode;
 					}
 					scripts.Add(
-						File.ReadAllText(
-							args[ index + 1 ]
-						)
+						await ReadScriptFileAsync(
+							args[ index + 1 ],
+							cancellationToken
+						).ConfigureAwait( false )
 					);
 					index += 2;
 					break;
@@ -2374,9 +2603,9 @@ public static class Command {
 						)
 						|| listWidth <= 0
 					) {
-						stderr.WriteLine(
+						await stderr.WriteLineAsync(
 							"sed: -l requires a positive width"
-						);
+						).ConfigureAwait( false );
 						return UsageExitCode;
 					}
 					options.ListWidth = listWidth;
@@ -2405,11 +2634,12 @@ public static class Command {
 						&& 2 < argument.Length
 					) {
 						scripts.Add(
-							File.ReadAllText(
+							await ReadScriptFileAsync(
 								argument.Substring(
 									2
-								)
-							)
+								),
+								cancellationToken
+							).ConfigureAwait( false )
 						);
 						index++;
 					} else if (
@@ -2443,11 +2673,12 @@ public static class Command {
 						)
 					) {
 						scripts.Add(
-							File.ReadAllText(
+							await ReadScriptFileAsync(
 								argument.Substring(
 									"--file=".Length
-								)
-							)
+								),
+								cancellationToken
+							).ConfigureAwait( false )
 						);
 						index++;
 					} else if (
@@ -2479,9 +2710,9 @@ public static class Command {
 						options.ListWidth = inlineWidth;
 						index++;
 					} else {
-						stderr.WriteLine(
+						await stderr.WriteLineAsync(
 							$"sed: unsupported option '{argument}'"
-						);
+						).ConfigureAwait( false );
 						return UsageExitCode;
 					}
 					break;
@@ -2500,13 +2731,15 @@ public static class Command {
 
 	#endregion argument methods
 
+
 	#region execution methods
 
-	private static ExecutionResult ProcessInPlace(
+	private static async Task<ExecutionResult> ProcessInPlaceAsync(
 		string path,
 		Options options,
 		SedProgram program,
-		ExecutionEnvironment sharedEnvironment
+		TextWriter stderr,
+		CancellationToken cancellationToken
 	) {
 		var directory = Path.GetDirectoryName(
 			path
@@ -2517,12 +2750,27 @@ public static class Command {
 		);
 
 		Encoding encoding;
-		using ( var reader = new StreamReader(
+		using ( var stream = new FileStream(
 			path,
+			FileMode.Open,
+			FileAccess.Read,
+			FileShare.Read,
+			8192,
+			useAsync: true
+		) )
+		using ( var reader = new StreamReader(
+			stream,
 			Encoding.UTF8,
-			detectEncodingFromByteOrderMarks: true
+			detectEncodingFromByteOrderMarks: true,
+			bufferSize: 8192,
+			leaveOpen: false
 		) ) {
-			_ = reader.Peek();
+			var probe = new char[ 1 ];
+			_ = await reader.ReadAsync(
+				probe,
+				0,
+				1
+			).ConfigureAwait( false );
 			encoding = reader.CurrentEncoding;
 		}
 
@@ -2532,18 +2780,15 @@ public static class Command {
 				temporaryPath,
 				FileMode.CreateNew,
 				FileAccess.Write,
-				FileShare.None
+				FileShare.None,
+				8192,
+				useAsync: true
 			) )
 			using ( var output = new StreamWriter(
 				outputStream,
-				encoding
-			) )
-			using ( var environment = new ExecutionEnvironment(
-				output,
-				sharedEnvironment.Error,
-				options.SuppressAutomaticPrint,
-				options.NullData,
-				options.ListWidth
+				encoding,
+				8192,
+				leaveOpen: false
 			) )
 			using ( var input = new InputSequence(
 				new SourceSpec[ 1 ] {
@@ -2558,11 +2803,24 @@ public static class Command {
 					output.AutoFlush = true;
 				}
 
-				result = Execute(
-					program,
-					input,
-					environment
+				var environment = new ExecutionEnvironment(
+					output,
+					stderr,
+					options.SuppressAutomaticPrint,
+					options.NullData,
+					options.ListWidth
 				);
+				try {
+					result = await ExecuteAsync(
+						program,
+						input,
+						environment,
+						cancellationToken
+					).ConfigureAwait( false );
+					await output.FlushAsync().ConfigureAwait( false );
+				} finally {
+					await environment.DisposeAsync().ConfigureAwait( false );
+				}
 			}
 
 			if (
@@ -2600,14 +2858,19 @@ public static class Command {
 		}
 	}
 
-	private static ExecutionResult Execute(
+	private static async Task<ExecutionResult> ExecuteAsync(
 		SedProgram program,
 		InputSequence input,
-		ExecutionEnvironment environment
+		ExecutionEnvironment environment,
+		CancellationToken cancellationToken
 	) {
 		program.ResetAddresses();
 
-		while ( input.MoveNext() ) {
+		while (
+			await input.MoveNextAsync(
+				cancellationToken
+			).ConfigureAwait( false )
+		) {
 			var patternSpace = input.Current;
 			var substitutionSucceeded = false;
 			var automaticPrint = true;
@@ -2615,6 +2878,8 @@ public static class Command {
 			environment.ClearDeferredOutput();
 
 			while ( programCounter < program.Instructions.Count ) {
+				cancellationToken.ThrowIfCancellationRequested();
+
 				var instruction = program.Instructions[ programCounter ];
 				if ( InstructionKind.Label == instruction.Kind ) {
 					programCounter++;
@@ -2679,7 +2944,11 @@ public static class Command {
 						}
 
 					case InstructionKind.AppendNext: {
-							if ( !input.MoveNext() ) {
+							if (
+								!await input.MoveNextAsync(
+									cancellationToken
+								).ConfigureAwait( false )
+							) {
 								return new ExecutionResult(
 									quit: true,
 									exitCode: 0
@@ -2708,12 +2977,12 @@ public static class Command {
 								|| instruction.Address.Negated
 								|| selection.RangeStarted
 							) {
-								WriteRecord(
+								await WriteRecordAsync(
 									environment.Output,
 									instruction.Argument as string
 										?? string.Empty,
 									environment.NullData
-								);
+								).ConfigureAwait( false );
 							}
 							automaticPrint = false;
 							programCounter = program.Instructions.Count;
@@ -2758,13 +3027,13 @@ public static class Command {
 						}
 
 					case InstructionKind.LineNumber: {
-							WriteRecord(
+							await WriteRecordAsync(
 								environment.Output,
 								input.LineNumber.ToString(
 									CultureInfo.InvariantCulture
 								),
 								environment.NullData
-							);
+							).ConfigureAwait( false );
 							programCounter++;
 							break;
 						}
@@ -2774,28 +3043,34 @@ public static class Command {
 								? configuredWidth
 								: environment.ListWidth
 							;
-							WriteRecord(
+							await WriteRecordAsync(
 								environment.Output,
 								FormatList(
 									patternSpace,
 									width
 								),
 								environment.NullData
-							);
+							).ConfigureAwait( false );
 							programCounter++;
 							break;
 						}
 
 					case InstructionKind.Next: {
 							if ( !environment.SuppressAutomaticPrint ) {
-								WriteRecord(
+								await WriteRecordAsync(
 									environment.Output,
 									patternSpace,
 									environment.NullData
-								);
+								).ConfigureAwait( false );
 							}
-							environment.FlushDeferredOutput();
-							if ( !input.MoveNext() ) {
+							await environment.FlushDeferredOutputAsync(
+								cancellationToken
+							).ConfigureAwait( false );
+							if (
+								!await input.MoveNextAsync(
+									cancellationToken
+								).ConfigureAwait( false )
+							) {
 								return new ExecutionResult(
 									quit: true,
 									exitCode: 0
@@ -2809,43 +3084,45 @@ public static class Command {
 
 					case InstructionKind.Print: {
 							if ( instruction.Argument is InsertArgument insert ) {
-								WriteRecord(
+								await WriteRecordAsync(
 									environment.Output,
 									insert.Text,
 									environment.NullData
-								);
+								).ConfigureAwait( false );
 							} else {
-								WriteRecord(
+								await WriteRecordAsync(
 									environment.Output,
 									patternSpace,
 									environment.NullData
-								);
+								).ConfigureAwait( false );
 							}
 							programCounter++;
 							break;
 						}
 
 					case InstructionKind.PrintFirst: {
-							WriteRecord(
+							await WriteRecordAsync(
 								environment.Output,
 								FirstPatternLine(
 									patternSpace
 								),
 								environment.NullData
-							);
+							).ConfigureAwait( false );
 							programCounter++;
 							break;
 						}
 
 					case InstructionKind.Quit: {
 							if ( !environment.SuppressAutomaticPrint ) {
-								WriteRecord(
+								await WriteRecordAsync(
 									environment.Output,
 									patternSpace,
 									environment.NullData
-								);
+								).ConfigureAwait( false );
 							}
-							environment.FlushDeferredOutput();
+							await environment.FlushDeferredOutputAsync(
+								cancellationToken
+							).ConfigureAwait( false );
 							return new ExecutionResult(
 								quit: true,
 								exitCode: instruction.Argument is int configuredExitCode
@@ -2873,10 +3150,11 @@ public static class Command {
 						}
 
 					case InstructionKind.ReadFileLine: {
-							environment.DeferFileLine(
+							await environment.DeferFileLineAsync(
 								instruction.Argument as string
-									?? string.Empty
-							);
+									?? string.Empty,
+								cancellationToken
+							).ConfigureAwait( false );
 							programCounter++;
 							break;
 						}
@@ -2903,17 +3181,18 @@ public static class Command {
 									substitution.Flags
 								);
 								if ( flags.Print ) {
-									WriteRecord(
+									await WriteRecordAsync(
 										environment.Output,
 										patternSpace,
 										environment.NullData
-									);
+									).ConfigureAwait( false );
 								}
 								if ( !string.IsNullOrEmpty( flags.WriteFile ) ) {
-									environment.WriteFile(
+									await environment.WriteFileAsync(
 										flags.WriteFile,
-										patternSpace
-									);
+										patternSpace,
+										cancellationToken
+									).ConfigureAwait( false );
 								}
 							}
 							programCounter++;
@@ -2955,23 +3234,25 @@ public static class Command {
 						}
 
 					case InstructionKind.WriteFile: {
-							environment.WriteFile(
+							await environment.WriteFileAsync(
 								instruction.Argument as string
 									?? string.Empty,
-								patternSpace
-							);
+								patternSpace,
+								cancellationToken
+							).ConfigureAwait( false );
 							programCounter++;
 							break;
 						}
 
 					case InstructionKind.WriteFirst: {
-							environment.WriteFile(
+							await environment.WriteFileAsync(
 								instruction.Argument as string
 									?? string.Empty,
 								FirstPatternLine(
 									patternSpace
-								)
-							);
+								),
+								cancellationToken
+							).ConfigureAwait( false );
 							programCounter++;
 							break;
 						}
@@ -2987,13 +3268,15 @@ public static class Command {
 				automaticPrint
 				&& !environment.SuppressAutomaticPrint
 			) {
-				WriteRecord(
+				await WriteRecordAsync(
 					environment.Output,
 					patternSpace,
 					environment.NullData
-				);
+				).ConfigureAwait( false );
 			}
-			environment.FlushDeferredOutput();
+			await environment.FlushDeferredOutputAsync(
+				cancellationToken
+			).ConfigureAwait( false );
 		}
 
 		return new ExecutionResult(
@@ -3003,6 +3286,7 @@ public static class Command {
 	}
 
 	#endregion execution methods
+
 
 	#region substitution methods
 
@@ -3267,6 +3551,7 @@ public static class Command {
 
 	#endregion substitution methods
 
+
 	#region regex methods
 
 	private static Regex CreateRegex(
@@ -3392,6 +3677,7 @@ public static class Command {
 	}
 
 	#endregion regex methods
+
 
 	#region text methods
 
@@ -3642,67 +3928,78 @@ public static class Command {
 		};
 	}
 
-	private static bool TryReadRecord(
-		TextReader reader,
-		bool nullData,
-		out string? value
+	private static async Task<string> ReadScriptFileAsync(
+		string path,
+		CancellationToken cancellationToken
 	) {
-		if ( !nullData ) {
-			value = reader.ReadLine();
-			return null != value;
-		}
-
-		var output = new StringBuilder();
-		while ( true ) {
-			var read = reader.Read();
-			if ( -1 == read ) {
-				if ( 0 == output.Length ) {
-					value = null;
-					return false;
-				}
-				value = output.ToString();
-				return true;
-			}
-
-			var character = Convert.ToChar(
-				read
-			);
-			if ( '\0' == character ) {
-				value = output.ToString();
-				return true;
-			}
-			output.Append(
-				character
-			);
+		using ( var reader = new StreamReader(
+			new FileStream(
+				path,
+				FileMode.Open,
+				FileAccess.Read,
+				FileShare.Read,
+				8192,
+				useAsync: true
+			),
+			Encoding.UTF8,
+			detectEncodingFromByteOrderMarks: true,
+			bufferSize: 8192,
+			leaveOpen: false
+		) ) {
+			cancellationToken.ThrowIfCancellationRequested();
+			return await reader.ReadToEndAsync().ConfigureAwait( false );
 		}
 	}
 
-	private static void WriteRecord(
+	private static async Task WriteRecordAsync(
 		TextWriter writer,
 		string value,
 		bool nullData
 	) {
-		writer.Write(
+		await writer.WriteAsync(
 			value
-		);
+		).ConfigureAwait( false );
+
 		if ( nullData ) {
-			writer.Write(
+			await writer.WriteAsync(
 				'\0'
-			);
+			).ConfigureAwait( false );
 		} else {
-			writer.WriteLine();
+			await writer.WriteLineAsync().ConfigureAwait( false );
 		}
 	}
 
 	#endregion text methods
 
+
 	#region usage methods
+
+	private static async Task PrintUsageAsync(
+		TextWriter stdout
+	) {
+		using ( var buffer = new StringWriter(
+			CultureInfo.InvariantCulture
+		) ) {
+			PrintUsage(
+				buffer
+			);
+			await stdout.WriteAsync(
+				buffer.ToString()
+			).ConfigureAwait( false );
+		}
+	}
 
 	private static void PrintUsage(
 		TextWriter stdout
 	) {
 		stdout.WriteLine(
 			"Usage: sed [OPTION]... {script-only-if-no-other-script} [input-file]..."
+		);
+		stdout.WriteLine(
+			"  -?, --help                  display this help"
+		);
+		stdout.WriteLine(
+			"  -V, --version               display version information"
 		);
 		stdout.WriteLine(
 			"  -n, --quiet, --silent       suppress automatic printing"
@@ -3733,12 +4030,6 @@ public static class Command {
 		);
 		stdout.WriteLine(
 			"      --sandbox                disable r, R, w, and W file access"
-		);
-		stdout.WriteLine(
-			"  -?, --help                  display this help"
-		);
-		stdout.WriteLine(
-			"  -V, --version               display version information"
 		);
 		stdout.WriteLine();
 		stdout.WriteLine(

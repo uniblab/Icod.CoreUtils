@@ -1,9 +1,15 @@
 namespace Icod.CoreUtils.Sed;
 
-using System;
+using System.Threading.Tasks;
 
 public static class Program {
-	public static int Main( string[] args ) {
-		return Command.Run( args );
+
+	public static async Task<int> Main(
+		string[] args
+	) {
+		return await Command.RunAsync(
+			args
+		).ConfigureAwait( false );
 	}
+
 }
