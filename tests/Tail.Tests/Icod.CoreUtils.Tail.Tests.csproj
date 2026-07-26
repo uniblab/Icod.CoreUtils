@@ -18,7 +18,7 @@
 		</PackageReference>
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\..\tail\Icod.CoreUtils.tail.csproj" />
+		<ProjectReference Include="..\..\tail\Icod.CoreUtils.Tail.csproj" />
 		<ProjectReference Include="..\..\Shared\Icod.CoreUtils.Shared.csproj" />
 	</ItemGroup>
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

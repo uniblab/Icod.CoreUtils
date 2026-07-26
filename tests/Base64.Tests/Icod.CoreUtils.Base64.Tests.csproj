@@ -18,7 +18,7 @@
 		</PackageReference>
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\..\base64\Icod.CoreUtils.base64.csproj" />
+		<ProjectReference Include="..\..\base64\Icod.CoreUtils.Base64.csproj" />
 		<ProjectReference Include="..\..\Shared\Icod.CoreUtils.Shared.csproj" />
 	</ItemGroup>
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
