@@ -1,11 +1,23 @@
-namespace Icod.CoreUtils.Basename;
+namespace Icod.CoreUtils.BaseName;
 
-using System;
-
-public static class Program
-{
-	public static int Main(string[] args)
-	{
-		return Command.Run(args);
+public static class Program {
+	public static async Task<int> Main( string[] args ) {
+		using var cancellation = new CancellationTokenSource();
+		ConsoleCancelEventHandler handler = ( _, eventArgs ) => {
+			eventArgs.Cancel = true;
+			cancellation.Cancel();
+		};
+		Console.CancelKeyPress += handler;
+		try {
+			return await Command.RunAsync(
+				args,
+				Console.In,
+				Console.Out,
+				Console.Error,
+				cancellation.Token
+			).ConfigureAwait( false );
+		} finally {
+			Console.CancelKeyPress -= handler;
+		}
 	}
 }
