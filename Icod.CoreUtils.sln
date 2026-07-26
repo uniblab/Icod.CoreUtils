@@ -7,6 +7,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{4F52FD
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Shared", "Shared\Icod.CoreUtils.Shared.csproj", "{38C9C31E-BFE0-44E4-8315-E074D28B6CD5}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{F05B4136-23C6-4CF5-8A6A-920F20DC0001}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Shared.Tests", "tests\Shared.Tests\Icod.CoreUtils.Shared.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0002}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.ProcessTestHost", "tests\ProcessTestHost\Icod.CoreUtils.ProcessTestHost.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0003}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ed", "ed", "{577CBE8C-F909-4CF2-8356-69E7EFE515BC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.ed", "ed\Icod.CoreUtils.ed.csproj", "{C4010FAE-3D10-4D62-BDBE-1563236AA9D8}"
@@ -205,7 +211,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.dirname", "d
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pathchk", "pathchk", "{F49B1ABB-5D4E-9035-EA50-181F06EFDD26}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Pathchk", "pathchk\Icod.CoreUtils.Pathchk.csproj", "{9FBD0DBC-2CF0-4DF2-AFE1-9076F75386B3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Pathchk", "pathchk\Icod.CoreUtils.pathchk.csproj", "{9FBD0DBC-2CF0-4DF2-AFE1-9076F75386B3}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "readlink", "readlink", "{967EF206-5291-5E32-34A5-6FC3D152D3AD}"
 EndProject
@@ -309,7 +315,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Arch", "arch
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "b2sum", "b2sum", "{4691C031-9FEB-3031-7375-EA377F82082D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.B2Sum", "b2sum\Icod.CoreUtils.B2Sum.csproj", "{3B4AC1E2-CC70-4A07-A4A2-4C3462E1BDE9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.B2Sum", "b2sum\Icod.CoreUtils.B2sum.csproj", "{3B4AC1E2-CC70-4A07-A4A2-4C3462E1BDE9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "basenc", "basenc", "{7339EAFE-6202-BA0D-6D25-F43AC3752ABD}"
 EndProject
@@ -353,7 +359,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Ln", "ln\Ico
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "logname", "logname", "{001ABA7F-D9EF-04C0-AAD0-199AAE2D5C10}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.LogName", "logname\Icod.CoreUtils.LogName.csproj", "{E8088EDF-19DB-47CE-9CAD-EDFDBC353851}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.LogName", "logname\Icod.CoreUtils.Logname.csproj", "{E8088EDF-19DB-47CE-9CAD-EDFDBC353851}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nice", "nice", "{A8120E5A-B43C-81FA-3CB3-834B8128A564}"
 EndProject
@@ -369,23 +375,23 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Seq", "seq\I
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sha224sum", "sha224sum", "{C3D30E8D-2CA8-FA70-E650-CBDFF3C10364}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Sha224Sum", "sha224sum\Icod.CoreUtils.Sha224Sum.csproj", "{B08A84B2-EE65-4A5F-AD32-ACD3CE0FE80F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Sha224Sum", "sha224sum\Icod.CoreUtils.Sha224sum.csproj", "{B08A84B2-EE65-4A5F-AD32-ACD3CE0FE80F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sha256sum", "sha256sum", "{4398C07F-9301-5D46-D9F2-BD98ADC62CCB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Sha256Sum", "sha256sum\Icod.CoreUtils.Sha256Sum.csproj", "{5D2ABC6D-208F-4C49-871D-54D2FE3206E5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Sha256Sum", "sha256sum\Icod.CoreUtils.Sha256sum.csproj", "{5D2ABC6D-208F-4C49-871D-54D2FE3206E5}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sha384sum", "sha384sum", "{AF1DEA24-1CE0-A04F-016B-24B0CCE43F07}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Sha384Sum", "sha384sum\Icod.CoreUtils.Sha384Sum.csproj", "{A4E8E8B2-BBE2-4439-9F6A-3AA94B37722E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Sha384Sum", "sha384sum\Icod.CoreUtils.Sha384sum.csproj", "{A4E8E8B2-BBE2-4439-9F6A-3AA94B37722E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sha512sum", "sha512sum", "{267DCB26-682D-F3B6-EF16-0F638B55AFB5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Sha512Sum", "sha512sum\Icod.CoreUtils.Sha512Sum.csproj", "{2C9DBB1E-4884-4FF3-AE23-B8ED5CCDBAA6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Sha512Sum", "sha512sum\Icod.CoreUtils.Sha512sum.csproj", "{2C9DBB1E-4884-4FF3-AE23-B8ED5CCDBAA6}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "stdbuf", "stdbuf", "{020DA367-8DCF-06EE-DAF1-CA16D3BA16EC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.StdBuf", "stdbuf\Icod.CoreUtils.StdBuf.csproj", "{77B33F6F-8810-4355-B147-62DB1A378CFF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.StdBuf", "stdbuf\Icod.CoreUtils.Stdbuf.csproj", "{77B33F6F-8810-4355-B147-62DB1A378CFF}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sync", "sync", "{5E63119C-E70B-5D45-ECC9-8CBACC584223}"
 EndProject
@@ -401,7 +407,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Tee", "tee\I
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tsort", "tsort", "{E01A64D2-CDE5-7C13-738D-BD1856B48C87}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.TSort", "tsort\Icod.CoreUtils.TSort.csproj", "{13F20C3A-863B-4165-91F6-08548EADC02B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.TSort", "tsort\Icod.CoreUtils.Tsort.csproj", "{13F20C3A-863B-4165-91F6-08548EADC02B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "unlink", "unlink", "{0319F135-B0A2-92FB-C06C-DF073EBC8CE1}"
 EndProject
@@ -413,7 +419,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Users", "use
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "vdir", "vdir", "{D28A7B19-7594-BF68-102B-1F2F0A2CDDE0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.VDir", "vdir\Icod.CoreUtils.VDir.csproj", "{B6EEB5E7-989A-470F-84F3-1DABA088D763}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.VDir", "vdir\Icod.CoreUtils.Vdir.csproj", "{B6EEB5E7-989A-470F-84F3-1DABA088D763}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -428,6 +434,42 @@ Global
 		Staging|x86 = Staging|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0002}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0002}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0002}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0002}.Debug|x64.Build.0 = Debug|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0002}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0002}.Debug|x86.Build.0 = Debug|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0002}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0002}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0002}.Release|x64.ActiveCfg = Release|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0002}.Release|x64.Build.0 = Release|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0002}.Release|x86.ActiveCfg = Release|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0002}.Release|x86.Build.0 = Release|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0002}.Staging|Any CPU.ActiveCfg = Staging|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0002}.Staging|Any CPU.Build.0 = Staging|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0002}.Staging|x64.ActiveCfg = Staging|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0002}.Staging|x64.Build.0 = Staging|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0002}.Staging|x86.ActiveCfg = Staging|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0002}.Staging|x86.Build.0 = Staging|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0003}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0003}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0003}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0003}.Debug|x64.Build.0 = Debug|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0003}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0003}.Debug|x86.Build.0 = Debug|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0003}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0003}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0003}.Release|x64.ActiveCfg = Release|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0003}.Release|x64.Build.0 = Release|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0003}.Release|x86.ActiveCfg = Release|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0003}.Release|x86.Build.0 = Release|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0003}.Staging|Any CPU.ActiveCfg = Staging|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0003}.Staging|Any CPU.Build.0 = Staging|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0003}.Staging|x64.ActiveCfg = Staging|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0003}.Staging|x64.Build.0 = Staging|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0003}.Staging|x86.ActiveCfg = Staging|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0003}.Staging|x86.Build.0 = Staging|Any CPU
 		{38C9C31E-BFE0-44E4-8315-E074D28B6CD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{38C9C31E-BFE0-44E4-8315-E074D28B6CD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{38C9C31E-BFE0-44E4-8315-E074D28B6CD5}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -2287,6 +2329,8 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0002} = {F05B4136-23C6-4CF5-8A6A-920F20DC0001}
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0003} = {F05B4136-23C6-4CF5-8A6A-920F20DC0001}
 		{38C9C31E-BFE0-44E4-8315-E074D28B6CD5} = {4F52FD11-658E-A102-6CD3-7D7C16FFA15B}
 		{C4010FAE-3D10-4D62-BDBE-1563236AA9D8} = {577CBE8C-F909-4CF2-8356-69E7EFE515BC}
 		{7F2DDE7A-C138-47C3-86FE-B082B5818D37} = {8403C6E9-9092-4E8A-B115-86BB5449D089}

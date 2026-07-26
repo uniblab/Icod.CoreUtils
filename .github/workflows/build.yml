@@ -1,0 +1,20 @@
+name: build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - run: dotnet restore Icod.CoreUtils.sln
+      - run: dotnet build Icod.CoreUtils.sln -c Debug --no-restore
+      - run: dotnet test tests/Shared.Tests/Icod.CoreUtils.Shared.Tests.csproj -c Debug --no-build --logger trx
