@@ -173,7 +173,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.ptx", "ptx\I
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "md5sum", "md5sum", "{7DC4B754-F622-8271-FD57-0393F7CDEEAF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Md5Sum", "md5sum\Icod.CoreUtils.Md5Sum.csproj", "{5FE7B4A9-6B51-470F-9570-850E7B3CF473}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.MD5Sum", "md5sum\Icod.CoreUtils.MD5Sum.csproj", "{5FE7B4A9-6B51-470F-9570-850E7B3CF473}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sha1sum", "sha1sum", "{378E4A56-2E85-4009-EF8F-DEE856AF0CC0}"
 EndProject
