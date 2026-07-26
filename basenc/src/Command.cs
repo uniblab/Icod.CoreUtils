@@ -1,134 +1,216 @@
+// Original behavior/reference: GNU coreutils
 // Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
 
 namespace Icod.CoreUtils.Basenc;
 
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Text;
+using Icod.CoreUtils.Shared.Codecs;
+using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CoreUtils.Shared.IO;
 
 /// <summary>
-/// basenc: minimal base64 encode/decode utility.
-/// Supported options:
-///   -d, --decode    decode from base64
-///   -? --help       display this help and exit
-/// Behavior:
-///   basenc [FILE...]
-/// If no files are specified, read from standard input.
-/// Encoded output is written as UTF-8 text. Decoded output is written as raw bytes.
+/// Encodes or decodes data and writes the result to standard output.
 /// </summary>
 public static class Command {
-	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
+
+	private static readonly BaseEncodingCommandSettings Settings = new() {
+		ProgramName = "basenc",
+		VersionText = "Icod.CoreUtils.Basenc 1.0",
+		EncodingSelections = new BaseEncodingSelection[] {
+			new BaseEncodingSelection(
+				"base64",
+				"base64",
+				BaseEncodingKind.Base64
+			),
+			new BaseEncodingSelection(
+				"base64url",
+				"base64url",
+				BaseEncodingKind.Base64Url
+			),
+			new BaseEncodingSelection(
+				"base58",
+				"base58",
+				BaseEncodingKind.Base58
+			),
+			new BaseEncodingSelection(
+				"base32",
+				"base32",
+				BaseEncodingKind.Base32
+			),
+			new BaseEncodingSelection(
+				"base32hex",
+				"base32hex",
+				BaseEncodingKind.Base32Hex
+			),
+			new BaseEncodingSelection(
+				"base16",
+				"base16",
+				BaseEncodingKind.Base16
+			),
+			new BaseEncodingSelection(
+				"base2msbf",
+				"base2msbf",
+				BaseEncodingKind.Base2Msbf
+			),
+			new BaseEncodingSelection(
+				"base2lsbf",
+				"base2lsbf",
+				BaseEncodingKind.Base2Lsbf
+			),
+			new BaseEncodingSelection(
+				"z85",
+				"z85",
+				BaseEncodingKind.Z85
+			)
+		},
+		PrintUsage = PrintUsage
+	};
+
+	/// <summary>
+	/// Runs the command synchronously.
+	/// </summary>
+	public static int Run(
+		string[] args,
+		TextReader? stdin = null,
+		TextWriter? stdout = null,
+		TextWriter? stderr = null
+	) {
+		return RunAsync(
+			args,
+			stdin,
+			stdout,
+			stderr
+		).GetAwaiter().GetResult();
+	}
+
+	/// <summary>
+	/// Runs the command asynchronously with optionally injected streams.
+	/// </summary>
+	public static async Task<int> RunAsync(
+		string[] args,
+		TextReader? stdin = null,
+		TextWriter? stdout = null,
+		TextWriter? stderr = null,
+		Stream? stdinStream = null,
+		Stream? stdoutStream = null,
+		CancellationToken cancellationToken = default
+	) {
+		var useConsoleInput = null == stdin;
+		var useConsoleOutput = null == stdout;
+		stdin ??= Console.In;
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;
 
-		var decode = false;
-		var files = new List<string>();
-
-		for ( var i = 0; i < args.Length; i++ ) {
-			var a = args[ i ];
-			if ( a is "-?" or "--help" ) {
-				PrintUsage( stdout );
-				return 0;
-			}
-
-			if ( a == "-d" || a == "--decode" ) {
-				decode = true;
-				continue;
-			}
-
-			// treat anything else as filename
-			files.Add( a );
-		}
-
-		if ( files.Count == 0 ) {
-			files.Add( "-" );
-		}
-
-		var exitCode = 0;
-		foreach ( var path in files ) {
-			try {
-				if ( decode ) {
-					// Read textual base64 input, then write decoded bytes.
-					string inputText;
-					if ( path == "-" ) {
-						// read all from stdin TextReader
-						inputText = stdin is not null ? stdin.ReadToEnd() : Console.In.ReadToEnd();
-					} else {
-						inputText = File.ReadAllText( path, Encoding.UTF8 );
-					}
-
-					// Strip whitespace that may be present
-					var b64 = RemoveWhitespace( inputText );
-					byte[] data;
-					try {
-						data = Convert.FromBase64String( b64 );
-					} catch ( FormatException ex ) {
-						stderr.WriteLine( $"basenc: {path}: invalid base64 data: {ex.Message}" );
-						exitCode = 1;
-						continue;
-					}
-
-					// Write raw bytes to stdout stream if available, otherwise write as binary via Console.OpenStandardOutput
-					if ( stdout is null ) {
-						// should not happen due to default above
-						Console.OpenStandardOutput().Write( data, 0, data.Length );
-					} else if ( stdout is StreamWriter sw ) {
-						sw.Flush();
-						var outStream = sw.BaseStream;
-						outStream.Write( data, 0, data.Length );
-						outStream.Flush();
-					} else {
-						// fallback: write to underlying standard output stream
-						var outStream = Console.OpenStandardOutput();
-						outStream.Write( data, 0, data.Length );
-						outStream.Flush();
-					}
-				} else {
-					// encode: read raw bytes and write base64 text
-					byte[] data;
-					if ( path == "-" ) {
-						Stream inStream;
-						if ( stdin is StreamReader sr ) {
-							inStream = sr.BaseStream;
-						} else {
-							inStream = Console.OpenStandardInput();
-						}
-
-						using ( inStream ) {
-							using var ms = new MemoryStream();
-							inStream.CopyTo( ms );
-							data = ms.ToArray();
-						}
-					} else {
-						data = File.ReadAllBytes( path );
-					}
-
-					var encoded = Convert.ToBase64String( data );
-					stdout!.WriteLine( encoded );
-				}
-			} catch ( Exception ex ) {
-				stderr.WriteLine( $"basenc: {path}: {ex.Message}" );
-				exitCode = 1;
+		TextReaderStream? inputAdapter = null;
+		if ( null == stdinStream ) {
+			if ( useConsoleInput ) {
+				stdinStream = Console.OpenStandardInput();
+			} else {
+				inputAdapter = new TextReaderStream(
+					stdin,
+					new UTF8Encoding(
+						encoderShouldEmitUTF8Identifier: false
+					)
+				);
+				stdinStream = inputAdapter;
 			}
 		}
+		if (
+			null == stdoutStream
+			&& useConsoleOutput
+		) {
+			stdoutStream = Console.OpenStandardOutput();
+		}
 
-		return exitCode;
+		try {
+			return await RunAsync(
+				args,
+				new CommandContext(
+					"basenc",
+					stdin,
+					stdout,
+					stderr,
+					stdinStream,
+					stdoutStream,
+					cancellationToken: cancellationToken
+				)
+			).ConfigureAwait( false );
+		} finally {
+			inputAdapter?.Dispose();
+		}
 	}
 
-	private static void PrintUsage( TextWriter stdout ) {
-		stdout.WriteLine( "Usage: basenc [-d] [file...]" );
-		stdout.WriteLine( "  -d, --decode    decode from base64" );
-		stdout.WriteLine( "  -?, --help      display this help and exit" );
+	/// <summary>
+	/// Runs the command using a shared command context.
+	/// </summary>
+	public static Task<int> RunAsync(
+		string[] args,
+		CommandContext context
+	) {
+		return BaseEncodingCommand.RunAsync(
+			args,
+			context,
+			Settings
+		);
 	}
 
-	private static string RemoveWhitespace( string s ) {
-		var sb = new StringBuilder( s.Length );
-		foreach ( var c in s ) {
-			if ( !char.IsWhiteSpace( c ) ) {
-				sb.Append( c );
-			}
-		}
-		return sb.ToString();
+	private static void PrintUsage(
+		TextWriter output
+	) {
+		output.WriteLine(
+			"Usage: basenc ENCODING [OPTION]... [FILE]"
+		);
+		output.WriteLine(
+			"Encode or decode FILE, or standard input, to standard output."
+		);
+		output.WriteLine(
+			""
+		);
+		output.WriteLine(
+			"      --base64          RFC 4648 Base64"
+		);
+		output.WriteLine(
+			"      --base64url       file- and URL-safe Base64"
+		);
+		output.WriteLine(
+			"      --base58          visually unambiguous Base58"
+		);
+		output.WriteLine(
+			"      --base32          RFC 4648 Base32"
+		);
+		output.WriteLine(
+			"      --base32hex       extended-hex Base32"
+		);
+		output.WriteLine(
+			"      --base16          hexadecimal"
+		);
+		output.WriteLine(
+			"      --base2msbf       bit string, most-significant bit first"
+		);
+		output.WriteLine(
+			"      --base2lsbf       bit string, least-significant bit first"
+		);
+		output.WriteLine(
+			"      --z85             ZeroMQ Z85"
+		);
+		output.WriteLine(
+			"  -d, --decode          decode data"
+		);
+		output.WriteLine(
+			"  -i, --ignore-garbage  when decoding, ignore non-alphabet characters"
+		);
+		output.WriteLine(
+			"  -w, --wrap=COLS       wrap encoded lines after COLS characters"
+		);
+		output.WriteLine(
+			"                         (default 76; 0 disables wrapping)"
+		);
+		output.WriteLine(
+			"      --help            display this help and exit"
+		);
+		output.WriteLine(
+			"      --version         output version information and exit"
+		);
 	}
+
 }
