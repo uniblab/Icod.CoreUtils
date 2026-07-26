@@ -6,8 +6,8 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<IsPackable>false</IsPackable>
 		<IsTestProject>true</IsTestProject>
-		<AssemblyName>Icod.CoreUtils.Wc.Tests</AssemblyName>
-		<RootNamespace>Icod.CoreUtils.Wc.Tests</RootNamespace>
+		<AssemblyName>Icod.CoreUtils.WC.Tests</AssemblyName>
+		<RootNamespace>Icod.CoreUtils.WC.Tests</RootNamespace>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
