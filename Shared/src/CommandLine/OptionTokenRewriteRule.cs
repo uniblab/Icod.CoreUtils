@@ -5,7 +5,9 @@ namespace Icod.CoreUtils.Shared.CommandLine;
 /// </summary>
 /// <remarks>
 /// A rule should return <see langword="null"/> when it does not recognize the token.
-/// The first matching rule wins. Rewritten tokens retain the original argument index.
+/// The first matching rule wins. Rules run only while option parsing is active;
+/// tokens consumed as option values and tokens following <c>--</c> are not rewritten.
+/// Rewritten tokens retain the original argument index.
 /// </remarks>
 public sealed class OptionTokenRewriteRule {
 

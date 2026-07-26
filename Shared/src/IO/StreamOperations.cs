@@ -217,6 +217,126 @@ public static class StreamOperations {
 	}
 
 	/// <summary>
+	/// Finds the byte offset at which the final requested number of delimited
+	/// records begins.
+	/// </summary>
+	/// <remarks>
+	/// The source must be seekable. A delimiter at the final byte terminates the
+	/// final record and is not counted as the boundary before that record.
+	/// The source position is restored before this method returns.
+	/// </remarks>
+	/// <returns>
+	/// Zero when the source contains no more than <paramref name="recordCount"/>
+	/// records; otherwise, the byte immediately after the boundary delimiter.
+	/// </returns>
+	public static async Task<long> FindStartOfLastDelimitedRecordsAsync(
+		Stream source,
+		byte separator,
+		long recordCount,
+		int bufferSize = DefaultBufferSize,
+		CancellationToken cancellationToken = default
+	) {
+		ArgumentNullException.ThrowIfNull(
+			source
+		);
+		if ( !source.CanRead || !source.CanSeek ) {
+			throw new ArgumentException(
+				"The source stream must be readable and seekable.",
+				nameof( source )
+			);
+		}
+		if ( recordCount < 0 ) {
+			throw new ArgumentOutOfRangeException(
+				nameof( recordCount )
+			);
+		}
+		if ( bufferSize <= 0 ) {
+			throw new ArgumentOutOfRangeException(
+				nameof( bufferSize )
+			);
+		}
+		cancellationToken.ThrowIfCancellationRequested();
+
+		var originalPosition = source.Position;
+		try {
+			var length = source.Length;
+			if ( 0 == recordCount ) {
+				return length;
+			}
+			if ( 0 == length ) {
+				return 0;
+			}
+
+			var buffer = ArrayPool<byte>.Shared.Rent(
+				bufferSize
+			);
+			try {
+				var position = length;
+				long boundaries = 0;
+				var ignoreTrailingSeparator = true;
+
+				while ( 0 < position ) {
+					var blockStart = Math.Max(
+						0,
+						position - buffer.Length
+					);
+					var blockLength = (int)( position - blockStart );
+					source.Seek(
+						blockStart,
+						SeekOrigin.Begin
+					);
+
+					var readTotal = 0;
+					while ( readTotal < blockLength ) {
+						var read = await source.ReadAsync(
+							buffer.AsMemory(
+								readTotal,
+								blockLength - readTotal
+							),
+							cancellationToken
+						).ConfigureAwait( false );
+						if ( 0 == read ) {
+							break;
+						}
+						readTotal += read;
+					}
+
+					for (
+						var index = readTotal - 1;
+						0 <= index;
+						index--
+					) {
+						if ( separator != buffer[ index ] ) {
+							ignoreTrailingSeparator = false;
+							continue;
+						}
+						if ( ignoreTrailingSeparator ) {
+							ignoreTrailingSeparator = false;
+							continue;
+						}
+
+						boundaries++;
+						if ( recordCount == boundaries ) {
+							return blockStart + index + 1;
+						}
+					}
+					position = blockStart;
+				}
+				return 0;
+			} finally {
+				ArrayPool<byte>.Shared.Return(
+					buffer
+				);
+			}
+		} finally {
+			source.Seek(
+				originalPosition,
+				SeekOrigin.Begin
+			);
+		}
+	}
+
+	/// <summary>
 	/// Reads at most the requested bounded number of bytes.
 	/// </summary>
 	public static async Task<byte[]> ReadAtMostAsync(

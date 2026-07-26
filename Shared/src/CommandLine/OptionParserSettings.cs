@@ -22,7 +22,7 @@ public sealed class OptionParserSettings {
 	} = OptionOrdering.RequireOrder;
 
 	/// <summary>
-	/// Gets legacy-token rewrite rules applied before parsing.
+	/// Gets legacy-token rewrite rules applied as option-candidate tokens are reached.
 	/// </summary>
 	public IList<OptionTokenRewriteRule> TokenRewriteRules {
 		get;
