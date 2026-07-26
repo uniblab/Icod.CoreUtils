@@ -19,7 +19,7 @@
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\..\Shared\Icod.CoreUtils.Shared.csproj" />
-		<ProjectReference Include="..\..\b2sum\Icod.CoreUtils.B2sum.csproj" />
+		<ProjectReference Include="..\..\b2sum\Icod.CoreUtils.B2Sum.csproj" />
 		<ProjectReference Include="..\..\cksum\Icod.CoreUtils.CkSum.csproj" />
 		<ProjectReference Include="..\..\md5sum\Icod.CoreUtils.MD5Sum.csproj" />
 		<ProjectReference Include="..\..\sha1sum\Icod.CoreUtils.Sha1Sum.csproj" />
