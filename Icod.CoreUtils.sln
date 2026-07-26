@@ -23,7 +23,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Cat.Tests", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Tee.Tests", "tests\Tee.Tests\Icod.CoreUtils.Tee.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0008}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Wc.Tests", "tests\Wc.Tests\Icod.CoreUtils.Wc.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0009}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.WC.Tests", "tests\WC.Tests\Icod.CoreUtils.WC.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0009}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Base32.Tests", "tests\Base32.Tests\Icod.CoreUtils.Base32.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0010}"
 EndProject
@@ -101,7 +101,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.uniq", "uniq
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "wc", "wc", "{C06185DE-690F-771F-7CF6-1417A0AE6027}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Wc", "wc\Icod.CoreUtils.Wc.csproj", "{D5678D62-B4EB-460B-888D-107BF3ACCB1A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.WC", "wc\Icod.CoreUtils.WC.csproj", "{D5678D62-B4EB-460B-888D-107BF3ACCB1A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tr", "tr", "{22EF949B-11C6-C68D-D503-12687A1A103C}"
 EndProject

@@ -1,4 +1,4 @@
-namespace Icod.CoreUtils.Wc;
+namespace Icod.CoreUtils.WC;
 
 using Icod.CoreUtils.Shared.Diagnostics;
 

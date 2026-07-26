@@ -9,7 +9,7 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<OutputPath>..\bin\$(Configuration)\</OutputPath>
 		<AssemblyName>wc</AssemblyName>
-		<RootNamespace>Icod.CoreUtils.Wc</RootNamespace>
+		<RootNamespace>Icod.CoreUtils.WC</RootNamespace>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
 		<PlatformTarget>AnyCPU</PlatformTarget>
