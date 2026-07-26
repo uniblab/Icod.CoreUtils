@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
+		<LangVersion>13</LangVersion>
 		<OutputType>Library</OutputType>
 		<TargetFramework>net9.0</TargetFramework>
 		<Nullable>enable</Nullable>
@@ -20,26 +21,31 @@
 	-->
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
 		<ErrorReport>prompt</ErrorReport>
-		<WarningLevel>4</WarningLevel>
+		<WarningLevel>2</WarningLevel>
 		<DebugSymbols>true</DebugSymbols>
 		<DebugType>full</DebugType>
 		<Optimize>false</Optimize>
 		<DefineConstants>DEBUG;TRACE</DefineConstants>
+		<SignAssembly>false</SignAssembly>
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(Configuration)' == 'Staging' ">
 		<ErrorReport>prompt</ErrorReport>
-		<WarningLevel>4</WarningLevel>
+		<WarningLevel>3</WarningLevel>
 		<DebugSymbols>true</DebugSymbols>
 		<DebugType>full</DebugType>
 		<Optimize>false</Optimize>
 		<DefineConstants>TRACE</DefineConstants>
+		<SignAssembly>false</SignAssembly>
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-		<AssemblyKeyContainerName>Icod</AssemblyKeyContainerName>
-		<DelaySign>false</DelaySign>
+		<SignAssembly>false</SignAssembly>
 		<DebugType>pdbonly</DebugType>
 		<Optimize>true</Optimize>
 		<ErrorReport>prompt</ErrorReport>
 		<WarningLevel>4</WarningLevel>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
 	</PropertyGroup>
 </Project>
