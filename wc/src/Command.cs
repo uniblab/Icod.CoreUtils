@@ -1,7 +1,7 @@
 // Original behavior/reference: GNU coreutils
 // Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
 
-namespace Icod.CoreUtils.Wc;
+namespace Icod.CoreUtils.WC;
 
 using System.Buffers;
 using System.Globalization;

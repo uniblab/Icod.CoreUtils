@@ -19,15 +19,15 @@
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\..\Shared\Icod.CoreUtils.Shared.csproj" />
-		<ProjectReference Include="..\..\b2sum\Icod.CoreUtils.B2sum.csproj" />
-		<ProjectReference Include="..\..\cksum\Icod.CoreUtils.cksum.csproj" />
-		<ProjectReference Include="..\..\md5sum\Icod.CoreUtils.md5sum.csproj" />
-		<ProjectReference Include="..\..\sha1sum\Icod.CoreUtils.sha1sum.csproj" />
-		<ProjectReference Include="..\..\sha224sum\Icod.CoreUtils.Sha224sum.csproj" />
-		<ProjectReference Include="..\..\sha256sum\Icod.CoreUtils.Sha256sum.csproj" />
-		<ProjectReference Include="..\..\sha384sum\Icod.CoreUtils.Sha384sum.csproj" />
-		<ProjectReference Include="..\..\sha512sum\Icod.CoreUtils.Sha512sum.csproj" />
-		<ProjectReference Include="..\..\sum\Icod.CoreUtils.sum.csproj" />
+		<ProjectReference Include="..\..\b2sum\Icod.CoreUtils.B2Sum.csproj" />
+		<ProjectReference Include="..\..\cksum\Icod.CoreUtils.CkSum.csproj" />
+		<ProjectReference Include="..\..\md5sum\Icod.CoreUtils.MD5Sum.csproj" />
+		<ProjectReference Include="..\..\sha1sum\Icod.CoreUtils.Sha1Sum.csproj" />
+		<ProjectReference Include="..\..\sha224sum\Icod.CoreUtils.Sha224Sum.csproj" />
+		<ProjectReference Include="..\..\sha256sum\Icod.CoreUtils.Sha256Sum.csproj" />
+		<ProjectReference Include="..\..\sha384sum\Icod.CoreUtils.Sha384Sum.csproj" />
+		<ProjectReference Include="..\..\sha512sum\Icod.CoreUtils.Sha512Sum.csproj" />
+		<ProjectReference Include="..\..\sum\Icod.CoreUtils.Sum.csproj" />
 	</ItemGroup>
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
 		<ErrorReport>prompt</ErrorReport>

@@ -1,8 +1,8 @@
-namespace Icod.CoreUtils.Wc.Tests;
+namespace Icod.CoreUtils.WC.Tests;
 
 using System.Text;
 using Icod.CoreUtils.Shared.Diagnostics;
-using WcCommand = Icod.CoreUtils.Wc.Command;
+using WcCommand = Icod.CoreUtils.WC.Command;
 using Xunit;
 
 public sealed class WcCommandTests {
