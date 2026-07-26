@@ -1,42 +1,116 @@
-// Original behavior/reference: GNU coreutils
-// Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
-
 namespace Icod.CoreUtils.Sum;
 
-using System;
-using System.IO;
 using System.Text;
+using Icod.CoreUtils.Shared.Checksums;
+using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CoreUtils.Shared.IO;
 
-/// <summary>
-/// Compute a simple 16-bit checksum and 512-byte block count similar to BSD `sum`.
-/// </summary>
+/// <summary>Computes BSD or System V checksums.</summary>
 public static class Command {
-	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
+
+	/// <summary>Runs the command synchronously.</summary>
+	public static int Run(
+		string[] args,
+		TextReader? stdin = null,
+		TextWriter? stdout = null,
+		TextWriter? stderr = null
+	) {
+		return RunAsync(
+			args,
+			stdin,
+			stdout,
+			stderr
+		).GetAwaiter().GetResult();
+	}
+
+	/// <summary>Runs the command asynchronously.</summary>
+	public static async Task<int> RunAsync(
+		string[] args,
+		TextReader? stdin = null,
+		TextWriter? stdout = null,
+		TextWriter? stderr = null,
+		Stream? stdinStream = null,
+		Stream? stdoutStream = null,
+		CancellationToken cancellationToken = default
+	) {
+		var useConsoleInput = null == stdin;
+		var useConsoleOutput = null == stdout;
 		stdin ??= Console.In;
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;
-
-		var files = args.Length == 0 ? new[] { "-" } : args;
-		var exitCode = 0;
-		foreach ( var name in files ) {
-			try {
-				using var stream = name == "-" ? Console.OpenStandardInput() : File.OpenRead( name );
-				var buffer = new byte[ 8192 ];
-				long len = 0;
-				ulong sum = 0;
-				int read;
-				while ( ( read = stream.Read( buffer, 0, buffer.Length ) ) > 0 ) {
-					len += read;
-					for ( var i = 0; i < read; i++ )
-						sum = ( sum + buffer[ i ] ) & 0xFFFFu;
-				}
-				var blocks = ( len + 511 ) / 512;
-				stdout.WriteLine( $"{sum} {blocks} {( name == "-" ? "-" : name )}" );
-			} catch ( Exception ex ) {
-				stderr.WriteLine( $"sum: {name}: {ex.Message}" );
-				exitCode = 1;
+		TextReaderStream? inputAdapter = null;
+		if ( null == stdinStream ) {
+			if ( useConsoleInput ) {
+				stdinStream = Console.OpenStandardInput();
+			} else {
+				inputAdapter = new TextReaderStream(
+					stdin,
+					new UTF8Encoding(
+						encoderShouldEmitUTF8Identifier: false
+					)
+				);
+				stdinStream = inputAdapter;
 			}
 		}
-		return exitCode;
+		if (
+			null == stdoutStream
+			&& useConsoleOutput
+		) {
+			stdoutStream = Console.OpenStandardOutput();
+		}
+		try {
+			return await RunAsync(
+				args,
+				new CommandContext(
+					"sum",
+					stdin,
+					stdout,
+					stderr,
+					stdinStream,
+					stdoutStream,
+					cancellationToken: cancellationToken
+				)
+			).ConfigureAwait( false );
+		} finally {
+			inputAdapter?.Dispose();
+		}
 	}
+
+	/// <summary>Runs the command with a shared context.</summary>
+	public static Task<int> RunAsync(
+		string[] args,
+		CommandContext context
+	) {
+		return SumCommand.RunAsync(
+			args,
+			context,
+			PrintUsage,
+			"Icod.CoreUtils.Sum 1.0"
+		);
+	}
+
+	private static void PrintUsage(
+		TextWriter output
+	) {
+		output.WriteLine(
+			"Usage: sum [OPTION]... [FILE]..."
+		);
+		output.WriteLine(
+			"Print checksum and block counts for each FILE."
+		);
+		output.WriteLine();
+		output.WriteLine(
+			"  -r                 use BSD checksum algorithm and 1K blocks"
+		);
+		output.WriteLine(
+			"  -s, --sysv         use System V checksum algorithm and 512-byte blocks"
+		);
+		output.WriteLine(
+			"      --help         display this help and exit"
+		);
+		output.WriteLine(
+			"      --version      output version information and exit"
+		);
+	}
+
 }
