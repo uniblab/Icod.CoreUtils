@@ -1,10 +1,28 @@
-// Port of the standard UNIX `base64` utility to .NET
 namespace Icod.CoreUtils.Base64;
 
-using System;
+using Icod.CoreUtils.Shared.Diagnostics;
 
-internal static class Program {
-	public static int Main( string[] args ) {
-		return Command.Run( args, Console.In, Console.Out, Console.Error );
+public static class Program {
+
+	public static async Task<int> Main(
+		string[] args
+	) {
+		using var cancellation = new CancellationTokenSource();
+		Console.CancelKeyPress += (
+			sender,
+			eventArgs
+		) => {
+			eventArgs.Cancel = true;
+			cancellation.Cancel();
+		};
+
+		return await Command.RunAsync(
+			args,
+			CommandContext.CreateConsole(
+				"base64",
+				cancellation.Token
+			)
+		).ConfigureAwait( false );
 	}
+
 }
