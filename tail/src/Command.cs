@@ -3,49 +3,107 @@
 
 namespace Icod.CoreUtils.Tail;
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
-using System.IO;
-using System.Numerics;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+using Icod.CoreUtils.Shared.CommandLine;
+using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CoreUtils.Shared.IO;
+using Icod.CoreUtils.Shared.Numerics;
 
 /// <summary>
 /// Implements GNU-style <c>tail</c>: output the last part of files and,
 /// optionally, follow files as they grow.
 /// </summary>
 /// <remarks>
-/// <para>
-/// The implementation uses TAP throughout. Last-N line mode retains only N
-/// records. Seekable byte input is read directly from the calculated offset;
-/// non-seekable byte input is spooled to a temporary file rather than held
-/// wholly in memory. Follow mode uses cancellable asynchronous polling.
-/// </para>
-/// <para>
-/// Supported options include <c>-c</c>/<c>--bytes</c>,
-/// <c>-n</c>/<c>--lines</c>, <c>-f</c>/<c>--follow</c>, <c>-F</c>,
-/// <c>--retry</c>, <c>--pid</c>, <c>-s</c>/<c>--sleep-interval</c>,
-/// <c>--max-unchanged-stats</c>, <c>-q</c>/<c>--quiet</c>,
-/// <c>-v</c>/<c>--verbose</c>, <c>-z</c>/<c>--zero-terminated</c>,
-/// <c>--debug</c>, <c>--help</c>, and <c>--version</c>.
-/// </para>
+/// Normal executable operation is byte preserving. Seekable files are scanned
+/// backward to locate the requested final records. Forward-only sources use
+/// bounded buffering or a temporary spool. Follow mode uses cancellation-aware
+/// asynchronous polling and supports descriptor and name semantics.
 /// </remarks>
 public static class Command {
 
 	#region fields
-	private const int BufferSize = 65536;
-	private const int MaxBufferedRecords = 65536;
+
 	private const int DefaultCount = 10;
 	private const int DefaultMaxUnchangedStats = 5;
 	private const int ErrorExitCode = 1;
+	private const int MaxBufferedRecords = 65536;
 	private const int UsageExitCode = 1;
 	private const string VersionText = "Icod.CoreUtils.Tail 1.0";
-	#endregion fields
 
+	private static readonly OptionDefinition[] Options = new OptionDefinition[] {
+		new(
+			"bytes",
+			'c',
+			new string[] { "bytes" },
+			OptionValueArity.Required
+		),
+		new(
+			"debug",
+			longNames: new string[] { "debug" }
+		),
+		new(
+			"follow",
+			'f',
+			new string[] { "follow" },
+			OptionValueArity.Optional
+		),
+		new(
+			"follow-retry",
+			'F'
+		),
+		new(
+			"lines",
+			'n',
+			new string[] { "lines" },
+			OptionValueArity.Required
+		),
+		new(
+			"max-unchanged-stats",
+			longNames: new string[] { "max-unchanged-stats" },
+			valueArity: OptionValueArity.Required
+		),
+		new(
+			"pid",
+			longNames: new string[] { "pid" },
+			valueArity: OptionValueArity.Required
+		),
+		new(
+			"quiet",
+			'q',
+			new string[] { "quiet", "silent" }
+		),
+		new(
+			"retry",
+			longNames: new string[] { "retry" }
+		),
+		new(
+			"sleep-interval",
+			's',
+			new string[] { "sleep-interval" },
+			OptionValueArity.Required
+		),
+		new(
+			"verbose",
+			'v',
+			new string[] { "verbose" }
+		),
+		new(
+			"zero-terminated",
+			'z',
+			new string[] { "zero-terminated" }
+		),
+		new(
+			"help",
+			'?',
+			new string[] { "help" }
+		),
+		new(
+			"version",
+			longNames: new string[] { "version" }
+		)
+	};
+
+	#endregion fields
 
 	#region nested types
 
@@ -60,7 +118,56 @@ public static class Command {
 		Name
 	}
 
-	private sealed class Options {
+	private sealed class FollowState : IDisposable {
+
+		public bool Active {
+			get;
+			set;
+		} = true;
+
+		public DateTime CreationTimeUtc {
+			get;
+			set;
+		}
+
+		public FileStream? Descriptor {
+			get;
+			set;
+		}
+
+		public bool MissingReported {
+			get;
+			set;
+		}
+
+		public string Path {
+			get;
+		}
+
+		public long Position {
+			get;
+			set;
+		}
+
+		public int UnchangedIterations {
+			get;
+			set;
+		}
+
+		public FollowState(
+			string path
+		) {
+			this.Path = path;
+		}
+
+		public void Dispose() {
+			this.Descriptor?.Dispose();
+			this.Descriptor = null;
+		}
+
+	}
+
+	private sealed class Settings {
 
 		public long Count {
 			get;
@@ -123,298 +230,13 @@ public static class Command {
 
 	}
 
-	private sealed class RecordReader {
-
-		private readonly char[] myBuffer;
-		private int myCount;
-		private int myIndex;
-		private readonly TextReader myReader;
-		private readonly char mySeparator;
-
-		public RecordReader(
-			TextReader reader,
-			char separator
-		) {
-			this.myReader = reader ?? throw new ArgumentNullException(
-				nameof( reader )
-			);
-			this.mySeparator = separator;
-			this.myBuffer = new char[ 4096 ];
-		}
-
-		public async Task<string?> ReadAsync(
-			CancellationToken cancellationToken
-		) {
-			if ( '\n' == this.mySeparator ) {
-				cancellationToken.ThrowIfCancellationRequested();
-				return await this.myReader.ReadLineAsync().ConfigureAwait( false );
-			}
-
-			var output = new StringBuilder();
-			while ( true ) {
-				if ( this.myCount <= this.myIndex ) {
-					cancellationToken.ThrowIfCancellationRequested();
-					this.myCount = await this.myReader.ReadAsync(
-						this.myBuffer,
-						0,
-						this.myBuffer.Length
-					).ConfigureAwait( false );
-					this.myIndex = 0;
-					if ( 0 == this.myCount ) {
-						return 0 == output.Length
-							? null
-							: output.ToString()
-						;
-					}
-				}
-
-				var start = this.myIndex;
-				while (
-					this.myIndex < this.myCount
-					&& this.mySeparator != this.myBuffer[ this.myIndex ]
-				) {
-					this.myIndex++;
-				}
-
-				output.Append(
-					this.myBuffer,
-					start,
-					this.myIndex - start
-				);
-
-				if (
-					this.myIndex < this.myCount
-					&& this.mySeparator == this.myBuffer[ this.myIndex ]
-				) {
-					this.myIndex++;
-					return output.ToString();
-				}
-			}
-		}
-
-	}
-
-	private sealed class OutputSink {
-
-		private readonly Stream? myBinary;
-		private readonly Decoder myDecoder;
-		private readonly Encoding myEncoding;
-		private readonly TextWriter myText;
-
-		public OutputSink(
-			TextWriter text,
-			Stream? binary
-		) {
-			this.myText = text ?? throw new ArgumentNullException(
-				nameof( text )
-			);
-			this.myBinary = binary;
-			this.myEncoding = Encoding.UTF8;
-			this.myDecoder = this.myEncoding.GetDecoder();
-		}
-
-		public async Task WriteHeaderAsync(
-			string path,
-			bool precedingBlankLine,
-			bool binaryMode,
-			CancellationToken cancellationToken
-		) {
-			var header = string.Concat(
-				precedingBlankLine
-					? Environment.NewLine
-					: string.Empty,
-				"==> ",
-				path,
-				" <==",
-				Environment.NewLine
-			);
-
-			if ( binaryMode ) {
-				var bytes = Encoding.UTF8.GetBytes(
-					header
-				);
-				await this.WriteBytesAsync(
-					bytes,
-					0,
-					bytes.Length,
-					cancellationToken
-				).ConfigureAwait( false );
-			} else {
-				cancellationToken.ThrowIfCancellationRequested();
-				await this.myText.WriteAsync(
-					header
-				).ConfigureAwait( false );
-			}
-		}
-
-		public async Task WriteRecordAsync(
-			string value,
-			bool zeroTerminated,
-			CancellationToken cancellationToken
-		) {
-			cancellationToken.ThrowIfCancellationRequested();
-			await this.myText.WriteAsync(
-				value
-			).ConfigureAwait( false );
-			if ( zeroTerminated ) {
-				await this.myText.WriteAsync(
-					'\0'
-				).ConfigureAwait( false );
-			} else {
-				await this.myText.WriteLineAsync().ConfigureAwait( false );
-			}
-		}
-
-		public async Task WriteBytesAsync(
-			byte[] buffer,
-			int offset,
-			int count,
-			CancellationToken cancellationToken
-		) {
-			if ( 0 == count ) {
-				return;
-			}
-
-			if ( null != this.myBinary ) {
-				await this.myBinary.WriteAsync(
-					buffer,
-					offset,
-					count,
-					cancellationToken
-				).ConfigureAwait( false );
-				return;
-			}
-
-			var maximumCharacters = this.myEncoding.GetMaxCharCount(
-				count
-			);
-			var characters = new char[ maximumCharacters ];
-			this.myDecoder.Convert(
-				buffer,
-				offset,
-				count,
-				characters,
-				0,
-				characters.Length,
-				flush: false,
-				out _,
-				out var charactersUsed,
-				out _
-			);
-			cancellationToken.ThrowIfCancellationRequested();
-			await this.myText.WriteAsync(
-				characters,
-				0,
-				charactersUsed
-			).ConfigureAwait( false );
-		}
-
-		public async Task FlushAsync(
-			bool binaryMode,
-			CancellationToken cancellationToken
-		) {
-			if (
-				binaryMode
-				&& null != this.myBinary
-			) {
-				await this.myBinary.FlushAsync(
-					cancellationToken
-				).ConfigureAwait( false );
-				return;
-			}
-
-			if (
-				binaryMode
-				&& null == this.myBinary
-			) {
-				var characters = new char[
-					this.myEncoding.GetMaxCharCount(
-						0
-					)
-				];
-				this.myDecoder.Convert(
-					Array.Empty<byte>(),
-					0,
-					0,
-					characters,
-					0,
-					characters.Length,
-					flush: true,
-					out _,
-					out var charactersUsed,
-					out _
-				);
-
-				if ( 0 < charactersUsed ) {
-					cancellationToken.ThrowIfCancellationRequested();
-					await this.myText.WriteAsync(
-						characters,
-						0,
-						charactersUsed
-					).ConfigureAwait( false );
-				}
-			}
-
-			cancellationToken.ThrowIfCancellationRequested();
-			await this.myText.FlushAsync().ConfigureAwait( false );
-		}
-
-	}
-
-	private sealed class FollowState : IDisposable {
-
-		public bool Active {
-			get;
-			set;
-		} = true;
-
-		public DateTime CreationTimeUtc {
-			get;
-			set;
-		}
-
-		public FileStream? Descriptor {
-			get;
-			set;
-		}
-
-		public bool MissingReported {
-			get;
-			set;
-		}
-
-		public string Path {
-			get;
-		}
-
-		public long Position {
-			get;
-			set;
-		}
-
-		public int UnchangedIterations {
-			get;
-			set;
-		}
-
-		public FollowState(
-			string path
-		) {
-			this.Path = path;
-		}
-
-		public void Dispose() {
-			this.Descriptor?.Dispose();
-			this.Descriptor = null;
-		}
-
-	}
-
 	#endregion nested types
-
 
 	#region public methods
 
+	/// <summary>
+	/// Executes <c>tail</c> synchronously.
+	/// </summary>
 	public static int Run(
 		string[] args,
 		TextReader? stdin = null,
@@ -429,6 +251,10 @@ public static class Command {
 		).GetAwaiter().GetResult();
 	}
 
+	/// <summary>
+	/// Executes <c>tail</c> asynchronously using optionally injected standard
+	/// streams.
+	/// </summary>
 	public static async Task<int> RunAsync(
 		string[] args,
 		TextReader? stdin = null,
@@ -445,7 +271,6 @@ public static class Command {
 		stdin ??= Console.In;
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;
-
 		if (
 			null == stdinStream
 			&& useConsoleInput
@@ -459,777 +284,744 @@ public static class Command {
 			stdoutStream = Console.OpenStandardOutput();
 		}
 
+		return await RunAsync(
+			args,
+			new CommandContext(
+				"tail",
+				stdin,
+				stdout,
+				stderr,
+				stdinStream,
+				stdoutStream,
+				cancellationToken: cancellationToken
+			)
+		).ConfigureAwait( false );
+	}
+
+	/// <summary>
+	/// Executes <c>tail</c> asynchronously using a shared command context.
+	/// </summary>
+	public static async Task<int> RunAsync(
+		string[] args,
+		CommandContext context
+	) {
+		ArgumentNullException.ThrowIfNull(
+			context
+		);
+		args ??= Array.Empty<string>();
+
+		using var output = new ByteOutputStream(
+			context.StandardOutput,
+			context.StandardOutputStream
+		);
 		try {
-			var options = new Options();
-			var files = new List<string>();
-			var parseResult = ParseArguments(
+			return await RunCoreAsync(
 				args,
-				options,
-				files,
-				stdout,
-				stderr
-			);
-			if ( parseResult.HasValue ) {
-				return parseResult.Value;
-			}
-
-			if ( 0 == files.Count ) {
-				files.Add(
-					"-"
-				);
-			}
-
-			var output = new OutputSink(
-				stdout,
-				stdoutStream
-			);
-			var showHeaders = options.Verbose
-				|| (
-					!options.Quiet
-					&& 1 < files.Count
-				)
-			;
-			var wroteHeader = false;
-			var exitCode = 0;
-			var followStates = new List<FollowState>();
-
-			try {
-				foreach ( var path in files ) {
-					cancellationToken.ThrowIfCancellationRequested();
-
-					try {
-						if ( showHeaders ) {
-							await output.WriteHeaderAsync(
-								"-" == path
-									? "standard input"
-									: path,
-								wroteHeader,
-								CountKind.Bytes == options.CountKind,
-								cancellationToken
-							).ConfigureAwait( false );
-							wroteHeader = true;
-						}
-
-						if ( CountKind.Lines == options.CountKind ) {
-							await ProcessLinesAsync(
-								path,
-								stdin,
-								output,
-								options,
-								cancellationToken
-							).ConfigureAwait( false );
-						} else {
-							await ProcessBytesAsync(
-								path,
-								stdinStream,
-								output,
-								options,
-								cancellationToken
-							).ConfigureAwait( false );
-						}
-
-						if (
-							FollowMode.None != options.FollowMode
-							&& "-" != path
-						) {
-							followStates.Add(
-								CreateFollowState(
-									path,
-									options
-								)
-							);
-						}
-					} catch ( Exception ex ) when (
-						ex is not OperationCanceledException
-					) {
-						await stderr.WriteLineAsync(
-							$"tail: {path}: {ex.Message}"
-						).ConfigureAwait( false );
-						exitCode = ErrorExitCode;
-
-						if (
-							FollowMode.None != options.FollowMode
-							&& options.Retry
-							&& "-" != path
-						) {
-							followStates.Add(
-								new FollowState(
-									path
-								) {
-									MissingReported = true
-								}
-							);
-						}
-					}
-				}
-
-				await output.FlushAsync(
-					CountKind.Bytes == options.CountKind,
-					cancellationToken
-				).ConfigureAwait( false );
-
-				if (
-					FollowMode.None != options.FollowMode
-					&& 0 < followStates.Count
-				) {
-					var followResult = await FollowAsync(
-						followStates,
-						options,
-						output,
-						stderr,
-						showHeaders,
-						cancellationToken
-					).ConfigureAwait( false );
-					if ( 0 != followResult ) {
-						exitCode = followResult;
-					}
-				}
-
-				return exitCode;
-			} finally {
-				foreach ( var state in followStates ) {
-					state.Dispose();
-				}
-			}
+				context,
+				output
+			).ConfigureAwait( false );
 		} catch ( OperationCanceledException ) {
-			return 130;
+			return CommandExitCodes.Canceled;
+		} catch ( Exception ex ) {
+			try {
+				await context.Diagnostics.ErrorAsync(
+					ex.Message,
+					CancellationToken.None
+				).ConfigureAwait( false );
+			} catch {
+				// A diagnostic failure must not replace the command's exit code.
+			}
+			return ErrorExitCode;
+		} finally {
+			try {
+				await output.CompleteAsync(
+					CancellationToken.None
+				).ConfigureAwait( false );
+			} catch {
+				// Completion must not replace the command's primary result.
+			}
 		}
 	}
 
 	#endregion public methods
 
+	#region command methods
 
-	#region argument methods
-
-	private static int? ParseArguments(
+	private static async Task<int> RunCoreAsync(
 		string[] args,
-		Options options,
-		ICollection<string> files,
-		TextWriter stdout,
-		TextWriter stderr
+		CommandContext context,
+		ByteOutputStream output
 	) {
-		var index = 0;
-		while ( index < args.Length ) {
-			var argument = args[ index ];
-			if ( "--" == argument ) {
-				index++;
-				break;
-			}
-			if (
-				"-" == argument
-				|| !argument.StartsWith(
-					"-",
-					StringComparison.Ordinal
-				)
-			) {
-				break;
-			}
+		var parser = CreateOptionParser();
+		var parseResult = parser.Parse(
+			args
+		);
+		if ( !parseResult.IsSuccess ) {
+			await WriteOptionErrorsAsync(
+				parseResult,
+				context
+			).ConfigureAwait( false );
+			return UsageExitCode;
+		}
 
-			if (
-				1 < argument.Length
-				&& '-' == argument[ 0 ]
-				&& char.IsDigit(
-					argument[ 1 ]
-				)
-			) {
-				if (
-					!TrySetCount(
-						argument.Substring(
-							1
-						),
-						CountKind.Lines,
-						options,
-						stderr
-					)
-				) {
-					return UsageExitCode;
-				}
-				index++;
-				continue;
-			}
-
-			switch ( argument ) {
-				case "-?":
-				case "--help":
-					PrintUsage(
-						stdout
-					);
+		var settings = new Settings();
+		foreach ( var option in parseResult.Options ) {
+			switch ( option.Definition.Key ) {
+				case "help":
+					await PrintUsageAsync(
+						context.StandardOutput,
+						context.CancellationToken
+					).ConfigureAwait( false );
 					return 0;
-
-				case "--version":
-					stdout.WriteLine(
-						VersionText
-					);
+				case "version":
+					await context.StandardOutput.WriteLineAsync(
+						VersionText.AsMemory(),
+						context.CancellationToken
+					).ConfigureAwait( false );
 					return 0;
-
-				case "--debug":
-					options.Debug = true;
-					index++;
+				case "debug":
+					settings.Debug = true;
 					break;
-
-				case "-q":
-				case "--quiet":
-				case "--silent":
-					options.Quiet = true;
-					options.Verbose = false;
-					index++;
-					break;
-
-				case "-v":
-				case "--verbose":
-					options.Verbose = true;
-					options.Quiet = false;
-					index++;
-					break;
-
-				case "-z":
-				case "--zero-terminated":
-					options.ZeroTerminated = true;
-					index++;
-					break;
-
-				case "-f":
-				case "--follow":
-					options.FollowMode = FollowMode.Descriptor;
-					index++;
-					break;
-
-				case "-F":
-					options.FollowMode = FollowMode.Name;
-					options.Retry = true;
-					index++;
-					break;
-
-				case "--retry":
-					options.Retry = true;
-					index++;
-					break;
-
-				case "-n":
-				case "--lines":
-					if ( args.Length <= index + 1 ) {
-						stderr.WriteLine(
-							"tail: option requires an argument -- 'n'"
-						);
-						return UsageExitCode;
-					}
+				case "follow":
 					if (
-						!TrySetCount(
-							args[ index + 1 ],
-							CountKind.Lines,
-							options,
-							stderr
+						!TryApplyFollowMode(
+							option.Value,
+							settings,
+							out var followError
 						)
 					) {
+						await context.Diagnostics.ErrorAsync(
+							followError,
+							context.CancellationToken
+						).ConfigureAwait( false );
 						return UsageExitCode;
 					}
-					index += 2;
 					break;
-
-				case "-c":
-				case "--bytes":
-					if ( args.Length <= index + 1 ) {
-						stderr.WriteLine(
-							"tail: option requires an argument -- 'c'"
-						);
-						return UsageExitCode;
-					}
+				case "follow-retry":
+					settings.FollowMode = FollowMode.Name;
+					settings.Retry = true;
+					break;
+				case "quiet":
+					settings.Quiet = true;
+					settings.Verbose = false;
+					break;
+				case "verbose":
+					settings.Verbose = true;
+					settings.Quiet = false;
+					break;
+				case "retry":
+					settings.Retry = true;
+					break;
+				case "zero-terminated":
+					settings.ZeroTerminated = true;
+					break;
+				case "bytes":
 					if (
-						!TrySetCount(
-							args[ index + 1 ],
+						!TryApplyCount(
+							option.Value,
 							CountKind.Bytes,
-							options,
-							stderr
+							settings,
+							out var byteCountError
 						)
 					) {
+						await context.Diagnostics.ErrorAsync(
+							byteCountError,
+							context.CancellationToken
+						).ConfigureAwait( false );
 						return UsageExitCode;
 					}
-					index += 2;
 					break;
-
-				case "-s":
-				case "--sleep-interval":
+				case "lines":
 					if (
-						args.Length <= index + 1
-						|| !TryParseInterval(
-							args[ index + 1 ],
-							out var interval
+						!TryApplyCount(
+							option.Value,
+							CountKind.Lines,
+							settings,
+							out var lineCountError
 						)
 					) {
-						stderr.WriteLine(
-							"tail: invalid sleep interval"
-						);
+						await context.Diagnostics.ErrorAsync(
+							lineCountError,
+							context.CancellationToken
+						).ConfigureAwait( false );
 						return UsageExitCode;
 					}
-					options.SleepInterval = interval;
-					index += 2;
 					break;
-
-				default:
+				case "max-unchanged-stats":
 					if (
-						TryGetAttachedValue(
-							argument,
-							"-n",
-							"--lines=",
-							out var lineValue
+						!TryApplyPositiveInteger(
+							option.Value,
+							"maximum unchanged statistics",
+							out var maximumStats,
+							out var maximumStatsError
 						)
 					) {
-						if (
-							!TrySetCount(
-								lineValue,
-								CountKind.Lines,
-								options,
-								stderr
-							)
-						) {
-							return UsageExitCode;
-						}
-						index++;
-					} else if (
-						TryGetAttachedValue(
-							argument,
-							"-c",
-							"--bytes=",
-							out var byteValue
+						await context.Diagnostics.ErrorAsync(
+							maximumStatsError,
+							context.CancellationToken
+						).ConfigureAwait( false );
+						return UsageExitCode;
+					}
+					settings.MaxUnchangedStats = maximumStats;
+					break;
+				case "pid":
+					if (
+						!TryApplyPositiveInteger(
+							option.Value,
+							"PID",
+							out var processId,
+							out var processIdError
 						)
 					) {
-						if (
-							!TrySetCount(
-								byteValue,
-								CountKind.Bytes,
-								options,
-								stderr
-							)
-						) {
-							return UsageExitCode;
-						}
-						index++;
-					} else if (
-						argument.StartsWith(
-							"--follow=",
-							StringComparison.Ordinal
+						await context.Diagnostics.ErrorAsync(
+							processIdError,
+							context.CancellationToken
+						).ConfigureAwait( false );
+						return UsageExitCode;
+					}
+					settings.ProcessIds.Add(
+						processId
+					);
+					break;
+				case "sleep-interval":
+					if (
+						!TryApplySleepInterval(
+							option.Value,
+							settings,
+							out var sleepIntervalError
 						)
 					) {
-						var mode = argument.Substring(
-							"--follow=".Length
-						);
-						if ( "name" == mode ) {
-							options.FollowMode = FollowMode.Name;
-						} else if ( "descriptor" == mode ) {
-							options.FollowMode = FollowMode.Descriptor;
-						} else {
-							stderr.WriteLine(
-								$"tail: invalid follow mode '{mode}'"
-							);
-							return UsageExitCode;
-						}
-						index++;
-					} else if (
-						argument.StartsWith(
-							"-s",
-							StringComparison.Ordinal
-						)
-						&& 2 < argument.Length
-						&& TryParseInterval(
-							argument.Substring(
-								2
-							),
-							out var shortInlineInterval
-						)
-					) {
-						options.SleepInterval = shortInlineInterval;
-						index++;
-					} else if (
-						argument.StartsWith(
-							"--sleep-interval=",
-							StringComparison.Ordinal
-						)
-						&& TryParseInterval(
-							argument.Substring(
-								"--sleep-interval=".Length
-							),
-							out var inlineInterval
-						)
-					) {
-						options.SleepInterval = inlineInterval;
-						index++;
-					} else if (
-						argument.StartsWith(
-							"--max-unchanged-stats=",
-							StringComparison.Ordinal
-						)
-						&& int.TryParse(
-							argument.Substring(
-								"--max-unchanged-stats=".Length
-							),
-							NumberStyles.None,
-							CultureInfo.InvariantCulture,
-							out var maximumStats
-						)
-						&& 0 < maximumStats
-					) {
-						options.MaxUnchangedStats = maximumStats;
-						index++;
-					} else if (
-						argument.StartsWith(
-							"--pid=",
-							StringComparison.Ordinal
-						)
-						&& int.TryParse(
-							argument.Substring(
-								"--pid=".Length
-							),
-							NumberStyles.None,
-							CultureInfo.InvariantCulture,
-							out var processId
-						)
-						&& 0 < processId
-					) {
-						options.ProcessIds.Add(
-							processId
-						);
-						index++;
-					} else {
-						stderr.WriteLine(
-							$"tail: unrecognized option '{argument}'"
-						);
+						await context.Diagnostics.ErrorAsync(
+							sleepIntervalError,
+							context.CancellationToken
+						).ConfigureAwait( false );
 						return UsageExitCode;
 					}
 					break;
 			}
 		}
 
-		while ( index < args.Length ) {
-			files.Add(
-				args[ index ]
-			);
-			index++;
-		}
-
 		if (
-			options.Retry
-			&& FollowMode.None == options.FollowMode
+			settings.Retry
+			&& FollowMode.None == settings.FollowMode
 		) {
-			stderr.WriteLine(
-				"tail: warning: --retry is useful only when following"
-			);
+			await context.Diagnostics.WarningAsync(
+				"--retry is useful only when following",
+				context.CancellationToken
+			).ConfigureAwait( false );
+		}
+		if (
+			0 < settings.ProcessIds.Count
+			&& FollowMode.None == settings.FollowMode
+		) {
+			await context.Diagnostics.WarningAsync(
+				"--pid is useful only when following",
+				context.CancellationToken
+			).ConfigureAwait( false );
 		}
 
-		return null;
-	}
-
-	private static bool TryGetAttachedValue(
-		string argument,
-		string shortName,
-		string longPrefix,
-		out string value
-	) {
-		if (
-			argument.StartsWith(
-				longPrefix,
-				StringComparison.Ordinal
+		IReadOnlyList<string> operands = 0 == parseResult.Operands.Count
+			? new string[] { "-" }
+			: parseResult.Operands
+		;
+		var showHeaders = settings.Verbose
+			|| (
+				!settings.Quiet
+				&& 1 < operands.Count
 			)
-		) {
-			value = argument.Substring(
-				longPrefix.Length
-			);
-			return true;
-		}
+		;
+		var wroteHeader = false;
+		var lastOutputPath = (string?)null;
+		var exitCode = 0;
+		var followStates = new List<FollowState>();
 
-		if (
-			argument.StartsWith(
-				shortName,
-				StringComparison.Ordinal
-			)
-			&& shortName.Length < argument.Length
-		) {
-			value = argument.Substring(
-				shortName.Length
-			);
-			if (
-				value.StartsWith(
-					"=",
-					StringComparison.Ordinal
-				)
-			) {
-				value = value.Substring(
-					1
+		try {
+			foreach ( var value in operands ) {
+				context.CancellationToken.ThrowIfCancellationRequested();
+				var operand = InputOperand.Create(
+					value
 				);
-			}
-			return true;
-		}
+				try {
+					if ( showHeaders ) {
+						await WriteHeaderAsync(
+							output,
+							operand.DisplayName,
+							wroteHeader,
+							context.CancellationToken
+						).ConfigureAwait( false );
+						wroteHeader = true;
+						lastOutputPath = operand.Value;
+					}
 
-		value = string.Empty;
-		return false;
+					if ( CountKind.Bytes == settings.CountKind ) {
+						await ProcessBytesAsync(
+							operand,
+							settings,
+							context,
+							output
+						).ConfigureAwait( false );
+					} else {
+						await ProcessRecordsAsync(
+							operand,
+							settings,
+							context,
+							output
+						).ConfigureAwait( false );
+					}
+
+					if (
+						FollowMode.None != settings.FollowMode
+						&& !operand.IsStandardInput
+					) {
+						followStates.Add(
+							CreateFollowState(
+								operand.Value,
+								settings
+							)
+						);
+					}
+				} catch ( Exception ex ) when (
+					ex is not OperationCanceledException
+				) {
+					await context.Diagnostics.ErrorAsync(
+						$"{operand.Value}: {ex.Message}",
+						context.CancellationToken
+					).ConfigureAwait( false );
+					exitCode = ErrorExitCode;
+					if (
+						FollowMode.None != settings.FollowMode
+						&& settings.Retry
+						&& !operand.IsStandardInput
+					) {
+						followStates.Add(
+							new FollowState(
+								operand.Value
+							) {
+								MissingReported = true
+							}
+						);
+					}
+				}
+			}
+
+			await output.FlushAsync(
+				context.CancellationToken
+			).ConfigureAwait( false );
+			if (
+				FollowMode.None != settings.FollowMode
+				&& 0 < followStates.Count
+			) {
+				var followResult = await FollowAsync(
+					followStates,
+					settings,
+					output,
+					context,
+					showHeaders,
+					lastOutputPath
+				).ConfigureAwait( false );
+				if ( 0 != followResult ) {
+					exitCode = followResult;
+				}
+			}
+			return exitCode;
+		} finally {
+			foreach ( var state in followStates ) {
+				state.Dispose();
+			}
+		}
 	}
 
-	private static bool TrySetCount(
-		string value,
+	#endregion command methods
+
+	#region option methods
+
+	private static OptionParser CreateOptionParser() {
+		var settings = new OptionParserSettings {
+			AllowLongOptionAbbreviations = true,
+			Ordering = OptionOrdering.Permute
+		};
+		settings.TokenRewriteRules.Add(
+			new OptionTokenRewriteRule(
+				token => {
+					if (
+						1 < token.Length
+						&& (
+							'-' == token[ 0 ]
+							|| '+' == token[ 0 ]
+						)
+						&& char.IsDigit( token[ 1 ] )
+					) {
+						return new string[] {
+							"-n",
+							token
+						};
+					}
+					return null;
+				}
+			)
+		);
+		return new OptionParser(
+			Options,
+			settings
+		);
+	}
+
+	private static bool TryApplyCount(
+		string? value,
 		CountKind countKind,
-		Options options,
-		TextWriter stderr
+		Settings settings,
+		out string error
 	) {
+		value ??= string.Empty;
 		var startAt = value.StartsWith(
 			"+",
 			StringComparison.Ordinal
 		);
-		if (
+		var magnitude = (
 			startAt
 			|| value.StartsWith(
 				"-",
 				StringComparison.Ordinal
 			)
-		) {
-			value = value.Substring(
-				1
-			);
-		}
-
-		if (
-			!TryParseCount(
-				value,
-				out var count
-			)
-		) {
-			stderr.WriteLine(
-				$"tail: invalid number of {( CountKind.Bytes == countKind ? "bytes" : "lines" )}: '{value}'"
-			);
-			return false;
-		}
-
-		options.CountKind = countKind;
-		options.Count = count;
-		options.StartAt = startAt;
-		return true;
-	}
-
-	private static bool TryParseCount(
-		string value,
-		out long count
-	) {
-		count = 0;
-		if ( string.IsNullOrEmpty( value ) ) {
-			return false;
-		}
-
-		var index = 0;
-		while (
-			index < value.Length
-			&& char.IsDigit(
-				value[ index ]
-			)
-		) {
-			index++;
-		}
-		if (
-			0 == index
-			|| !BigInteger.TryParse(
-				value.Substring(
-					0,
-					index
-				),
-				NumberStyles.None,
-				CultureInfo.InvariantCulture,
-				out var number
-			)
-		) {
-			return false;
-		}
-
-		if (
-			!TryGetMultiplier(
-				value.Substring(
-					index
-				),
-				out var multiplier
-			)
-		) {
-			return false;
-		}
-
-		var result = number * multiplier;
-		count = long.MaxValue < result
-			? long.MaxValue
-			: (long)result
+		)
+			? value.Substring( 1 )
+			: value
 		;
+		var parsed = QuantityParser.ParseInt64(
+			magnitude,
+			NumericSuffixTable.GnuCounts,
+			allowLeadingPlus: false,
+			allowLeadingMinus: false,
+			overflowBehavior: OverflowBehavior.Clamp
+		);
+		if ( !parsed.IsSuccess ) {
+			error = $"invalid number of {( CountKind.Bytes == countKind ? "bytes" : "lines" )}: '{value}'";
+			return false;
+		}
+
+		settings.CountKind = countKind;
+		settings.Count = parsed.Value;
+		settings.StartAt = startAt;
+		error = string.Empty;
 		return true;
 	}
 
-	private static bool TryGetMultiplier(
-		string suffix,
-		out BigInteger multiplier
+	private static bool TryApplyFollowMode(
+		string? value,
+		Settings settings,
+		out string error
 	) {
-		switch ( suffix ) {
-			case "":
-				multiplier = BigInteger.One;
-				return true;
-			case "b":
-				multiplier = new BigInteger( 512 );
-				return true;
-			case "kB":
-				multiplier = BigInteger.Pow( 1000, 1 );
-				return true;
-			case "K":
-			case "KiB":
-				multiplier = BigInteger.One << 10;
-				return true;
-			case "MB":
-				multiplier = BigInteger.Pow( 1000, 2 );
-				return true;
-			case "M":
-			case "MiB":
-				multiplier = BigInteger.One << 20;
-				return true;
-			case "GB":
-				multiplier = BigInteger.Pow( 1000, 3 );
-				return true;
-			case "G":
-			case "GiB":
-				multiplier = BigInteger.One << 30;
-				return true;
-			case "TB":
-				multiplier = BigInteger.Pow( 1000, 4 );
-				return true;
-			case "T":
-			case "TiB":
-				multiplier = BigInteger.One << 40;
-				return true;
-			case "PB":
-				multiplier = BigInteger.Pow( 1000, 5 );
-				return true;
-			case "P":
-			case "PiB":
-				multiplier = BigInteger.One << 50;
-				return true;
-			case "EB":
-				multiplier = BigInteger.Pow( 1000, 6 );
-				return true;
-			case "E":
-			case "EiB":
-				multiplier = BigInteger.One << 60;
-				return true;
-			case "ZB":
-				multiplier = BigInteger.Pow( 1000, 7 );
-				return true;
-			case "Z":
-			case "ZiB":
-				multiplier = BigInteger.One << 70;
-				return true;
-			case "YB":
-				multiplier = BigInteger.Pow( 1000, 8 );
-				return true;
-			case "Y":
-			case "YiB":
-				multiplier = BigInteger.One << 80;
-				return true;
-			case "RB":
-				multiplier = BigInteger.Pow( 1000, 9 );
-				return true;
-			case "R":
-			case "RiB":
-				multiplier = BigInteger.One << 90;
-				return true;
-			case "QB":
-				multiplier = BigInteger.Pow( 1000, 10 );
-				return true;
-			case "Q":
-			case "QiB":
-				multiplier = BigInteger.One << 100;
-				return true;
-			default:
-				multiplier = BigInteger.Zero;
-				return false;
+		if (
+			string.IsNullOrEmpty( value )
+			|| "descriptor" == value
+		) {
+			settings.FollowMode = FollowMode.Descriptor;
+			error = string.Empty;
+			return true;
+		}
+		if ( "name" == value ) {
+			settings.FollowMode = FollowMode.Name;
+			error = string.Empty;
+			return true;
+		}
+
+		error = $"invalid argument '{value}' for '--follow'";
+		return false;
+	}
+
+	private static bool TryApplyPositiveInteger(
+		string? value,
+		string description,
+		out int result,
+		out string error
+	) {
+		var parsed = QuantityParser.ParseInt64(
+			value,
+			NumericSuffixTable.None,
+			allowLeadingPlus: true,
+			allowLeadingMinus: false
+		);
+		if (
+			!parsed.IsSuccess
+			|| parsed.Value <= 0
+			|| int.MaxValue < parsed.Value
+		) {
+			error = $"invalid {description}: '{value}'";
+			result = 0;
+			return false;
+		}
+		result = (int)parsed.Value;
+		error = string.Empty;
+		return true;
+	}
+
+	private static bool TryApplySleepInterval(
+		string? value,
+		Settings settings,
+		out string error
+	) {
+		var parsed = QuantityParser.ParseDouble(
+			value,
+			allowLeadingPlus: true,
+			allowLeadingMinus: false
+		);
+		if (
+			!parsed.IsSuccess
+			|| parsed.Value < 0
+		) {
+			error = $"invalid sleep interval '{value}'";
+			return false;
+		}
+		settings.SleepInterval = parsed.Value;
+		error = string.Empty;
+		return true;
+	}
+
+	private static async Task WriteOptionErrorsAsync(
+		OptionParseResult result,
+		CommandContext context
+	) {
+		foreach ( var error in result.Errors ) {
+			await context.StandardError.WriteLineAsync(
+				OptionDiagnosticFormatter.Format(
+					context.ProgramName,
+					error
+				).AsMemory(),
+				context.CancellationToken
+			).ConfigureAwait( false );
 		}
 	}
 
-	private static bool TryParseInterval(
-		string value,
-		out double interval
-	) {
-		return (
-			double.TryParse(
-				value,
-				NumberStyles.AllowDecimalPoint,
-				CultureInfo.InvariantCulture,
-				out interval
-			)
-			&& 0 <= interval
-		);
-	}
-
-	#endregion argument methods
-
+	#endregion option methods
 
 	#region initial output methods
 
-	private static async Task ProcessLinesAsync(
-		string path,
-		TextReader standardInput,
-		OutputSink output,
-		Options options,
-		CancellationToken cancellationToken
+	private static async Task ProcessBytesAsync(
+		InputOperand operand,
+		Settings settings,
+		CommandContext context,
+		ByteOutputStream output
 	) {
-		TextReader reader;
-		var ownsReader = false;
+		await using var source = InputSource.OpenBinary(
+			operand,
+			context
+		);
+		var stream = source.BinaryStream
+			?? throw new InvalidOperationException(
+				"A binary input stream was not available."
+			)
+		;
 
-		if ( "-" == path ) {
-			reader = standardInput;
-		} else {
-			reader = new StreamReader(
-				new FileStream(
-					path,
-					FileMode.Open,
-					FileAccess.Read,
-					FileShare.ReadWrite | FileShare.Delete,
-					BufferSize,
-					FileOptions.Asynchronous | FileOptions.SequentialScan
+		if ( settings.StartAt ) {
+			await StreamOperations.SkipAsync(
+				stream,
+				Math.Max(
+					0,
+					settings.Count - 1
 				),
-				Encoding.UTF8,
-				detectEncodingFromByteOrderMarks: true
-			);
-			ownsReader = true;
+				cancellationToken: context.CancellationToken
+			).ConfigureAwait( false );
+			await StreamOperations.CopyAsync(
+				stream,
+				output,
+				cancellationToken: context.CancellationToken
+			).ConfigureAwait( false );
+			return;
 		}
 
-		try {
-			var recordReader = new RecordReader(
-				reader,
-				options.ZeroTerminated
-					? '\0'
-					: '\n'
+		if ( stream.CanSeek ) {
+			stream.Seek(
+				Math.Max(
+					0,
+					stream.Length - settings.Count
+				),
+				SeekOrigin.Begin
 			);
+			await StreamOperations.CopyAsync(
+				stream,
+				output,
+				cancellationToken: context.CancellationToken
+			).ConfigureAwait( false );
+			return;
+		}
 
-			if ( options.StartAt ) {
-				await OutputStartingAtRecordAsync(
-					recordReader,
-					output,
-					options.Count,
-					options.ZeroTerminated,
-					cancellationToken
+		await using var spool = TemporarySpool.Create();
+		await StreamOperations.CopyAsync(
+			stream,
+			spool.Stream,
+			cancellationToken: context.CancellationToken
+		).ConfigureAwait( false );
+		await spool.RewindAsync(
+			context.CancellationToken
+		).ConfigureAwait( false );
+		spool.Stream.Seek(
+			Math.Max(
+				0,
+				spool.Stream.Length - settings.Count
+			),
+			SeekOrigin.Begin
+		);
+		await StreamOperations.CopyAsync(
+			spool.Stream,
+			output,
+			cancellationToken: context.CancellationToken
+		).ConfigureAwait( false );
+	}
+
+	private static async Task ProcessRecordsAsync(
+		InputOperand operand,
+		Settings settings,
+		CommandContext context,
+		ByteOutputStream output
+	) {
+		if (
+			operand.IsStandardInput
+			&& null == context.StandardInputStream
+		) {
+			await ProcessTextRecordsAsync(
+				settings,
+				context,
+				output
+			).ConfigureAwait( false );
+			return;
+		}
+
+		await using var source = InputSource.OpenBinary(
+			operand,
+			context
+		);
+		var stream = source.BinaryStream
+			?? throw new InvalidOperationException(
+				"A binary input stream was not available."
+			)
+		;
+		var separator = settings.ZeroTerminated
+			? (byte)0
+			: (byte)'\n'
+		;
+
+		if ( settings.StartAt ) {
+			using var reader = new DelimitedByteRecordReader(
+				stream,
+				separator
+			);
+			await OutputStartingAtRecordAsync(
+				reader,
+				output,
+				settings.Count,
+				context.CancellationToken
+			).ConfigureAwait( false );
+			return;
+		}
+
+		if ( stream.CanSeek ) {
+			var offset = await StreamOperations.FindStartOfLastDelimitedRecordsAsync(
+				stream,
+				separator,
+				settings.Count,
+				cancellationToken: context.CancellationToken
+			).ConfigureAwait( false );
+			stream.Seek(
+				offset,
+				SeekOrigin.Begin
+			);
+			await StreamOperations.CopyAsync(
+				stream,
+				output,
+				cancellationToken: context.CancellationToken
+			).ConfigureAwait( false );
+			return;
+		}
+
+		using ( var reader = new DelimitedByteRecordReader(
+			stream,
+			separator
+		) ) {
+			await OutputLastRecordsAsync(
+				reader,
+				output,
+				settings.Count,
+				separator,
+				context.CancellationToken
+			).ConfigureAwait( false );
+		}
+	}
+
+	private static async Task ProcessTextRecordsAsync(
+		Settings settings,
+		CommandContext context,
+		ByteOutputStream output
+	) {
+		var separator = settings.ZeroTerminated
+			? '\0'
+			: '\n'
+		;
+		var reader = new DelimitedRecordReader(
+			context.StandardInput,
+			separator
+		);
+		if ( settings.StartAt ) {
+			long lineNumber = 1;
+			while ( true ) {
+				var record = await reader.ReadAsync(
+					context.CancellationToken
 				).ConfigureAwait( false );
-			} else {
-				await OutputLastRecordsAsync(
-					recordReader,
-					output,
-					options.Count,
-					options.ZeroTerminated,
-					cancellationToken
-				).ConfigureAwait( false );
+				if ( null == record ) {
+					return;
+				}
+				if ( settings.Count <= lineNumber ) {
+					await WriteTextRecordAsync(
+						output,
+						record,
+						separator,
+						context.CancellationToken
+					).ConfigureAwait( false );
+				}
+				lineNumber++;
 			}
-		} finally {
-			if ( ownsReader ) {
-				reader.Dispose();
+		}
+
+		if ( MaxBufferedRecords < settings.Count ) {
+			throw new InvalidOperationException(
+				"A binary standard-input stream is required for this end-relative count."
+			);
+		}
+		var records = new Queue<string>(
+			(int)settings.Count
+		);
+		while ( true ) {
+			var record = await reader.ReadAsync(
+				context.CancellationToken
+			).ConfigureAwait( false );
+			if ( null == record ) {
+				break;
 			}
+			if ( 0 < settings.Count ) {
+				records.Enqueue(
+					record
+				);
+				if ( settings.Count < records.Count ) {
+					records.Dequeue();
+				}
+			}
+		}
+		foreach ( var record in records ) {
+			await WriteTextRecordAsync(
+				output,
+				record,
+				separator,
+				context.CancellationToken
+			).ConfigureAwait( false );
 		}
 	}
 
 	private static async Task OutputStartingAtRecordAsync(
-		RecordReader reader,
-		OutputSink output,
+		DelimitedByteRecordReader reader,
+		ByteOutputStream output,
 		long firstRecord,
-		bool zeroTerminated,
 		CancellationToken cancellationToken
 	) {
-		var lineNumber = 1L;
+		long recordNumber = 1;
 		while ( true ) {
 			var record = await reader.ReadAsync(
 				cancellationToken
@@ -1237,23 +1029,21 @@ public static class Command {
 			if ( null == record ) {
 				return;
 			}
-
-			if ( firstRecord <= lineNumber ) {
-				await output.WriteRecordAsync(
-					record,
-					zeroTerminated,
+			if ( firstRecord <= recordNumber ) {
+				await output.WriteAsync(
+					record.AsMemory(),
 					cancellationToken
 				).ConfigureAwait( false );
 			}
-			lineNumber++;
+			recordNumber++;
 		}
 	}
 
 	private static async Task OutputLastRecordsAsync(
-		RecordReader reader,
-		OutputSink output,
+		DelimitedByteRecordReader reader,
+		ByteOutputStream output,
 		long count,
-		bool zeroTerminated,
+		byte separator,
 		CancellationToken cancellationToken
 	) {
 		if ( 0 == count ) {
@@ -1265,19 +1055,18 @@ public static class Command {
 			}
 			return;
 		}
-
 		if ( MaxBufferedRecords < count ) {
 			await OutputLastRecordsSpoolingAsync(
 				reader,
 				output,
 				count,
-				zeroTerminated,
+				separator,
 				cancellationToken
 			).ConfigureAwait( false );
 			return;
 		}
 
-		var buffer = new Queue<string>(
+		var records = new Queue<byte[]>(
 			(int)count
 		);
 		while ( true ) {
@@ -1287,370 +1076,161 @@ public static class Command {
 			if ( null == record ) {
 				break;
 			}
-
-			buffer.Enqueue(
+			records.Enqueue(
 				record
 			);
-			if ( count < buffer.Count ) {
-				buffer.Dequeue();
+			if ( count < records.Count ) {
+				records.Dequeue();
 			}
 		}
-
-		foreach ( var record in buffer ) {
-			await output.WriteRecordAsync(
-				record,
-				zeroTerminated,
+		foreach ( var record in records ) {
+			await output.WriteAsync(
+				record.AsMemory(),
 				cancellationToken
 			).ConfigureAwait( false );
 		}
 	}
 
 	private static async Task OutputLastRecordsSpoolingAsync(
-		RecordReader reader,
-		OutputSink output,
+		DelimitedByteRecordReader reader,
+		ByteOutputStream output,
 		long count,
-		bool zeroTerminated,
+		byte separator,
 		CancellationToken cancellationToken
 	) {
-		var temporaryPath = Path.GetTempFileName();
+		await using var spool = TemporarySpool.Create();
 		long recordCount = 0;
-
-		try {
-			using ( var stream = new FileStream(
-				temporaryPath,
-				FileMode.Create,
-				FileAccess.Write,
-				FileShare.None,
-				BufferSize,
-				FileOptions.Asynchronous | FileOptions.SequentialScan
-			) )
-			using ( var writer = new StreamWriter(
-				stream,
-				new UTF8Encoding(
-					encoderShouldEmitUTF8Identifier: false
-				)
-			) ) {
-				while ( true ) {
-					var record = await reader.ReadAsync(
-						cancellationToken
-					).ConfigureAwait( false );
-					if ( null == record ) {
-						break;
-					}
-
-					await writer.WriteAsync(
-						record
-					).ConfigureAwait( false );
-					await writer.WriteAsync(
-						zeroTerminated
-							? '\0'
-							: '\n'
-					).ConfigureAwait( false );
-					recordCount++;
-				}
-				await writer.FlushAsync().ConfigureAwait( false );
-			}
-
-			var skip = Math.Max(
-				0,
-				recordCount - count
-			);
-
-			using ( var stream = new FileStream(
-				temporaryPath,
-				FileMode.Open,
-				FileAccess.Read,
-				FileShare.Read,
-				BufferSize,
-				FileOptions.Asynchronous | FileOptions.SequentialScan
-			) )
-			using ( var textReader = new StreamReader(
-				stream,
-				Encoding.UTF8,
-				detectEncodingFromByteOrderMarks: true
-			) ) {
-				var spoolReader = new RecordReader(
-					textReader,
-					zeroTerminated
-						? '\0'
-						: '\n'
-				);
-				for (
-					long index = 0;
-					index < skip;
-					index++
-				) {
-					if (
-						null == await spoolReader.ReadAsync(
-							cancellationToken
-						).ConfigureAwait( false )
-					) {
-						return;
-					}
-				}
-
-				while ( true ) {
-					var record = await spoolReader.ReadAsync(
-						cancellationToken
-					).ConfigureAwait( false );
-					if ( null == record ) {
-						return;
-					}
-					await output.WriteRecordAsync(
-						record,
-						zeroTerminated,
-						cancellationToken
-					).ConfigureAwait( false );
-				}
-			}
-		} finally {
-			File.Delete(
-				temporaryPath
-			);
-		}
-	}
-
-	private static async Task ProcessBytesAsync(
-		string path,
-		Stream? standardInput,
-		OutputSink output,
-		Options options,
-		CancellationToken cancellationToken
-	) {
-		Stream stream;
-		var ownsStream = false;
-
-		if ( "-" == path ) {
-			stream = standardInput ?? throw new InvalidOperationException(
-				"Byte mode on standard input requires a binary input stream."
-			);
-		} else {
-			stream = new FileStream(
-				path,
-				FileMode.Open,
-				FileAccess.Read,
-				FileShare.ReadWrite | FileShare.Delete,
-				BufferSize,
-				FileOptions.Asynchronous | FileOptions.SequentialScan
-			);
-			ownsStream = true;
-		}
-
-		try {
-			if ( options.StartAt ) {
-				await SkipBytesAsync(
-					stream,
-					Math.Max(
-						0,
-						options.Count - 1
-					),
-					cancellationToken
-				).ConfigureAwait( false );
-				await CopyToEndAsync(
-					stream,
-					output,
-					cancellationToken
-				).ConfigureAwait( false );
-			} else {
-				await OutputLastBytesAsync(
-					stream,
-					output,
-					options.Count,
-					cancellationToken
-				).ConfigureAwait( false );
-			}
-		} finally {
-			if ( ownsStream ) {
-				stream.Dispose();
-			}
-		}
-	}
-
-	private static async Task OutputLastBytesAsync(
-		Stream input,
-		OutputSink output,
-		long count,
-		CancellationToken cancellationToken
-	) {
-		if ( input.CanSeek ) {
-			input.Seek(
-				Math.Max(
-					0,
-					input.Length - count
-				),
-				SeekOrigin.Begin
-			);
-			await CopyToEndAsync(
-				input,
-				output,
-				cancellationToken
-			).ConfigureAwait( false );
-			return;
-		}
-
-		var temporaryPath = Path.GetTempFileName();
-		try {
-			using ( var temporary = new FileStream(
-				temporaryPath,
-				FileMode.Create,
-				FileAccess.ReadWrite,
-				FileShare.None,
-				BufferSize,
-				FileOptions.Asynchronous | FileOptions.SequentialScan
-			) ) {
-				await input.CopyToAsync(
-					temporary,
-					BufferSize,
-					cancellationToken
-				).ConfigureAwait( false );
-				temporary.Seek(
-					Math.Max(
-						0,
-						temporary.Length - count
-					),
-					SeekOrigin.Begin
-				);
-				await CopyToEndAsync(
-					temporary,
-					output,
-					cancellationToken
-				).ConfigureAwait( false );
-			}
-		} finally {
-			File.Delete(
-				temporaryPath
-			);
-		}
-	}
-
-	private static async Task SkipBytesAsync(
-		Stream input,
-		long count,
-		CancellationToken cancellationToken
-	) {
-		if ( input.CanSeek ) {
-			input.Seek(
-				Math.Min(
-					input.Length,
-					count
-				),
-				SeekOrigin.Begin
-			);
-			return;
-		}
-
-		var buffer = new byte[ BufferSize ];
-		var remaining = count;
-		while ( 0 < remaining ) {
-			var read = await input.ReadAsync(
-				buffer,
-				0,
-				(int)Math.Min(
-					buffer.Length,
-					remaining
-				),
-				cancellationToken
-			).ConfigureAwait( false );
-			if ( 0 == read ) {
-				return;
-			}
-			remaining -= read;
-		}
-	}
-
-	private static async Task CopyToEndAsync(
-		Stream input,
-		OutputSink output,
-		CancellationToken cancellationToken
-	) {
-		var buffer = new byte[ BufferSize ];
 		while ( true ) {
-			var read = await input.ReadAsync(
-				buffer,
-				0,
-				buffer.Length,
+			var record = await reader.ReadAsync(
 				cancellationToken
 			).ConfigureAwait( false );
-			if ( 0 == read ) {
+			if ( null == record ) {
+				break;
+			}
+			await spool.Stream.WriteAsync(
+				record.AsMemory(),
+				cancellationToken
+			).ConfigureAwait( false );
+			recordCount++;
+		}
+
+		await spool.RewindAsync(
+			cancellationToken
+		).ConfigureAwait( false );
+		using var spoolReader = new DelimitedByteRecordReader(
+			spool.Stream,
+			separator
+		);
+		var skip = Math.Max(
+			0,
+			recordCount - count
+		);
+		for (
+			long index = 0;
+			index < skip;
+			index++
+		) {
+			if (
+				null == await spoolReader.ReadAsync(
+					cancellationToken
+				).ConfigureAwait( false )
+			) {
 				return;
 			}
-			await output.WriteBytesAsync(
-				buffer,
-				0,
-				read,
+		}
+		while ( true ) {
+			var record = await spoolReader.ReadAsync(
+				cancellationToken
+			).ConfigureAwait( false );
+			if ( null == record ) {
+				return;
+			}
+			await output.WriteAsync(
+				record.AsMemory(),
 				cancellationToken
 			).ConfigureAwait( false );
 		}
+	}
+
+	private static async ValueTask WriteTextRecordAsync(
+		ByteOutputStream output,
+		string record,
+		char separator,
+		CancellationToken cancellationToken
+	) {
+		await output.WriteTextAsync(
+			record,
+			cancellationToken
+		).ConfigureAwait( false );
+		var delimiter = new byte[] {
+			(byte)separator
+		};
+		await output.WriteAsync(
+			delimiter.AsMemory(),
+			cancellationToken
+		).ConfigureAwait( false );
 	}
 
 	#endregion initial output methods
-
 
 	#region follow methods
 
 	private static FollowState CreateFollowState(
 		string path,
-		Options options
+		Settings settings
 	) {
 		var state = new FollowState(
 			path
 		);
-		var info = new FileInfo(
+		var information = new FileInfo(
 			path
 		);
-		info.Refresh();
-		state.Position = info.Exists
-			? info.Length
+		information.Refresh();
+		state.Position = information.Exists
+			? information.Length
 			: 0
 		;
-		state.CreationTimeUtc = info.Exists
-			? info.CreationTimeUtc
+		state.CreationTimeUtc = information.Exists
+			? information.CreationTimeUtc
 			: DateTime.MinValue
 		;
 
 		if (
-			FollowMode.Descriptor == options.FollowMode
-			&& info.Exists
+			FollowMode.Descriptor == settings.FollowMode
+			&& information.Exists
 		) {
-			state.Descriptor = OpenFollowStream(
+			var descriptor = OpenFollowStream(
 				path
 			);
-			state.Descriptor.Seek(
+			descriptor.Seek(
 				state.Position,
 				SeekOrigin.Begin
 			);
+			state.Descriptor = descriptor;
 		}
-
 		return state;
 	}
 
 	private static async Task<int> FollowAsync(
 		IReadOnlyList<FollowState> states,
-		Options options,
-		OutputSink output,
-		TextWriter stderr,
+		Settings settings,
+		ByteOutputStream output,
+		CommandContext context,
 		bool showHeaders,
-		CancellationToken cancellationToken
+		string? lastOutputPath
 	) {
-		if ( options.Debug ) {
-			await stderr.WriteLineAsync(
-				$"tail: using asynchronous polling follow mode ({options.FollowMode.ToString().ToLowerInvariant()})"
+		if ( settings.Debug ) {
+			await context.Diagnostics.WarningAsync(
+				$"using asynchronous polling follow mode ({settings.FollowMode.ToString().ToLowerInvariant()})",
+				context.CancellationToken
 			).ConfigureAwait( false );
 		}
-
-		string? lastOutputPath = showHeaders
-			? states.LastOrDefault(
-				state => state.Active
-			)?.Path
-			: null
-		;
 		var delay = TimeSpan.FromSeconds(
-			options.SleepInterval
+			settings.SleepInterval
 		);
 
 		while ( true ) {
-			cancellationToken.ThrowIfCancellationRequested();
-
+			context.CancellationToken.ThrowIfCancellationRequested();
 			if (
 				states.All(
 					state => !state.Active
@@ -1658,10 +1238,9 @@ public static class Command {
 			) {
 				return ErrorExitCode;
 			}
-
 			if (
-				0 < options.ProcessIds.Count
-				&& options.ProcessIds.All(
+				0 < settings.ProcessIds.Count
+				&& settings.ProcessIds.All(
 					processId => !IsProcessAlive(
 						processId
 					)
@@ -1674,53 +1253,46 @@ public static class Command {
 				if ( !state.Active ) {
 					continue;
 				}
-
-				var wrote = FollowMode.Descriptor == options.FollowMode
+				var wrote = FollowMode.Descriptor == settings.FollowMode
 					? await PollDescriptorAsync(
 						state,
-						options,
+						settings,
 						output,
-						stderr,
+						context,
 						showHeaders,
-						lastOutputPath,
-						cancellationToken
+						lastOutputPath
 					).ConfigureAwait( false )
 					: await PollNameAsync(
 						state,
-						options,
+						settings,
 						output,
-						stderr,
+						context,
 						showHeaders,
-						lastOutputPath,
-						cancellationToken
+						lastOutputPath
 					).ConfigureAwait( false )
 				;
-
 				if ( wrote ) {
 					lastOutputPath = state.Path;
 				}
 			}
 
 			await output.FlushAsync(
-				binaryMode: true,
-				cancellationToken
+				context.CancellationToken
 			).ConfigureAwait( false );
-
 			await Task.Delay(
 				delay,
-				cancellationToken
+				context.CancellationToken
 			).ConfigureAwait( false );
 		}
 	}
 
 	private static async Task<bool> PollDescriptorAsync(
 		FollowState state,
-		Options options,
-		OutputSink output,
-		TextWriter stderr,
+		Settings settings,
+		ByteOutputStream output,
+		CommandContext context,
 		bool showHeaders,
-		string? lastOutputPath,
-		CancellationToken cancellationToken
+		string? lastOutputPath
 	) {
 		if ( null == state.Descriptor ) {
 			try {
@@ -1729,63 +1301,60 @@ public static class Command {
 				);
 				state.Position = 0;
 				state.MissingReported = false;
-				await stderr.WriteLineAsync(
-					$"tail: '{state.Path}' has become accessible"
+				await context.Diagnostics.WarningAsync(
+					$"'{state.Path}' has become accessible",
+					context.CancellationToken
 				).ConfigureAwait( false );
 			} catch ( Exception ex ) when (
 				ex is not OperationCanceledException
 			) {
 				if ( !state.MissingReported ) {
-					await stderr.WriteLineAsync(
-						$"tail: cannot open '{state.Path}': {ex.Message}"
+					await context.Diagnostics.ErrorAsync(
+						$"cannot open '{state.Path}': {ex.Message}",
+						context.CancellationToken
 					).ConfigureAwait( false );
 					state.MissingReported = true;
 				}
-				if ( !options.Retry ) {
+				if ( !settings.Retry ) {
 					state.Active = false;
 				}
 				return false;
 			}
 		}
 
-		var stream = state.Descriptor;
+		var stream = state.Descriptor
+			?? throw new InvalidOperationException(
+				"The followed file descriptor is unavailable."
+			)
+		;
 		var length = stream.Length;
 		if ( length < state.Position ) {
-			await stderr.WriteLineAsync(
-				$"tail: {state.Path}: file truncated"
+			await context.Diagnostics.WarningAsync(
+				$"{state.Path}: file truncated",
+				context.CancellationToken
 			).ConfigureAwait( false );
 			state.Position = 0;
 		}
-
 		if ( length <= state.Position ) {
 			return false;
 		}
 
-		if (
-			showHeaders
-			&& !string.Equals(
-				lastOutputPath,
-				state.Path,
-				StringComparison.Ordinal
-			)
-		) {
-			await output.WriteHeaderAsync(
-				state.Path,
-				null != lastOutputPath,
-				binaryMode: true,
-				cancellationToken
-			).ConfigureAwait( false );
-		}
-
+		await WriteFollowHeaderIfNeededAsync(
+			output,
+			state.Path,
+			showHeaders,
+			lastOutputPath,
+			context.CancellationToken
+		).ConfigureAwait( false );
 		stream.Seek(
 			state.Position,
 			SeekOrigin.Begin
 		);
-		await CopyAvailableAsync(
+		await StreamOperations.CopyCountAsync(
 			stream,
 			output,
 			length - state.Position,
-			cancellationToken
+			cancellationToken: context.CancellationToken
 		).ConfigureAwait( false );
 		state.Position = length;
 		return true;
@@ -1793,98 +1362,89 @@ public static class Command {
 
 	private static async Task<bool> PollNameAsync(
 		FollowState state,
-		Options options,
-		OutputSink output,
-		TextWriter stderr,
+		Settings settings,
+		ByteOutputStream output,
+		CommandContext context,
 		bool showHeaders,
-		string? lastOutputPath,
-		CancellationToken cancellationToken
+		string? lastOutputPath
 	) {
-		var info = new FileInfo(
+		var information = new FileInfo(
 			state.Path
 		);
-		info.Refresh();
-
-		if ( !info.Exists ) {
+		information.Refresh();
+		if ( !information.Exists ) {
 			if ( !state.MissingReported ) {
-				await stderr.WriteLineAsync(
-					$"tail: '{state.Path}' has become inaccessible"
+				await context.Diagnostics.WarningAsync(
+					$"'{state.Path}' has become inaccessible",
+					context.CancellationToken
 				).ConfigureAwait( false );
 				state.MissingReported = true;
 			}
-			if ( !options.Retry ) {
+			if ( !settings.Retry ) {
 				state.Active = false;
 			}
 			return false;
 		}
 
 		if ( state.MissingReported ) {
-			await stderr.WriteLineAsync(
-				$"tail: '{state.Path}' has appeared; following new file"
+			await context.Diagnostics.WarningAsync(
+				$"'{state.Path}' has appeared; following new file",
+				context.CancellationToken
 			).ConfigureAwait( false );
 			state.MissingReported = false;
 			state.Position = 0;
-			state.CreationTimeUtc = info.CreationTimeUtc;
+			state.CreationTimeUtc = information.CreationTimeUtc;
 		}
 
 		state.UnchangedIterations++;
-		var replacementCheck = options.MaxUnchangedStats <= state.UnchangedIterations;
-		if ( replacementCheck ) {
+		if ( settings.MaxUnchangedStats <= state.UnchangedIterations ) {
 			state.UnchangedIterations = 0;
 			if (
 				DateTime.MinValue != state.CreationTimeUtc
-				&& state.CreationTimeUtc != info.CreationTimeUtc
+				&& state.CreationTimeUtc != information.CreationTimeUtc
 			) {
-				await stderr.WriteLineAsync(
-					$"tail: '{state.Path}' has been replaced; following new file"
+				await context.Diagnostics.WarningAsync(
+					$"'{state.Path}' has been replaced; following new file",
+					context.CancellationToken
 				).ConfigureAwait( false );
 				state.Position = 0;
 			}
-			state.CreationTimeUtc = info.CreationTimeUtc;
+			state.CreationTimeUtc = information.CreationTimeUtc;
 		}
 
-		if ( info.Length < state.Position ) {
-			await stderr.WriteLineAsync(
-				$"tail: {state.Path}: file truncated"
+		if ( information.Length < state.Position ) {
+			await context.Diagnostics.WarningAsync(
+				$"{state.Path}: file truncated",
+				context.CancellationToken
 			).ConfigureAwait( false );
 			state.Position = 0;
 		}
-
-		if ( info.Length <= state.Position ) {
+		if ( information.Length <= state.Position ) {
 			return false;
 		}
 
-		if (
-			showHeaders
-			&& !string.Equals(
-				lastOutputPath,
-				state.Path,
-				StringComparison.Ordinal
-			)
-		) {
-			await output.WriteHeaderAsync(
-				state.Path,
-				null != lastOutputPath,
-				binaryMode: true,
-				cancellationToken
-			).ConfigureAwait( false );
-		}
-
-		using ( var stream = OpenFollowStream(
+		await WriteFollowHeaderIfNeededAsync(
+			output,
+			state.Path,
+			showHeaders,
+			lastOutputPath,
+			context.CancellationToken
+		).ConfigureAwait( false );
+		await using ( var stream = OpenFollowStream(
 			state.Path
 		) ) {
 			stream.Seek(
 				state.Position,
 				SeekOrigin.Begin
 			);
-			await CopyAvailableAsync(
+			await StreamOperations.CopyCountAsync(
 				stream,
 				output,
-				info.Length - state.Position,
-				cancellationToken
+				information.Length - state.Position,
+				cancellationToken: context.CancellationToken
 			).ConfigureAwait( false );
 		}
-		state.Position = info.Length;
+		state.Position = information.Length;
 		return true;
 	}
 
@@ -1896,131 +1456,115 @@ public static class Command {
 			FileMode.Open,
 			FileAccess.Read,
 			FileShare.ReadWrite | FileShare.Delete,
-			BufferSize,
+			StreamOperations.DefaultBufferSize,
 			FileOptions.Asynchronous | FileOptions.SequentialScan
 		);
-	}
-
-	private static async Task CopyAvailableAsync(
-		Stream input,
-		OutputSink output,
-		long count,
-		CancellationToken cancellationToken
-	) {
-		var buffer = new byte[ BufferSize ];
-		var remaining = count;
-
-		while ( 0 < remaining ) {
-			var read = await input.ReadAsync(
-				buffer,
-				0,
-				(int)Math.Min(
-					buffer.Length,
-					remaining
-				),
-				cancellationToken
-			).ConfigureAwait( false );
-			if ( 0 == read ) {
-				return;
-			}
-			await output.WriteBytesAsync(
-				buffer,
-				0,
-				read,
-				cancellationToken
-			).ConfigureAwait( false );
-			remaining -= read;
-		}
 	}
 
 	private static bool IsProcessAlive(
 		int processId
 	) {
 		try {
-			using ( var process = Process.GetProcessById(
+			using var process = Process.GetProcessById(
 				processId
-			) ) {
-				return !process.HasExited;
-			}
+			);
+			return !process.HasExited;
 		} catch ( ArgumentException ) {
 			return false;
 		} catch ( InvalidOperationException ) {
+			return false;
+		} catch ( System.ComponentModel.Win32Exception ) {
+			return false;
+		} catch ( NotSupportedException ) {
 			return false;
 		}
 	}
 
 	#endregion follow methods
 
+	#region output methods
 
-	#region usage methods
-
-	private static void PrintUsage(
-		TextWriter writer
+	private static ValueTask WriteHeaderAsync(
+		ByteOutputStream output,
+		string displayName,
+		bool precedingBlankLine,
+		CancellationToken cancellationToken
 	) {
-		writer.WriteLine(
-			"Usage: tail [OPTION]... [FILE]..."
-		);
-		writer.WriteLine(
-			"Print the last 10 lines of each FILE to standard output."
-		);
-		writer.WriteLine();
-		writer.WriteLine(
-			"  -c, --bytes=[+]NUM           output the last NUM bytes;"
-		);
-		writer.WriteLine(
-			"                                 with '+', start with byte NUM"
-		);
-		writer.WriteLine(
-			"  -n, --lines=[+]NUM           output the last NUM lines;"
-		);
-		writer.WriteLine(
-			"                                 with '+', start with line NUM"
-		);
-		writer.WriteLine(
-			"  -f, --follow[=descriptor]    output appended data as files grow"
-		);
-		writer.WriteLine(
-			"      --follow=name            follow file names across replacement"
-		);
-		writer.WriteLine(
-			"  -F                           same as --follow=name --retry"
-		);
-		writer.WriteLine(
-			"      --retry                  keep trying inaccessible files"
-		);
-		writer.WriteLine(
-			"  -s, --sleep-interval=N       poll approximately every N seconds"
-		);
-		writer.WriteLine(
-			"      --max-unchanged-stats=N  recheck followed names after N polls"
-		);
-		writer.WriteLine(
-			"      --pid=PID                stop after all specified PIDs exit"
-		);
-		writer.WriteLine(
-			"  -q, --quiet, --silent        never print file-name headers"
-		);
-		writer.WriteLine(
-			"  -v, --verbose                always print file-name headers"
-		);
-		writer.WriteLine(
-			"  -z, --zero-terminated        use NUL as the line delimiter"
-		);
-		writer.WriteLine(
-			"      --debug                  describe the follow implementation"
-		);
-		writer.WriteLine(
-			"      --help                   display this help and exit"
-		);
-		writer.WriteLine(
-			"      --version                output version information and exit"
-		);
-		writer.WriteLine();
-		writer.WriteLine(
-			"NUM may use b, decimal or binary prefixes through Q/QiB."
+		return output.WriteTextAsync(
+			string.Concat(
+				precedingBlankLine
+					? "\n"
+					: string.Empty,
+				"==> ",
+				displayName,
+				" <==\n"
+			),
+			cancellationToken
 		);
 	}
 
-	#endregion usage methods
+	private static async Task WriteFollowHeaderIfNeededAsync(
+		ByteOutputStream output,
+		string path,
+		bool showHeaders,
+		string? lastOutputPath,
+		CancellationToken cancellationToken
+	) {
+		if (
+			showHeaders
+			&& !string.Equals(
+				lastOutputPath,
+				path,
+				StringComparison.Ordinal
+			)
+		) {
+			await WriteHeaderAsync(
+				output,
+				path,
+				null != lastOutputPath,
+				cancellationToken
+			).ConfigureAwait( false );
+		}
+	}
+
+	private static Task PrintUsageAsync(
+		TextWriter writer,
+		CancellationToken cancellationToken
+	) {
+		const string usage = """
+Usage: tail [OPTION]... [FILE]...
+Print the last 10 lines of each FILE to standard output.
+With more than one FILE, precede each with a header giving the file name.
+
+  -c, --bytes=[+]NUM           output the last NUM bytes;
+                                 with '+', start with byte NUM
+      --debug                  indicate which follow implementation is used
+  -f, --follow[=MODE]          output appended data as the file grows;
+                                 MODE is 'name' or 'descriptor'
+  -F                           same as --follow=name --retry
+  -n, --lines=[+]NUM           output the last NUM lines instead of the last 10;
+                                 with '+', start with line NUM
+      --max-unchanged-stats=N  with --follow=name, reopen after N unchanged polls
+      --pid=PID                with -f, exit after PID no longer exists;
+                                 may be repeated
+  -q, --quiet, --silent        never output headers giving file names
+      --retry                  keep trying to open an inaccessible file
+  -s, --sleep-interval=N       with -f, sleep approximately N seconds per poll
+  -v, --verbose                always output headers giving file names
+  -z, --zero-terminated        line delimiter is NUL, not newline
+  -?, --help                   display this help and exit
+      --version                output version information and exit
+
+NUM may have a multiplier suffix: b 512, kB 1000, K 1024, MB 1000*1000,
+M 1024*1024, and so on for G, T, P, E, Z, Y, R, and Q. Binary prefixes
+such as KiB and MiB are accepted too.
+""";
+		return writer.WriteAsync(
+			usage.AsMemory(),
+			cancellationToken
+		);
+	}
+
+	#endregion output methods
 
 }

@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<LangVersion>13</LangVersion>
+		<LangVersion>13.0</LangVersion>
 		<OutputType>Library</OutputType>
 		<TargetFramework>net9.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-		<NoWarn>$(NoWarn);1591</NoWarn>
 		<OutputPath>..\bin\$(Configuration)\</OutputPath>
 		<AssemblyName>Icod.CoreUtils.Shared</AssemblyName>
 		<RootNamespace>Icod.CoreUtils.Shared</RootNamespace>
@@ -40,11 +38,11 @@
 		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-		<SignAssembly>false</SignAssembly>
-		<DebugType>pdbonly</DebugType>
-		<Optimize>true</Optimize>
 		<ErrorReport>prompt</ErrorReport>
 		<WarningLevel>4</WarningLevel>
+		<DebugType>pdbonly</DebugType>
+		<Optimize>true</Optimize>
+		<SignAssembly>false</SignAssembly>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
 	</PropertyGroup>

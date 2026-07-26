@@ -3,52 +3,79 @@
 
 namespace Icod.CoreUtils.Head;
 
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Numerics;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+using Icod.CoreUtils.Shared.CommandLine;
+using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CoreUtils.Shared.IO;
+using Icod.CoreUtils.Shared.Numerics;
 
 /// <summary>
 /// Implements GNU-style <c>head</c>: output the first part of files.
 /// </summary>
 /// <remarks>
-/// <para>
-/// The implementation uses TAP and streams input. Positive line and byte
-/// counts retain no input beyond the current buffer. Negative line counts
-/// retain only the final requested number of records. Negative byte counts
-/// use direct seeking for seekable files and a temporary-file spool for
-/// non-seekable input.
-/// </para>
-/// <para>
-/// Supported options include <c>-c</c>/<c>--bytes</c>,
-/// <c>-n</c>/<c>--lines</c>, <c>-q</c>/<c>--quiet</c>,
-/// <c>-v</c>/<c>--verbose</c>, <c>-z</c>/<c>--zero-terminated</c>,
-/// <c>--help</c>, and <c>--version</c>.
-/// </para>
+/// Normal executable operation is byte preserving, including line endings and
+/// a final unterminated record. Seekable files use direct offsets; forward-only
+/// sources use bounded buffering or a temporary spool when an end-relative
+/// operation requires it.
 /// </remarks>
 public static class Command {
 
 	#region fields
-	private const int BufferSize = 65536;
-	private const int MaxBufferedRecords = 65536;
+
 	private const int DefaultCount = 10;
 	private const int ErrorExitCode = 1;
+	private const int MaxBufferedRecords = 65536;
 	private const int UsageExitCode = 1;
 	private const string VersionText = "Icod.CoreUtils.Head 1.0";
+
+	private static readonly OptionDefinition[] Options = new OptionDefinition[] {
+		new(
+			"bytes",
+			'c',
+			new string[] { "bytes" },
+			OptionValueArity.Required
+		),
+		new(
+			"lines",
+			'n',
+			new string[] { "lines" },
+			OptionValueArity.Required
+		),
+		new(
+			"quiet",
+			'q',
+			new string[] { "quiet", "silent" }
+		),
+		new(
+			"verbose",
+			'v',
+			new string[] { "verbose" }
+		),
+		new(
+			"zero-terminated",
+			'z',
+			new string[] { "zero-terminated" }
+		),
+		new(
+			"help",
+			'?',
+			new string[] { "help" }
+		),
+		new(
+			"version",
+			longNames: new string[] { "version" }
+		)
+	};
+
 	#endregion fields
 
-
 	#region nested types
+
 	private enum CountKind {
 		Lines,
 		Bytes
 	}
 
-	private sealed class Options {
+	private sealed class Settings {
 
 		public long Count {
 			get;
@@ -82,254 +109,13 @@ public static class Command {
 
 	}
 
-	private sealed class RecordReader {
-
-		private readonly char[] myBuffer;
-		private int myCount;
-		private int myIndex;
-		private readonly TextReader myReader;
-		private readonly char mySeparator;
-
-		public RecordReader(
-			TextReader reader,
-			char separator
-		) {
-			this.myReader = reader ?? throw new ArgumentNullException(
-				nameof( reader )
-			);
-			this.mySeparator = separator;
-			this.myBuffer = new char[ 4096 ];
-		}
-
-		public async Task<string?> ReadAsync(
-			CancellationToken cancellationToken
-		) {
-			if ( '\n' == this.mySeparator ) {
-				cancellationToken.ThrowIfCancellationRequested();
-				return await this.myReader.ReadLineAsync().ConfigureAwait( false );
-			}
-
-			var output = new StringBuilder();
-			while ( true ) {
-				if ( this.myCount <= this.myIndex ) {
-					cancellationToken.ThrowIfCancellationRequested();
-					this.myCount = await this.myReader.ReadAsync(
-						this.myBuffer,
-						0,
-						this.myBuffer.Length
-					).ConfigureAwait( false );
-					this.myIndex = 0;
-					if ( 0 == this.myCount ) {
-						return 0 == output.Length
-							? null
-							: output.ToString()
-						;
-					}
-				}
-
-				var start = this.myIndex;
-				while (
-					this.myIndex < this.myCount
-					&& this.mySeparator != this.myBuffer[ this.myIndex ]
-				) {
-					this.myIndex++;
-				}
-
-				output.Append(
-					this.myBuffer,
-					start,
-					this.myIndex - start
-				);
-
-				if (
-					this.myIndex < this.myCount
-					&& this.mySeparator == this.myBuffer[ this.myIndex ]
-				) {
-					this.myIndex++;
-					return output.ToString();
-				}
-			}
-		}
-
-	}
-
-	private sealed class OutputSink {
-
-		private readonly Stream? myBinary;
-		private readonly Decoder myDecoder;
-		private readonly Encoding myEncoding;
-		private readonly TextWriter myText;
-
-		public OutputSink(
-			TextWriter text,
-			Stream? binary
-		) {
-			this.myText = text ?? throw new ArgumentNullException(
-				nameof( text )
-			);
-			this.myBinary = binary;
-			this.myEncoding = Encoding.UTF8;
-			this.myDecoder = this.myEncoding.GetDecoder();
-		}
-
-		public async Task WriteHeaderAsync(
-			string path,
-			bool precedingBlankLine,
-			bool binaryMode,
-			CancellationToken cancellationToken
-		) {
-			var header = string.Concat(
-				precedingBlankLine
-					? Environment.NewLine
-					: string.Empty,
-				"==> ",
-				path,
-				" <==",
-				Environment.NewLine
-			);
-
-			if ( binaryMode ) {
-				await this.WriteBytesAsync(
-					Encoding.UTF8.GetBytes(
-						header
-					),
-					cancellationToken
-				).ConfigureAwait( false );
-			} else {
-				cancellationToken.ThrowIfCancellationRequested();
-				await this.myText.WriteAsync(
-					header
-				).ConfigureAwait( false );
-			}
-		}
-
-		public async Task WriteRecordAsync(
-			string value,
-			bool zeroTerminated,
-			CancellationToken cancellationToken
-		) {
-			cancellationToken.ThrowIfCancellationRequested();
-			await this.myText.WriteAsync(
-				value
-			).ConfigureAwait( false );
-			if ( zeroTerminated ) {
-				await this.myText.WriteAsync(
-					'\0'
-				).ConfigureAwait( false );
-			} else {
-				await this.myText.WriteLineAsync().ConfigureAwait( false );
-			}
-		}
-
-		public async Task WriteBytesAsync(
-			byte[] buffer,
-			int offset,
-			int count,
-			CancellationToken cancellationToken
-		) {
-			if ( null != this.myBinary ) {
-				await this.myBinary.WriteAsync(
-					buffer,
-					offset,
-					count,
-					cancellationToken
-				).ConfigureAwait( false );
-				return;
-			}
-
-			var characters = new char[
-				this.myEncoding.GetMaxCharCount(
-					count
-				)
-			];
-			this.myDecoder.Convert(
-				buffer,
-				offset,
-				count,
-				characters,
-				0,
-				characters.Length,
-				flush: false,
-				out _,
-				out var charactersUsed,
-				out _
-			);
-			cancellationToken.ThrowIfCancellationRequested();
-			await this.myText.WriteAsync(
-				characters,
-				0,
-				charactersUsed
-			).ConfigureAwait( false );
-		}
-
-		public Task WriteBytesAsync(
-			byte[] buffer,
-			CancellationToken cancellationToken
-		) {
-			return this.WriteBytesAsync(
-				buffer,
-				0,
-				buffer.Length,
-				cancellationToken
-			);
-		}
-
-		public async Task FlushAsync(
-			bool binaryMode,
-			CancellationToken cancellationToken
-		) {
-			if (
-				binaryMode
-				&& null != this.myBinary
-			) {
-				await this.myBinary.FlushAsync(
-					cancellationToken
-				).ConfigureAwait( false );
-				return;
-			}
-
-			if (
-				binaryMode
-				&& null == this.myBinary
-			) {
-				var characters = new char[
-					this.myEncoding.GetMaxCharCount(
-						0
-					)
-				];
-				this.myDecoder.Convert(
-					Array.Empty<byte>(),
-					0,
-					0,
-					characters,
-					0,
-					characters.Length,
-					flush: true,
-					out _,
-					out var charactersUsed,
-					out _
-				);
-
-				if ( 0 < charactersUsed ) {
-					cancellationToken.ThrowIfCancellationRequested();
-					await this.myText.WriteAsync(
-						characters,
-						0,
-						charactersUsed
-					).ConfigureAwait( false );
-				}
-			}
-
-			cancellationToken.ThrowIfCancellationRequested();
-			await this.myText.FlushAsync().ConfigureAwait( false );
-		}
-
-	}
 	#endregion nested types
-
 
 	#region public methods
 
+	/// <summary>
+	/// Executes <c>head</c> synchronously.
+	/// </summary>
 	public static int Run(
 		string[] args,
 		TextReader? stdin = null,
@@ -344,6 +130,10 @@ public static class Command {
 		).GetAwaiter().GetResult();
 	}
 
+	/// <summary>
+	/// Executes <c>head</c> asynchronously using optionally injected standard
+	/// streams.
+	/// </summary>
 	public static async Task<int> RunAsync(
 		string[] args,
 		TextReader? stdin = null,
@@ -360,7 +150,6 @@ public static class Command {
 		stdin ??= Console.In;
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;
-
 		if (
 			null == stdinStream
 			&& useConsoleInput
@@ -374,574 +163,491 @@ public static class Command {
 			stdoutStream = Console.OpenStandardOutput();
 		}
 
+		return await RunAsync(
+			args,
+			new CommandContext(
+				"head",
+				stdin,
+				stdout,
+				stderr,
+				stdinStream,
+				stdoutStream,
+				cancellationToken: cancellationToken
+			)
+		).ConfigureAwait( false );
+	}
+
+	/// <summary>
+	/// Executes <c>head</c> asynchronously using a shared command context.
+	/// </summary>
+	public static async Task<int> RunAsync(
+		string[] args,
+		CommandContext context
+	) {
+		ArgumentNullException.ThrowIfNull(
+			context
+		);
+		args ??= Array.Empty<string>();
+
+		using var output = new ByteOutputStream(
+			context.StandardOutput,
+			context.StandardOutputStream
+		);
 		try {
-			var options = new Options();
-			var files = new List<string>();
-			var parseResult = ParseArguments(
-				args,
-				options,
-				files,
-				stdout,
-				stderr
+			var parser = CreateOptionParser();
+			var parseResult = parser.Parse(
+				args
 			);
-			if ( parseResult.HasValue ) {
-				return parseResult.Value;
+			if ( !parseResult.IsSuccess ) {
+				await WriteOptionErrorsAsync(
+					parseResult,
+					context
+				).ConfigureAwait( false );
+				return UsageExitCode;
 			}
 
-			if ( 0 == files.Count ) {
-				files.Add(
-					"-"
-				);
+			var settings = new Settings();
+			foreach ( var option in parseResult.Options ) {
+				switch ( option.Definition.Key ) {
+					case "help":
+						await PrintUsageAsync(
+							context.StandardOutput,
+							context.CancellationToken
+						).ConfigureAwait( false );
+						return 0;
+					case "version":
+						await context.StandardOutput.WriteLineAsync(
+							VersionText.AsMemory(),
+							context.CancellationToken
+						).ConfigureAwait( false );
+						return 0;
+					case "quiet":
+						settings.Quiet = true;
+						settings.Verbose = false;
+						break;
+					case "verbose":
+						settings.Verbose = true;
+						settings.Quiet = false;
+						break;
+					case "zero-terminated":
+						settings.ZeroTerminated = true;
+						break;
+					case "bytes":
+						if (
+							!TryApplyCount(
+								option.Value,
+								CountKind.Bytes,
+								settings,
+								out var countError
+							)
+						) {
+							await context.Diagnostics.ErrorAsync(
+								countError,
+								context.CancellationToken
+							).ConfigureAwait( false );
+							return UsageExitCode;
+						}
+						break;
+					case "lines":
+						if (
+							!TryApplyCount(
+								option.Value,
+								CountKind.Lines,
+								settings,
+								out var lineCountError
+							)
+						) {
+							await context.Diagnostics.ErrorAsync(
+								lineCountError,
+								context.CancellationToken
+							).ConfigureAwait( false );
+							return UsageExitCode;
+						}
+						break;
+				}
 			}
 
-			var output = new OutputSink(
-				stdout,
-				stdoutStream
-			);
-			var showHeaders = options.Verbose
+			IReadOnlyList<string> operands = 0 == parseResult.Operands.Count
+				? new string[] { "-" }
+				: parseResult.Operands
+			;
+			var showHeaders = settings.Verbose
 				|| (
-					!options.Quiet
-					&& 1 < files.Count
+					!settings.Quiet
+					&& 1 < operands.Count
 				)
 			;
 			var wroteHeader = false;
 			var exitCode = 0;
 
-			foreach ( var path in files ) {
-				cancellationToken.ThrowIfCancellationRequested();
-
+			foreach ( var value in operands ) {
+				context.CancellationToken.ThrowIfCancellationRequested();
+				var operand = InputOperand.Create(
+					value
+				);
 				try {
 					if ( showHeaders ) {
-						await output.WriteHeaderAsync(
-							"-" == path
-								? "standard input"
-								: path,
+						await WriteHeaderAsync(
+							output,
+							operand.DisplayName,
 							wroteHeader,
-							CountKind.Bytes == options.CountKind,
-							cancellationToken
+							context.CancellationToken
 						).ConfigureAwait( false );
 						wroteHeader = true;
 					}
 
-					if ( CountKind.Lines == options.CountKind ) {
-						await ProcessLinesAsync(
-							path,
-							stdin,
-							output,
-							options,
-							cancellationToken
+					if ( CountKind.Bytes == settings.CountKind ) {
+						await ProcessBytesAsync(
+							operand,
+							settings,
+							context,
+							output
 						).ConfigureAwait( false );
 					} else {
-						await ProcessBytesAsync(
-							path,
-							stdinStream,
-							output,
-							options,
-							cancellationToken
+						await ProcessRecordsAsync(
+							operand,
+							settings,
+							context,
+							output
 						).ConfigureAwait( false );
 					}
 				} catch ( Exception ex ) when (
 					ex is not OperationCanceledException
 				) {
-					await stderr.WriteLineAsync(
-						$"head: {path}: {ex.Message}"
+					await context.Diagnostics.ErrorAsync(
+						$"{operand.Value}: {ex.Message}",
+						context.CancellationToken
 					).ConfigureAwait( false );
 					exitCode = ErrorExitCode;
 				}
 			}
 
-			await output.FlushAsync(
-				CountKind.Bytes == options.CountKind,
-				cancellationToken
+			await output.CompleteAsync(
+				context.CancellationToken
 			).ConfigureAwait( false );
 			return exitCode;
 		} catch ( OperationCanceledException ) {
-			return 130;
+			return CommandExitCodes.Canceled;
+		} catch ( Exception ex ) {
+			try {
+				await context.Diagnostics.ErrorAsync(
+					ex.Message,
+					CancellationToken.None
+				).ConfigureAwait( false );
+			} catch {
+				// A diagnostic failure must not replace the command's exit code.
+			}
+			return ErrorExitCode;
+		} finally {
+			try {
+				await output.CompleteAsync(
+					CancellationToken.None
+				).ConfigureAwait( false );
+			} catch {
+				// Completion must not replace the command's primary result.
+			}
 		}
 	}
 
 	#endregion public methods
 
+	#region option methods
 
-	#region argument methods
-
-	private static int? ParseArguments(
-		string[] args,
-		Options options,
-		ICollection<string> files,
-		TextWriter stdout,
-		TextWriter stderr
-	) {
-		var index = 0;
-		while ( index < args.Length ) {
-			var argument = args[ index ];
-			if ( "--" == argument ) {
-				index++;
-				break;
-			}
-			if (
-				"-" == argument
-				|| !argument.StartsWith(
-					"-",
-					StringComparison.Ordinal
-				)
-			) {
-				break;
-			}
-
-			if (
-				1 < argument.Length
-				&& '-' == argument[ 0 ]
-				&& char.IsDigit(
-					argument[ 1 ]
-				)
-			) {
-				if (
-					!TrySetCount(
-						argument.Substring(
-							1
-						),
-						CountKind.Lines,
-						options,
-						stderr
-					)
-				) {
-					return UsageExitCode;
-				}
-				index++;
-				continue;
-			}
-
-			switch ( argument ) {
-				case "-?":
-				case "--help":
-					PrintUsage(
-						stdout
-					);
-					return 0;
-
-				case "--version":
-					stdout.WriteLine(
-						VersionText
-					);
-					return 0;
-
-				case "-q":
-				case "--quiet":
-				case "--silent":
-					options.Quiet = true;
-					options.Verbose = false;
-					index++;
-					break;
-
-				case "-v":
-				case "--verbose":
-					options.Verbose = true;
-					options.Quiet = false;
-					index++;
-					break;
-
-				case "-z":
-				case "--zero-terminated":
-					options.ZeroTerminated = true;
-					index++;
-					break;
-
-				case "-n":
-				case "--lines":
-					if ( args.Length <= index + 1 ) {
-						stderr.WriteLine(
-							"head: option requires an argument -- 'n'"
-						);
-						return UsageExitCode;
-					}
+	private static OptionParser CreateOptionParser() {
+		var settings = new OptionParserSettings {
+			AllowLongOptionAbbreviations = true,
+			Ordering = OptionOrdering.Permute
+		};
+		settings.TokenRewriteRules.Add(
+			new OptionTokenRewriteRule(
+				token => {
 					if (
-						!TrySetCount(
-							args[ index + 1 ],
-							CountKind.Lines,
-							options,
-							stderr
-						)
+						1 < token.Length
+						&& '-' == token[ 0 ]
+						&& char.IsDigit( token[ 1 ] )
 					) {
-						return UsageExitCode;
-					}
-					index += 2;
-					break;
-
-				case "-c":
-				case "--bytes":
-					if ( args.Length <= index + 1 ) {
-						stderr.WriteLine(
-							"head: option requires an argument -- 'c'"
-						);
-						return UsageExitCode;
-					}
-					if (
-						!TrySetCount(
-							args[ index + 1 ],
-							CountKind.Bytes,
-							options,
-							stderr
-						)
-					) {
-						return UsageExitCode;
-					}
-					index += 2;
-					break;
-
-				default:
-					if (
-						TryGetAttachedValue(
-							argument,
+						return new string[] {
 							"-n",
-							"--lines=",
-							out var lineValue
-						)
-					) {
-						if (
-							!TrySetCount(
-								lineValue,
-								CountKind.Lines,
-								options,
-								stderr
-							)
-						) {
-							return UsageExitCode;
-						}
-						index++;
-					} else if (
-						TryGetAttachedValue(
-							argument,
-							"-c",
-							"--bytes=",
-							out var byteValue
-						)
-					) {
-						if (
-							!TrySetCount(
-								byteValue,
-								CountKind.Bytes,
-								options,
-								stderr
-							)
-						) {
-							return UsageExitCode;
-						}
-						index++;
-					} else {
-						stderr.WriteLine(
-							$"head: unrecognized option '{argument}'"
-						);
-						return UsageExitCode;
+							token.Substring( 1 )
+						};
 					}
-					break;
-			}
-		}
-
-		while ( index < args.Length ) {
-			files.Add(
-				args[ index ]
-			);
-			index++;
-		}
-
-		return null;
+					return null;
+				}
+			)
+		);
+		return new OptionParser(
+			Options,
+			settings
+		);
 	}
 
-	private static bool TryGetAttachedValue(
-		string argument,
-		string shortName,
-		string longPrefix,
-		out string value
-	) {
-		if (
-			argument.StartsWith(
-				longPrefix,
-				StringComparison.Ordinal
-			)
-		) {
-			value = argument.Substring(
-				longPrefix.Length
-			);
-			return true;
-		}
-
-		if (
-			argument.StartsWith(
-				shortName,
-				StringComparison.Ordinal
-			)
-			&& shortName.Length < argument.Length
-		) {
-			value = argument.Substring(
-				shortName.Length
-			);
-			if (
-				value.StartsWith(
-					"=",
-					StringComparison.Ordinal
-				)
-			) {
-				value = value.Substring(
-					1
-				);
-			}
-			return true;
-		}
-
-		value = string.Empty;
-		return false;
-	}
-
-	private static bool TrySetCount(
-		string value,
+	private static bool TryApplyCount(
+		string? value,
 		CountKind countKind,
-		Options options,
-		TextWriter stderr
+		Settings settings,
+		out string error
 	) {
+		value ??= string.Empty;
 		var excludeLast = value.StartsWith(
 			"-",
 			StringComparison.Ordinal
 		);
-		if (
+		var magnitude = (
 			excludeLast
 			|| value.StartsWith(
 				"+",
 				StringComparison.Ordinal
 			)
-		) {
-			value = value.Substring(
-				1
-			);
-		}
-
-		if (
-			!TryParseCount(
-				value,
-				out var count
-			)
-		) {
-			stderr.WriteLine(
-				$"head: invalid number of {( CountKind.Bytes == countKind ? "bytes" : "lines" )}: '{value}'"
-			);
-			return false;
-		}
-
-		options.CountKind = countKind;
-		options.Count = count;
-		options.ExcludeLast = excludeLast;
-		return true;
-	}
-
-	private static bool TryParseCount(
-		string value,
-		out long count
-	) {
-		count = 0;
-		if ( string.IsNullOrEmpty( value ) ) {
-			return false;
-		}
-
-		var index = 0;
-		while (
-			index < value.Length
-			&& char.IsDigit(
-				value[ index ]
-			)
-		) {
-			index++;
-		}
-		if (
-			0 == index
-			|| !BigInteger.TryParse(
-				value.Substring(
-					0,
-					index
-				),
-				NumberStyles.None,
-				CultureInfo.InvariantCulture,
-				out var number
-			)
-		) {
-			return false;
-		}
-
-		if (
-			!TryGetMultiplier(
-				value.Substring(
-					index
-				),
-				out var multiplier
-			)
-		) {
-			return false;
-		}
-
-		var result = number * multiplier;
-		count = long.MaxValue < result
-			? long.MaxValue
-			: (long)result
+		)
+			? value.Substring( 1 )
+			: value
 		;
+		var parsed = QuantityParser.ParseInt64(
+			magnitude,
+			NumericSuffixTable.GnuCounts,
+			allowLeadingPlus: false,
+			allowLeadingMinus: false,
+			overflowBehavior: OverflowBehavior.Clamp
+		);
+		if ( !parsed.IsSuccess ) {
+			error = $"invalid number of {( CountKind.Bytes == countKind ? "bytes" : "lines" )}: '{value}'";
+			return false;
+		}
+
+		settings.CountKind = countKind;
+		settings.Count = parsed.Value;
+		settings.ExcludeLast = excludeLast;
+		error = string.Empty;
 		return true;
 	}
 
-	private static bool TryGetMultiplier(
-		string suffix,
-		out BigInteger multiplier
+	private static async Task WriteOptionErrorsAsync(
+		OptionParseResult result,
+		CommandContext context
 	) {
-		switch ( suffix ) {
-			case "":
-				multiplier = BigInteger.One;
-				return true;
-			case "b":
-				multiplier = new BigInteger( 512 );
-				return true;
-			case "kB":
-				multiplier = BigInteger.Pow( 1000, 1 );
-				return true;
-			case "K":
-			case "KiB":
-				multiplier = BigInteger.One << 10;
-				return true;
-			case "MB":
-				multiplier = BigInteger.Pow( 1000, 2 );
-				return true;
-			case "M":
-			case "MiB":
-				multiplier = BigInteger.One << 20;
-				return true;
-			case "GB":
-				multiplier = BigInteger.Pow( 1000, 3 );
-				return true;
-			case "G":
-			case "GiB":
-				multiplier = BigInteger.One << 30;
-				return true;
-			case "TB":
-				multiplier = BigInteger.Pow( 1000, 4 );
-				return true;
-			case "T":
-			case "TiB":
-				multiplier = BigInteger.One << 40;
-				return true;
-			case "PB":
-				multiplier = BigInteger.Pow( 1000, 5 );
-				return true;
-			case "P":
-			case "PiB":
-				multiplier = BigInteger.One << 50;
-				return true;
-			case "EB":
-				multiplier = BigInteger.Pow( 1000, 6 );
-				return true;
-			case "E":
-			case "EiB":
-				multiplier = BigInteger.One << 60;
-				return true;
-			case "ZB":
-				multiplier = BigInteger.Pow( 1000, 7 );
-				return true;
-			case "Z":
-			case "ZiB":
-				multiplier = BigInteger.One << 70;
-				return true;
-			case "YB":
-				multiplier = BigInteger.Pow( 1000, 8 );
-				return true;
-			case "Y":
-			case "YiB":
-				multiplier = BigInteger.One << 80;
-				return true;
-			case "RB":
-				multiplier = BigInteger.Pow( 1000, 9 );
-				return true;
-			case "R":
-			case "RiB":
-				multiplier = BigInteger.One << 90;
-				return true;
-			case "QB":
-				multiplier = BigInteger.Pow( 1000, 10 );
-				return true;
-			case "Q":
-			case "QiB":
-				multiplier = BigInteger.One << 100;
-				return true;
-			default:
-				multiplier = BigInteger.Zero;
-				return false;
+		foreach ( var error in result.Errors ) {
+			await context.StandardError.WriteLineAsync(
+				OptionDiagnosticFormatter.Format(
+					context.ProgramName,
+					error
+				).AsMemory(),
+				context.CancellationToken
+			).ConfigureAwait( false );
 		}
 	}
 
-	#endregion argument methods
-
+	#endregion option methods
 
 	#region processing methods
 
-	private static async Task ProcessLinesAsync(
-		string path,
-		TextReader standardInput,
-		OutputSink output,
-		Options options,
-		CancellationToken cancellationToken
+	private static async Task ProcessBytesAsync(
+		InputOperand operand,
+		Settings settings,
+		CommandContext context,
+		ByteOutputStream output
 	) {
-		TextReader reader;
-		var ownsReader = false;
-
-		if ( "-" == path ) {
-			reader = standardInput;
-		} else {
-			reader = new StreamReader(
-				new FileStream(
-					path,
-					FileMode.Open,
-					FileAccess.Read,
-					FileShare.ReadWrite | FileShare.Delete,
-					BufferSize,
-					FileOptions.Asynchronous | FileOptions.SequentialScan
-				),
-				Encoding.UTF8,
-				detectEncodingFromByteOrderMarks: true
-			);
-			ownsReader = true;
+		await using var source = InputSource.OpenBinary(
+			operand,
+			context
+		);
+		var stream = source.BinaryStream
+			?? throw new InvalidOperationException(
+				"A binary input stream was not available."
+			)
+		;
+		if ( !settings.ExcludeLast ) {
+			await StreamOperations.CopyCountAsync(
+				stream,
+				output,
+				settings.Count,
+				cancellationToken: context.CancellationToken
+			).ConfigureAwait( false );
+			return;
 		}
 
-		try {
-			var recordReader = new RecordReader(
-				reader,
-				options.ZeroTerminated
-					? '\0'
-					: '\n'
+		if ( stream.CanSeek ) {
+			var count = Math.Max(
+				0,
+				stream.Length - settings.Count
 			);
+			stream.Seek(
+				0,
+				SeekOrigin.Begin
+			);
+			await StreamOperations.CopyCountAsync(
+				stream,
+				output,
+				count,
+				cancellationToken: context.CancellationToken
+			).ConfigureAwait( false );
+			return;
+		}
 
-			if ( options.ExcludeLast ) {
-				await OutputAllButLastRecordsAsync(
-					recordReader,
-					output,
-					options.Count,
-					options.ZeroTerminated,
-					cancellationToken
+		await using var spool = TemporarySpool.Create();
+		await StreamOperations.CopyAsync(
+			stream,
+			spool.Stream,
+			cancellationToken: context.CancellationToken
+		).ConfigureAwait( false );
+		await spool.RewindAsync(
+			context.CancellationToken
+		).ConfigureAwait( false );
+		await StreamOperations.CopyCountAsync(
+			spool.Stream,
+			output,
+			Math.Max(
+				0,
+				spool.Stream.Length - settings.Count
+			),
+			cancellationToken: context.CancellationToken
+		).ConfigureAwait( false );
+	}
+
+	private static async Task ProcessRecordsAsync(
+		InputOperand operand,
+		Settings settings,
+		CommandContext context,
+		ByteOutputStream output
+	) {
+		if (
+			operand.IsStandardInput
+			&& null == context.StandardInputStream
+		) {
+			await ProcessTextRecordsAsync(
+				settings,
+				context,
+				output
+			).ConfigureAwait( false );
+			return;
+		}
+
+		await using var source = InputSource.OpenBinary(
+			operand,
+			context
+		);
+		var stream = source.BinaryStream
+			?? throw new InvalidOperationException(
+				"A binary input stream was not available."
+			)
+		;
+		var separator = settings.ZeroTerminated
+			? (byte)0
+			: (byte)'\n'
+		;
+
+		if (
+			settings.ExcludeLast
+			&& stream.CanSeek
+		) {
+			var offset = await StreamOperations.FindStartOfLastDelimitedRecordsAsync(
+				stream,
+				separator,
+				settings.Count,
+				cancellationToken: context.CancellationToken
+			).ConfigureAwait( false );
+			stream.Seek(
+				0,
+				SeekOrigin.Begin
+			);
+			await StreamOperations.CopyCountAsync(
+				stream,
+				output,
+				offset,
+				cancellationToken: context.CancellationToken
+			).ConfigureAwait( false );
+			return;
+		}
+
+		using var reader = new DelimitedByteRecordReader(
+			stream,
+			separator
+		);
+		if ( settings.ExcludeLast ) {
+			await OutputAllButLastRecordsAsync(
+				reader,
+				output,
+				settings.Count,
+				separator,
+				context.CancellationToken
+			).ConfigureAwait( false );
+		} else {
+			await OutputFirstRecordsAsync(
+				reader,
+				output,
+				settings.Count,
+				context.CancellationToken
+			).ConfigureAwait( false );
+		}
+	}
+
+	private static async Task ProcessTextRecordsAsync(
+		Settings settings,
+		CommandContext context,
+		ByteOutputStream output
+	) {
+		var separator = settings.ZeroTerminated
+			? '\0'
+			: '\n'
+		;
+		var reader = new DelimitedRecordReader(
+			context.StandardInput,
+			separator
+		);
+		if ( !settings.ExcludeLast ) {
+			for (
+				long index = 0;
+				index < settings.Count;
+				index++
+			) {
+				var record = await reader.ReadAsync(
+					context.CancellationToken
 				).ConfigureAwait( false );
-			} else {
-				await OutputFirstRecordsAsync(
-					recordReader,
+				if ( null == record ) {
+					return;
+				}
+				await WriteTextRecordAsync(
 					output,
-					options.Count,
-					options.ZeroTerminated,
-					cancellationToken
+					record,
+					separator,
+					context.CancellationToken
 				).ConfigureAwait( false );
 			}
-		} finally {
-			if ( ownsReader ) {
-				reader.Dispose();
+			return;
+		}
+
+		if ( MaxBufferedRecords < settings.Count ) {
+			throw new InvalidOperationException(
+				"A binary standard-input stream is required for this end-relative count."
+			);
+		}
+		var records = new Queue<string>(
+			(int)settings.Count
+		);
+		while ( true ) {
+			var record = await reader.ReadAsync(
+				context.CancellationToken
+			).ConfigureAwait( false );
+			if ( null == record ) {
+				return;
+			}
+			records.Enqueue(
+				record
+			);
+			if ( settings.Count < records.Count ) {
+				await WriteTextRecordAsync(
+					output,
+					records.Dequeue(),
+					separator,
+					context.CancellationToken
+				).ConfigureAwait( false );
 			}
 		}
 	}
 
 	private static async Task OutputFirstRecordsAsync(
-		RecordReader reader,
-		OutputSink output,
+		DelimitedByteRecordReader reader,
+		ByteOutputStream output,
 		long count,
-		bool zeroTerminated,
 		CancellationToken cancellationToken
 	) {
 		for (
@@ -953,21 +659,20 @@ public static class Command {
 				cancellationToken
 			).ConfigureAwait( false );
 			if ( null == record ) {
-				break;
+				return;
 			}
-			await output.WriteRecordAsync(
-				record,
-				zeroTerminated,
+			await output.WriteAsync(
+				record.AsMemory(),
 				cancellationToken
 			).ConfigureAwait( false );
 		}
 	}
 
 	private static async Task OutputAllButLastRecordsAsync(
-		RecordReader reader,
-		OutputSink output,
+		DelimitedByteRecordReader reader,
+		ByteOutputStream output,
 		long discard,
-		bool zeroTerminated,
+		byte separator,
 		CancellationToken cancellationToken
 	) {
 		if ( 0 == discard ) {
@@ -978,29 +683,26 @@ public static class Command {
 				if ( null == record ) {
 					return;
 				}
-				await output.WriteRecordAsync(
-					record,
-					zeroTerminated,
+				await output.WriteAsync(
+					record.AsMemory(),
 					cancellationToken
 				).ConfigureAwait( false );
 			}
 		}
-
 		if ( MaxBufferedRecords < discard ) {
 			await OutputAllButLastRecordsSpoolingAsync(
 				reader,
 				output,
 				discard,
-				zeroTerminated,
+				separator,
 				cancellationToken
 			).ConfigureAwait( false );
 			return;
 		}
 
-		var buffer = new Queue<string>(
+		var records = new Queue<byte[]>(
 			(int)discard
 		);
-
 		while ( true ) {
 			var record = await reader.ReadAsync(
 				cancellationToken
@@ -1008,14 +710,13 @@ public static class Command {
 			if ( null == record ) {
 				return;
 			}
-
-			buffer.Enqueue(
+			records.Enqueue(
 				record
 			);
-			if ( discard < buffer.Count ) {
-				await output.WriteRecordAsync(
-					buffer.Dequeue(),
-					zeroTerminated,
+			if ( discard < records.Count ) {
+				var ready = records.Dequeue();
+				await output.WriteAsync(
+					ready.AsMemory(),
 					cancellationToken
 				).ConfigureAwait( false );
 			}
@@ -1023,285 +724,121 @@ public static class Command {
 	}
 
 	private static async Task OutputAllButLastRecordsSpoolingAsync(
-		RecordReader reader,
-		OutputSink output,
+		DelimitedByteRecordReader reader,
+		ByteOutputStream output,
 		long discard,
-		bool zeroTerminated,
+		byte separator,
 		CancellationToken cancellationToken
 	) {
-		var temporaryPath = Path.GetTempFileName();
+		await using var spool = TemporarySpool.Create();
 		long recordCount = 0;
-
-		try {
-			using ( var stream = new FileStream(
-				temporaryPath,
-				FileMode.Create,
-				FileAccess.Write,
-				FileShare.None,
-				BufferSize,
-				FileOptions.Asynchronous | FileOptions.SequentialScan
-			) )
-			using ( var writer = new StreamWriter(
-				stream,
-				new UTF8Encoding(
-					encoderShouldEmitUTF8Identifier: false
-				)
-			) ) {
-				while ( true ) {
-					var record = await reader.ReadAsync(
-						cancellationToken
-					).ConfigureAwait( false );
-					if ( null == record ) {
-						break;
-					}
-
-					await writer.WriteAsync(
-						record
-					).ConfigureAwait( false );
-					await writer.WriteAsync(
-						zeroTerminated
-							? '\0'
-							: '\n'
-					).ConfigureAwait( false );
-					recordCount++;
-				}
-				await writer.FlushAsync().ConfigureAwait( false );
-			}
-
-			var outputCount = Math.Max(
-				0,
-				recordCount - discard
-			);
-			if ( 0 == outputCount ) {
-				return;
-			}
-
-			using ( var stream = new FileStream(
-				temporaryPath,
-				FileMode.Open,
-				FileAccess.Read,
-				FileShare.Read,
-				BufferSize,
-				FileOptions.Asynchronous | FileOptions.SequentialScan
-			) )
-			using ( var textReader = new StreamReader(
-				stream,
-				Encoding.UTF8,
-				detectEncodingFromByteOrderMarks: true
-			) ) {
-				var spoolReader = new RecordReader(
-					textReader,
-					zeroTerminated
-						? '\0'
-						: '\n'
-				);
-				await OutputFirstRecordsAsync(
-					spoolReader,
-					output,
-					outputCount,
-					zeroTerminated,
-					cancellationToken
-				).ConfigureAwait( false );
-			}
-		} finally {
-			File.Delete(
-				temporaryPath
-			);
-		}
-	}
-
-	private static async Task ProcessBytesAsync(
-		string path,
-		Stream? standardInput,
-		OutputSink output,
-		Options options,
-		CancellationToken cancellationToken
-	) {
-		Stream stream;
-		var ownsStream = false;
-
-		if ( "-" == path ) {
-			stream = standardInput ?? throw new InvalidOperationException(
-				"Byte mode on standard input requires a binary input stream."
-			);
-		} else {
-			stream = new FileStream(
-				path,
-				FileMode.Open,
-				FileAccess.Read,
-				FileShare.ReadWrite | FileShare.Delete,
-				BufferSize,
-				FileOptions.Asynchronous | FileOptions.SequentialScan
-			);
-			ownsStream = true;
-		}
-
-		try {
-			if ( options.ExcludeLast ) {
-				await OutputAllButLastBytesAsync(
-					stream,
-					output,
-					options.Count,
-					cancellationToken
-				).ConfigureAwait( false );
-			} else {
-				await CopyBytesAsync(
-					stream,
-					output,
-					options.Count,
-					cancellationToken
-				).ConfigureAwait( false );
-			}
-		} finally {
-			if ( ownsStream ) {
-				stream.Dispose();
-			}
-		}
-	}
-
-	private static async Task OutputAllButLastBytesAsync(
-		Stream input,
-		OutputSink output,
-		long discard,
-		CancellationToken cancellationToken
-	) {
-		if ( input.CanSeek ) {
-			var count = Math.Max(
-				0,
-				input.Length - discard
-			);
-			input.Seek(
-				0,
-				SeekOrigin.Begin
-			);
-			await CopyBytesAsync(
-				input,
-				output,
-				count,
+		while ( true ) {
+			var record = await reader.ReadAsync(
 				cancellationToken
 			).ConfigureAwait( false );
-			return;
-		}
-
-		var temporaryPath = Path.GetTempFileName();
-		try {
-			using ( var temporary = new FileStream(
-				temporaryPath,
-				FileMode.Create,
-				FileAccess.ReadWrite,
-				FileShare.None,
-				BufferSize,
-				FileOptions.Asynchronous | FileOptions.SequentialScan
-			) ) {
-				await input.CopyToAsync(
-					temporary,
-					BufferSize,
-					cancellationToken
-				).ConfigureAwait( false );
-
-				var count = Math.Max(
-					0,
-					temporary.Length - discard
-				);
-				temporary.Seek(
-					0,
-					SeekOrigin.Begin
-				);
-				await CopyBytesAsync(
-					temporary,
-					output,
-					count,
-					cancellationToken
-				).ConfigureAwait( false );
-			}
-		} finally {
-			File.Delete(
-				temporaryPath
-			);
-		}
-	}
-
-	private static async Task CopyBytesAsync(
-		Stream input,
-		OutputSink output,
-		long count,
-		CancellationToken cancellationToken
-	) {
-		var buffer = new byte[ BufferSize ];
-		var remaining = count;
-
-		while ( 0 < remaining ) {
-			var requested = (int)Math.Min(
-				buffer.Length,
-				remaining
-			);
-			var read = await input.ReadAsync(
-				buffer,
-				0,
-				requested,
-				cancellationToken
-			).ConfigureAwait( false );
-			if ( 0 == read ) {
+			if ( null == record ) {
 				break;
 			}
-
-			await output.WriteBytesAsync(
-				buffer,
-				0,
-				read,
+			await spool.Stream.WriteAsync(
+				record.AsMemory(),
 				cancellationToken
 			).ConfigureAwait( false );
-			remaining -= read;
+			recordCount++;
 		}
+
+		var outputCount = Math.Max(
+			0,
+			recordCount - discard
+		);
+		if ( 0 == outputCount ) {
+			return;
+		}
+		await spool.RewindAsync(
+			cancellationToken
+		).ConfigureAwait( false );
+		using var spoolReader = new DelimitedByteRecordReader(
+			spool.Stream,
+			separator
+		);
+		await OutputFirstRecordsAsync(
+			spoolReader,
+			output,
+			outputCount,
+			cancellationToken
+		).ConfigureAwait( false );
+	}
+
+	private static async ValueTask WriteTextRecordAsync(
+		ByteOutputStream output,
+		string record,
+		char separator,
+		CancellationToken cancellationToken
+	) {
+		await output.WriteTextAsync(
+			record,
+			cancellationToken
+		).ConfigureAwait( false );
+		var delimiter = new byte[] {
+			(byte)separator
+		};
+		await output.WriteAsync(
+			delimiter.AsMemory(),
+			cancellationToken
+		).ConfigureAwait( false );
 	}
 
 	#endregion processing methods
 
+	#region output methods
 
-	#region usage methods
-
-	private static void PrintUsage(
-		TextWriter writer
+	private static ValueTask WriteHeaderAsync(
+		ByteOutputStream output,
+		string displayName,
+		bool precedingBlankLine,
+		CancellationToken cancellationToken
 	) {
-		writer.WriteLine(
-			"Usage: head [OPTION]... [FILE]..."
-		);
-		writer.WriteLine(
-			"Print the first 10 lines of each FILE to standard output."
-		);
-		writer.WriteLine();
-		writer.WriteLine(
-			"  -c, --bytes=[-]NUM       print the first NUM bytes;"
-		);
-		writer.WriteLine(
-			"                             with '-', print all but the last NUM bytes"
-		);
-		writer.WriteLine(
-			"  -n, --lines=[-]NUM       print the first NUM lines;"
-		);
-		writer.WriteLine(
-			"                             with '-', print all but the last NUM lines"
-		);
-		writer.WriteLine(
-			"  -q, --quiet, --silent    never print file-name headers"
-		);
-		writer.WriteLine(
-			"  -v, --verbose            always print file-name headers"
-		);
-		writer.WriteLine(
-			"  -z, --zero-terminated    use NUL as the line delimiter"
-		);
-		writer.WriteLine(
-			"      --help               display this help and exit"
-		);
-		writer.WriteLine(
-			"      --version            output version information and exit"
-		);
-		writer.WriteLine();
-		writer.WriteLine(
-			"NUM may use b, decimal or binary prefixes through Q/QiB."
+		return output.WriteTextAsync(
+			string.Concat(
+				precedingBlankLine
+					? "\n"
+					: string.Empty,
+				"==> ",
+				displayName,
+				" <==\n"
+			),
+			cancellationToken
 		);
 	}
-	#endregion usage methods
+
+	private static Task PrintUsageAsync(
+		TextWriter writer,
+		CancellationToken cancellationToken
+	) {
+		const string usage = """
+Usage: head [OPTION]... [FILE]...
+Print the first 10 lines of each FILE to standard output.
+With more than one FILE, precede each with a header giving the file name.
+
+  -c, --bytes=[-]NUM       print the first NUM bytes of each file;
+                             with '-', print all but the last NUM bytes
+  -n, --lines=[-]NUM       print the first NUM lines instead of the first 10;
+                             with '-', print all but the last NUM lines
+  -q, --quiet, --silent    never print headers giving file names
+  -v, --verbose            always print headers giving file names
+  -z, --zero-terminated    line delimiter is NUL, not newline
+  -?, --help               display this help and exit
+      --version            output version information and exit
+
+NUM may have a multiplier suffix: b 512, kB 1000, K 1024, MB 1000*1000,
+M 1024*1024, and so on for G, T, P, E, Z, Y, R, and Q. Binary prefixes
+such as KiB and MiB are accepted too.
+""";
+		return writer.WriteAsync(
+			usage.AsMemory(),
+			cancellationToken
+		);
+	}
+
+	#endregion output methods
 
 }

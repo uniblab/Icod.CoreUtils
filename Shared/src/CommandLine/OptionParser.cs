@@ -8,7 +8,8 @@ public sealed class OptionParser {
 	private sealed record ParserToken(
 		string Value,
 		string OriginalValue,
-		int ArgumentIndex
+		int ArgumentIndex,
+		bool CanRewrite
 	);
 
 	private readonly Dictionary<string, OptionDefinition> myDefinitionsByKey;
@@ -99,7 +100,7 @@ public sealed class OptionParser {
 	) {
 		arguments ??= Array.Empty<string>();
 
-		var tokens = this.RewriteTokens(
+		var tokens = CreateTokens(
 			arguments
 		);
 		var options = new List<OptionOccurrence>();
@@ -117,6 +118,45 @@ public sealed class OptionParser {
 			index++
 		) {
 			var token = tokens[ index ];
+			if ( parsingOptions && "--" == token.Value ) {
+				parsingOptions = false;
+				continue;
+			}
+
+			if (
+				parsingOptions
+				&& token.CanRewrite
+			) {
+				var rewritten = this.RewriteToken(
+					token.Value
+				);
+				if ( null != rewritten ) {
+					tokens.RemoveAt(
+						index
+					);
+					for (
+						var replacementIndex = rewritten.Count - 1;
+						0 <= replacementIndex;
+						replacementIndex--
+					) {
+						tokens.Insert(
+							index,
+							new ParserToken(
+								rewritten[ replacementIndex ] ?? string.Empty,
+								token.OriginalValue,
+								token.ArgumentIndex,
+								false
+							)
+						);
+					}
+					if ( 0 == rewritten.Count ) {
+						index--;
+						continue;
+					}
+					token = tokens[ index ];
+				}
+			}
+
 			if ( parsingOptions && "--" == token.Value ) {
 				parsingOptions = false;
 				continue;
@@ -184,47 +224,42 @@ public sealed class OptionParser {
 		);
 	}
 
-	private IReadOnlyList<ParserToken> RewriteTokens(
+	private static List<ParserToken> CreateTokens(
 		IReadOnlyList<string> arguments
 	) {
-		var output = new List<ParserToken>();
+		var output = new List<ParserToken>(
+			arguments.Count
+		);
 		for (
 			var index = 0;
 			index < arguments.Count;
 			index++
 		) {
 			var value = arguments[ index ] ?? string.Empty;
-			IReadOnlyList<string>? rewritten = null;
-			foreach ( var rule in this.mySettings.TokenRewriteRules ) {
-				rewritten = rule.Rewrite(
-					value
-				);
-				if ( null != rewritten ) {
-					break;
-				}
-			}
-
-			if ( null == rewritten ) {
-				output.Add(
-					new ParserToken(
-						value,
-						value,
-						index
-					)
-				);
-			} else {
-				foreach ( var replacement in rewritten ) {
-					output.Add(
-						new ParserToken(
-							replacement ?? string.Empty,
-							value,
-							index
-						)
-					);
-				}
-			}
+			output.Add(
+				new ParserToken(
+					value,
+					value,
+					index,
+					true
+				)
+			);
 		}
 		return output;
+	}
+
+	private IReadOnlyList<string>? RewriteToken(
+		string value
+	) {
+		foreach ( var rule in this.mySettings.TokenRewriteRules ) {
+			var rewritten = rule.Rewrite(
+				value
+			);
+			if ( null != rewritten ) {
+				return rewritten;
+			}
+		}
+		return null;
 	}
 
 	private void ParseLongOption(
