@@ -18,7 +18,7 @@
 		</PackageReference>
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\..\factor\Icod.CoreUtils.factor.csproj" />
+		<ProjectReference Include="..\..\factor\Icod.CoreUtils.Factor.csproj" />
 		<ProjectReference Include="..\..\Shared\Icod.CoreUtils.Shared.csproj" />
 	</ItemGroup>
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
