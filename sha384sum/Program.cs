@@ -1,10 +1,28 @@
-// Port of the standard UNIX `sha384sum` utility to .NET
 namespace Icod.CoreUtils.Sha384Sum;
 
-using System;
+using Icod.CoreUtils.Shared.Diagnostics;
 
-internal static class Program {
-	public static int Main( string[] args ) {
-		return Command.Run( args, Console.In, Console.Out, Console.Error );
+public static class Program {
+
+	public static async Task<int> Main(
+		string[] args
+	) {
+		using var cancellation = new CancellationTokenSource();
+		Console.CancelKeyPress += (
+			sender,
+			eventArgs
+		) => {
+			eventArgs.Cancel = true;
+			cancellation.Cancel();
+		};
+
+		return await Command.RunAsync(
+			args,
+			CommandContext.CreateConsole(
+				"sha384sum",
+				cancellation.Token
+			)
+		).ConfigureAwait( false );
 	}
+
 }

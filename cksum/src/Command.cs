@@ -1,80 +1,140 @@
-// Original behavior/reference: GNU coreutils
-// Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
-
 namespace Icod.CoreUtils.Cksum;
 
-using System;
-using System.IO;
 using System.Text;
+using Icod.CoreUtils.Shared.Checksums;
+using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CoreUtils.Shared.IO;
 
-// TODO: expose as service in CoreUtils.Common
-// TODO: augment with other checksums (MD5, SHA*, etc.)
-/// <summary>
-/// Compute CRC-32 (IEEE) checksum and length in bytes, similar to POSIX `cksum`.
-/// </summary>
+/// <summary>Computes and verifies checksums.</summary>
 public static class Command {
-	private static readonly uint[] Table = CreateTable();
 
-	private static uint[] CreateTable() {
-		const uint poly = 0xEDB88320u;
-		var t = new uint[ 256 ];
-		for ( uint i = 0; i < 256; i++ ) {
-			var r = i;
-			for ( var j = 0; j < 8; j++ ) {
-				if ( ( r & 1 ) != 0 )
-					r = ( r >> 1 ) ^ poly;
-				else
-					r >>= 1;
-			}
-
-			t[ i ] = r;
-		}
-
-		return t;
+	/// <summary>Runs the command synchronously.</summary>
+	public static int Run(
+		string[] args,
+		TextReader? stdin = null,
+		TextWriter? stdout = null,
+		TextWriter? stderr = null
+	) {
+		return RunAsync(
+			args,
+			stdin,
+			stdout,
+			stderr
+		).GetAwaiter().GetResult();
 	}
 
-	/// <summary>
-	/// cksum: compute CRC-32 and file length. Outputs: "&lt;crc&gt; &lt;length&gt; &lt;filename&gt;"."
-	/// </summary>
-	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
+	/// <summary>Runs the command asynchronously.</summary>
+	public static async Task<int> RunAsync(
+		string[] args,
+		TextReader? stdin = null,
+		TextWriter? stdout = null,
+		TextWriter? stderr = null,
+		Stream? stdinStream = null,
+		Stream? stdoutStream = null,
+		CancellationToken cancellationToken = default
+	) {
+		var useConsoleInput = null == stdin;
+		var useConsoleOutput = null == stdout;
 		stdin ??= Console.In;
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;
-
-		if ( args.Length == 1 && ( args[ 0 ] == "-h" || args[ 0 ] == "--help" ) ) {
-			PrintUsage( stdout );
-			return 0;
-		}
-
-		var files = args.Length == 0 ? new[] { "-" } : args;
-		var exitCode = 0;
-		foreach ( var name in files ) {
-			try {
-				using var stream = name == "-" ? Console.OpenStandardInput() : File.OpenRead( name );
-				var buffer = new byte[ 8192 ];
-				long len = 0;
-				uint crc = 0xFFFFFFFFu;
-				int read;
-				while ( ( read = stream.Read( buffer, 0, buffer.Length ) ) > 0 ) {
-					len += read;
-					for ( var i = 0; i < read; i++ ) {
-						crc = ( crc >> 8 ) ^ Table[ ( crc ^ buffer[ i ] ) & 0xFF ];
-					}
-				}
-
-				crc ^= 0xFFFFFFFFu;
-				// cksum prints decimal CRC and decimal length
-				stdout.WriteLine( $"{crc} {len} {( name == "-" ? "-" : name )}" );
-			} catch ( Exception ex ) {
-				stderr.WriteLine( $"cksum: {name}: {ex.Message}" );
-				exitCode = 1;
+		TextReaderStream? inputAdapter = null;
+		if ( null == stdinStream ) {
+			if ( useConsoleInput ) {
+				stdinStream = Console.OpenStandardInput();
+			} else {
+				inputAdapter = new TextReaderStream(
+					stdin,
+					new UTF8Encoding(
+						encoderShouldEmitUTF8Identifier: false
+					)
+				);
+				stdinStream = inputAdapter;
 			}
 		}
-
-		return exitCode;
+		if (
+			null == stdoutStream
+			&& useConsoleOutput
+		) {
+			stdoutStream = Console.OpenStandardOutput();
+		}
+		try {
+			return await RunAsync(
+				args,
+				new CommandContext(
+					"cksum",
+					stdin,
+					stdout,
+					stderr,
+					stdinStream,
+					stdoutStream,
+					cancellationToken: cancellationToken
+				)
+			).ConfigureAwait( false );
+		} finally {
+			inputAdapter?.Dispose();
+		}
 	}
 
-	private static void PrintUsage( TextWriter stdout ) {
-		stdout.WriteLine( "Usage: cksum [FILE]..." );
+	/// <summary>Runs the command with a shared context.</summary>
+	public static Task<int> RunAsync(
+		string[] args,
+		CommandContext context
+	) {
+		return CksumCommand.RunAsync(
+			args,
+			context,
+			PrintUsage,
+			"Icod.CoreUtils.Cksum 1.0"
+		);
 	}
+
+	private static void PrintUsage(
+		TextWriter output
+	) {
+		output.WriteLine(
+			"Usage: cksum [OPTION]... [FILE]..."
+		);
+		output.WriteLine(
+			"Print or verify checksums."
+		);
+		output.WriteLine();
+		output.WriteLine(
+			"  -a, --algorithm=TYPE  select sysv, bsd, crc, crc32b, md5, sha1,"
+		);
+		output.WriteLine(
+			"                        sha2, sha3, blake2b, or sm3"
+		);
+		output.WriteLine(
+			"      --base64         emit base64 digests"
+		);
+		output.WriteLine(
+			"  -c, --check          verify checksum files"
+		);
+		output.WriteLine(
+			"  -l, --length=BITS    digest length for sha2, sha3, or blake2b"
+		);
+		output.WriteLine(
+			"      --raw            emit raw digest bytes"
+		);
+		output.WriteLine(
+			"      --tag            emit BSD-style tagged output"
+		);
+		output.WriteLine(
+			"      --untagged       emit digest followed by file name"
+		);
+		output.WriteLine(
+			"  -z, --zero           terminate output records with NUL"
+		);
+		output.WriteLine(
+			"      --debug          explain the selected implementation"
+		);
+		output.WriteLine(
+			"      --help           display this help and exit"
+		);
+		output.WriteLine(
+			"      --version        output version information and exit"
+		);
+	}
+
 }
