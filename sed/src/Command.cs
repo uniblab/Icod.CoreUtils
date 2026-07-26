@@ -12,6 +12,10 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Icod.CoreUtils.Shared.CommandLine;
+using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CoreUtils.Shared.IO;
+using Icod.CoreUtils.Shared.Processes;
 
 /// <summary>
 /// Implements a portable, BSD-style <c>sed</c> stream editor using the .NET
@@ -44,7 +48,7 @@ using System.Threading.Tasks;
 /// <c>!</c> to negate its selection.
 /// </para>
 /// <para>
-/// Supported commands are <c>= a b c d D g G h H i l n N p P q Q r R
+/// Supported commands are <c>= a b c d D e g G h H i l n N p P q Q r R
 /// s t T w W x y</c>, labels introduced with <c>:</c>, comments introduced
 /// with <c>#</c>, and grouped commands enclosed in braces.
 /// </para>
@@ -61,8 +65,8 @@ public static class Command {
 
 	#region fields
 	private const int DefaultListWidth = 70;
-	private const int ErrorExitCode = 1;
-	private const int UsageExitCode = 2;
+	private const int ErrorExitCode = CommandExitCodes.Failure;
+	private const int UsageExitCode = CommandExitCodes.UsageError;
 	private const string VersionText = "Icod.CoreUtils.Sed 1.0";
 	#endregion fields
 
@@ -70,12 +74,27 @@ public static class Command {
 	#region nested types
 	private sealed class Options {
 
+		public bool Debug {
+			get;
+			set;
+		}
+
 		public bool ExtendedRegularExpressions {
 			get;
 			set;
 		}
 
+		public bool FollowSymlinks {
+			get;
+			set;
+		}
+
 		public bool InPlace {
+			get;
+			set;
+		}
+
+		public bool Posix {
 			get;
 			set;
 		}
@@ -540,6 +559,7 @@ public static class Command {
 		Delete,
 		DeleteFirst,
 		EndGroup,
+		Execute,
 		Exchange,
 		GetHold,
 		Label,
@@ -752,6 +772,7 @@ public static class Command {
 
 		private readonly bool myExtendedRegularExpressions;
 		private readonly List<Instruction> myInstructions;
+		private readonly bool myPosix;
 		private string? myLastRegularExpression;
 		private readonly bool mySandbox;
 		private readonly string myText;
@@ -760,13 +781,15 @@ public static class Command {
 		public ScriptParser(
 			string text,
 			bool extendedRegularExpressions,
-			bool sandbox
+			bool sandbox,
+			bool posix
 		) {
 			this.myText = text ?? throw new ArgumentNullException(
 				nameof( text )
 			);
 			this.myExtendedRegularExpressions = extendedRegularExpressions;
 			this.mySandbox = sandbox;
+			this.myPosix = posix;
 			this.myInstructions = new List<Instruction>();
 		}
 
@@ -944,6 +967,21 @@ public static class Command {
 						this.RequireBoundary();
 						break;
 
+					case 'e':
+						this.RequireGnuExtension(
+							command
+						);
+						this.RequireFileAccess();
+						this.myIndex++;
+						this.myInstructions.Add(
+							new Instruction(
+								InstructionKind.Execute,
+								selector,
+								this.ReadSimpleArgument()
+							)
+						);
+						break;
+
 					case 'g':
 						this.myIndex++;
 						this.myInstructions.Add(
@@ -1009,11 +1047,20 @@ public static class Command {
 					case 'l':
 						this.myIndex++;
 						this.SkipHorizontalWhitespace();
+						var listWidth = this.ReadOptionalInteger();
+						if (
+							this.myPosix
+							&& listWidth.HasValue
+						) {
+							throw this.Error(
+								"the l command width is not available in POSIX mode"
+							);
+						}
 						this.myInstructions.Add(
 							new Instruction(
 								InstructionKind.List,
 								selector,
-								this.ReadOptionalInteger()
+								listWidth
 							)
 						);
 						this.RequireBoundary();
@@ -1070,17 +1117,29 @@ public static class Command {
 						);
 						this.myIndex++;
 						this.SkipHorizontalWhitespace();
+						var quitExitCode = this.ReadOptionalInteger();
+						if (
+							this.myPosix
+							&& quitExitCode.HasValue
+						) {
+							throw this.Error(
+								"the q command exit code is not available in POSIX mode"
+							);
+						}
 						this.myInstructions.Add(
 							new Instruction(
 								InstructionKind.Quit,
 								selector,
-								this.ReadOptionalInteger()
+								quitExitCode
 							)
 						);
 						this.RequireBoundary();
 						break;
 
 					case 'Q':
+						this.RequireGnuExtension(
+							command
+						);
 						this.RequireAtMostOneAddress(
 							selector,
 							command
@@ -1114,6 +1173,9 @@ public static class Command {
 						break;
 
 					case 'R':
+						this.RequireGnuExtension(
+							command
+						);
 						this.RequireFileAccess();
 						this.RequireAtMostOneAddress(
 							selector,
@@ -1151,6 +1213,9 @@ public static class Command {
 						break;
 
 					case 'T':
+						this.RequireGnuExtension(
+							command
+						);
 						this.myIndex++;
 						this.myInstructions.Add(
 							new Instruction(
@@ -1174,6 +1239,9 @@ public static class Command {
 						break;
 
 					case 'W':
+						this.RequireGnuExtension(
+							command
+						);
 						this.RequireFileAccess();
 						this.myIndex++;
 						this.myInstructions.Add(
@@ -1279,6 +1347,11 @@ public static class Command {
 					this.myIndex < this.myText.Length
 					&& '~' == this.myText[ this.myIndex ]
 				) {
+					if ( this.myPosix ) {
+						throw this.Error(
+							"step addresses are not available in POSIX mode"
+						);
+					}
 					this.myIndex++;
 					var step = this.ReadInteger(
 						allowZero: false
@@ -1290,6 +1363,11 @@ public static class Command {
 				}
 
 				if ( 0 == number ) {
+					if ( this.myPosix ) {
+						throw this.Error(
+							"address 0 is not available in POSIX mode"
+						);
+					}
 					return new ZeroAddress();
 				}
 				return new LineAddress(
@@ -1305,9 +1383,8 @@ public static class Command {
 				pattern = this.ResolveRegularExpression(
 					pattern
 				);
-				return new RegexAddress(
-					pattern,
-					this.myExtendedRegularExpressions
+				return this.CreateRegexAddress(
+					pattern
 				);
 			}
 
@@ -1324,9 +1401,8 @@ public static class Command {
 				pattern = this.ResolveRegularExpression(
 					pattern
 				);
-				return new RegexAddress(
-					pattern,
-					this.myExtendedRegularExpressions
+				return this.CreateRegexAddress(
+					pattern
 				);
 			}
 
@@ -1341,6 +1417,11 @@ public static class Command {
 			}
 
 			if ( '+' == this.myText[ this.myIndex ] ) {
+				if ( this.myPosix ) {
+					throw this.Error(
+						"relative range addresses are not available in POSIX mode"
+					);
+				}
 				this.myIndex++;
 				return new RelativeRangeEnd(
 					this.ReadInteger(
@@ -1350,6 +1431,11 @@ public static class Command {
 			}
 
 			if ( '~' == this.myText[ this.myIndex ] ) {
+				if ( this.myPosix ) {
+					throw this.Error(
+						"multiple range addresses are not available in POSIX mode"
+					);
+				}
 				this.myIndex++;
 				return new MultipleRangeEnd(
 					this.ReadInteger(
@@ -1385,6 +1471,9 @@ public static class Command {
 			pattern = this.ResolveRegularExpression(
 				pattern
 			);
+			this.ValidateRegularExpression(
+				pattern
+			);
 			var replacement = this.ReadDelimited(
 				delimiter
 			);
@@ -1405,17 +1494,9 @@ public static class Command {
 				this.myIndex - flagStart
 			).Trim();
 
-			if (
-				this.mySandbox
-				&& Regex.IsMatch(
-					flags,
-					@"(?:^|\s)w(?:\s|$)"
-				)
-			) {
-				throw this.Error(
-					"the substitution w flag is disabled in sandbox mode"
-				);
-			}
+			this.ValidateSubstitutionFlags(
+				flags
+			);
 
 			return new Substitution(
 				pattern,
@@ -1442,6 +1523,18 @@ public static class Command {
 				delimiter
 			);
 			this.RequireBoundary();
+			if (
+				ExpandCharacterSet(
+					source
+				).Length
+				!= ExpandCharacterSet(
+					destination
+				).Length
+			) {
+				throw this.Error(
+					"the y command source and destination must have equal lengths"
+				);
+			}
 
 			return new Transliteration(
 				source,
@@ -1636,6 +1729,143 @@ public static class Command {
 			return output;
 		}
 
+		private RegexAddress CreateRegexAddress(
+			string pattern
+		) {
+			this.ValidateRegularExpression(
+				pattern
+			);
+			return new RegexAddress(
+				pattern,
+				this.myExtendedRegularExpressions
+			);
+		}
+
+		private void ValidateRegularExpression(
+			string pattern
+		) {
+			try {
+				_ = CreateRegex(
+					pattern,
+					this.myExtendedRegularExpressions,
+					RegexOptions.None
+				);
+			} catch ( ArgumentException ex ) {
+				throw this.Error(
+					$"invalid regular expression: {ex.Message}"
+				);
+			}
+		}
+
+		private void RequireGnuExtension(
+			char command
+		) {
+			if ( this.myPosix ) {
+				throw this.Error(
+					$"command '{command}' is not available in POSIX mode"
+				);
+			}
+		}
+
+		private void ValidateSubstitutionFlags(
+			string flags
+		) {
+			var index = 0;
+			var occurrenceSeen = false;
+			while ( index < flags.Length ) {
+				var character = flags[ index ];
+				if ( char.IsWhiteSpace( character ) ) {
+					index++;
+					continue;
+				}
+				if ( char.IsDigit( character ) ) {
+					if ( occurrenceSeen ) {
+						throw this.Error(
+							"multiple substitution occurrence numbers"
+						);
+					}
+					occurrenceSeen = true;
+					var occurrenceStart = index;
+					while (
+						index < flags.Length
+						&& char.IsDigit( flags[ index ] )
+					) {
+						index++;
+					}
+					if (
+						!int.TryParse(
+							flags.Substring(
+								occurrenceStart,
+								index - occurrenceStart
+							),
+							NumberStyles.None,
+							CultureInfo.InvariantCulture,
+							out var occurrence
+						)
+						|| occurrence <= 0
+					) {
+						throw this.Error(
+							"substitution occurrence must be a positive integer"
+						);
+					}
+					continue;
+				}
+				if (
+					'g' == character
+					|| 'p' == character
+				) {
+					index++;
+					continue;
+				}
+				if ( 'w' == character ) {
+					if ( this.mySandbox ) {
+						throw this.Error(
+							"the substitution w flag is disabled in sandbox mode"
+						);
+					}
+					index++;
+					while (
+						index < flags.Length
+						&& char.IsWhiteSpace( flags[ index ] )
+					) {
+						index++;
+					}
+					if ( index >= flags.Length ) {
+						throw this.Error(
+							"the substitution w flag requires a file name"
+						);
+					}
+					return;
+				}
+				if (
+					'i' == character
+					|| 'I' == character
+					|| 'm' == character
+					|| 'M' == character
+					|| 'e' == character
+				) {
+					if ( this.myPosix ) {
+						throw this.Error(
+							$"substitution flag '{character}' is not available in POSIX mode"
+						);
+					}
+					if (
+						'e' == character
+						&& this.mySandbox
+					) {
+						throw this.Error(
+							"the substitution e flag is disabled in sandbox mode"
+						);
+					}
+					index++;
+					continue;
+				}
+				throw this.Error(
+					$"unknown substitution flag '{character}'"
+				);
+			}
+		}
+
 		private void RequireAtMostOneAddress(
 			AddressSelector? selector,
 			char command
@@ -1763,82 +1993,40 @@ public static class Command {
 
 	private sealed class AsyncRecordReader : IDisposable {
 
-		private readonly char[] myBuffer;
-		private int myBufferCount;
-		private int myBufferOffset;
-		private readonly bool myNullData;
+		private readonly DelimitedRecordReader myReader;
 		private readonly bool myOwnsReader;
-		private readonly TextReader myReader;
+		private readonly TextReader myTextReader;
 
 		public AsyncRecordReader(
 			TextReader reader,
 			bool nullData,
 			bool ownsReader
 		) {
-			this.myReader = reader ?? throw new ArgumentNullException(
+			this.myTextReader = reader ?? throw new ArgumentNullException(
 				nameof( reader )
 			);
-			this.myNullData = nullData;
 			this.myOwnsReader = ownsReader;
-			this.myBuffer = new char[ 8192 ];
+			this.myReader = new DelimitedRecordReader(
+				reader,
+				nullData
+					? '\0'
+					: '\n',
+				bufferSize: 8192,
+				trimCarriageReturn: !nullData
+			);
 		}
 
 		public async Task<string?> ReadAsync(
 			CancellationToken cancellationToken
 		) {
-			cancellationToken.ThrowIfCancellationRequested();
-
-			if ( !this.myNullData ) {
-				return await this.myReader.ReadLineAsync().ConfigureAwait( false );
-			}
-
-			var output = new StringBuilder();
-			while ( true ) {
-				if ( this.myBufferOffset < this.myBufferCount ) {
-					var separatorIndex = Array.IndexOf(
-						this.myBuffer,
-						'\0',
-						this.myBufferOffset,
-						this.myBufferCount - this.myBufferOffset
-					);
-					if ( 0 <= separatorIndex ) {
-						output.Append(
-							this.myBuffer,
-							this.myBufferOffset,
-							separatorIndex - this.myBufferOffset
-						);
-						this.myBufferOffset = separatorIndex + 1;
-						return output.ToString();
-					}
-
-					output.Append(
-						this.myBuffer,
-						this.myBufferOffset,
-						this.myBufferCount - this.myBufferOffset
-					);
-					this.myBufferOffset = this.myBufferCount;
-				}
-
-				cancellationToken.ThrowIfCancellationRequested();
-				this.myBufferCount = await this.myReader.ReadAsync(
-					this.myBuffer,
-					0,
-					this.myBuffer.Length
-				).ConfigureAwait( false );
-				this.myBufferOffset = 0;
-
-				if ( 0 == this.myBufferCount ) {
-					return 0 == output.Length
-						? null
-						: output.ToString()
-					;
-				}
-			}
+			return await this.myReader.ReadAsync(
+				cancellationToken
+			).ConfigureAwait( false );
 		}
 
 		public void Dispose() {
 			if ( this.myOwnsReader ) {
-				this.myReader.Dispose();
+				this.myTextReader.Dispose();
 			}
 		}
 
@@ -2005,6 +2193,10 @@ public static class Command {
 		private readonly Dictionary<string, AsyncRecordReader> myReadLineFiles;
 		private readonly Dictionary<string, StreamWriter> myWriteFiles;
 
+		public bool Debug {
+			get;
+		}
+
 		public string HoldSpace {
 			get;
 			set;
@@ -2035,11 +2227,13 @@ public static class Command {
 			TextWriter error,
 			bool suppressAutomaticPrint,
 			bool nullData,
-			int listWidth
+			int listWidth,
+			bool debug
 		) {
 			this.Output = output;
 			this.Error = error;
 			this.SuppressAutomaticPrint = suppressAutomaticPrint;
+			this.Debug = debug;
 			this.NullData = nullData;
 			this.ListWidth = listWidth;
 			this.myDeferredOutput = new List<DeferredOutputItem>();
@@ -2340,6 +2534,10 @@ public static class Command {
 				);
 			}
 
+			if ( options.InPlace ) {
+				options.Separate = true;
+			}
+
 			if (
 				options.InPlace
 				&& files.Any(
@@ -2359,8 +2557,20 @@ public static class Command {
 			var program = new ScriptParser(
 				scriptText,
 				options.ExtendedRegularExpressions,
-				options.Sandbox
+				options.Sandbox,
+				options.Posix
 			).Parse();
+
+			if ( options.Debug ) {
+				await stderr.WriteLineAsync(
+					"SED PROGRAM:"
+				).ConfigureAwait( false );
+				foreach ( var scriptLine in scriptText.Split( '\n' ) ) {
+					await stderr.WriteLineAsync(
+						$"  {scriptLine.TrimEnd( '\r' )}"
+					).ConfigureAwait( false );
+				}
+			}
 
 			if (
 				options.Unbuffered
@@ -2401,7 +2611,8 @@ public static class Command {
 							stderr,
 							options.SuppressAutomaticPrint,
 							options.NullData,
-							options.ListWidth
+							options.ListWidth,
+							options.Debug
 						);
 						try {
 							var result = await ExecuteAsync(
@@ -2426,7 +2637,8 @@ public static class Command {
 				stderr,
 				options.SuppressAutomaticPrint,
 				options.NullData,
-				options.ListWidth
+				options.ListWidth,
+				options.Debug
 			);
 			try {
 				using ( var input = new InputSequence(
@@ -2459,7 +2671,7 @@ public static class Command {
 			await stderr.WriteLineAsync(
 				"sed: operation canceled"
 			).ConfigureAwait( false );
-			return ErrorExitCode;
+			return CommandExitCodes.Canceled;
 		} catch ( Exception ex ) {
 			await stderr.WriteLineAsync(
 				$"sed: {ex.Message}"
@@ -2482,121 +2694,78 @@ public static class Command {
 		TextWriter stderr,
 		CancellationToken cancellationToken
 	) {
-		var index = 0;
-		while ( index < args.Length ) {
-			var argument = args[ index ];
-			if ( "--" == argument ) {
-				index++;
-				break;
-			} else if (
-				"-" == argument
-				|| !argument.StartsWith(
-					"-",
-					StringComparison.Ordinal
-				)
-			) {
-				break;
+		var parser = new OptionParser(
+			new OptionDefinition[] {
+				new OptionDefinition( "quiet", 'n', new string[] { "quiet", "silent" } ),
+				new OptionDefinition( "debug", longNames: new string[] { "debug" } ),
+				new OptionDefinition( "expression", 'e', new string[] { "expression" }, OptionValueArity.Required ),
+				new OptionDefinition( "file", 'f', new string[] { "file" }, OptionValueArity.Required ),
+				new OptionDefinition( "follow-symlinks", longNames: new string[] { "follow-symlinks" } ),
+				new OptionDefinition( "in-place", 'i', new string[] { "in-place" }, OptionValueArity.Optional ),
+				new OptionDefinition( "line-length", 'l', new string[] { "line-length" }, OptionValueArity.Required ),
+				new OptionDefinition( "posix", longNames: new string[] { "posix" } ),
+				new OptionDefinition( "regexp-extended", 'E', new string[] { "regexp-extended" } ),
+				new OptionDefinition( "regexp-extended-r", 'r' ),
+				new OptionDefinition( "separate", 's', new string[] { "separate" } ),
+				new OptionDefinition( "sandbox", longNames: new string[] { "sandbox" } ),
+				new OptionDefinition( "unbuffered", 'u', new string[] { "unbuffered" } ),
+				new OptionDefinition( "null-data", 'z', new string[] { "null-data" } ),
+				new OptionDefinition( "help", '?', new string[] { "help" } ),
+				new OptionDefinition( "version", 'V', new string[] { "version" } )
+			},
+			new OptionParserSettings {
+				AllowLongOptionAbbreviations = true,
+				Ordering = OptionOrdering.Permute
 			}
+		);
+		var result = parser.Parse(
+			args
+		);
+		if ( !result.IsSuccess ) {
+			foreach ( var error in result.Errors ) {
+				await stderr.WriteLineAsync(
+					OptionDiagnosticFormatter.Format(
+						"sed",
+						error
+					)
+				).ConfigureAwait( false );
+			}
+			return UsageExitCode;
+		}
 
-			switch ( argument ) {
-				case "-n":
-				case "--quiet":
-				case "--silent":
+		foreach ( var occurrence in result.Options ) {
+			cancellationToken.ThrowIfCancellationRequested();
+			switch ( occurrence.Definition.Key ) {
+				case "quiet":
 					options.SuppressAutomaticPrint = true;
-					index++;
 					break;
-
-				case "-E":
-				case "-r":
-				case "--regexp-extended":
-					options.ExtendedRegularExpressions = true;
-					index++;
+				case "debug":
+					options.Debug = true;
 					break;
-
-				case "-s":
-				case "--separate":
-					options.Separate = true;
-					index++;
-					break;
-
-				case "-u":
-				case "--unbuffered":
-					options.Unbuffered = true;
-					index++;
-					break;
-
-				case "-z":
-				case "--null-data":
-					options.NullData = true;
-					index++;
-					break;
-
-				case "--sandbox":
-					options.Sandbox = true;
-					index++;
-					break;
-
-				case "--follow-symlinks":
-				case "--posix":
-					index++;
-					break;
-
-				case "-?":
-				case "--help":
-					await PrintUsageAsync(
-						stdout
-					).ConfigureAwait( false );
-					return 0;
-
-				case "-V":
-				case "--version":
-					await stdout.WriteLineAsync(
-						VersionText
-					).ConfigureAwait( false );
-					return 0;
-
-				case "-e":
-				case "--expression":
-					if ( args.Length <= index + 1 ) {
-						await stderr.WriteLineAsync(
-							"sed: option requires a script"
-						).ConfigureAwait( false );
-						return UsageExitCode;
-					}
+				case "expression":
 					scripts.Add(
-						args[ index + 1 ]
+						occurrence.Value ?? string.Empty
 					);
-					index += 2;
 					break;
-
-				case "-f":
-				case "--file":
-					if ( args.Length <= index + 1 ) {
-						await stderr.WriteLineAsync(
-							"sed: option requires a script file"
-						).ConfigureAwait( false );
-						return UsageExitCode;
-					}
+				case "file":
 					scripts.Add(
 						await ReadScriptFileAsync(
-							args[ index + 1 ],
+							occurrence.Value ?? string.Empty,
 							cancellationToken
 						).ConfigureAwait( false )
 					);
-					index += 2;
 					break;
-
-				case "-i":
+				case "follow-symlinks":
+					options.FollowSymlinks = true;
+					break;
+				case "in-place":
 					options.InPlace = true;
-					options.BackupSuffix = string.Empty;
-					index++;
+					options.BackupSuffix = occurrence.Value ?? string.Empty;
 					break;
-
-				case "-l":
+				case "line-length":
 					if (
-						args.Length <= index + 1
-						|| !int.TryParse(
-							args[ index + 1 ],
+						!int.TryParse(
+							occurrence.Value,
 							NumberStyles.None,
 							CultureInfo.InvariantCulture,
 							out var listWidth
@@ -2604,128 +2773,49 @@ public static class Command {
 						|| listWidth <= 0
 					) {
 						await stderr.WriteLineAsync(
-							"sed: -l requires a positive width"
+							"sed: option --line-length requires a positive integer"
 						).ConfigureAwait( false );
 						return UsageExitCode;
 					}
 					options.ListWidth = listWidth;
-					index += 2;
 					break;
-
-				default:
-					if (
-						argument.StartsWith(
-							"-e",
-							StringComparison.Ordinal
-						)
-						&& 2 < argument.Length
-					) {
-						scripts.Add(
-							argument.Substring(
-								2
-							)
-						);
-						index++;
-					} else if (
-						argument.StartsWith(
-							"-f",
-							StringComparison.Ordinal
-						)
-						&& 2 < argument.Length
-					) {
-						scripts.Add(
-							await ReadScriptFileAsync(
-								argument.Substring(
-									2
-								),
-								cancellationToken
-							).ConfigureAwait( false )
-						);
-						index++;
-					} else if (
-						argument.StartsWith(
-							"-i",
-							StringComparison.Ordinal
-						)
-						&& 2 < argument.Length
-					) {
-						options.InPlace = true;
-						options.BackupSuffix = argument.Substring(
-							2
-						);
-						index++;
-					} else if (
-						argument.StartsWith(
-							"--expression=",
-							StringComparison.Ordinal
-						)
-					) {
-						scripts.Add(
-							argument.Substring(
-								"--expression=".Length
-							)
-						);
-						index++;
-					} else if (
-						argument.StartsWith(
-							"--file=",
-							StringComparison.Ordinal
-						)
-					) {
-						scripts.Add(
-							await ReadScriptFileAsync(
-								argument.Substring(
-									"--file=".Length
-								),
-								cancellationToken
-							).ConfigureAwait( false )
-						);
-						index++;
-					} else if (
-						argument.StartsWith(
-							"--in-place=",
-							StringComparison.Ordinal
-						)
-					) {
-						options.InPlace = true;
-						options.BackupSuffix = argument.Substring(
-							"--in-place=".Length
-						);
-						index++;
-					} else if (
-						argument.StartsWith(
-							"--line-length=",
-							StringComparison.Ordinal
-						)
-						&& int.TryParse(
-							argument.Substring(
-								"--line-length=".Length
-							),
-							NumberStyles.None,
-							CultureInfo.InvariantCulture,
-							out var inlineWidth
-						)
-						&& 0 < inlineWidth
-					) {
-						options.ListWidth = inlineWidth;
-						index++;
-					} else {
-						await stderr.WriteLineAsync(
-							$"sed: unsupported option '{argument}'"
-						).ConfigureAwait( false );
-						return UsageExitCode;
-					}
+				case "posix":
+					options.Posix = true;
 					break;
+				case "regexp-extended":
+				case "regexp-extended-r":
+					options.ExtendedRegularExpressions = true;
+					break;
+				case "separate":
+					options.Separate = true;
+					break;
+				case "sandbox":
+					options.Sandbox = true;
+					break;
+				case "unbuffered":
+					options.Unbuffered = true;
+					break;
+				case "null-data":
+					options.NullData = true;
+					break;
+				case "help":
+					await PrintUsageAsync(
+						stdout
+					).ConfigureAwait( false );
+					return CommandExitCodes.Success;
+				case "version":
+					await stdout.WriteLineAsync(
+						VersionText
+					).ConfigureAwait( false );
+					return CommandExitCodes.Success;
 			}
 		}
 
-		while ( index < args.Length ) {
+		foreach ( var operand in result.Operands ) {
 			files.Add(
-				args[ index ]
+				operand
 			);
-			index++;
 		}
-
 		return null;
 	}
 
@@ -2741,17 +2831,30 @@ public static class Command {
 		TextWriter stderr,
 		CancellationToken cancellationToken
 	) {
+		var editPath = ResolveInPlacePath(
+			path,
+			options.FollowSymlinks
+		);
 		var directory = Path.GetDirectoryName(
-			path
+			editPath
 		) ?? ".";
 		var temporaryPath = Path.Combine(
 			directory,
 			$".sed.{Path.GetRandomFileName()}.tmp"
 		);
+		var attributes = File.GetAttributes(
+			editPath
+		);
+		UnixFileMode? unixMode = null;
+		if ( !OperatingSystem.IsWindows() ) {
+			unixMode = File.GetUnixFileMode(
+				editPath
+			);
+		}
 
 		Encoding encoding;
 		using ( var stream = new FileStream(
-			path,
+			editPath,
 			FileMode.Open,
 			FileAccess.Read,
 			FileShare.Read,
@@ -2767,9 +2870,8 @@ public static class Command {
 		) ) {
 			var probe = new char[ 1 ];
 			_ = await reader.ReadAsync(
-				probe,
-				0,
-				1
+				probe.AsMemory(),
+				cancellationToken
 			).ConfigureAwait( false );
 			encoding = reader.CurrentEncoding;
 		}
@@ -2793,7 +2895,7 @@ public static class Command {
 			using ( var input = new InputSequence(
 				new SourceSpec[ 1 ] {
 					new SourceSpec(
-						path
+						editPath
 					)
 				},
 				TextReader.Null,
@@ -2808,7 +2910,8 @@ public static class Command {
 					stderr,
 					options.SuppressAutomaticPrint,
 					options.NullData,
-					options.ListWidth
+					options.ListWidth,
+					options.Debug
 				);
 				try {
 					result = await ExecuteAsync(
@@ -2827,26 +2930,52 @@ public static class Command {
 				null != options.BackupSuffix
 				&& 0 < options.BackupSuffix.Length
 			) {
-				var backupPath = path + options.BackupSuffix;
+				var backupPath = BuildBackupPath(
+					editPath,
+					options.BackupSuffix
+				);
 				if ( File.Exists( backupPath ) ) {
 					File.Delete(
 						backupPath
 					);
 				}
 				File.Move(
-					path,
+					editPath,
 					backupPath
 				);
 			} else {
+				if (
+					0 != (
+						attributes & FileAttributes.ReadOnly
+					)
+				) {
+					File.SetAttributes(
+						editPath,
+						attributes & ~FileAttributes.ReadOnly
+					);
+				}
 				File.Delete(
-					path
+					editPath
 				);
 			}
 
 			File.Move(
 				temporaryPath,
-				path
+				editPath
 			);
+			File.SetAttributes(
+				editPath,
+				attributes & ~FileAttributes.ReparsePoint
+			);
+			if (
+				!OperatingSystem.IsWindows()
+				&& unixMode.HasValue
+			) {
+				File.SetUnixFileMode(
+					editPath,
+					unixMode.Value
+				);
+			}
 			return result;
 		} catch {
 			if ( File.Exists( temporaryPath ) ) {
@@ -2872,6 +3001,14 @@ public static class Command {
 			).ConfigureAwait( false )
 		) {
 			var patternSpace = input.Current;
+			if ( environment.Debug ) {
+				await environment.Error.WriteLineAsync(
+					$"INPUT:   {input.LineNumber}"
+				).ConfigureAwait( false );
+				await environment.Error.WriteLineAsync(
+					$"PATTERN: {EscapeDebugText( patternSpace )}"
+				).ConfigureAwait( false );
+			}
 			var substitutionSucceeded = false;
 			var automaticPrint = true;
 			var programCounter = 0;
@@ -3009,6 +3146,31 @@ public static class Command {
 								substitutionSucceeded = false;
 								programCounter = 0;
 							}
+							break;
+						}
+
+					case InstructionKind.Execute: {
+							var commandText = instruction.Argument as string;
+							if ( string.IsNullOrWhiteSpace( commandText ) ) {
+								commandText = patternSpace;
+							}
+							var shellResult = await ExecuteShellAsync(
+								commandText,
+								environment,
+								captureStandardOutput: false,
+								cancellationToken
+							).ConfigureAwait( false );
+							if ( shellResult.ExitCode != 0 ) {
+								await environment.Error.WriteLineAsync(
+									$"sed: command exited with status {shellResult.ExitCode}"
+								).ConfigureAwait( false );
+							}
+							if ( 0 < shellResult.StandardOutput.Length ) {
+								await environment.Output.WriteAsync(
+									shellResult.StandardOutput
+								).ConfigureAwait( false );
+							}
+							programCounter++;
 							break;
 						}
 
@@ -3180,6 +3342,23 @@ public static class Command {
 								var flags = ParseSubstitutionFlags(
 									substitution.Flags
 								);
+								if ( flags.Execute ) {
+									var shellResult = await ExecuteShellAsync(
+										patternSpace,
+										environment,
+										captureStandardOutput: true,
+										cancellationToken
+									).ConfigureAwait( false );
+									patternSpace = shellResult.StandardOutput.TrimEnd(
+										'\r',
+										'\n'
+									);
+									if ( shellResult.ExitCode != 0 ) {
+										await environment.Error.WriteLineAsync(
+											$"sed: command exited with status {shellResult.ExitCode}"
+										).ConfigureAwait( false );
+									}
+								}
 								if ( flags.Print ) {
 									await WriteRecordAsync(
 										environment.Output,
@@ -3292,6 +3471,11 @@ public static class Command {
 
 	private sealed class SubstitutionFlags {
 
+		public bool Execute {
+			get;
+			set;
+		}
+
 		public bool Global {
 			get;
 			set;
@@ -3351,6 +3535,9 @@ public static class Command {
 					),
 					CultureInfo.InvariantCulture
 				);
+			} else if ( 'e' == character ) {
+				output.Execute = true;
+				index++;
 			} else if ( 'g' == character ) {
 				output.Global = true;
 				index++;
@@ -3679,6 +3866,284 @@ public static class Command {
 	#endregion regex methods
 
 
+	private sealed record ShellResult(
+		int ExitCode,
+		string StandardOutput
+	);
+
+	private sealed class TextWriterStream : Stream {
+
+		private readonly Decoder myDecoder;
+		private readonly Encoding myEncoding;
+		private readonly TextWriter myWriter;
+
+		public override bool CanRead {
+			get {
+				return false;
+			}
+		}
+
+		public override bool CanSeek {
+			get {
+				return false;
+			}
+		}
+
+		public override bool CanWrite {
+			get {
+				return true;
+			}
+		}
+
+		public override long Length {
+			get {
+				throw new NotSupportedException();
+			}
+		}
+
+		public override long Position {
+			get {
+				throw new NotSupportedException();
+			}
+			set {
+				throw new NotSupportedException();
+			}
+		}
+
+		public TextWriterStream(
+			TextWriter writer,
+			Encoding encoding
+		) {
+			this.myWriter = writer ?? throw new ArgumentNullException(
+				nameof( writer )
+			);
+			this.myEncoding = encoding ?? throw new ArgumentNullException(
+				nameof( encoding )
+			);
+			this.myDecoder = encoding.GetDecoder();
+		}
+
+		public override void Flush() {
+			this.myWriter.Flush();
+		}
+
+		public override async Task FlushAsync(
+			CancellationToken cancellationToken
+		) {
+			var characters = new char[
+				this.myEncoding.GetMaxCharCount(
+					0
+				)
+			];
+			this.myDecoder.Convert(
+				ReadOnlySpan<byte>.Empty,
+				characters.AsSpan(),
+				flush: true,
+				out _,
+				out var charactersUsed,
+				out _
+			);
+			if ( 0 < charactersUsed ) {
+				await this.myWriter.WriteAsync(
+					characters.AsMemory(
+						0,
+						charactersUsed
+					),
+					cancellationToken
+				).ConfigureAwait( false );
+			}
+			await this.myWriter.FlushAsync(
+				cancellationToken
+			).ConfigureAwait( false );
+		}
+
+		public override int Read(
+			byte[] buffer,
+			int offset,
+			int count
+		) {
+			throw new NotSupportedException();
+		}
+
+		public override long Seek(
+			long offset,
+			SeekOrigin origin
+		) {
+			throw new NotSupportedException();
+		}
+
+		public override void SetLength(
+			long value
+		) {
+			throw new NotSupportedException();
+		}
+
+		public override void Write(
+			byte[] buffer,
+			int offset,
+			int count
+		) {
+			var characters = new char[
+				this.myEncoding.GetMaxCharCount(
+					count
+				)
+			];
+			this.myDecoder.Convert(
+				buffer.AsSpan(
+					offset,
+					count
+				),
+				characters.AsSpan(),
+				flush: false,
+				out _,
+				out var charactersUsed,
+				out _
+			);
+			this.myWriter.Write(
+				characters,
+				0,
+				charactersUsed
+			);
+		}
+
+		public override async ValueTask WriteAsync(
+			ReadOnlyMemory<byte> buffer,
+			CancellationToken cancellationToken = default
+		) {
+			if ( buffer.IsEmpty ) {
+				return;
+			}
+			var characters = new char[
+				this.myEncoding.GetMaxCharCount(
+					buffer.Length
+				)
+			];
+			this.myDecoder.Convert(
+				buffer.Span,
+				characters.AsSpan(),
+				flush: false,
+				out _,
+				out var charactersUsed,
+				out _
+			);
+			await this.myWriter.WriteAsync(
+				characters.AsMemory(
+					0,
+					charactersUsed
+				),
+				cancellationToken
+			).ConfigureAwait( false );
+		}
+
+	}
+
+	private static async Task<ShellResult> ExecuteShellAsync(
+		string command,
+		ExecutionEnvironment environment,
+		bool captureStandardOutput,
+		CancellationToken cancellationToken
+	) {
+		await using var outputStream = captureStandardOutput
+			? null
+			: new TextWriterStream(
+				environment.Output,
+				Encoding.UTF8
+			)
+		;
+		await using var errorStream = new TextWriterStream(
+			environment.Error,
+			Encoding.UTF8
+		);
+		var options = new ProcessRunOptions(
+			OperatingSystem.IsWindows()
+				? Environment.GetEnvironmentVariable( "COMSPEC" ) ?? "cmd.exe"
+				: "/bin/sh"
+		) {
+			CaptureStandardOutput = captureStandardOutput,
+			OutputEncoding = Encoding.UTF8,
+			StandardError = errorStream,
+			StandardOutput = outputStream
+		};
+		if ( OperatingSystem.IsWindows() ) {
+			options.Arguments.Add( "/d" );
+			options.Arguments.Add( "/s" );
+			options.Arguments.Add( "/c" );
+		} else {
+			options.Arguments.Add( "-c" );
+		}
+		options.Arguments.Add(
+			command
+		);
+		var result = await ProcessRunner.RunAsync(
+			options,
+			cancellationToken
+		).ConfigureAwait( false );
+		if ( result.WasCanceled ) {
+			throw new OperationCanceledException(
+				cancellationToken
+			);
+		}
+		if ( null != outputStream ) {
+			await outputStream.FlushAsync(
+				cancellationToken
+			).ConfigureAwait( false );
+		}
+		await errorStream.FlushAsync(
+			cancellationToken
+		).ConfigureAwait( false );
+		return new ShellResult(
+			result.ExitCode ?? ErrorExitCode,
+			result.StandardOutput ?? string.Empty
+		);
+	}
+
+	private static string BuildBackupPath(
+		string path,
+		string suffix
+	) {
+		return suffix.Contains(
+			"*",
+			StringComparison.Ordinal
+		)
+			? suffix.Replace(
+				"*",
+				path,
+				StringComparison.Ordinal
+			)
+			: string.Concat(
+				path,
+				suffix
+			)
+		;
+	}
+
+	private static string ResolveInPlacePath(
+		string path,
+		bool followSymlinks
+	) {
+		if ( !followSymlinks ) {
+			return path;
+		}
+		var info = new FileInfo(
+			path
+		);
+		var target = info.ResolveLinkTarget(
+			returnFinalTarget: true
+		);
+		return target?.FullName ?? path;
+	}
+
+	private static string EscapeDebugText(
+		string value
+	) {
+		return value
+			.Replace( "\\", "\\\\", StringComparison.Ordinal )
+			.Replace( "\r", "\\r", StringComparison.Ordinal )
+			.Replace( "\n", "\\n", StringComparison.Ordinal )
+			.Replace( "\0", "\\0", StringComparison.Ordinal )
+		;
+	}
+
 	#region text methods
 
 	private static string Transliterate(
@@ -3947,7 +4412,9 @@ public static class Command {
 			leaveOpen: false
 		) ) {
 			cancellationToken.ThrowIfCancellationRequested();
-			return await reader.ReadToEndAsync().ConfigureAwait( false );
+			return await reader.ReadToEndAsync(
+				cancellationToken
+			).ConfigureAwait( false );
 		}
 	}
 
@@ -4005,6 +4472,9 @@ public static class Command {
 			"  -n, --quiet, --silent       suppress automatic printing"
 		);
 		stdout.WriteLine(
+			"      --debug                  annotate program execution"
+		);
+		stdout.WriteLine(
 			"  -e SCRIPT                   add SCRIPT to the program"
 		);
 		stdout.WriteLine(
@@ -4012,6 +4482,12 @@ public static class Command {
 		);
 		stdout.WriteLine(
 			"  -i[SUFFIX]                  edit files in place; optionally back up"
+		);
+		stdout.WriteLine(
+			"      --follow-symlinks        follow symlinks when editing in place"
+		);
+		stdout.WriteLine(
+			"      --posix                  disable GNU extensions"
 		);
 		stdout.WriteLine(
 			"  -E, -r                      use extended regular expressions"
@@ -4029,7 +4505,7 @@ public static class Command {
 			"  -l N, --line-length=N       set the l-command wrap width"
 		);
 		stdout.WriteLine(
-			"      --sandbox                disable r, R, w, and W file access"
+			"      --sandbox                disable e, r, R, w, W, and s///e"
 		);
 		stdout.WriteLine();
 		stdout.WriteLine(
@@ -4070,6 +4546,9 @@ public static class Command {
 			"  d, D     delete pattern space / delete through first newline"
 		);
 		stdout.WriteLine(
+			"  e [CMD]  execute CMD, or execute pattern space when omitted"
+		);
+		stdout.WriteLine(
 			"  g,G,h,H,x manipulate pattern and hold spaces"
 		);
 		stdout.WriteLine(
@@ -4094,7 +4573,7 @@ public static class Command {
 			"  sXreXreplacementXFLAGS  substitute using delimiter X"
 		);
 		stdout.WriteLine(
-			"           FLAGS: N, g, p, i/I, m/M, w FILE"
+			"           FLAGS: N, e, g, p, i/I, m/M, w FILE"
 		);
 		stdout.WriteLine(
 			"  t,T LABEL branch after successful / unsuccessful substitution"

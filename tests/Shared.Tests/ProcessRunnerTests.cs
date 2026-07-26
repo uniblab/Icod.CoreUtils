@@ -170,46 +170,76 @@ public sealed class ProcessRunnerTests {
 	}
 
 	private static string FindProcessTestHost() {
-		DirectoryInfo? directory = new DirectoryInfo(
+		var testOutputDirectory = new DirectoryInfo(
 			AppContext.BaseDirectory
 		);
+		var targetFramework = testOutputDirectory.Name;
+		var configuration = testOutputDirectory.Parent?.Name;
+
+		DirectoryInfo? directory = testOutputDirectory;
 		while ( null != directory ) {
-			var solution = Path.Combine(
+			var hostProject = Path.Combine(
 				directory.FullName,
-				"Icod.CoreUtils.sln"
+				"tests",
+				"ProcessTestHost",
+				"Icod.CoreUtils.ProcessTestHost.csproj"
 			);
-			if ( File.Exists( solution ) ) {
+			if ( File.Exists( hostProject ) ) {
 				var hostDirectory = Path.Combine(
 					directory.FullName,
 					"tests",
 					"ProcessTestHost",
 					"bin"
 				);
-				var match = Directory
-					.EnumerateFiles(
+
+				if (
+					!string.IsNullOrEmpty( configuration )
+					&& !string.IsNullOrEmpty( targetFramework )
+				) {
+					var configuredHost = Path.Combine(
 						hostDirectory,
-						"Icod.CoreUtils.ProcessTestHost.dll",
-						SearchOption.AllDirectories
-					)
-					.FirstOrDefault(
-						path => !path.Contains(
-							string.Concat(
-								Path.DirectorySeparatorChar,
-								"ref",
-								Path.DirectorySeparatorChar
-							),
-							StringComparison.Ordinal
-						)
+						configuration,
+						targetFramework,
+						"Icod.CoreUtils.ProcessTestHost.dll"
 					);
-				return match ?? throw new FileNotFoundException(
-					"The ProcessTestHost output was not found.",
+					if ( File.Exists( configuredHost ) ) {
+						return configuredHost;
+					}
+				}
+
+				if ( Directory.Exists( hostDirectory ) ) {
+					var match = Directory
+						.EnumerateFiles(
+							hostDirectory,
+							"Icod.CoreUtils.ProcessTestHost.dll",
+							SearchOption.AllDirectories
+						)
+						.FirstOrDefault(
+							path => !path.Contains(
+								string.Concat(
+									Path.DirectorySeparatorChar,
+									"ref",
+									Path.DirectorySeparatorChar
+								),
+								StringComparison.Ordinal
+							)
+						);
+					if ( null != match ) {
+						return match;
+					}
+				}
+
+				throw new FileNotFoundException(
+					"The ProcessTestHost output was not found. Build the ProcessTestHost project before running Shared.Tests.",
 					hostDirectory
 				);
 			}
+
 			directory = directory.Parent;
 		}
+
 		throw new FileNotFoundException(
-			"The solution root was not found from the test output directory."
+			"The ProcessTestHost project directory was not found from the test output directory."
 		);
 	}
 
