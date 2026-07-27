@@ -1,11 +1,6 @@
-namespace Icod.CoreUtils.Uptime;
-
-using System;
+﻿namespace Icod.CoreUtils.Uptime;
 
 public static class Program
 {
-	public static int Main(string[] args)
-	{
-		return Command.Run(args);
-	}
+    public static Task<int> Main(string[] args) => Command.RunAsync(args);
 }
