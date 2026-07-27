@@ -1,4 +1,4 @@
-namespace Icod.CoreUtils.Nl;
+namespace Icod.CoreUtils.NL;
 
 using System;
 

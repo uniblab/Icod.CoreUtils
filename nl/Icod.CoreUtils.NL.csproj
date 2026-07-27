@@ -8,7 +8,7 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<OutputPath>..\bin\$(Configuration)\</OutputPath>
 		<AssemblyName>nl</AssemblyName>
-		<RootNamespace>Icod.CoreUtils.Nl</RootNamespace>
+		<RootNamespace>Icod.CoreUtils.NL</RootNamespace>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
 		<PlatformTarget>AnyCPU</PlatformTarget>
