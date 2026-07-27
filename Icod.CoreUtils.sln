@@ -117,7 +117,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.env", "env\I
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "expand", "expand", "{5A95941F-A524-19C8-3557-FDB5BBF87F97}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.expand", "expand\Icod.CoreUtils.expand.csproj", "{A14AAA72-6CED-4458-895F-5873C6113271}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Expand", "expand\Icod.CoreUtils.Expand.csproj", "{A14AAA72-6CED-4458-895F-5873C6113271}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "expr", "expr", "{F307C669-7CC5-D57B-CA32-C0AE5E8332AE}"
 EndProject
