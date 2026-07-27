@@ -50,42 +50,6 @@ For GNU Coreutils commands, the conformance baseline is the pinned GNU Coreutils
 
 Man7 pages are useful synopses and secondary references, but they must not replace the authoritative upstream manual.
 
-## Historical initial measurements
-
-> **Historical baseline only:** The following measurements describe the repository before Batch 0. They are retained for posterity and must not be interpreted as current repository health or current project counts.
-
-- Scope at the initial audit: **102 command projects** plus `Shared`, all targeting `net9.0`.
-- Tools with `RunAsync`: 3 (`head`, `tail`, and `sed`).
-- Tools with asynchronous `Main`: 3.
-- Remaining synchronous tools: 99.
-- Synchronous tools containing `ReadLine` loops: 25.
-- Tools containing `ReadAll*`: 16.
-- Tools containing `ReadToEnd`: 5.
-- Tools containing blocking `Process.WaitForExit`: 10.
-- Tools containing `NotImplementedException`: 7.
-- There was no automated test project. The `/test` directory implemented the `test(1)` command.
-- The original archive contained 103 `obj` directories and 74 `*.Backup.tmp` files, which were identified as generated artifacts that should not appear in review packages.
-- The initial audit environment did not contain a .NET SDK, so those measurements were based on static source review.
-
-### Historical largest implementations
-
-> These line counts are also archival measurements from the initial audit.
-
-| Tool | Historical `Command.cs` LOC | Async | Historical await count |
-|---|---:|---|---:|
-| `sed` | 4,115 | yes | 64 |
-| `tail` | 2,026 | yes | 60 |
-| `head` | 1,307 | yes | 38 |
-| `ls` | 568 | no | 0 |
-| `install` | 313 | no | 0 |
-| `link` | 214 | no | 0 |
-| `groups` | 189 | no | 0 |
-| `ed` | 188 | no | 0 |
-| `ln` | 167 | no | 0 |
-| `cut` | 166 | no | 0 |
-| `grep` | 160 | no | 0 |
-| `comm` | 153 | no | 0 |
-
 ## Current repository audit
 
 ### What is working well
