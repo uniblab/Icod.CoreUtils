@@ -1,4 +1,4 @@
-namespace Icod.CoreUtils.Cat.Tests;
+﻿namespace Icod.CoreUtils.Cat.Tests;
 
 using System.Text;
 using Icod.CoreUtils.Shared.Diagnostics;
@@ -195,16 +195,12 @@ public sealed class CatCommandTests {
 		Assert.Equal( 0, help.ExitCode );
 		Assert.Contains(
 			"Usage: cat",
-			Encoding.UTF8.GetString(
-				help.Output
-			)
+			help.TextOutput
 		);
 		Assert.Equal( 0, version.ExitCode );
 		Assert.Contains(
 			"Icod.CoreUtils.Cat",
-			Encoding.UTF8.GetString(
-				version.Output
-			)
+			version.TextOutput
 		);
 		Assert.Equal( 1, invalid.ExitCode );
 		Assert.Contains(
@@ -272,6 +268,7 @@ public sealed class CatCommandTests {
 		return new CommandResult(
 			exitCode,
 			outputStream.ToArray(),
+			outputText.ToString(),
 			errorText.ToString()
 		);
 	}
@@ -279,6 +276,7 @@ public sealed class CatCommandTests {
 	private sealed record CommandResult(
 		int ExitCode,
 		byte[] Output,
+		string TextOutput,
 		string Error
 	);
 

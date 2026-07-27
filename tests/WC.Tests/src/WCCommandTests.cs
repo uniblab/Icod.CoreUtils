@@ -1,4 +1,4 @@
-namespace Icod.CoreUtils.WC.Tests;
+﻿namespace Icod.CoreUtils.WC.Tests;
 
 using System.Text;
 using Icod.CoreUtils.Shared.Diagnostics;
@@ -17,7 +17,10 @@ public sealed class WcCommandTests {
 		);
 		Assert.Equal( 0, result.ExitCode );
 		Assert.Equal(
-			"      1       2       4\n",
+			System.String.Concat(
+				"      1       2       4",
+				Environment.NewLine
+			),
 			result.Output
 		);
 	}
@@ -31,7 +34,10 @@ public sealed class WcCommandTests {
 			)
 		);
 		Assert.Equal(
-			"      2       3\n",
+			System.String.Concat(
+				"      2       3",
+				Environment.NewLine
+			),
 			result.Output
 		);
 	}
@@ -47,7 +53,10 @@ public sealed class WcCommandTests {
 			}
 		);
 		Assert.Equal(
-			"      1       2       3\n",
+			System.String.Concat(
+				"      1       2       3",
+				Environment.NewLine
+			),
 			result.Output
 		);
 	}
@@ -61,14 +70,17 @@ public sealed class WcCommandTests {
 			)
 		);
 		Assert.Equal(
-			"     11\n",
+			System.String.Concat(
+				"     11",
+				Environment.NewLine
+			),
 			result.Output
 		);
 	}
 
 	[Theory]
-	[InlineData( "abc\rx\n", "      3\n" )]
-	[InlineData( "abc\b\bX\n", "      4\n" )]
+	[InlineData( "abc\rx\n", "      3" )]
+	[InlineData( "abc\b\bX\n", "      4" )]
 	public async Task MaximumLineLengthTracksDisplayCursorRules(
 		string input,
 		string expected
@@ -80,7 +92,10 @@ public sealed class WcCommandTests {
 			)
 		);
 		Assert.Equal(
-			expected,
+			System.String.Concat(
+				expected,
+				Environment.NewLine
+			),
 			result.Output
 		);
 	}
@@ -97,7 +112,11 @@ public sealed class WcCommandTests {
 				additionalArguments: new string[] { path }
 			);
 			Assert.Equal(
-				$"1 2 4 {path}\n",
+				System.String.Concat(
+					"1 2 4 ",
+					path,
+					Environment.NewLine
+				),
 				result.Output
 			);
 		} finally {
@@ -121,7 +140,7 @@ public sealed class WcCommandTests {
 				Array.Empty<byte>()
 			);
 			var lines = result.Output.Split(
-				'\n',
+				Environment.NewLine,
 				StringSplitOptions.RemoveEmptyEntries
 			);
 			Assert.Equal( 3, lines.Length );

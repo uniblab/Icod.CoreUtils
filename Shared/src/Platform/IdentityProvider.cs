@@ -1,4 +1,4 @@
-namespace Icod.CoreUtils.Shared.Platform;
+﻿namespace Icod.CoreUtils.Shared.Platform;
 
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
@@ -274,15 +274,16 @@ public sealed class SystemIdentityProvider : IIdentityProvider {
 		return System.Text.Encoding.UTF8.GetString( bytes, 0, length );
 	}
 
-	[StructLayout( LayoutKind.Sequential )]
+	// Linux, Darwin, and FreeBSD share this ABI-stable prefix, but append
+	// different fields to struct passwd. Reserve enough unmanaged storage for
+	// every supported layout so getpwuid_r/getpwnam_r cannot overwrite the
+	// marshalling buffer on BSD-derived systems.
+	[StructLayout( LayoutKind.Sequential, Size = 128 )]
 	private struct Passwd {
 		public IntPtr Name;
 		public IntPtr Password;
 		public uint UserId;
 		public uint GroupId;
-		public IntPtr Gecos;
-		public IntPtr Directory;
-		public IntPtr Shell;
 	}
 
 	[StructLayout( LayoutKind.Sequential )]

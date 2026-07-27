@@ -65,5 +65,5 @@ exit /b %errorlevel%
 :test
 echo.
 echo === Test ===
-dotnet test tests\Shared.Tests\Icod.CoreUtils.Shared.Tests.csproj -c Debug --no-build
+dotnet test Icod.CoreUtils.sln -c Debug --no-build
 exit /b %errorlevel%

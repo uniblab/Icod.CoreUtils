@@ -1,4 +1,4 @@
-namespace Icod.CoreUtils.Echo;
+﻿namespace Icod.CoreUtils.Echo;
 
 using System.Text;
 
@@ -252,6 +252,9 @@ public static class Command {
 						buffer.Append( '\\' );
 						buffer.Append( escape );
 						break;
+				}
+				if ( stop ) {
+					break;
 				}
 				await FlushWhenFullAsync(
 					buffer,

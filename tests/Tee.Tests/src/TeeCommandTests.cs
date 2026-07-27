@@ -1,4 +1,4 @@
-namespace Icod.CoreUtils.Tee.Tests;
+﻿namespace Icod.CoreUtils.Tee.Tests;
 
 using System.Text;
 using Icod.CoreUtils.Shared.Diagnostics;
@@ -266,9 +266,7 @@ public sealed class TeeCommandTests {
 		Assert.Equal( 0, help.ExitCode );
 		Assert.Contains(
 			"Usage: tee",
-			Encoding.UTF8.GetString(
-				help.Output
-			)
+			help.TextOutput
 		);
 		Assert.Equal( 0, version.ExitCode );
 		Assert.Equal( 1, invalid.ExitCode );
@@ -312,6 +310,7 @@ public sealed class TeeCommandTests {
 		return new CommandResult(
 			exitCode,
 			outputStream.ToArray(),
+			outputText.ToString(),
 			errorText.ToString()
 		);
 	}
@@ -401,6 +400,7 @@ public sealed class TeeCommandTests {
 	private sealed record CommandResult(
 		int ExitCode,
 		byte[] Output,
+		string TextOutput,
 		string Error
 	);
 
