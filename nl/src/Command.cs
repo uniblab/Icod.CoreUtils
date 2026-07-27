@@ -1,7 +1,7 @@
 // Original behavior/reference: GNU coreutils
 // Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
 
-namespace Icod.CoreUtils.Nl;
+namespace Icod.CoreUtils.NL;
 
 using System;
 using System.IO;
