@@ -60,28 +60,28 @@ public static class Program {
 				;
 
 			case "dual": {
-				var count = 1 < args.Length
-					&& int.TryParse(
-						args[ 1 ],
-						out var parsedCount
-					)
-						? parsedCount
-						: 1000
-				;
-				for (
-					var index = 0;
-					index < count;
-					index++
-				) {
-					await Console.Out.WriteLineAsync(
-						$"out-{index}"
-					).ConfigureAwait( false );
-					await Console.Error.WriteLineAsync(
-						$"err-{index}"
-					).ConfigureAwait( false );
+					var count = 1 < args.Length
+						&& int.TryParse(
+							args[ 1 ],
+							out var parsedCount
+						)
+							? parsedCount
+							: 1000
+					;
+					for (
+						var index = 0;
+						index < count;
+						index++
+					) {
+						await Console.Out.WriteLineAsync(
+							$"out-{index}"
+						).ConfigureAwait( false );
+						await Console.Error.WriteLineAsync(
+							$"err-{index}"
+						).ConfigureAwait( false );
+					}
+					return 0;
 				}
-				return 0;
-			}
 
 			case "sleep":
 				await Task.Delay(
