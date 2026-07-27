@@ -103,71 +103,75 @@ Refactor `Shared`, add automated tests and CI, centralize option/stream/process/
 
 `dd`
 
-### Batch 11 — Expression evaluators (2 tools)
+### Batch 11 — File-size manipulation (1 tool)
+
+`truncate`
+
+### Batch 12 — Expression evaluators (2 tools)
 
 `expr`, `test`
 
-### Batch 12 — Width, tab, and line-format filters (5 tools)
+### Batch 13 — Width, tab, and line-format filters (5 tools)
 
 `expand`, `unexpand`, `fold`, `fmt`, `nl`
 
-### Batch 13 — Field and multi-file record filters (5 tools)
+### Batch 14 — Field and multi-file record filters (5 tools)
 
 `cut`, `paste`, `comm`, `join`, `uniq`
 
-### Batch 14 — Ordering and transformation filters (5 tools)
+### Batch 15 — Ordering and transformation filters (5 tools)
 
 `sort`, `shuf`, `tr`, `tsort`, `ptx`
 
-### Batch 15 — Splitting, reversing, and presentation tools (5 tools)
+### Batch 16 — Splitting, reversing, and presentation tools (5 tools)
 
 `split`, `csplit`, `tac`, `pr`, `od`
 
-### Batch 16 — Regular-expression search (1 tool)
+### Batch 17 — Regular-expression search (1 tool)
 
 `grep`
 
-### Batch 17 — Difference and patch family (2 tools)
+### Batch 18 — Difference and patch family (2 tools)
 
 `diff`, `patch`
 
-### Batch 18 — Line editor (1 tool)
+### Batch 19 — Line editor (1 tool)
 
 `ed`
 
-### Batch 19 — Archive engine (1 tool)
+### Batch 20 — Archive engine (1 tool)
 
 `tar`
 
-### Batch 20 — Directory and link mutation (6 tools)
+### Batch 21 — Directory and link mutation (6 tools)
 
 `mkdir`, `rmdir`, `rm`, `unlink`, `link`, `ln`
 
-### Batch 21 — Path resolution and metadata (4 tools)
+### Batch 22 — Path resolution and metadata (4 tools)
 
 `readlink`, `realpath`, `stat`, `touch`
 
-### Batch 22 — Permissions, ownership, contexts, and root (6 tools)
+### Batch 23 — Permissions, ownership, contexts, and root (6 tools)
 
 `chmod`, `chown`, `chgrp`, `chcon`, `runcon`, `chroot`
 
-### Batch 23 — Copy, move, and install family (3 tools)
+### Batch 24 — Copy, move, and install family (3 tools)
 
 `cp`, `mv`, `install`
 
-### Batch 24 — Directory listing family (4 tools)
+### Batch 25 — Directory listing family (4 tools)
 
 `ls`, `dir`, `vdir`, `dircolors`
 
-### Batch 25 — Filesystem usage reporting (2 tools)
+### Batch 26 — Filesystem usage reporting (2 tools)
 
 `df`, `du`
 
-### Batch 26 — Data destruction and filesystem flushing (2 tools)
+### Batch 27 — Data destruction and filesystem flushing (2 tools)
 
 `shred`, `sync`
 
-### Batch 27 — Environment and process control (5 tools)
+### Batch 28 — Environment and process control (5 tools)
 
 `env`, `nice`, `timeout`, `kill`, `stdbuf`
 
