@@ -22,7 +22,7 @@ build()
 test()
 {
     printf '\n=== Test ===\n'
-    dotnet test Icod.CoreUtils.csproj  \
+    dotnet test Icod.CoreUtils.sln  \
         -c Debug \
         --no-build
 }

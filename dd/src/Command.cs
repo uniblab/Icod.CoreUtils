@@ -446,12 +446,12 @@ and then resume copying.
 	private static PosixSignalRegistration? TryRegisterSignal(
 		DdCopyEngine engine
 	) {
-		if ( OperatingSystem.IsWindows() ) {
+		if ( !TryGetSigUsr1( out var signal ) ) {
 			return null;
 		}
 		try {
 			return PosixSignalRegistration.Create(
-				PosixSignal.SIGUSR1,
+				signal,
 				context => {
 					context.Cancel = true;
 					engine.RequestSignalReport();
@@ -459,7 +459,27 @@ and then resume copying.
 			);
 		} catch ( PlatformNotSupportedException ) {
 			return null;
+		} catch ( IOException ) {
+			return null;
 		}
+	}
+
+	private static bool TryGetSigUsr1(
+		out PosixSignal signal
+	) {
+		if ( OperatingSystem.IsLinux() ) {
+			signal = (PosixSignal)10;
+			return true;
+		}
+		if (
+			OperatingSystem.IsMacOS()
+			|| OperatingSystem.IsFreeBSD()
+		) {
+			signal = (PosixSignal)30;
+			return true;
+		}
+		signal = default;
+		return false;
 	}
 
 	private static void ValidatePathFlags(
