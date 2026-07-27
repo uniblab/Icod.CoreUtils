@@ -1,10 +1,6 @@
-// Port of the standard UNIX `date` utility (minimal).
-namespace Icod.CoreUtils.Date;
+﻿namespace Icod.CoreUtils.Date;
 
-using System;
-
-internal static class Program {
-	public static int Main( string[] args ) {
-		return Command.Run( args, Console.In, Console.Out, Console.Error );
-	}
+public static class Program
+{
+    public static Task<int> Main(string[] args) => Command.RunAsync(args);
 }
