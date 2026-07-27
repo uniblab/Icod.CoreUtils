@@ -1,10 +1,5 @@
-namespace Icod.CoreUtils.Id;
-
-using System;
-using System.IO;
+namespace Icod.CoreUtils.ID;
 
 public static class Program {
-	public static int Main( string[] args ) {
-		return Command.Run( args, Console.In, Console.Out, Console.Error );
-	}
+	public static Task<int> Main( string[] args ) => Command.RunAsync( args );
 }

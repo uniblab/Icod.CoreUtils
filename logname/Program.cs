@@ -1,10 +1,5 @@
-// Port of the standard UNIX `logname` utility to .NET
 namespace Icod.CoreUtils.LogName;
 
-using System;
-
-internal static class Program {
-	public static int Main( string[] args ) {
-		return Command.Run( args, Console.In, Console.Out, Console.Error );
-	}
+public static class Program {
+	public static Task<int> Main( string[] args ) => Command.RunAsync( args );
 }

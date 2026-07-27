@@ -1,125 +1,139 @@
-// Original behavior/reference: GNU coreutils
-// Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
+namespace Icod.CoreUtils.UName;
 
-namespace Icod.CoreUtils.Uname;
+using Icod.CoreUtils.Shared.CommandLine;
+using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CoreUtils.Shared.Platform;
 
-using System;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Text;
-
-/// <summary>
-/// uname: print system information (best-effort).
-/// Supported options:
-///   -a  all (equivalent to: -s -n -r -v -m)
-///   -s  kernel name
-///   -n  nodename
-///   -r  kernel release
-///   -v  kernel version
-///   -m  machine
-/// </summary>
+/// <summary>Implements the <c>uname</c> command.</summary>
 public static class Command {
-	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
-		stdin ??= Console.In;
-		stdout ??= Console.Out;
-		stderr ??= Console.Error;
+	private const string ProgramName = "uname";
+	private const string Version = "uname (Icod.CoreUtils) 1.0";
 
-		var showAll = false;
-		var showS = false;
-		var showN = false;
-		var showR = false;
-		var showV = false;
-		var showM = false;
+	/// <summary>Runs the command synchronously.</summary>
+	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) =>
+		RunAsync( args, stdin, stdout, stderr ).GetAwaiter().GetResult();
 
-		if ( args.Length == 0 ) {
-			showS = true;
-		} else {
-			foreach ( var a in args ) {
-				if ( a == "-a" ) {
-					showAll = true;
-				} else if ( a == "-s" ) {
-					showS = true;
-				} else if ( a == "-n" ) {
-					showN = true;
-				} else if ( a == "-r" ) {
-					showR = true;
-				} else if ( a == "-v" ) {
-					showV = true;
-				} else if ( a == "-m" ) {
-					showM = true;
-				} else {
-					// ignore unknown
-				}
-			}
-		}
+	/// <summary>Runs the command asynchronously.</summary>
+	public static Task<int> RunAsync(
+		string[] args,
+		TextReader? stdin = null,
+		TextWriter? stdout = null,
+		TextWriter? stderr = null,
+		CancellationToken cancellationToken = default
+	) => RunAsync(
+		args ?? Array.Empty<string>(),
+		new CommandContext(
+			ProgramName,
+			stdin ?? Console.In,
+			stdout ?? Console.Out,
+			stderr ?? Console.Error,
+			cancellationToken: cancellationToken
+		)
+	);
 
-		if ( showAll ) {
-			showS = true;
-			showN = true;
-			showR = true;
-			showV = true;
-			showM = true;
-		}
-
+	/// <summary>Runs the command asynchronously with an injected context and provider.</summary>
+	public static async Task<int> RunAsync(
+		string[] args,
+		CommandContext context,
+		ISystemInformationProvider? provider = null
+	) {
+		ArgumentNullException.ThrowIfNull( context );
+		provider ??= SystemInformationProvider.Instance;
+		var parser = CreateParser(
+			new OptionDefinition( "all", 'a', new[] { "all" } ),
+			new OptionDefinition( "kernel-name", 's', new[] { "kernel-name" } ),
+			new OptionDefinition( "nodename", 'n', new[] { "nodename" } ),
+			new OptionDefinition( "kernel-release", 'r', new[] { "kernel-release" } ),
+			new OptionDefinition( "kernel-version", 'v', new[] { "kernel-version" } ),
+			new OptionDefinition( "machine", 'm', new[] { "machine" } ),
+			new OptionDefinition( "processor", 'p', new[] { "processor" } ),
+			new OptionDefinition( "hardware-platform", 'i', new[] { "hardware-platform" } ),
+			new OptionDefinition( "operating-system", 'o', new[] { "operating-system" } ),
+			new OptionDefinition( "help", null, new[] { "help" } ),
+			new OptionDefinition( "version", null, new[] { "version" } )
+		);
 		try {
-			var parts = new System.Collections.Generic.List<string>();
-			if ( showS ) {
-				parts.Add( GetKernelName() );
+			var result = parser.Parse( args );
+			if ( await WriteParseErrorsAsync( result, context ).ConfigureAwait( false ) )
+				return CommandExitCodes.Failure;
+			if ( result.HasOption( "help" ) ) {
+				await WriteHelpAsync( context ).ConfigureAwait( false );
+				return CommandExitCodes.Success;
+			}
+			if ( result.HasOption( "version" ) ) {
+				await context.StandardOutput.WriteLineAsync( Version.AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+				return CommandExitCodes.Success;
+			}
+			if ( 0 < result.Operands.Count ) {
+				await context.Diagnostics.ErrorAsync( $"extra operand '{result.Operands[ 0 ]}'", context.CancellationToken ).ConfigureAwait( false );
+				return CommandExitCodes.Failure;
 			}
 
-			if ( showN ) {
-				parts.Add( Environment.MachineName );
-			}
-
-			if ( showR ) {
-				parts.Add( GetKernelRelease() );
-			}
-
-			if ( showV ) {
-				parts.Add( GetKernelVersion() );
-			}
-
-			if ( showM ) {
-				parts.Add( RuntimeInformation.OSArchitecture.ToString() );
-			}
-
-			stdout.WriteLine( string.Join( " ", parts ) );
-			return 0;
-		} catch ( Exception ex ) {
-			stderr.WriteLine( $"uname: {ex.Message}" );
-			return 1;
+			var information = await provider.GetAsync( context.CancellationToken ).ConfigureAwait( false );
+			var all = result.HasOption( "all" );
+			var noSelection = !all && !result.Options.Any( option => IsInformationOption( option.Definition.Key ) );
+			var fields = new List<string>();
+			if ( all || noSelection || result.HasOption( "kernel-name" ) )
+				fields.Add( information.KernelName );
+			if ( all || result.HasOption( "nodename" ) )
+				fields.Add( information.NodeName );
+			if ( all || result.HasOption( "kernel-release" ) )
+				fields.Add( information.KernelRelease );
+			if ( all || result.HasOption( "kernel-version" ) )
+				fields.Add( information.KernelVersion );
+			if ( all || result.HasOption( "machine" ) )
+				fields.Add( information.Machine );
+			if ( ( !all && result.HasOption( "processor" ) ) || ( all && !IsUnknown( information.Processor ) ) )
+				fields.Add( information.Processor );
+			if ( ( !all && result.HasOption( "hardware-platform" ) ) || ( all && !IsUnknown( information.HardwarePlatform ) ) )
+				fields.Add( information.HardwarePlatform );
+			if ( all || result.HasOption( "operating-system" ) )
+				fields.Add( information.OperatingSystem );
+			await context.StandardOutput.WriteLineAsync( string.Join( ' ', fields ).AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+			return CommandExitCodes.Success;
+		} catch ( OperationCanceledException ) {
+			return CommandExitCodes.Canceled;
+		} catch ( Exception ex ) when ( ex is IOException or UnauthorizedAccessException ) {
+			await context.Diagnostics.ErrorAsync( ex.Message, context.CancellationToken ).ConfigureAwait( false );
+			return CommandExitCodes.Failure;
 		}
 	}
 
-	private static string GetKernelName() {
-		if ( RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) ) {
-			return "Windows";
-		}
+	private static bool IsInformationOption( string key ) => key is
+		"kernel-name" or "nodename" or "kernel-release" or "kernel-version" or
+		"machine" or "processor" or "hardware-platform" or "operating-system";
+	private static bool IsUnknown( string value ) => string.Equals( value, "unknown", StringComparison.OrdinalIgnoreCase );
 
-		if ( RuntimeInformation.IsOSPlatform( OSPlatform.Linux ) ) {
-			return "Linux";
-		}
+	private static Task WriteHelpAsync( CommandContext context ) => context.StandardOutput.WriteAsync( System.String.Concat(
+		"Usage: uname [OPTION]...\nPrint certain system information.  With no OPTION, same as -s.\n\n", 
+		"  -a, --all                print all information, omitting -p and -i if unknown\n", 
+		"  -s, --kernel-name        print the kernel name\n", 
+		"  -n, --nodename           print the network node hostname\n",
+		"  -r, --kernel-release     print the kernel release\n",
+		"  -v, --kernel-version     print the kernel version\n", 
+		"  -m, --machine            print the machine hardware name\n", 
+		"  -p, --processor          print the processor type (non-portable)\n", 
+		"  -i, --hardware-platform  print the hardware platform (non-portable)\n", 
+		"  -o, --operating-system   print the operating system\n",
+		"      --help               display this help and exit\n", 
+		"      --version            output version information and exit\n" ).AsMemory(),
+		context.CancellationToken
+	);
 
-		if ( RuntimeInformation.IsOSPlatform( OSPlatform.OSX ) ) {
-			return "Darwin";
-		}
+	private static OptionParser CreateParser( params OptionDefinition[] options ) => new(
+		options,
+		new OptionParserSettings { AllowLongOptionAbbreviations = true, Ordering = OptionOrdering.Permute }
+	);
 
-		return RuntimeInformation.OSDescription;
-	}
-
-	private static string GetKernelRelease() {
-		try {
-			return RuntimeInformation.OSDescription;
-		} catch {
-			return "";
+	private static async Task<bool> WriteParseErrorsAsync( OptionParseResult result, CommandContext context ) {
+		if ( result.IsSuccess )
+			return false;
+		foreach ( var error in result.Errors ) {
+			await context.StandardError.WriteLineAsync(
+				OptionDiagnosticFormatter.Format( context.ProgramName, error ).AsMemory(),
+				context.CancellationToken
+			).ConfigureAwait( false );
 		}
-	}
-
-	private static string GetKernelVersion() {
-		try {
-			return Environment.OSVersion.VersionString;
-		} catch {
-			return "";
-		}
+		return true;
 	}
 }
