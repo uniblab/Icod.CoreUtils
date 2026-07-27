@@ -149,8 +149,8 @@ These gates are repository milestones rather than command batches. They do not a
   - [x] `ubuntu-latest`
   - [x] `macos-latest`
 - [x] Verify that every test project is included in the solution and is actually discovered on every applicable runner.
-- [ ] Add a repository check for UTF-8 text files and forbidden generated artifacts.
-- [ ] Add repository checks for lowercase command assembly names and required project configuration blocks.
+- ~~[ ] Add a repository check for UTF-8 text files and forbidden generated artifacts.~~
+- ~~[ ] Add repository checks for lowercase command assembly names and required project configuration blocks.~~
 - [ ] Record the exact authoritative upstream version used for every completed and future batch.
 - [ ] Update the living status section after Batch 11 is merged.
 
