@@ -3,7 +3,7 @@ namespace Icod.CoreUtils.Id.Tests;
 using Icod.CoreUtils.Shared.CommandLine;
 using Icod.CoreUtils.Shared.Diagnostics;
 using Icod.CoreUtils.Shared.Platform;
-using Tool = Icod.CoreUtils.Id.Command;
+using Tool = Icod.CoreUtils.ID.Command;
 using Xunit;
 
 public sealed class IdCommandTests {
