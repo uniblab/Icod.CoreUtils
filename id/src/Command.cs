@@ -164,18 +164,18 @@ public static class Command {
 		else await context.StandardOutput.WriteLineAsync( value.AsMemory(), context.CancellationToken ).ConfigureAwait( false );
 	}
 
-	private static Task WriteHelpAsync( CommandContext context ) => context.StandardOutput.WriteAsync(
-		"Usage: id [OPTION]... [USER]...\nPrint user and group information for each specified USER, or for the current process.\n\n" +
-		"  -a                       ignored, for compatibility with other versions\n" +
-		"  -Z, --context            print only the security context\n" +
-		"  -g, --group              print only the effective group ID\n" +
-		"  -G, --groups             print all group IDs\n" +
-		"  -n, --name               print a name instead of a number, for -ugG\n" +
-		"  -r, --real               print the real ID instead of the effective ID, for -ugG\n" +
-		"  -u, --user               print only the effective user ID\n" +
-		"  -z, --zero               delimit entries with NUL, not whitespace\n" +
-		"      --help               display this help and exit\n" +
-		"      --version            output version information and exit\n".AsMemory(),
+	private static Task WriteHelpAsync( CommandContext context ) => context.StandardOutput.WriteAsync( System.String.Concat(
+		"Usage: id [OPTION]... [USER]...\nPrint user and group information for each specified USER, or for the current process.\n\n",
+		"  -a                       ignored, for compatibility with other versions\n",
+		"  -Z, --context            print only the security context\n",
+		"  -g, --group              print only the effective group ID\n",
+		"  -G, --groups             print all group IDs\n",
+		"  -n, --name               print a name instead of a number, for -ugG\n",
+		"  -r, --real               print the real ID instead of the effective ID, for -ugG\n",
+		"  -u, --user               print only the effective user ID\n",
+		"  -z, --zero               delimit entries with NUL, not whitespace\n",
+		"      --help               display this help and exit\n",
+		"      --version            output version information and exit\n" ).AsMemory(),
 		context.CancellationToken
 	);
 	private static OptionParser CreateParser( params OptionDefinition[] options ) => new( options, new OptionParserSettings { AllowLongOptionAbbreviations = true, Ordering = OptionOrdering.Permute } );

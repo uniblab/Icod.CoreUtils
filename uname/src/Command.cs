@@ -54,7 +54,8 @@ public static class Command {
 		);
 		try {
 			var result = parser.Parse( args );
-			if ( await WriteParseErrorsAsync( result, context ).ConfigureAwait( false ) ) return CommandExitCodes.Failure;
+			if ( await WriteParseErrorsAsync( result, context ).ConfigureAwait( false ) )
+				return CommandExitCodes.Failure;
 			if ( result.HasOption( "help" ) ) {
 				await WriteHelpAsync( context ).ConfigureAwait( false );
 				return CommandExitCodes.Success;
@@ -64,7 +65,7 @@ public static class Command {
 				return CommandExitCodes.Success;
 			}
 			if ( 0 < result.Operands.Count ) {
-				await context.Diagnostics.ErrorAsync( $"extra operand '{result.Operands[0]}'", context.CancellationToken ).ConfigureAwait( false );
+				await context.Diagnostics.ErrorAsync( $"extra operand '{result.Operands[ 0 ]}'", context.CancellationToken ).ConfigureAwait( false );
 				return CommandExitCodes.Failure;
 			}
 
@@ -72,14 +73,22 @@ public static class Command {
 			var all = result.HasOption( "all" );
 			var noSelection = !all && !result.Options.Any( option => IsInformationOption( option.Definition.Key ) );
 			var fields = new List<string>();
-			if ( all || noSelection || result.HasOption( "kernel-name" ) ) fields.Add( information.KernelName );
-			if ( all || result.HasOption( "nodename" ) ) fields.Add( information.NodeName );
-			if ( all || result.HasOption( "kernel-release" ) ) fields.Add( information.KernelRelease );
-			if ( all || result.HasOption( "kernel-version" ) ) fields.Add( information.KernelVersion );
-			if ( all || result.HasOption( "machine" ) ) fields.Add( information.Machine );
-			if ( (!all && result.HasOption( "processor" )) || (all && !IsUnknown( information.Processor )) ) fields.Add( information.Processor );
-			if ( (!all && result.HasOption( "hardware-platform" )) || (all && !IsUnknown( information.HardwarePlatform )) ) fields.Add( information.HardwarePlatform );
-			if ( all || result.HasOption( "operating-system" ) ) fields.Add( information.OperatingSystem );
+			if ( all || noSelection || result.HasOption( "kernel-name" ) )
+				fields.Add( information.KernelName );
+			if ( all || result.HasOption( "nodename" ) )
+				fields.Add( information.NodeName );
+			if ( all || result.HasOption( "kernel-release" ) )
+				fields.Add( information.KernelRelease );
+			if ( all || result.HasOption( "kernel-version" ) )
+				fields.Add( information.KernelVersion );
+			if ( all || result.HasOption( "machine" ) )
+				fields.Add( information.Machine );
+			if ( ( !all && result.HasOption( "processor" ) ) || ( all && !IsUnknown( information.Processor ) ) )
+				fields.Add( information.Processor );
+			if ( ( !all && result.HasOption( "hardware-platform" ) ) || ( all && !IsUnknown( information.HardwarePlatform ) ) )
+				fields.Add( information.HardwarePlatform );
+			if ( all || result.HasOption( "operating-system" ) )
+				fields.Add( information.OperatingSystem );
 			await context.StandardOutput.WriteLineAsync( string.Join( ' ', fields ).AsMemory(), context.CancellationToken ).ConfigureAwait( false );
 			return CommandExitCodes.Success;
 		} catch ( OperationCanceledException ) {
@@ -95,19 +104,19 @@ public static class Command {
 		"machine" or "processor" or "hardware-platform" or "operating-system";
 	private static bool IsUnknown( string value ) => string.Equals( value, "unknown", StringComparison.OrdinalIgnoreCase );
 
-	private static Task WriteHelpAsync( CommandContext context ) => context.StandardOutput.WriteAsync(
-		"Usage: uname [OPTION]...\nPrint certain system information.  With no OPTION, same as -s.\n\n" +
-		"  -a, --all                print all information, omitting -p and -i if unknown\n" +
-		"  -s, --kernel-name        print the kernel name\n" +
-		"  -n, --nodename           print the network node hostname\n" +
-		"  -r, --kernel-release     print the kernel release\n" +
-		"  -v, --kernel-version     print the kernel version\n" +
-		"  -m, --machine            print the machine hardware name\n" +
-		"  -p, --processor          print the processor type (non-portable)\n" +
-		"  -i, --hardware-platform  print the hardware platform (non-portable)\n" +
-		"  -o, --operating-system   print the operating system\n" +
-		"      --help               display this help and exit\n" +
-		"      --version            output version information and exit\n".AsMemory(),
+	private static Task WriteHelpAsync( CommandContext context ) => context.StandardOutput.WriteAsync( System.String.Concat(
+		"Usage: uname [OPTION]...\nPrint certain system information.  With no OPTION, same as -s.\n\n", 
+		"  -a, --all                print all information, omitting -p and -i if unknown\n", 
+		"  -s, --kernel-name        print the kernel name\n", 
+		"  -n, --nodename           print the network node hostname\n",
+		"  -r, --kernel-release     print the kernel release\n",
+		"  -v, --kernel-version     print the kernel version\n", 
+		"  -m, --machine            print the machine hardware name\n", 
+		"  -p, --processor          print the processor type (non-portable)\n", 
+		"  -i, --hardware-platform  print the hardware platform (non-portable)\n", 
+		"  -o, --operating-system   print the operating system\n",
+		"      --help               display this help and exit\n", 
+		"      --version            output version information and exit\n" ).AsMemory(),
 		context.CancellationToken
 	);
 
@@ -117,7 +126,8 @@ public static class Command {
 	);
 
 	private static async Task<bool> WriteParseErrorsAsync( OptionParseResult result, CommandContext context ) {
-		if ( result.IsSuccess ) return false;
+		if ( result.IsSuccess )
+			return false;
 		foreach ( var error in result.Errors ) {
 			await context.StandardError.WriteLineAsync(
 				OptionDiagnosticFormatter.Format( context.ProgramName, error ).AsMemory(),
