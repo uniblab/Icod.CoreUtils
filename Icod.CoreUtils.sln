@@ -85,7 +85,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.rmdir", "rmd
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "touch", "touch", "{9A456459-11A2-D070-2094-6BF533C0211E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.touch", "touch\Icod.CoreUtils.touch.csproj", "{67F28FDA-4F39-4193-988A-18E25BD9B6DB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Touch", "touch\Icod.CoreUtils.Touch.csproj", "{67F28FDA-4F39-4193-988A-18E25BD9B6DB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "cat", "cat", "{36753BED-4B2E-4238-DC2F-5A197BC6B8F9}"
 EndProject
@@ -97,7 +97,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.sort", "sort
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "uniq", "uniq", "{DE5041AB-A70C-BA82-4921-1B543AEB3092}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.uniq", "uniq\Icod.CoreUtils.uniq.csproj", "{D3159916-FDC0-462A-8FFE-C8257B55439A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Uniq", "uniq\Icod.CoreUtils.Uniq.csproj", "{D3159916-FDC0-462A-8FFE-C8257B55439A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "wc", "wc", "{C06185DE-690F-771F-7CF6-1417A0AE6027}"
 EndProject
@@ -105,7 +105,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.WC", "wc\Ico
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tr", "tr", "{22EF949B-11C6-C68D-D503-12687A1A103C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.tr", "tr\Icod.CoreUtils.tr.csproj", "{641FD4C5-0554-4078-9E50-C9177066BF0A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Tr", "tr\Icod.CoreUtils.Tr.csproj", "{641FD4C5-0554-4078-9E50-C9177066BF0A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "cut", "cut", "{F9E878A3-166D-69C7-3D54-EDA0AC617F29}"
 EndProject
@@ -165,7 +165,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.expand", "ex
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "unexpand", "unexpand", "{EEB38671-2084-ACEE-E6FC-7562F843843E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.unexpand", "unexpand\Icod.CoreUtils.unexpand.csproj", "{E96FFECE-D57B-467F-9A5B-DE59BF3E91BF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Unexpand", "unexpand\Icod.CoreUtils.Unexpand.csproj", "{E96FFECE-D57B-467F-9A5B-DE59BF3E91BF}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ptx", "ptx", "{32B9370C-C577-660A-2633-5116E09DFA89}"
 EndProject
@@ -197,7 +197,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Base64", "ba
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "date", "date", "{17ADCB1A-03C4-B798-1B68-C179B079D1D4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.date", "date\Icod.CoreUtils.date.csproj", "{0231268B-136E-4460-8541-7B61E16DDABD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Date", "date\Icod.CoreUtils.Date.csproj", "{0231268B-136E-4460-8541-7B61E16DDABD}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "echo", "echo", "{E9D7235E-3E68-3A6C-C2CD-A870A30147B3}"
 EndProject
@@ -221,7 +221,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.UName", "una
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "uptime", "uptime", "{E98EB837-825B-ADF9-C2F6-388D356C24B6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.uptime", "uptime\Icod.CoreUtils.uptime.csproj", "{85DD0752-F927-470E-B8F4-B8934EBEF1B5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Uptime", "uptime\Icod.CoreUtils.Uptime.csproj", "{85DD0752-F927-470E-B8F4-B8934EBEF1B5}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "who", "who", "{BF75029A-65E4-4BD2-1D84-8F76DDA87A91}"
 EndProject
@@ -265,7 +265,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.expr", "expr
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{0C88DD14-F956-CE84-757C-A364CCF449FC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.test", "test\Icod.CoreUtils.test.csproj", "{F6C3176A-129A-4099-B599-01FB18297878}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Test", "test\Icod.CoreUtils.Test.csproj", "{F6C3176A-129A-4099-B599-01FB18297878}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "true", "true", "{1AB868FE-6453-1188-EDD5-6CBD4A372F20}"
 EndProject
@@ -289,7 +289,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Sleep", "sle
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "timeout", "timeout", "{53A3A70A-DC8B-DA83-3396-A0CD6BB930E5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.timeout", "timeout\Icod.CoreUtils.timeout.csproj", "{C0055996-B1E8-4466-B381-49C69D7D9F1F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Timeout", "timeout\Icod.CoreUtils.Timeout.csproj", "{C0055996-B1E8-4466-B381-49C69D7D9F1F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "yes", "yes", "{6621376F-0D6D-3A5A-8AEB-627FDC43F86B}"
 EndProject
@@ -337,11 +337,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.kill", "kill
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.patch", "patch\Icod.CoreUtils.patch.csproj", "{4ADCD43A-58D4-4F21-AD47-FC2B3228FBA6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.ps", "ps\Icod.CoreUtils.ps.csproj", "{38BC58B9-B0CD-4539-ABAC-DE3BE5CC1A3F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Ps", "ps\Icod.CoreUtils.Ps.csproj", "{38BC58B9-B0CD-4539-ABAC-DE3BE5CC1A3F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.shred", "shred\Icod.CoreUtils.shred.csproj", "{05EA16F3-7349-407F-A6C8-D2B3BD40CF86}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.tar", "tar\Icod.CoreUtils.tar.csproj", "{71D07E2C-1C8E-41E1-8AF9-52BA3EA68D5E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Tar", "tar\Icod.CoreUtils.Tar.csproj", "{71D07E2C-1C8E-41E1-8AF9-52BA3EA68D5E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "arch", "arch", "{F0F316A6-568A-1714-0BC7-75AE9A2A66AB}"
 EndProject
@@ -441,7 +441,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Tee", "tee\I
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tsort", "tsort", "{E01A64D2-CDE5-7C13-738D-BD1856B48C87}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Tsort", "tsort\Icod.CoreUtils.Tsort.csproj", "{13F20C3A-863B-4165-91F6-08548EADC02B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.TSort", "tsort\Icod.CoreUtils.TSort.csproj", "{13F20C3A-863B-4165-91F6-08548EADC02B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "unlink", "unlink", "{0319F135-B0A2-92FB-C06C-DF073EBC8CE1}"
 EndProject
