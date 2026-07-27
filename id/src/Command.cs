@@ -1,4 +1,4 @@
-namespace Icod.CoreUtils.Id;
+namespace Icod.CoreUtils.ID;
 
 using System.Text;
 using Icod.CoreUtils.Shared.CommandLine;
