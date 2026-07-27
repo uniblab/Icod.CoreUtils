@@ -49,7 +49,7 @@ public static class Command {
 			var stdOutTask = Task.Run( async () => {
 				char[] buffer = new char[ 4096 ];
 				while ( !proc.HasExited ) {
-					var read = await proc.StandardOutput.ReadAsync( buffer, 0, buffer.Length );
+					var read = await proc.StandardOutput.ReadAsync( buffer, 0, buffer.Length ).ConfigureAwait( false );
 					if ( read > 0 ) {
 						stdout.Write( new string( buffer, 0, read ) );
 					} else {
@@ -57,13 +57,14 @@ public static class Command {
 					}
 				}
 
-				while ( !proc.StandardOutput.EndOfStream ) {
-					var line = proc.StandardOutput.ReadLine();
+				var line = await proc.StandardOutput.ReadLineAsync().ConfigureAwait( false );
+				while ( null != line ) {
 					if ( line is not null ) {
 						stdout.WriteLine( line );
 					} else {
 						break;
 					}
+					line = await proc.StandardOutput.ReadLineAsync().ConfigureAwait( false );
 				}
 			} );
 
@@ -78,13 +79,14 @@ public static class Command {
 					}
 				}
 
-				while ( !proc.StandardError.EndOfStream ) {
-					var line = proc.StandardError.ReadLine();
+				var line = await proc.StandardError.ReadLineAsync().ConfigureAwait( false );
+				while ( null != line ) {
 					if ( line is not null ) {
 						stderr.WriteLine( line );
 					} else {
 						break;
 					}
+					line = await proc.StandardError.ReadLineAsync().ConfigureAwait( false );
 				}
 			} );
 
