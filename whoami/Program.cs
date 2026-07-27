@@ -1,11 +1,5 @@
-namespace Icod.CoreUtils.Whoami;
+namespace Icod.CoreUtils.WhoAmI;
 
-using System;
-
-public static class Program
-{
-	public static int Main(string[] args)
-	{
-		return Command.Run(args);
-	}
+public static class Program {
+	public static Task<int> Main( string[] args ) => Command.RunAsync( args );
 }

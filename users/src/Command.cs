@@ -1,78 +1,72 @@
-// Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
-
 namespace Icod.CoreUtils.Users;
 
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Text;
+using Icod.CoreUtils.Shared.CommandLine;
+using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CoreUtils.Shared.Platform;
 
-/// <summary>
-/// Best-effort `users`: prints the login names of users currently logged in,
-/// separated by spaces. Tries to invoke system `users` or `who -q` on Unix-like
-/// systems; falls back to the current user name when not available.
-/// </summary>
+/// <summary>Implements the <c>users</c> command.</summary>
 public static class Command {
-	private const System.String QSwitch = "-q";
-	private static readonly System.String[] QSwitchArray;
+	private const string ProgramName = "users";
+	private const string Version = "users (Icod.CoreUtils) 1.0";
 
-	static Command() {
-			QSwitchArray = new[] { QSwitch };
-	}
+	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) =>
+		RunAsync( args, stdin, stdout, stderr ).GetAwaiter().GetResult();
 
-	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
-		stdin ??= Console.In;
-		stdout ??= Console.Out;
-		stderr ??= Console.Error;
+	public static Task<int> RunAsync(
+		string[] args,
+		TextReader? stdin = null,
+		TextWriter? stdout = null,
+		TextWriter? stderr = null,
+		CancellationToken cancellationToken = default
+	) => RunAsync(
+		args ?? Array.Empty<string>(),
+		new CommandContext( ProgramName, stdin ?? Console.In, stdout ?? Console.Out, stderr ?? Console.Error, cancellationToken: cancellationToken )
+	);
 
-		if ( args.Length > 0 && ( args[ 0 ] == "-h" || args[ 0 ] == "--help" ) ) {
-			PrintUsage( stdout );
-			return 0;
-		}
-
+	public static async Task<int> RunAsync( string[] args, CommandContext context, ILoginRecordProvider? provider = null ) {
+		ArgumentNullException.ThrowIfNull( context );
+		provider ??= SystemLoginRecordProvider.Instance;
+		var parser = CreateParser(
+			new OptionDefinition( "help", null, new[] { "help" } ),
+			new OptionDefinition( "version", null, new[] { "version" } )
+		);
 		try {
-			// Try `who -q` which prints names followed by a line like: # users=2
-			if ( TryRunTool( "who", QSwitchArray, out var outText ) ) {
-				// who -q prints a names line and a trailing summary; take the first line
-				using var sr = new StringReader( outText );
-				var first = sr.ReadLine() ?? string.Empty;
-				stdout.Write( first.Trim() );
-				stdout.WriteLine();
-				return 0;
+			var result = parser.Parse( args );
+			if ( await WriteParseErrorsAsync( result, context ).ConfigureAwait( false ) ) return CommandExitCodes.Failure;
+			if ( result.HasOption( "help" ) ) { await WriteHelpAsync( context ).ConfigureAwait( false ); return CommandExitCodes.Success; }
+			if ( result.HasOption( "version" ) ) { await context.StandardOutput.WriteLineAsync( Version.AsMemory(), context.CancellationToken ).ConfigureAwait( false ); return CommandExitCodes.Success; }
+			if ( 1 < result.Operands.Count ) {
+				await context.Diagnostics.ErrorAsync( $"extra operand '{result.Operands[1]}'", context.CancellationToken ).ConfigureAwait( false );
+				return CommandExitCodes.Failure;
+			}
+			if ( !provider.IsSupported ) {
+				await context.Diagnostics.ErrorAsync( "login records are not supported on this platform", context.CancellationToken ).ConfigureAwait( false );
+				return CommandExitCodes.Failure;
 			}
 
-			// Fallback: current user
-			stdout.WriteLine( Environment.UserName ?? string.Empty );
-			return 0;
-		} catch ( Exception ex ) {
-			stderr.WriteLine( $"users: {ex.Message}" );
-			return 1;
+			var names = new List<string>();
+			await foreach ( var record in provider.ReadAsync( result.Operands.SingleOrDefault(), context.CancellationToken ).ConfigureAwait( false ) ) {
+				if ( LoginRecordType.UserProcess == record.Type && !string.IsNullOrEmpty( record.User ) ) names.Add( record.User );
+			}
+			names.Sort( StringComparer.Ordinal );
+			await context.StandardOutput.WriteLineAsync( string.Join( ' ', names ).AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+			return CommandExitCodes.Success;
+		} catch ( OperationCanceledException ) {
+			return CommandExitCodes.Canceled;
+		} catch ( Exception ex ) when ( ex is IOException or UnauthorizedAccessException ) {
+			await context.Diagnostics.ErrorAsync( ex.Message, context.CancellationToken ).ConfigureAwait( false );
+			return CommandExitCodes.Failure;
 		}
 	}
 
-	private static bool TryRunTool( string tool, string[] args, out string output ) {
-		output = string.Empty;
-		try {
-			var psi = new ProcessStartInfo {
-				FileName = tool,
-				Arguments = string.Join( " ", args ),
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				UseShellExecute = false,
-				CreateNoWindow = true
-			};
-			using var p = Process.Start( psi );
-			if ( p is null )
-				return false;
-			output = p.StandardOutput.ReadToEnd();
-			p.WaitForExit();
-			return p.ExitCode == 0 && !string.IsNullOrEmpty( output );
-		} catch {
-			return false;
-		}
-	}
-
-	private static void PrintUsage( TextWriter stdout ) {
-		stdout.WriteLine( "Usage: users" );
+	private static Task WriteHelpAsync( CommandContext context ) => context.StandardOutput.WriteAsync(
+		"Usage: users [OPTION]... [FILE]\nOutput who is currently logged in according to FILE. If FILE is not specified, use the system login database.\n\n      --help     display this help and exit\n      --version  output version information and exit\n".AsMemory(),
+		context.CancellationToken
+	);
+	private static OptionParser CreateParser( params OptionDefinition[] options ) => new( options, new OptionParserSettings { AllowLongOptionAbbreviations = true, Ordering = OptionOrdering.Permute } );
+	private static async Task<bool> WriteParseErrorsAsync( OptionParseResult result, CommandContext context ) {
+		if ( result.IsSuccess ) return false;
+		foreach ( var error in result.Errors ) await context.StandardError.WriteLineAsync( OptionDiagnosticFormatter.Format( context.ProgramName, error ).AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+		return true;
 	}
 }

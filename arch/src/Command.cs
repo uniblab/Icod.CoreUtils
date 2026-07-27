@@ -28,20 +28,40 @@ public static class Command {
 
 	public static async Task<int> RunAsync( string[] args, CommandContext context ) {
 		ArgumentNullException.ThrowIfNull( context );
-		var parser = CreateParser(new OptionDefinition( "help", longNames: new[] { "help" } ), new OptionDefinition( "version", longNames: new[] { "version" } ));
+		var parser = CreateParser( new OptionDefinition( "help", longNames: new[] { "help" } ), new OptionDefinition( "version", longNames: new[] { "version" } ) );
 		try {
 			var result = parser.Parse( args );
-			if ( await WriteParseErrorsAsync( result, context ).ConfigureAwait( false ) ) return 1;
-			if ( result.HasOption( "help" ) ) { await context.StandardOutput.WriteAsync("Usage: arch [OPTION]...\nPrint machine architecture.\n\n      --help     display this help and exit\n      --version  output version information and exit\n".AsMemory(), context.CancellationToken ).ConfigureAwait( false ); return 0; }
-			if ( result.HasOption( "version" ) ) { await context.StandardOutput.WriteLineAsync( VERSION.AsMemory(), context.CancellationToken ).ConfigureAwait( false ); return 0; }
-			if ( result.Operands.Count > 0 ) { await context.Diagnostics.ErrorAsync( $"extra operand '{result.Operands[0]}'", context.CancellationToken ).ConfigureAwait( false ); return 1; }
+			if ( await WriteParseErrorsAsync( result, context ).ConfigureAwait( false ) )
+				return 1;
+			if ( result.HasOption( "help" ) ) {
+				await context.StandardOutput.WriteAsync( "Usage: arch [OPTION]...\nPrint machine architecture.\n\n      --help     display this help and exit\n      --version  output version information and exit\n".AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+				return 0;
+			}
+			if ( result.HasOption( "version" ) ) {
+				await context.StandardOutput.WriteLineAsync( VERSION.AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+				return 0;
+			}
+			if ( result.Operands.Count > 0 ) {
+				await context.Diagnostics.ErrorAsync( $"extra operand '{result.Operands[ 0 ]}'", context.CancellationToken ).ConfigureAwait( false );
+				return 1;
+			}
 			context.CancellationToken.ThrowIfCancellationRequested();
 			await context.StandardOutput.WriteLineAsync( GetArchitecture().AsMemory(), context.CancellationToken ).ConfigureAwait( false );
 			return 0;
 		} catch ( OperationCanceledException ) { return CommandExitCodes.Canceled; }
 	}
 	internal static string GetArchitecture() => RuntimeInformation.OSArchitecture.ToString() switch {
-		"X64" => "x86_64", "X86" => "i686", "Arm64" => "aarch64", "Arm" => "armv7l", "Armv6" => "armv6l", "Ppc64le" => "ppc64le", "S390x" => "s390x", "LoongArch64" => "loongarch64", "RiscV64" => "riscv64", "Wasm" => "wasm", var value => value.ToLowerInvariant()
+		"X64" => "x86_64",
+		"X86" => "i686",
+		"Arm64" => "aarch64",
+		"Arm" => "armv7l",
+		"Armv6" => "armv6l",
+		"Ppc64le" => "ppc64le",
+		"S390x" => "s390x",
+		"LoongArch64" => "loongarch64",
+		"RiscV64" => "riscv64",
+		"Wasm" => "wasm",
+		var value => value.ToLowerInvariant()
 	};
 
 	private static OptionParser CreateParser( params OptionDefinition[] options ) => new(
@@ -52,7 +72,8 @@ public static class Command {
 		}
 	);
 	private static async Task<bool> WriteParseErrorsAsync( OptionParseResult result, CommandContext context ) {
-		if ( result.IsSuccess ) return false;
+		if ( result.IsSuccess )
+			return false;
 		foreach ( var error in result.Errors ) {
 			await context.StandardError.WriteLineAsync(
 				OptionDiagnosticFormatter.Format( context.ProgramName, error ).AsMemory(),
