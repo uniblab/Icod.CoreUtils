@@ -1,4 +1,4 @@
-namespace Icod.CoreUtils.Tail.Tests;
+﻿namespace Icod.CoreUtils.Tail.Tests;
 
 using System.Text;
 using TailCommand = Icod.CoreUtils.Tail.Command;
@@ -218,7 +218,7 @@ public sealed class TailCommandTests {
 			);
 
 			Assert.Equal( 0, result.ExitCode );
-			Assert.Contains( "follow implementation", result.Error );
+			Assert.Contains( "asynchronous polling follow mode", result.Error );
 		} finally {
 			File.Delete( path );
 		}

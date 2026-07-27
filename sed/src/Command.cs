@@ -1,4 +1,4 @@
-// Original behavior/reference: sed (Lee E. McMahon)
+﻿// Original behavior/reference: sed (Lee E. McMahon)
 // Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
 
 namespace Icod.CoreUtils.Sed;
@@ -501,20 +501,7 @@ public static class Command {
 			} else if (
 				this.First is ZeroAddress
 			) {
-				this.myRangeActive = true;
-				this.myRangeStartLine = 0;
-				selected = true;
-				rangeStarted = true;
-				if (
-					this.Second.IsEnd(
-						context,
-						this.myRangeStartLine,
-						isStartLine: false
-					)
-				) {
-					this.myRangeActive = false;
-					rangeEnded = true;
-				}
+				selected = false;
 			} else if (
 				this.First.Matches(
 					context

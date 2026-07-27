@@ -1,4 +1,4 @@
-namespace Icod.CoreUtils.Checksum.Tests;
+﻿namespace Icod.CoreUtils.Checksum.Tests;
 
 using System.Text;
 using CksumCommandWrapper = Icod.CoreUtils.Cksum.Command;
@@ -323,13 +323,19 @@ public sealed class CksumAndSumCommandTests {
 			)
 		);
 		Assert.Equal(
-			"16556     1\n",
+			System.String.Concat(
+				"16556     1",
+				Environment.NewLine
+			),
 			CommandTestHelper.DecodeOutput(
 				bsd
 			)
 		);
 		Assert.Equal(
-			"294 1\n",
+			System.String.Concat(
+				"294 1",
+				Environment.NewLine
+			),
 			CommandTestHelper.DecodeOutput(
 				sysv
 			)

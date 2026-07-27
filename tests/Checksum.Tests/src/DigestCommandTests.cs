@@ -1,4 +1,4 @@
-namespace Icod.CoreUtils.Checksum.Tests;
+﻿namespace Icod.CoreUtils.Checksum.Tests;
 
 using System.Text;
 using B2Command = Icod.CoreUtils.B2Sum.Command;
@@ -36,7 +36,7 @@ public sealed class DigestCommandTests {
 			};
 			yield return new object[] {
 				"sha384sum",
-				"cb00753f45a35e8bb5a03d699ac65007272c32ab0ded1631a8b605a43ff5bed8086072ba1e7cc2358baeca134c825a7"
+				"cb00753f45a35e8bb5a03d699ac65007272c32ab0eded1631a8b605a43ff5bed8086072ba1e7cc2358baeca134c825a7"
 			};
 			yield return new object[] {
 				"sha512sum",
@@ -167,8 +167,18 @@ public sealed class DigestCommandTests {
 				result
 			);
 			Assert.Equal( 0, result.ExitCode );
-			Assert.Contains( rootFile, text );
-			Assert.Contains( deepFile, text );
+			Assert.Contains(
+				EscapeFileNameForDigestOutput(
+					rootFile
+				),
+				text
+			);
+			Assert.Contains(
+				EscapeFileNameForDigestOutput(
+					deepFile
+				),
+				text
+			);
 		} finally {
 			Directory.Delete(
 				directory,
@@ -329,6 +339,16 @@ public sealed class DigestCommandTests {
 				nameof( program )
 			)
 		};
+	}
+
+	private static string EscapeFileNameForDigestOutput(
+		string fileName
+	) {
+		return fileName.Replace(
+			"\\",
+			"\\\\",
+			StringComparison.Ordinal
+		);
 	}
 
 	private static string CreateDirectory() {
