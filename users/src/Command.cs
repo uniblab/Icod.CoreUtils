@@ -59,10 +59,19 @@ public static class Command {
 		}
 	}
 
-	private static Task WriteHelpAsync( CommandContext context ) => context.StandardOutput.WriteAsync(
-		"Usage: users [OPTION]... [FILE]\nOutput who is currently logged in according to FILE. If FILE is not specified, use the system login database.\n\n      --help     display this help and exit\n      --version  output version information and exit\n".AsMemory(),
-		context.CancellationToken
-	);
+	private static async Task WriteHelpAsync( CommandContext context ) {
+		const string text = """
+Usage: users [OPTION]... [FILE]
+Output who is currently logged in according to FILE. If FILE is not specified, use the system login database.
+
+      --help     display this help and exit
+      --version  output version information and exit
+""";
+		await context.StandardOutput.WriteAsync(
+			text.ReplaceLineEndings( Environment.NewLine ).AsMemory(),
+			context.CancellationToken
+		).ConfigureAwait( false );
+	}
 	private static OptionParser CreateParser( params OptionDefinition[] options ) => new( options, new OptionParserSettings { AllowLongOptionAbbreviations = true, Ordering = OptionOrdering.Permute } );
 	private static async Task<bool> WriteParseErrorsAsync( OptionParseResult result, CommandContext context ) {
 		if ( result.IsSuccess ) return false;

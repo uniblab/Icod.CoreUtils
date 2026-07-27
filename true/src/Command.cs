@@ -70,7 +70,7 @@ Exit with a status code indicating success.
       --version     output version information and exit
 """;
 		await output.WriteAsync(
-			text.AsMemory(),
+			text.ReplaceLineEndings( Environment.NewLine ).AsMemory(),
 			cancellationToken
 		).ConfigureAwait( false );
 	}

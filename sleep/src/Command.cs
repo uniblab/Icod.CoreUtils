@@ -75,7 +75,12 @@ public static class Command {
 
 			if ( 0 == operands.Count ) {
 				await stderr.WriteAsync(
-					"sleep: missing operand\nTry 'sleep --help' for more information.\n".AsMemory(),
+					System.String.Concat(
+						"sleep: missing operand",
+						Environment.NewLine,
+						"Try 'sleep --help' for more information.",
+						Environment.NewLine
+					).AsMemory(),
 					cancellationToken
 				).ConfigureAwait( false );
 				return 1;
@@ -85,7 +90,14 @@ public static class Command {
 			foreach ( var operand in operands ) {
 				if ( !TryParseDuration( operand, out var seconds ) ) {
 					await stderr.WriteAsync(
-						$"sleep: invalid time interval '{operand}'\nTry 'sleep --help' for more information.\n".AsMemory(),
+						System.String.Concat(
+							"sleep: invalid time interval '",
+							operand,
+							"'",
+							Environment.NewLine,
+							"Try 'sleep --help' for more information.",
+							Environment.NewLine
+						).AsMemory(),
 						cancellationToken
 					).ConfigureAwait( false );
 					return 1;
@@ -122,7 +134,11 @@ public static class Command {
 		) {
 			await TryWriteErrorAsync(
 				stderr,
-				$"sleep: {exception.Message}\n"
+				System.String.Concat(
+					"sleep: ",
+					exception.Message,
+					Environment.NewLine
+				)
 			).ConfigureAwait( false );
 			return 1;
 		} catch ( IOException ) {
@@ -193,7 +209,14 @@ public static class Command {
 			: $"-{argument[ 1 ]}"
 		;
 		await error.WriteAsync(
-			$"sleep: unrecognized option '{option}'\nTry 'sleep --help' for more information.\n".AsMemory(),
+			System.String.Concat(
+				"sleep: unrecognized option '",
+				option,
+				"'",
+				Environment.NewLine,
+				"Try 'sleep --help' for more information.",
+				Environment.NewLine
+			).AsMemory(),
 			cancellationToken
 		).ConfigureAwait( false );
 	}
@@ -223,7 +246,7 @@ integer.  Given two or more arguments, pause for the sum of their values.
       --version     output version information and exit
 """;
 		await output.WriteAsync(
-			text.AsMemory(),
+			text.ReplaceLineEndings( Environment.NewLine ).AsMemory(),
 			cancellationToken
 		).ConfigureAwait( false );
 	}

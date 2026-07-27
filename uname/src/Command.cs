@@ -104,21 +104,28 @@ public static class Command {
 		"machine" or "processor" or "hardware-platform" or "operating-system";
 	private static bool IsUnknown( string value ) => string.Equals( value, "unknown", StringComparison.OrdinalIgnoreCase );
 
-	private static Task WriteHelpAsync( CommandContext context ) => context.StandardOutput.WriteAsync( System.String.Concat(
-		"Usage: uname [OPTION]...\nPrint certain system information.  With no OPTION, same as -s.\n\n", 
-		"  -a, --all                print all information, omitting -p and -i if unknown\n", 
-		"  -s, --kernel-name        print the kernel name\n", 
-		"  -n, --nodename           print the network node hostname\n",
-		"  -r, --kernel-release     print the kernel release\n",
-		"  -v, --kernel-version     print the kernel version\n", 
-		"  -m, --machine            print the machine hardware name\n", 
-		"  -p, --processor          print the processor type (non-portable)\n", 
-		"  -i, --hardware-platform  print the hardware platform (non-portable)\n", 
-		"  -o, --operating-system   print the operating system\n",
-		"      --help               display this help and exit\n", 
-		"      --version            output version information and exit\n" ).AsMemory(),
-		context.CancellationToken
-	);
+	private static async Task WriteHelpAsync( CommandContext context ) {
+		const string text = """
+Usage: uname [OPTION]...
+Print certain system information.  With no OPTION, same as -s.
+
+  -a, --all                print all information, omitting -p and -i if unknown
+  -s, --kernel-name        print the kernel name
+  -n, --nodename           print the network node hostname
+  -r, --kernel-release     print the kernel release
+  -v, --kernel-version     print the kernel version
+  -m, --machine            print the machine hardware name
+  -p, --processor          print the processor type (non-portable)
+  -i, --hardware-platform  print the hardware platform (non-portable)
+  -o, --operating-system   print the operating system
+      --help               display this help and exit
+      --version            output version information and exit
+""";
+		await context.StandardOutput.WriteAsync(
+			text.ReplaceLineEndings( Environment.NewLine ).AsMemory(),
+			context.CancellationToken
+		).ConfigureAwait( false );
+	}
 
 	private static OptionParser CreateParser( params OptionDefinition[] options ) => new(
 		options,

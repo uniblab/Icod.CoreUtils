@@ -50,10 +50,19 @@ public static class Command {
 		}
 	}
 
-	private static Task WriteHelpAsync( CommandContext context ) => context.StandardOutput.WriteAsync(
-		"Usage: whoami [OPTION]...\nPrint the user name associated with the current effective user ID.\n\n      --help     display this help and exit\n      --version  output version information and exit\n".AsMemory(),
-		context.CancellationToken
-	);
+	private static async Task WriteHelpAsync( CommandContext context ) {
+		const string text = """
+Usage: whoami [OPTION]...
+Print the user name associated with the current effective user ID.
+
+      --help     display this help and exit
+      --version  output version information and exit
+""";
+		await context.StandardOutput.WriteAsync(
+			text.ReplaceLineEndings( Environment.NewLine ).AsMemory(),
+			context.CancellationToken
+		).ConfigureAwait( false );
+	}
 	private static OptionParser CreateParser( params OptionDefinition[] options ) => new( options, new OptionParserSettings { AllowLongOptionAbbreviations = true, Ordering = OptionOrdering.Permute } );
 	private static async Task<bool> WriteParseErrorsAsync( OptionParseResult result, CommandContext context ) {
 		if ( result.IsSuccess ) return false;

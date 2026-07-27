@@ -57,12 +57,15 @@ public static class Command {
 				return 0;
 			}
 
-			var line = string.Join(
-				" ",
-				0 == args.Length
-					? new string[] { "y" }
-					: args
-			) + "\n";
+			var line = System.String.Concat(
+				string.Join(
+					" ",
+					0 == args.Length
+						? new string[] { "y" }
+						: args
+				),
+				Environment.NewLine
+			);
 			var block = CreateOutputBlock( line );
 			while ( true ) {
 				cancellationToken.ThrowIfCancellationRequested();
@@ -76,13 +79,21 @@ public static class Command {
 		} catch ( IOException exception ) {
 			await TryWriteErrorAsync(
 				stderr,
-				$"yes: standard output: {exception.Message}\n"
+				System.String.Concat(
+					"yes: standard output: ",
+					exception.Message,
+					Environment.NewLine
+				)
 			).ConfigureAwait( false );
 			return 1;
 		} catch ( ObjectDisposedException exception ) {
 			await TryWriteErrorAsync(
 				stderr,
-				$"yes: standard output: {exception.Message}\n"
+				System.String.Concat(
+					"yes: standard output: ",
+					exception.Message,
+					Environment.NewLine
+				)
 			).ConfigureAwait( false );
 			return 1;
 		}
@@ -130,7 +141,7 @@ Repeatedly output a line with all specified STRING(s), or 'y'.
       --version     output version information and exit
 """;
 		await output.WriteAsync(
-			text.AsMemory(),
+			text.ReplaceLineEndings( Environment.NewLine ).AsMemory(),
 			cancellationToken
 		).ConfigureAwait( false );
 	}

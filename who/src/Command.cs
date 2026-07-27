@@ -209,28 +209,35 @@ public static class Command {
 		}
 	}
 
-	private static Task WriteHelpAsync( CommandContext context ) => context.StandardOutput.WriteAsync( System.String.Concat(
-		"Usage: who [OPTION]... [ FILE | ARG1 ARG2 ]\nPrint information about users who are currently logged in.\n\n",
-		"  -a, --all         same as -b -d --login -p -r -t -T -u\n",
-		"  -b, --boot        time of last system boot\n",
-		"  -d, --dead        print dead processes\n",
-		"  -H, --heading     print line of column headings\n",
-		"  -l, --login       print system login processes\n",
-		"      --lookup      canonicalize hostnames via DNS\n",
-		"  -m                only hostname and user associated with stdin\n",
-		"  -p, --process     print active processes spawned by init\n",
-		"  -q, --count       all login names and number of users logged on\n",
-		"  -r, --runlevel    print current runlevel\n",
-		"  -s, --short       print only name, line, and time (default)\n",
-		"  -t, --time        print last system clock change\n",
-		"  -T, -w, --mesg   add user's message status as +, - or ?\n",
-		"      --message     same as -T\n",
-		"      --writable    same as -T\n",
-		"  -u, --users       list users logged in, including idle time\n",
-		"      --help        display this help and exit\n",
-		"      --version     output version information and exit\n" ).AsMemory(),
-		context.CancellationToken
-	);
+	private static async Task WriteHelpAsync( CommandContext context ) {
+		const string text = """
+Usage: who [OPTION]... [ FILE | ARG1 ARG2 ]
+Print information about users who are currently logged in.
+
+  -a, --all         same as -b -d --login -p -r -t -T -u
+  -b, --boot        time of last system boot
+  -d, --dead        print dead processes
+  -H, --heading     print line of column headings
+  -l, --login       print system login processes
+      --lookup      canonicalize hostnames via DNS
+  -m                only hostname and user associated with stdin
+  -p, --process     print active processes spawned by init
+  -q, --count       all login names and number of users logged on
+  -r, --runlevel    print current runlevel
+  -s, --short       print only name, line, and time (default)
+  -t, --time        print last system clock change
+  -T, -w, --mesg   add user's message status as +, - or ?
+      --message     same as -T
+      --writable    same as -T
+  -u, --users       list users logged in, including idle time
+      --help        display this help and exit
+      --version     output version information and exit
+""";
+		await context.StandardOutput.WriteAsync(
+			text.ReplaceLineEndings( Environment.NewLine ).AsMemory(),
+			context.CancellationToken
+		).ConfigureAwait( false );
+	}
 	private static OptionParser CreateParser( params OptionDefinition[] options ) => new( options, new OptionParserSettings { AllowLongOptionAbbreviations = true, Ordering = OptionOrdering.Permute } );
 	private static async Task<bool> WriteParseErrorsAsync( OptionParseResult result, CommandContext context ) {
 		if ( result.IsSuccess )

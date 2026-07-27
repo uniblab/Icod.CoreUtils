@@ -74,13 +74,22 @@ public static class Command {
 			.Select( group => group.Name )
 			.ToArray();
 		var prefix = null == userName ? string.Empty : $"{userName} : ";
-		await context.StandardOutput.WriteLineAsync( (prefix + string.Join( ' ', names )).AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+		await context.StandardOutput.WriteLineAsync( System.String.Concat( prefix, string.Join( ' ', names ) ).AsMemory(), context.CancellationToken ).ConfigureAwait( false );
 	}
 
-	private static Task WriteHelpAsync( CommandContext context ) => context.StandardOutput.WriteAsync(
-		"Usage: groups [OPTION]... [USERNAME]...\nPrint group memberships for each USERNAME or, if no USERNAME is specified, for the current process.\n\n      --help     display this help and exit\n      --version  output version information and exit\n".AsMemory(),
-		context.CancellationToken
-	);
+	private static async Task WriteHelpAsync( CommandContext context ) {
+		const string text = """
+Usage: groups [OPTION]... [USERNAME]...
+Print group memberships for each USERNAME or, if no USERNAME is specified, for the current process.
+
+      --help     display this help and exit
+      --version  output version information and exit
+""";
+		await context.StandardOutput.WriteAsync(
+			text.ReplaceLineEndings( Environment.NewLine ).AsMemory(),
+			context.CancellationToken
+		).ConfigureAwait( false );
+	}
 	private static OptionParser CreateParser( params OptionDefinition[] options ) => new( options, new OptionParserSettings { AllowLongOptionAbbreviations = true, Ordering = OptionOrdering.Permute } );
 	private static async Task<bool> WriteParseErrorsAsync( OptionParseResult result, CommandContext context ) {
 		if ( result.IsSuccess ) return false;

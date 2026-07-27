@@ -117,8 +117,8 @@ public static class Command {
 				).ConfigureAwait( false );
 			}
 			if ( !noNewline ) {
-				await stdout.WriteAsync(
-					"\n".AsMemory(),
+				await stdout.WriteLineAsync(
+					ReadOnlyMemory<char>.Empty,
 					cancellationToken
 				).ConfigureAwait( false );
 			}
@@ -128,7 +128,11 @@ public static class Command {
 		} catch ( IOException exception ) {
 			await TryWriteErrorAsync(
 				stderr,
-				$"echo: write error: {exception.Message}\n"
+				System.String.Concat(
+					"echo: write error: ",
+					exception.Message,
+					Environment.NewLine
+				)
 			).ConfigureAwait( false );
 			return 1;
 		}
@@ -206,7 +210,7 @@ public static class Command {
 						buffer.Append( '\f' );
 						break;
 					case 'n':
-						buffer.Append( '\n' );
+						buffer.Append( Environment.NewLine );
 						break;
 					case 'r':
 						buffer.Append( '\r' );
@@ -260,7 +264,7 @@ public static class Command {
 			!stop
 			&& !noNewline
 		) {
-			buffer.Append( '\n' );
+			buffer.Append( Environment.NewLine );
 		}
 		if ( 0 < buffer.Length ) {
 			await output.WriteAsync(
@@ -369,7 +373,7 @@ If -e is in effect, the following sequences are recognized:
   \\xHH   byte with hexadecimal value HH (1 to 2 digits)
 """;
 		await output.WriteAsync(
-			text.AsMemory(),
+			text.ReplaceLineEndings( Environment.NewLine ).AsMemory(),
 			cancellationToken
 		).ConfigureAwait( false );
 	}

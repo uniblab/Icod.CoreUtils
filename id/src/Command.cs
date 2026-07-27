@@ -160,24 +160,31 @@ public static class Command {
 
 	private static string Format( string id, string name ) => string.IsNullOrEmpty( name ) ? id : $"{id}({name})";
 	private static async Task WriteScalarAsync( string value, bool zero, CommandContext context ) {
-		if ( zero ) await context.StandardOutput.WriteAsync( (value + '\0').AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+		if ( zero ) await context.StandardOutput.WriteAsync( System.String.Concat( value, '\0' ).AsMemory(), context.CancellationToken ).ConfigureAwait( false );
 		else await context.StandardOutput.WriteLineAsync( value.AsMemory(), context.CancellationToken ).ConfigureAwait( false );
 	}
 
-	private static Task WriteHelpAsync( CommandContext context ) => context.StandardOutput.WriteAsync( System.String.Concat(
-		"Usage: id [OPTION]... [USER]...\nPrint user and group information for each specified USER, or for the current process.\n\n",
-		"  -a                       ignored, for compatibility with other versions\n",
-		"  -Z, --context            print only the security context\n",
-		"  -g, --group              print only the effective group ID\n",
-		"  -G, --groups             print all group IDs\n",
-		"  -n, --name               print a name instead of a number, for -ugG\n",
-		"  -r, --real               print the real ID instead of the effective ID, for -ugG\n",
-		"  -u, --user               print only the effective user ID\n",
-		"  -z, --zero               delimit entries with NUL, not whitespace\n",
-		"      --help               display this help and exit\n",
-		"      --version            output version information and exit\n" ).AsMemory(),
-		context.CancellationToken
-	);
+	private static async Task WriteHelpAsync( CommandContext context ) {
+		const string text = """
+Usage: id [OPTION]... [USER]...
+Print user and group information for each specified USER, or for the current process.
+
+  -a                       ignored, for compatibility with other versions
+  -Z, --context            print only the security context
+  -g, --group              print only the effective group ID
+  -G, --groups             print all group IDs
+  -n, --name               print a name instead of a number, for -ugG
+  -r, --real               print the real ID instead of the effective ID, for -ugG
+  -u, --user               print only the effective user ID
+  -z, --zero               delimit entries with NUL, not whitespace
+      --help               display this help and exit
+      --version            output version information and exit
+""";
+		await context.StandardOutput.WriteAsync(
+			text.ReplaceLineEndings( Environment.NewLine ).AsMemory(),
+			context.CancellationToken
+		).ConfigureAwait( false );
+	}
 	private static OptionParser CreateParser( params OptionDefinition[] options ) => new( options, new OptionParserSettings { AllowLongOptionAbbreviations = true, Ordering = OptionOrdering.Permute } );
 	private static async Task<bool> WriteParseErrorsAsync( OptionParseResult result, CommandContext context ) {
 		if ( result.IsSuccess ) return false;

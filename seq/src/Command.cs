@@ -54,7 +54,7 @@ public static class Command {
 		try {
 			cancellationToken.ThrowIfCancellationRequested();
 			var operands = new List<string>();
-			var separator = "\n";
+			var separator = Environment.NewLine;
 			string? formatText = null;
 			var equalWidth = false;
 			var optionsEnded = false;
@@ -142,7 +142,14 @@ public static class Command {
 						&& !LooksLikeNumber( argument )
 					) {
 						await stderr.WriteAsync(
-							$"seq: unrecognized option '{argument}'\nTry 'seq --help' for more information.\n".AsMemory(),
+							System.String.Concat(
+								"seq: unrecognized option '",
+								argument,
+								"'",
+								Environment.NewLine,
+								"Try 'seq --help' for more information.",
+								Environment.NewLine
+							).AsMemory(),
 							cancellationToken
 						).ConfigureAwait( false );
 						return 1;
@@ -153,14 +160,26 @@ public static class Command {
 
 			if ( 0 == operands.Count ) {
 				await stderr.WriteAsync(
-					"seq: missing operand\nTry 'seq --help' for more information.\n".AsMemory(),
+					System.String.Concat(
+						"seq: missing operand",
+						Environment.NewLine,
+						"Try 'seq --help' for more information.",
+						Environment.NewLine
+					).AsMemory(),
 					cancellationToken
 				).ConfigureAwait( false );
 				return 1;
 			}
 			if ( 3 < operands.Count ) {
 				await stderr.WriteAsync(
-					$"seq: extra operand '{operands[ 3 ]}'\nTry 'seq --help' for more information.\n".AsMemory(),
+					System.String.Concat(
+						"seq: extra operand '",
+						operands[ 3 ],
+						"'",
+						Environment.NewLine,
+						"Try 'seq --help' for more information.",
+						Environment.NewLine
+					).AsMemory(),
 					cancellationToken
 				).ConfigureAwait( false );
 				return 1;
@@ -170,7 +189,12 @@ public static class Command {
 				&& null != formatText
 			) {
 				await stderr.WriteAsync(
-					"seq: format string may not be specified when printing equal width strings\nTry 'seq --help' for more information.\n".AsMemory(),
+					System.String.Concat(
+						"seq: format string may not be specified when printing equal width strings",
+						Environment.NewLine,
+						"Try 'seq --help' for more information.",
+						Environment.NewLine
+					).AsMemory(),
 					cancellationToken
 				).ConfigureAwait( false );
 				return 1;
@@ -180,7 +204,14 @@ public static class Command {
 			foreach ( var operand in operands ) {
 				if ( !TryParseOperand( operand, out var number ) ) {
 					await stderr.WriteAsync(
-						$"seq: invalid floating point argument: '{operand}'\nTry 'seq --help' for more information.\n".AsMemory(),
+						System.String.Concat(
+							"seq: invalid floating point argument: '",
+							operand,
+							"'",
+							Environment.NewLine,
+							"Try 'seq --help' for more information.",
+							Environment.NewLine
+						).AsMemory(),
 						cancellationToken
 					).ConfigureAwait( false );
 					return 1;
@@ -220,7 +251,12 @@ public static class Command {
 			);
 			if ( 0 == increment ) {
 				await stderr.WriteAsync(
-					"seq: zero increment\nTry 'seq --help' for more information.\n".AsMemory(),
+					System.String.Concat(
+						"seq: zero increment",
+						Environment.NewLine,
+						"Try 'seq --help' for more information.",
+						Environment.NewLine
+					).AsMemory(),
 					cancellationToken
 				).ConfigureAwait( false );
 				return 1;
@@ -230,7 +266,14 @@ public static class Command {
 			if ( null != formatText ) {
 				if ( !TryParsePrintfFormat( formatText, out printfFormat ) ) {
 					await stderr.WriteAsync(
-						$"seq: format '{formatText}' has no % directive\nTry 'seq --help' for more information.\n".AsMemory(),
+						System.String.Concat(
+							"seq: format '",
+							formatText,
+							"' has no % directive",
+							Environment.NewLine,
+							"Try 'seq --help' for more information.",
+							Environment.NewLine
+						).AsMemory(),
 						cancellationToken
 					).ConfigureAwait( false );
 					return 1;
@@ -323,7 +366,7 @@ public static class Command {
 				}
 			}
 			if ( wroteAny ) {
-				outputBuffer.Append( '\n' );
+				outputBuffer.Append( Environment.NewLine );
 			}
 			if ( 0 < outputBuffer.Length ) {
 				await stdout.WriteAsync(
@@ -337,13 +380,13 @@ public static class Command {
 		} catch ( IOException exception ) {
 			await TryWriteErrorAsync(
 				stderr,
-				$"seq: write error: {exception.Message}\n"
+				System.String.Concat( "seq: write error: ", exception.Message, Environment.NewLine )
 			).ConfigureAwait( false );
 			return 1;
 		} catch ( OverflowException exception ) {
 			await TryWriteErrorAsync(
 				stderr,
-				$"seq: {exception.Message}\n"
+				System.String.Concat( "seq: ", exception.Message, Environment.NewLine )
 			).ConfigureAwait( false );
 			return 1;
 		}
@@ -906,7 +949,10 @@ public static class Command {
 		CancellationToken cancellationToken
 	) {
 		await error.WriteAsync(
-			$"seq: option '{option}' requires an argument\nTry 'seq --help' for more information.\n".AsMemory(),
+			System.String.Concat(
+				"seq: option '", option, "' requires an argument", Environment.NewLine,
+				"Try 'seq --help' for more information.", Environment.NewLine
+			).AsMemory(),
 			cancellationToken
 		).ConfigureAwait( false );
 		return 1;
@@ -939,7 +985,7 @@ Print numbers from FIRST to LAST, in steps of INCREMENT.
       --version            output version information and exit
 """;
 		await output.WriteAsync(
-			text.AsMemory(),
+			text.ReplaceLineEndings( Environment.NewLine ).AsMemory(),
 			cancellationToken
 		).ConfigureAwait( false );
 	}

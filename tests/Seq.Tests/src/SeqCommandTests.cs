@@ -17,9 +17,9 @@ public sealed class SeqCommandTests {
 		var descending = await RunAsync(
 			new string[] { "3", "-1", "1" }
 		);
-		Assert.Equal( "1\n2\n3\n", lastOnly.Output );
-		Assert.Equal( "2\n3\n4\n", firstLast.Output );
-		Assert.Equal( "3\n2\n1\n", descending.Output );
+		Assert.Equal( Lines( "1", "2", "3" ), lastOnly.Output );
+		Assert.Equal( Lines( "2", "3", "4" ), firstLast.Output );
+		Assert.Equal( Lines( "3", "2", "1" ), descending.Output );
 	}
 
 	[Fact]
@@ -33,9 +33,9 @@ public sealed class SeqCommandTests {
 		var formatted = await RunAsync(
 			new string[] { "-f", "x%+06.2fy", "1", "2" }
 		);
-		Assert.Equal( "1,2,3\n", separated.Output );
-		Assert.Equal( "-2\n-1\n00\n01\n02\n", padded.Output );
-		Assert.Equal( "x+01.00y\nx+02.00y\n", formatted.Output );
+		Assert.Equal( Lines( "1,2,3" ), separated.Output );
+		Assert.Equal( Lines( "-2", "-1", "00", "01", "02" ), padded.Output );
+		Assert.Equal( Lines( "x+01.00y", "x+02.00y" ), formatted.Output );
 	}
 
 	[Fact]
@@ -44,7 +44,7 @@ public sealed class SeqCommandTests {
 		var result = await RunAsync(
 			new string[] { "1", "0.1", "1.2" }
 		);
-		Assert.Equal( "1.0\n1.1\n1.2\n", result.Output );
+		Assert.Equal( Lines( "1.0", "1.1", "1.2" ), result.Output );
 	}
 
 	[Fact]
@@ -52,7 +52,7 @@ public sealed class SeqCommandTests {
 		var hexadecimal = await RunAsync(
 			new string[] { "-f", "%a", "1", "2" }
 		);
-		Assert.Equal( "0x8p-3\n0x8p-2\n", hexadecimal.Output );
+		Assert.Equal( Lines( "0x8p-3", "0x8p-2" ), hexadecimal.Output );
 
 		using var cancellation = new CancellationTokenSource();
 		cancellation.CancelAfter( TimeSpan.FromMilliseconds( 25 ) );
@@ -71,8 +71,8 @@ public sealed class SeqCommandTests {
 		var longDouble = await RunAsync(
 			new string[] { "-f", "%Lg", "1", "2" }
 		);
-		Assert.Equal( "-0.0\n1.0\n2.0\n", negativeZero.Output );
-		Assert.Equal( "1\n2\n", longDouble.Output );
+		Assert.Equal( Lines( "-0.0", "1.0", "2.0" ), negativeZero.Output );
+		Assert.Equal( Lines( "1", "2" ), longDouble.Output );
 	}
 
 	[Fact]
@@ -82,7 +82,7 @@ public sealed class SeqCommandTests {
 			cancellation,
 			128
 		);
-		using var error = new StringWriter { NewLine = "\n" };
+		using var error = new StringWriter { NewLine = Environment.NewLine };
 		var exitCode = await SeqCommand.RunAsync(
 			new string[] { "inf", "inf" },
 			TextReader.Null,
@@ -91,7 +91,7 @@ public sealed class SeqCommandTests {
 			cancellation.Token
 		);
 		Assert.Equal( 130, exitCode );
-		Assert.StartsWith( "inf\ninf\n", output.Output );
+		Assert.StartsWith( Lines( "inf", "inf" ), output.Output );
 	}
 
 	[Fact]
@@ -113,9 +113,9 @@ public sealed class SeqCommandTests {
 		var large = await RunAsync(
 			new string[] { "1", "10000" }
 		);
-		Assert.Equal( 10_000, large.Output.Count( value => '\n' == value ) );
-		Assert.StartsWith( "1\n2\n", large.Output );
-		Assert.EndsWith( "9999\n10000\n", large.Output );
+		Assert.Equal( 10_000, CountOccurrences( large.Output, Environment.NewLine ) );
+		Assert.StartsWith( Lines( "1", "2" ), large.Output );
+		Assert.EndsWith( Lines( "9999", "10000" ), large.Output );
 
 		using var cancellation = new CancellationTokenSource();
 		cancellation.Cancel();
@@ -146,10 +146,10 @@ public sealed class SeqCommandTests {
 	) {
 		using var output = new StringWriter(
 			CultureInfo.InvariantCulture
-		) { NewLine = "\n" };
+		) { NewLine = Environment.NewLine };
 		using var error = new StringWriter(
 			CultureInfo.InvariantCulture
-		) { NewLine = "\n" };
+		) { NewLine = Environment.NewLine };
 		var exitCode = await SeqCommand.RunAsync(
 			args,
 			TextReader.Null,
@@ -239,4 +239,22 @@ public sealed class SeqCommandTests {
 			CultureInfo.CurrentUICulture = this.myUiCulture;
 		}
 	}
+	private static string Lines( params string[] values ) => System.String.Concat(
+		string.Join( Environment.NewLine, values ),
+		Environment.NewLine
+	);
+
+	private static int CountOccurrences( string value, string separator ) {
+		var count = 0;
+		var offset = 0;
+		while ( true ) {
+			var index = value.IndexOf( separator, offset, StringComparison.Ordinal );
+			if ( 0 > index ) {
+				return count;
+			}
+			count++;
+			offset = index + separator.Length;
+		}
+	}
+
 }

@@ -94,7 +94,14 @@ public static class Command {
 						&& '-' == argument[ 0 ]
 					) {
 						await stderr.WriteAsync(
-							$"factor: invalid option -- '{argument[ 1 ]}'\nTry 'factor --help' for more information.\n".AsMemory(),
+							System.String.Concat(
+								"factor: invalid option -- '",
+								argument[ 1 ],
+								"'",
+								Environment.NewLine,
+								"Try 'factor --help' for more information.",
+								Environment.NewLine
+							).AsMemory(),
 							cancellationToken
 						).ConfigureAwait( false );
 						return 1;
@@ -160,7 +167,7 @@ public static class Command {
 		} catch ( IOException exception ) {
 			await TryWriteErrorAsync(
 				stderr,
-				$"factor: {exception.Message}\n"
+				System.String.Concat( "factor: ", exception.Message, Environment.NewLine )
 			).ConfigureAwait( false );
 			return 1;
 		}
@@ -184,7 +191,12 @@ public static class Command {
 			|| 0 > number
 		) {
 			await error.WriteAsync(
-				$"factor: '{token}' is not a valid positive integer\n".AsMemory(),
+				System.String.Concat(
+					"factor: '",
+					token,
+					"' is not a valid positive integer",
+					Environment.NewLine
+				).AsMemory(),
 				cancellationToken
 			).ConfigureAwait( false );
 			return 1;
@@ -232,7 +244,7 @@ public static class Command {
 				}
 			}
 		}
-		outputLine.Append( '\n' );
+		outputLine.Append( Environment.NewLine );
 		await output.WriteAsync(
 			outputLine.ToString().AsMemory(),
 			cancellationToken
@@ -420,7 +432,7 @@ specified on the command line, read them from standard input.
       --version    output version information and exit
 """;
 		await output.WriteAsync(
-			text.AsMemory(),
+			text.ReplaceLineEndings( Environment.NewLine ).AsMemory(),
 			cancellationToken
 		).ConfigureAwait( false );
 	}

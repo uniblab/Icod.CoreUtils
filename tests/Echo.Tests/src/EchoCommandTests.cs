@@ -10,7 +10,7 @@ public sealed class EchoCommandTests {
 			new string[] { "-nEne", "alpha\\nbeta" }
 		);
 		Assert.Equal( 0, result.ExitCode );
-		Assert.Equal( "alpha\nbeta", result.Output );
+		Assert.Equal( System.String.Concat( "alpha", Environment.NewLine, "beta" ), result.Output );
 	}
 
 	[Fact]
@@ -22,7 +22,12 @@ public sealed class EchoCommandTests {
 			}
 		);
 		Assert.Equal(
-			"\a\b\u001B\f\n\r\t\vAB\\\n",
+			System.String.Concat(
+				"\a\b\u001B\f",
+				Environment.NewLine,
+				"\r\t\vAB\\",
+				Environment.NewLine
+			),
 			result.Output
 		);
 	}
@@ -43,8 +48,8 @@ public sealed class EchoCommandTests {
 		var doubleDash = await RunAsync(
 			new string[] { "--", "-n" }
 		);
-		Assert.Equal( "a\\qb\n", unknown.Output );
-		Assert.Equal( "-- -n\n", doubleDash.Output );
+		Assert.Equal( System.String.Concat( "a\\qb", Environment.NewLine ), unknown.Output );
+		Assert.Equal( System.String.Concat( "-- -n", Environment.NewLine ), doubleDash.Output );
 	}
 
 	[Fact]
@@ -62,9 +67,9 @@ public sealed class EchoCommandTests {
 		var literalHelp = await RunAsync(
 			new string[] { "--help" }
 		);
-		Assert.Equal( "-e alpha\nbeta\n", literalOption.Output );
-		Assert.Equal( "alpha\nbeta", leadingN.Output );
-		Assert.Equal( "--help\n", literalHelp.Output );
+		Assert.Equal( System.String.Concat( "-e alpha", Environment.NewLine, "beta", Environment.NewLine ), literalOption.Output );
+		Assert.Equal( System.String.Concat( "alpha", Environment.NewLine, "beta" ), leadingN.Output );
+		Assert.Equal( System.String.Concat( "--help", Environment.NewLine ), literalHelp.Output );
 	}
 
 	[Fact]
@@ -101,8 +106,8 @@ public sealed class EchoCommandTests {
 		string[] args,
 		CancellationToken cancellationToken = default
 	) {
-		using var output = new StringWriter { NewLine = "\n" };
-		using var error = new StringWriter { NewLine = "\n" };
+		using var output = new StringWriter { NewLine = Environment.NewLine };
+		using var error = new StringWriter { NewLine = Environment.NewLine };
 		var exitCode = await EchoCommand.RunAsync(
 			args,
 			TextReader.Null,

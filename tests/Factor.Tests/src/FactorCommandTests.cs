@@ -11,7 +11,7 @@ public sealed class FactorCommandTests {
 		);
 		Assert.Equal( 0, result.ExitCode );
 		Assert.Equal(
-			"0:\n1:\n12: 2 2 3\n13: 13\n",
+			Lines( "0:", "1:", "12: 2 2 3", "13: 13" ),
 			result.Output
 		);
 	}
@@ -22,7 +22,7 @@ public sealed class FactorCommandTests {
 			new string[] { "--exponents", "12", "72" }
 		);
 		Assert.Equal(
-			"12: 2^2 3\n72: 2^3 3^2\n",
+			Lines( "12: 2^2 3", "72: 2^3 3^2" ),
 			result.Output
 		);
 	}
@@ -31,11 +31,11 @@ public sealed class FactorCommandTests {
 	public async Task ReadsWhitespaceSeparatedStandardInputAsynchronously() {
 		var result = await RunAsync(
 			Array.Empty<string>(),
-			"12 13\n14\t15"
+			System.String.Concat( "12 13", Environment.NewLine, "14\t15" )
 		);
 		Assert.Equal( 0, result.ExitCode );
 		Assert.Equal(
-			"12: 2 2 3\n13: 13\n14: 2 7\n15: 3 5\n",
+			Lines( "12: 2 2 3", "13: 13", "14: 2 7", "15: 3 5" ),
 			result.Output
 		);
 	}
@@ -47,7 +47,7 @@ public sealed class FactorCommandTests {
 		);
 		Assert.Equal( 0, result.ExitCode );
 		Assert.Equal(
-			"1000000016000000063: 1000000007 1000000009\n",
+			Lines( "1000000016000000063: 1000000007 1000000009" ),
 			result.Output
 		);
 	}
@@ -58,7 +58,7 @@ public sealed class FactorCommandTests {
 			new string[] { "12", "invalid", "13" }
 		);
 		Assert.Equal( 1, result.ExitCode );
-		Assert.Equal( "12: 2 2 3\n13: 13\n", result.Output );
+		Assert.Equal( Lines( "12: 2 2 3", "13: 13" ), result.Output );
 		Assert.Contains( "not a valid positive integer", result.Error );
 	}
 
@@ -72,7 +72,7 @@ public sealed class FactorCommandTests {
 			Array.Empty<string>(),
 			input
 		);
-		Assert.Equal( 5000, large.Output.Count( value => '\n' == value ) );
+		Assert.Equal( 5000, CountOccurrences( large.Output, Environment.NewLine ) );
 
 		using var cancellation = new CancellationTokenSource();
 		cancellation.Cancel();
@@ -103,8 +103,8 @@ public sealed class FactorCommandTests {
 		CancellationToken cancellationToken = default
 	) {
 		using var inputReader = new StringReader( input );
-		using var output = new StringWriter { NewLine = "\n" };
-		using var error = new StringWriter { NewLine = "\n" };
+		using var output = new StringWriter { NewLine = Environment.NewLine };
+		using var error = new StringWriter { NewLine = Environment.NewLine };
 		var exitCode = await FactorCommand.RunAsync(
 			args,
 			inputReader,
@@ -124,4 +124,22 @@ public sealed class FactorCommandTests {
 		string Output,
 		string Error
 	);
+	private static string Lines( params string[] values ) => System.String.Concat(
+		string.Join( Environment.NewLine, values ),
+		Environment.NewLine
+	);
+
+	private static int CountOccurrences( string value, string separator ) {
+		var count = 0;
+		var offset = 0;
+		while ( true ) {
+			var index = value.IndexOf( separator, offset, StringComparison.Ordinal );
+			if ( 0 > index ) {
+				return count;
+			}
+			count++;
+			offset = index + separator.Length;
+		}
+	}
+
 }

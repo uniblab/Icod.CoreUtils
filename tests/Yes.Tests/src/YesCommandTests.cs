@@ -12,7 +12,7 @@ public sealed class YesCommandTests {
 			cancellation,
 			70_000
 		);
-		using var error = new StringWriter { NewLine = "\n" };
+		using var error = new StringWriter { NewLine = Environment.NewLine };
 		var exitCode = await YesCommand.RunAsync(
 			Array.Empty<string>(),
 			TextReader.Null,
@@ -21,7 +21,7 @@ public sealed class YesCommandTests {
 			cancellation.Token
 		);
 		Assert.Equal( 130, exitCode );
-		Assert.StartsWith( "y\ny\ny\n", output.Output );
+		Assert.StartsWith( Lines( "y", "y", "y" ), output.Output );
 		Assert.True( output.Output.Length >= 70_000 );
 	}
 
@@ -32,7 +32,7 @@ public sealed class YesCommandTests {
 			cancellation,
 			80
 		);
-		using var error = new StringWriter { NewLine = "\n" };
+		using var error = new StringWriter { NewLine = Environment.NewLine };
 		var exitCode = await YesCommand.RunAsync(
 			new string[] { "alpha", "beta" },
 			TextReader.Null,
@@ -41,13 +41,13 @@ public sealed class YesCommandTests {
 			cancellation.Token
 		);
 		Assert.Equal( 130, exitCode );
-		Assert.StartsWith( "alpha beta\nalpha beta\n", output.Output );
+		Assert.StartsWith( Lines( "alpha beta", "alpha beta" ), output.Output );
 	}
 
 	[Fact]
 	public async Task BrokenPipeReturnsFailureAndDiagnostic() {
 		using var output = new ThrowingTextWriter();
-		using var error = new StringWriter { NewLine = "\n" };
+		using var error = new StringWriter { NewLine = Environment.NewLine };
 		var exitCode = await YesCommand.RunAsync(
 			Array.Empty<string>(),
 			TextReader.Null,
@@ -76,8 +76,8 @@ public sealed class YesCommandTests {
 	private static async Task<CommandResult> RunFiniteAsync(
 		string[] args
 	) {
-		using var output = new StringWriter { NewLine = "\n" };
-		using var error = new StringWriter { NewLine = "\n" };
+		using var output = new StringWriter { NewLine = Environment.NewLine };
+		using var error = new StringWriter { NewLine = Environment.NewLine };
 		var exitCode = await YesCommand.RunAsync(
 			args,
 			TextReader.Null,
@@ -159,4 +159,9 @@ public sealed class YesCommandTests {
 			throw new IOException( "simulated broken pipe" );
 		}
 	}
+	private static string Lines( params string[] values ) => System.String.Concat(
+		string.Join( Environment.NewLine, values ),
+		Environment.NewLine
+	);
+
 }

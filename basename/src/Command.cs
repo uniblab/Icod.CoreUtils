@@ -45,13 +45,17 @@ public static class Command {
 			if ( !multiple && result.Operands.Count > 2 ) return await UsageErrorAsync( context, $"extra operand '{result.Operands[2]}'" ).ConfigureAwait( false );
 			var names = multiple ? result.Operands : result.Operands.Take( 1 ).ToArray();
 			if ( !multiple && result.Operands.Count == 2 ) suffix = result.Operands[1];
-			var separator = result.HasOption( "zero" ) ? "\0" : Environment.NewLine;
+			var zero = result.HasOption( "zero" );
 			foreach ( var name in names ) {
 				context.CancellationToken.ThrowIfCancellationRequested();
 				var value = GetBaseName( name );
 				if ( !string.IsNullOrEmpty( suffix ) && suffix.Length < value.Length && value.EndsWith( suffix, StringComparison.Ordinal ) ) value = value[..^suffix.Length];
-				await context.StandardOutput.WriteAsync( value.AsMemory(), context.CancellationToken ).ConfigureAwait( false );
-				await context.StandardOutput.WriteAsync( separator.AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+				if ( zero ) {
+					await context.StandardOutput.WriteAsync( value.AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+					await context.StandardOutput.WriteAsync( "\0".AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+				} else {
+					await context.StandardOutput.WriteLineAsync( value.AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+				}
 			}
 			return 0;
 		} catch ( OperationCanceledException ) { return CommandExitCodes.Canceled; }
@@ -66,8 +70,23 @@ public static class Command {
 		return name.Substring( start + 1, end - start );
 	}
 	private static async Task<int> UsageErrorAsync( CommandContext c, string message ) { await c.Diagnostics.ErrorAsync( message, c.CancellationToken ).ConfigureAwait( false ); return 1; }
-	private static Task WriteHelpAsync( CommandContext c ) => c.StandardOutput.WriteAsync("Usage: basename NAME [SUFFIX]\n  or:  basename OPTION... NAME...\nPrint NAME with any leading directory components removed.\n\n  -a, --multiple       support multiple arguments\n  -s, --suffix=SUFFIX  remove a trailing SUFFIX\n  -z, --zero           end each output with NUL, not newline\n      --help            display this help and exit\n      --version         output version information and exit\n".AsMemory(), c.CancellationToken);
+	private static async Task WriteHelpAsync( CommandContext context ) {
+		const string text = """
+Usage: basename NAME [SUFFIX]
+  or:  basename OPTION... NAME...
+Print NAME with any leading directory components removed.
 
+  -a, --multiple       support multiple arguments
+  -s, --suffix=SUFFIX  remove a trailing SUFFIX
+  -z, --zero           end each output with NUL, not newline
+      --help            display this help and exit
+      --version         output version information and exit
+""";
+		await context.StandardOutput.WriteAsync(
+			text.ReplaceLineEndings( Environment.NewLine ).AsMemory(),
+			context.CancellationToken
+		).ConfigureAwait( false );
+	}
 	private static OptionParser CreateParser( params OptionDefinition[] options ) => new(
 		options,
 		new OptionParserSettings {

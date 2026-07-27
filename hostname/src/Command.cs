@@ -84,8 +84,26 @@ public static class Command {
 		foreach ( var raw in lines ) { var line = raw.Split( '#', 2 )[0].Trim(); if ( line.Length > 0 ) return line.Split( (char[]?)null, StringSplitOptions.RemoveEmptyEntries )[0]; }
 		throw new InvalidDataException( "host name file contains no host name" );
 	}
-	private static Task WriteHelpAsync( CommandContext c ) => c.StandardOutput.WriteAsync("Usage: hostname [OPTION]... [NAME]\nShow or set the system's host name. Setting is not supported by this implementation.\n\n  -a, --alias          display aliases\n  -d, --domain         display DNS domain\n  -f, --fqdn, --long   display fully qualified name\n  -i, --ip-address     display resolved addresses\n  -s, --short          display short host name\n  -F, --file=FILE      read a name to set from FILE\n  -y, --yp, --nis      display NIS domain (unsupported)\n  -h, --help           display this help and exit\n  -V, --version        output version information and exit\n".AsMemory(), c.CancellationToken);
+	private static async Task WriteHelpAsync( CommandContext context ) {
+		const string text = """
+Usage: hostname [OPTION]... [NAME]
+Show or set the system's host name. Setting is not supported by this implementation.
 
+  -a, --alias          display aliases
+  -d, --domain         display DNS domain
+  -f, --fqdn, --long   display fully qualified name
+  -i, --ip-address     display resolved addresses
+  -s, --short          display short host name
+  -F, --file=FILE      read a name to set from FILE
+  -y, --yp, --nis      display NIS domain (unsupported)
+  -h, --help           display this help and exit
+  -V, --version        output version information and exit
+""";
+		await context.StandardOutput.WriteAsync(
+			text.ReplaceLineEndings( Environment.NewLine ).AsMemory(),
+			context.CancellationToken
+		).ConfigureAwait( false );
+	}
 	private static OptionParser CreateParser( params OptionDefinition[] options ) => new(
 		options,
 		new OptionParserSettings {

@@ -38,11 +38,16 @@ public static class Command {
 			if ( result.HasOption( "help" ) ) { await WriteHelpAsync( context ).ConfigureAwait( false ); return 0; }
 			if ( result.HasOption( "version" ) ) { await context.StandardOutput.WriteLineAsync( VERSION.AsMemory(), context.CancellationToken ).ConfigureAwait( false ); return 0; }
 			if ( result.Operands.Count == 0 ) { await context.Diagnostics.ErrorAsync( "missing operand", context.CancellationToken ).ConfigureAwait( false ); return 1; }
-			var separator = result.HasOption( "zero" ) ? "\0" : Environment.NewLine;
+			var zero = result.HasOption( "zero" );
 			foreach ( var operand in result.Operands ) {
 				context.CancellationToken.ThrowIfCancellationRequested();
-				await context.StandardOutput.WriteAsync( GetDirName( operand ).AsMemory(), context.CancellationToken ).ConfigureAwait( false );
-				await context.StandardOutput.WriteAsync( separator.AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+				var value = GetDirName( operand );
+				if ( zero ) {
+					await context.StandardOutput.WriteAsync( value.AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+					await context.StandardOutput.WriteAsync( "\0".AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+				} else {
+					await context.StandardOutput.WriteLineAsync( value.AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+				}
 			}
 			return 0;
 		} catch ( OperationCanceledException ) { return CommandExitCodes.Canceled; }
@@ -58,8 +63,20 @@ public static class Command {
 		while ( directoryEnd > 0 && name[directoryEnd - 1] == '/' ) directoryEnd--;
 		return directoryEnd == 0 ? "/" : name[..directoryEnd];
 	}
-	private static Task WriteHelpAsync( CommandContext c ) => c.StandardOutput.WriteAsync("Usage: dirname [OPTION] NAME...\nOutput each NAME with its last non-slash component and trailing slashes removed.\n\n  -z, --zero     end each output with NUL, not newline\n      --help     display this help and exit\n      --version  output version information and exit\n".AsMemory(), c.CancellationToken);
+	private static async Task WriteHelpAsync( CommandContext context ) {
+		const string text = """
+Usage: dirname [OPTION] NAME...
+Output each NAME with its last non-slash component and trailing slashes removed.
 
+  -z, --zero     end each output with NUL, not newline
+      --help     display this help and exit
+      --version  output version information and exit
+""";
+		await context.StandardOutput.WriteAsync(
+			text.ReplaceLineEndings( Environment.NewLine ).AsMemory(),
+			context.CancellationToken
+		).ConfigureAwait( false );
+	}
 	private static OptionParser CreateParser( params OptionDefinition[] options ) => new(
 		options,
 		new OptionParserSettings {

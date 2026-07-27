@@ -67,8 +67,21 @@ public static class Command {
 		}
 		return Path.TrimEndingDirectorySeparator( Path.GetFullPath( current ) );
 	}
-	private static Task WriteHelpAsync( CommandContext c ) => c.StandardOutput.WriteAsync("Usage: pwd [OPTION]...\nPrint the full filename of the current working directory.\n\n  -L, --logical   use PWD from the environment, even if it contains symlinks\n  -P, --physical  avoid all symlinks\n      --help      display this help and exit\n      --version   output version information and exit\n".AsMemory(), c.CancellationToken);
+	private static async Task WriteHelpAsync( CommandContext context ) {
+		const string text = """
+Usage: pwd [OPTION]...
+Print the full filename of the current working directory.
 
+  -L, --logical   use PWD from the environment, even if it contains symlinks
+  -P, --physical  avoid all symlinks
+      --help      display this help and exit
+      --version   output version information and exit
+""";
+		await context.StandardOutput.WriteAsync(
+			text.ReplaceLineEndings( Environment.NewLine ).AsMemory(),
+			context.CancellationToken
+		).ConfigureAwait( false );
+	}
 	private static OptionParser CreateParser( params OptionDefinition[] options ) => new(
 		options,
 		new OptionParserSettings {

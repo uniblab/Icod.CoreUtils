@@ -69,15 +69,22 @@ public static class Command {
 		return valid;
 	}
 	private static bool IsPortable( char ch ) => ch == '/' || ch == '.' || ch == '_' || ch == '-' || ch is >= '0' and <= '9' || ch is >= 'A' and <= 'Z' || ch is >= 'a' and <= 'z';
-	private static Task WriteHelpAsync( CommandContext c ) => c.StandardOutput.WriteAsync("Usage: pathchk [OPTION]... NAME...\nDiagnose invalid or nonportable file names.\n\n  -p                 check for most POSIX systems\n  -P                 check for empty names and leading '-' components\n      --portability  check both -p and -P\n      --help         display this help and exit\n      --version      output version information and exit\n".AsMemory(), c.CancellationToken);
+	private static async Task WriteHelpAsync( CommandContext context ) {
+		const string text = """
+Usage: pathchk [OPTION]... NAME...
+Diagnose invalid or nonportable file names.
 
-	private static OptionParser CreateParser( params OptionDefinition[] options ) => new(
-		options,
-		new OptionParserSettings {
-			AllowLongOptionAbbreviations = true,
-			Ordering = OptionOrdering.Permute
-		}
-	);
+  -p                 check for most POSIX systems
+  -P                 check for empty names and leading '-' components
+      --portability  check both -p and -P
+      --help         display this help and exit
+      --version      output version information and exit
+""";
+		await context.StandardOutput.WriteAsync(
+			text.ReplaceLineEndings( Environment.NewLine ).AsMemory(),
+			context.CancellationToken
+		).ConfigureAwait( false );
+	}
 	private static async Task<bool> WriteParseErrorsAsync( OptionParseResult result, CommandContext context ) {
 		if ( result.IsSuccess ) return false;
 		foreach ( var error in result.Errors ) {

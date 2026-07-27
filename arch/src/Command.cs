@@ -34,7 +34,17 @@ public static class Command {
 			if ( await WriteParseErrorsAsync( result, context ).ConfigureAwait( false ) )
 				return 1;
 			if ( result.HasOption( "help" ) ) {
-				await context.StandardOutput.WriteAsync( "Usage: arch [OPTION]...\nPrint machine architecture.\n\n      --help     display this help and exit\n      --version  output version information and exit\n".AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+				const string help = """
+Usage: arch [OPTION]...
+Print machine architecture.
+
+      --help     display this help and exit
+      --version  output version information and exit
+""";
+				await context.StandardOutput.WriteAsync(
+					help.ReplaceLineEndings( Environment.NewLine ).AsMemory(),
+					context.CancellationToken
+				).ConfigureAwait( false );
 				return 0;
 			}
 			if ( result.HasOption( "version" ) ) {
