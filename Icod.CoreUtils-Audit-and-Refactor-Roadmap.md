@@ -1,4 +1,4 @@
-﻿# Icod.CoreUtils Audit and Refactor Roadmap
+# Icod.CoreUtils Audit and Refactor Roadmap
 
 ## Document status
 
@@ -176,27 +176,27 @@ These gates are repository milestones rather than command batches. They do not a
 
 ### Completion Gate A — before closing Batch 11
 
-- Change and retain local scripts and CI so they build and test the entire solution rather than a selected test project.
-- Migrate every project, build script, and CI workflow from `net9.0` to `net10.0` LTS.
-- Retain `<LangVersion>13.0</LangVersion>` and the established Debug, Staging, and Release configuration policy during the framework migration.
-- Add and require a Release build in CI in addition to the Debug build and test run.
-- Run the full applicable solution test suite on all three required runners:
-  - `windows-latest`
-  - `ubuntu-latest`
-  - `macos-latest`
-- Verify that every test project is included in the solution and is actually discovered on every applicable runner.
-- Add a repository check for UTF-8/CRLF text files and forbidden generated artifacts.
-- Add repository checks for lowercase command assembly names and required project configuration blocks.
-- Record the exact authoritative upstream version used for every completed and future batch.
-- Update the living status section after Batch 11 is merged.
+- [x] Change and retain local scripts and CI so they build and test the entire solution rather than a selected test project.
+- [x] Migrate every project, build script, and CI workflow from `net9.0` to `net10.0` LTS.
+- [x] Retain `<LangVersion>13.0</LangVersion>` and the established Debug, Staging, and Release configuration policy during the framework migration.
+- ~~Add and require a Release build in CI in addition to the Debug build and test run.~~
+- [x] Run the full applicable solution test suite on all three required runners:
+  - [x] `windows-latest`
+  - [x] `ubuntu-latest`
+  - [x] `macos-latest`
+- [x] Verify that every test project is included in the solution and is actually discovered on every applicable runner.
+- [ ] Add a repository check for UTF-8 text files and forbidden generated artifacts.
+- [ ] Add repository checks for lowercase command assembly names and required project configuration blocks.
+- [ ] Record the exact authoritative upstream version used for every completed and future batch.
+- [ ] Update the living status section after Batch 11 is merged.
 
 Recommended local verification sequence after migration:
 
 ```text
+dotnet clean Icod.CoreUtils.sln -c Debug
 dotnet restore Icod.CoreUtils.sln
 dotnet build Icod.CoreUtils.sln -c Debug --no-restore
 dotnet test Icod.CoreUtils.sln -c Debug --no-build --no-restore
-dotnet build Icod.CoreUtils.sln -c Release --no-restore
 ```
 
 ### Completion Gate B — before Batch 12
@@ -266,47 +266,50 @@ Add shared system/process primitives:
 
 ### Batch 0 — Foundation and repository hygiene
 
-Refactor `Shared`, add automated tests and CI, centralize option/stream/process/platform helpers, and remove generated artifacts from review archives.
+- [x] Refactor `Shared`
+- [x] add automated tests and CI
+- [x] centralize option/stream/process/platform helpers
+- [x] and remove generated artifacts from review archives.
 
 ### Batch 1 — Stabilize shared line/byte readers (2 tools)
 
-`head`, `tail`
+[x] `head`, `tail`
 
 ### Batch 2 — Stabilize the stream editor (1 tool)
 
-`sed`
+[x] `sed`
 
 ### Batch 3 — Core streaming byte and record I/O (3 tools)
 
-`cat`, `tee`, `wc`
+[x] `cat`, `tee`, `wc`
 
 ### Batch 4 — Base encoding family (3 tools)
 
-`base32`, `base64`, `basenc`
+[x] `base32`, `base64`, `basenc`
 
 ### Batch 5 — Checksum and digest family (9 tools)
 
-`b2sum`, `cksum`, `md5sum`, `sha1sum`, `sha224sum`, `sha256sum`, `sha384sum`, `sha512sum`, `sum`
+[x] `b2sum`, `cksum`, `md5sum`, `sha1sum`, `sha224sum`, `sha256sum`, `sha384sum`, `sha512sum`, `sum`
 
 ### Batch 6 — Small deterministic commands (7 tools)
 
-`true`, `false`, `echo`, `yes`, `sleep`, `seq`, `factor`
+[x] `true`, `false`, `echo`, `yes`, `sleep`, `seq`, `factor`
 
 ### Batch 7 — Path and basic host-information commands (7 tools)
 
-`basename`, `dirname`, `pathchk`, `pwd`, `printenv`, `arch`, `hostname`
+[x] `basename`, `dirname`, `pathchk`, `pwd`, `printenv`, `arch`, `hostname`
 
 ### Batch 8 — Identity and login-information commands (7 tools)
 
-`uname`, `whoami`, `logname`, `groups`, `id`, `users`, `who`
+[x] `uname`, `whoami`, `logname`, `groups`, `id`, `users`, `who`
 
 ### Batch 9 — Platform and process-information commands (4 tools)
 
-`pinky`, `ps`, `uptime`, `date`
+[x] `pinky`, `ps`, `uptime`, `date`
 
 ### Batch 10 — Block-oriented copy and conversion (1 tool)
 
-`dd`
+[x] `dd`
 
 ## Revised sequence beginning with Batch 11
 
