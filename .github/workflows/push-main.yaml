@@ -19,4 +19,4 @@ jobs:
       - run: dotnet clean Icod.CoreUtils.sln -c Debug
       - run: dotnet restore Icod.CoreUtils.sln
       - run: dotnet build Icod.CoreUtils.sln -c Debug --no-restore
-      - run: dotnet test tests/Shared.Tests/Icod.CoreUtils.Shared.Tests.csproj -c Debug --no-build --logger trx
+      - run: dotnet test Icod.CoreUtils.sln -c Debug --no-build --logger trx
