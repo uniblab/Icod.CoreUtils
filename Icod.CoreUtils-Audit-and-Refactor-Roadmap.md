@@ -166,59 +166,14 @@ These conventions apply to every existing project that is altered and every proj
 
 These gates are repository milestones rather than command batches. They do not alter the historical numbering.
 
-### Completion Gate A — before closing Batch 11
+### Completion Gate D — before the external-ordering batch
 
-- [x] Change and retain local scripts and CI so they build and test the entire solution rather than a selected test project.
-- [x] Migrate every project, build script, and CI workflow from `net9.0` to `net10.0` LTS.
-- [x] Retain `<LangVersion>13.0</LangVersion>` and the established Debug, Staging, and Release configuration policy during the framework migration.
-- ~~[x] Add and require a Release build in CI in addition to the Debug build and test run.~~
-- [x] Run the full applicable solution test suite on all three required runners:
-  - [x] `windows-latest`
-  - [x] `ubuntu-latest`
-  - [x] `macos-latest`
-- [x] Verify that every test project is included in the solution and is actually discovered on every applicable runner.
-- ~~[ ] Add a repository check for UTF-8 text files and forbidden generated artifacts.~~
-- ~~[ ] Add repository checks for lowercase command assembly names and required project configuration blocks.~~
-- [x] Record the exact authoritative upstream version used for every completed and future batch.
-- [x] Update the living status section after Batch 11 is merged.
+[ ] Extend the secure temporary-object infrastructure established by `mktemp`:
 
-- [x] Recommended local verification sequence after migration:
-```text
-dotnet clean Icod.CoreUtils.sln -c Debug
-dotnet restore Icod.CoreUtils.sln
-dotnet build Icod.CoreUtils.sln -c Debug --no-restore
-dotnet test Icod.CoreUtils.sln -c Debug --no-build --no-restore
-```
-
-### Completion Gate B — before Batch 12
-
-[x] Add `Shared.FileSystem` flush and allocation capability abstractions needed by `dd`, `truncate`, and `sync`:
-
-- [x] data-only versus data-and-metadata flush;
-- [x] file-specific versus filesystem-wide flush;
-- [x] sparse extension and allocated-range capability reporting;
-- [x] controlled platform diagnostics where equivalent semantics are unavailable;
-- [x] injectable abstractions and platform-specific integration tests.
-
-### Completion Gate C — before Batch 16
-
-[ ] Add the shared text model:
-
-- [ ] byte, Unicode scalar, and display-column iteration;
-- [ ] locale-aware collation and character classification;
-- [ ] tab-stop grammar;
-- [ ] field/range-list grammar;
-- [ ] escape-sequence parsing;
-- [ ] configurable line and NUL record readers/writers.
-
-### Completion Gate D — before Batch 19
-
-[ ] Add secure temporary-workspace and external-ordering infrastructure:
-
-- [ ] exclusive temporary creation;
-- [ ] bounded-memory runs;
+- [ ] bounded-memory sorted runs;
 - [ ] stable external merge;
 - [ ] configurable locale/key comparison;
+- [ ] temporary-workspace lifecycle management;
 - [ ] deterministic cleanup on success, failure, and cancellation.
 
 ### Completion Gate E — before Batch 28
@@ -336,7 +291,40 @@ dotnet test Icod.CoreUtils.sln -c Debug --no-build --no-restore
 
 - [x] `dd`
 
+### Completion Gate A — before closing Batch 11
+
+- [x] Change and retain local scripts and CI so they build and test the entire solution rather than a selected test project.
+- [x] Migrate every project, build script, and CI workflow from `net9.0` to `net10.0` LTS.
+- [x] Retain `<LangVersion>13.0</LangVersion>` and the established Debug, Staging, and Release configuration policy during the framework migration.
+- ~~[x] Add and require a Release build in CI in addition to the Debug build and test run.~~
+- [x] Run the full applicable solution test suite on all three required runners:
+  - [x] `windows-latest`
+  - [x] `ubuntu-latest`
+  - [x] `macos-latest`
+- [x] Verify that every test project is included in the solution and is actually discovered on every applicable runner.
+- ~~[ ] Add a repository check for UTF-8 text files and forbidden generated artifacts.~~
+- ~~[ ] Add repository checks for lowercase command assembly names and required project configuration blocks.~~
+- [x] Record the exact authoritative upstream version used for every completed and future batch.
+- [x] Update the living status section after Batch 11 is merged.
+- [x] Recommended local verification sequence after migration:
+```text
+dotnet clean Icod.CoreUtils.sln -c Debug
+dotnet restore Icod.CoreUtils.sln
+dotnet build Icod.CoreUtils.sln -c Debug --no-restore
+dotnet test Icod.CoreUtils.sln -c Debug --no-build --no-restore
+```
+
 ## Revised sequence beginning with Batch 11
+
+### Completion Gate B — before Batch 12
+
+[x] Add `Shared.FileSystem` flush and allocation capability abstractions needed by `dd`, `truncate`, and `sync`:
+
+- [x] data-only versus data-and-metadata flush;
+- [x] file-specific versus filesystem-wide flush;
+- [x] sparse extension and allocated-range capability reporting;
+- [x] controlled platform diagnostics where equivalent semantics are unavailable;
+- [x] injectable abstractions and platform-specific integration tests.
 
 ### Batch 11 — File-size manipulation (1 tool)
 
@@ -375,6 +363,17 @@ Add secure, exclusive file and directory creation, template validation, `TMPDIR`
 
 Implement a real precedence-aware expression parser with arithmetic, relations, Boolean operators, string operations, regular expressions, overflow behavior, quoting rules, and GNU exit statuses. Do not pair it with `test`; their grammars and result models are materially different.
 
+### Completion Gate C — before Batch 17
+
+[ ] Add the shared text model:
+
+- [ ] byte, Unicode scalar, and display-column iteration;
+- [ ] locale-aware collation and character classification;
+- [ ] tab-stop grammar;
+- [ ] field/range-list grammar;
+- [ ] escape-sequence parsing;
+- [ ] configurable line and NUL record readers/writers.
+
 ### Batch 17 — Tabs and display columns (3 tools)
 
 - [ ] `expand`
@@ -397,14 +396,19 @@ Implement paragraph recognition, sentence spacing, crown/tagged modes, logical-p
 
 Implement complete byte/character/field list grammar, complement and output delimiters, NUL records, delimiter suppression, serial paste, delimiter escape cycles, multiple input streams, and correct behavior on multibyte input.
 
-### Batch 20 — External ordering and randomization (2 tools)
+### Batch 20 — External ordering (1 tool)
 
 - [ ] `sort`
+
+For `sort`, implement key specifications, locale collation, stable and unique modes, numeric families, month/version/human-numeric comparison, checking and merging, secure temporary runs, bounded-memory external merge, zero-terminated records, and exact exit statuses.
+
+### Batch 21 — External randomization (1 tool)
+
 - [ ] `shuf`
 
-For `sort`, implement key specifications, locale collation, stable and unique modes, numeric families, month/version/human-numeric comparison, checking and merging, secure temporary runs, bounded-memory external merge, zero-terminated records, and exact exit statuses. For `shuf`, use unbiased selection, secure/random-source abstractions, repeat and range modes, and bounded-memory strategies. The commands share temporary-storage and record infrastructure but retain separate execution engines.
+For `shuf`, use unbiased selection, secure/random-source abstractions, repeat and range modes, and bounded-memory strategies. The commands share temporary-storage and record infrastructure but retain separate execution engines.
 
-### Batch 21 — Sorted-stream consumers (3 tools)
+### Batch 22 — Sorted-stream consumers (3 tools)
 
 - [ ] `comm`
 - [ ] `join`
@@ -412,73 +416,89 @@ For `sort`, implement key specifications, locale collation, stable and unique mo
 
 Reuse the collation and record model established by `sort`. Preserve duplicate-key Cartesian behavior in `join`, order checking, header and output formatting, field selection, skip/check options, counting, zero records, and streaming without loading complete inputs.
 
-### Batch 22 — Character transformation, graph ordering, and permuted indexing (3 tools)
+### Batch 23 — Character transformation (1 tool)
 
 - [ ] `tr`
+
+Implement the full `tr` set-expression grammar, including ranges, escapes, repetition, character classes, equivalence classes, complement, delete, squeeze, locale behavior, and delimiter bytes.
+
+### Batch 24 — Graph ordering (1 tool)
+
 - [ ] `tsort`
+
+Implement `tsort` tokenization, deterministic ordering, stable diagnostics, and cycle reporting.
+
+### Batch 25 — Permuted indexing (1 tool)
+
 - [ ] `ptx`
 
-Implement the full `tr` set-expression grammar, including ranges, escapes, repetition, character classes, equivalence classes, complement, delete, squeeze, locale behavior, and delimiter bytes. Implement `tsort` tokenization, deterministic ordering, stable diagnostics, and cycle reporting. Replace the simplified `ptx` token dump with documented input, word, ignore, reference, width, break-file, collation, spill-storage, and output-format behavior. These commands share text, locale, tokenization, and ordering primitives but not one monolithic execution engine.
+Replace the simplified `ptx` token dump with documented input, word, ignore, reference, width, break-file, collation, spill-storage, and output-format behavior. These commands share text, locale, tokenization, and ordering primitives but not one monolithic execution engine.
 
-### Batch 23 — Regular-expression search (1 tool)
+### Batch 26 — Regular-expression search (1 tool)
 
 - [ ] `grep`
 
 Implement the documented GNU grep option and pattern model, including multiple pattern sources, basic/extended/fixed/Perl-mode policy, recursive traversal, include/exclude rules, binary policy, context, filename and line metadata, counts, quiet/list modes, NUL behavior, and the required 0/1/2 status distinction. Unsupported regex dialect features must be explicit rather than ignored.
 
-### Batch 24 — Splitting and reversing (3 tools)
+### Batch 27 — Splitting and reversing (3 tools)
 
 - [ ] `split`
-- [ ] `csplit`
 - [ ] `tac`
 
-Repair split-output rotation and support nonseekable input, line/byte/chunk modes, suffix alphabets, filters, additional suffixes, numeric suffixes, and exact file-creation cleanup. Reuse the regex policy established by `grep` for `csplit`, including numeric and regex addresses, offsets, repetition, suppression, prefix/suffix grammar, keep-files behavior, exact byte counts, and cleanup after failure or cancellation. Implement `tac` with backward file scanning or secure temporary spooling rather than whole-input memory loading.
+Repair split-output rotation and support nonseekable input, line/byte/chunk modes, suffix alphabets, filters, additional suffixes, numeric suffixes, and exact file-creation cleanup.
+Implement `tac` with backward file scanning or secure temporary spooling rather than whole-input memory loading.
 
-### Batch 25 — Page presentation (1 tools)
+### Batch 28 — Splitting and reversing (3 tools)
+
+- [ ] `csplit`
+
+Reuse the regex policy established by `grep` for `csplit`, including numeric and regex addresses, offsets, repetition, suppression, prefix/suffix grammar, keep-files behavior, exact byte counts, and cleanup after failure or cancellation.
+
+### Batch 29 — Page presentation (1 tools)
 
 - [ ] `pr`
 
 For `pr`, implement columns, page geometry, headers and footers, form feeds, dates, numbering, merge modes, separators, and terminal-independent output.
 
-### Batch 26 — Difference engine (1 tool)
+### Batch 30 — Difference engine (1 tool)
 
 - [ ] `diff`
 
 Implement an actual sequence-difference algorithm, normal/context/unified/ed formats, whitespace and case policies, labels, function context, binary handling, recursive directory comparison, absent-file policy, and statuses 0 for no differences, 1 for differences, and greater than 1 for errors.
 
-### Batch 27 — Patch application engine (1 tool)
+### Batch 31 — Patch application engine (1 tool)
 
 - [ ] `patch`
 
 Parse normal, context, and unified diffs; implement file selection, strip counts, reversal detection, fuzz, offsets, backups, rejects, dry runs, timestamps, atomic replacement, and safe pathname handling. Test against files produced by the preceding `diff` batch.
 
-### Batch 28 — Line editor (1 tool)
+### Batch 32 — Line editor (1 tool)
 
 - [ ] `ed`
 
 Complete the address parser, command state machine, global commands, substitutions, marks, buffers, file and shell commands, modified-buffer rules, diagnostics, signals, and exit behavior. Reuse the agreed regex policy but keep the editor state machine isolated.
 
-### Batch 29 — Symbolic-link and canonical-path resolution (2 tools)
+### Batch 33 — Symbolic-link and canonical-path resolution (2 tools)
 
 - [ ] `readlink`
 - [ ] `realpath`
 
 Implement lexical versus physical resolution, missing-component policies, canonicalization modes, delimiters, quiet/verbose behavior, relative output, symlink loops, reparse points, and deterministic failures. Never return the unresolved input as a false success.
 
-### Batch 30 — File metadata and timestamps (2 tools)
+### Batch 34 — File metadata and timestamps (2 tools)
 
 - [ ] `stat`
 - [ ] `touch`
 
 Build the authoritative metadata adapter and format-string engine. Distinguish access, modification, inode-change, and birth times where available; expose controlled platform gaps; support dereference policies, filesystems, reference files, date parsing, selective timestamps, no-create, and directories.
 
-### Batch 31 — Condition evaluator (1 tool)
+### Batch 35 — Condition evaluator (1 tool)
 
 - [ ] `test`
 
 Implement the complete GNU/POSIX operand-count grammar, file type and characteristic predicates, access checks, string and numeric comparisons, connectives, precedence, ambiguity rules, and statuses 0, 1, and 2. **Do not create a separate `[` project.**
 
-### Batch 32 — Basic directory and name removal (3 tools)
+### Batch 36 — Basic directory and name removal (3 tools)
 
 - [ ] `mkdir`
 - [ ] `rmdir`
@@ -486,59 +506,59 @@ Implement the complete GNU/POSIX operand-count grammar, file type and characteri
 
 Implement modes, parents, verbose/context policy, ignore-fail behavior, parent removal, exact operand rules, and deterministic handling of files versus directories. These commands validate the new filesystem adapter without yet introducing recursive deletion.
 
-### Batch 33 — Hard and symbolic links (2 tools)
+### Batch 37 — Hard and symbolic links (2 tools)
 
 - [ ] `link`
 - [ ] `ln`
 
 Make `link` the documented two-operand hard-link command. Build `ln` as a separate front end over shared link primitives, covering symbolic/physical/logical behavior, targets, directories, relative links, backups, force/interactive modes, and platform capability diagnostics. Do not invoke native `ln`.
 
-### Batch 34 — Special file creation (2 tools)
+### Batch 38 — Special file creation (2 tools)
 
 - [ ] `mkfifo`
 - [ ] `mknod`
 
 Add the missing GNU projects. Implement modes, FIFO creation, block/character device operands, major/minor validation, umask behavior, and controlled privilege/platform failure. Never emulate success by creating an ordinary file.
 
-### Batch 35 — Permission modes (1 tool)
+### Batch 39 — Permission modes (1 tool)
 
 - [ ] `chmod`
 
 Implement octal parsing correctly, symbolic clauses, omitted-who/umask behavior, recursive traversal, reference mode, symlink policy, preserve-root, verbose/change reporting, and Windows capability mapping without pretending that the read-only attribute is a complete Unix mode.
 
-### Batch 36 — Ownership and group mutation (2 tools)
+### Batch 40 — Ownership and group mutation (2 tools)
 
 - [ ] `chown`
 - [ ] `chgrp`
 
 Replace `NotImplementedException` with real Unix ownership operations and controlled non-Unix diagnostics. Implement names and numeric IDs, reference files, dereference policies, recursive traversal, from-filtering, preserve-root, and verbose/change reporting.
 
-### Batch 37 — Recursive removal (1 tool)
+### Batch 41 — Recursive removal (1 tool)
 
 - [ ] `rm`
 
 Use the shared traversal engine. Implement interactive modes, recursive directory handling, force, one-file-system, preserve-root, empty-directory removal, symlink safety, write-protected prompts, race-aware deletion, glob expansion policy, and error continuation.
 
-### Batch 38 — Copy and move engine (2 tools)
+### Batch 42 — Copy and move engine (2 tools)
 
 - [ ] `cp`
 - [ ] `mv`
 
 Implement source/destination classification, recursive copy, symlink and hard-link policy, metadata preservation, sparse files, reflink/copy-file-range opportunities, backup and overwrite modes, update rules, atomic replacement, cross-filesystem moves, destination-inside-source prevention, and partial-failure cleanup.
 
-### Batch 39 — Installation engine (1 tool)
+### Batch 43 — Installation engine (1 tool)
 
 - [ ] `install`
 
 Build on `mkdir`, `cp`, `chmod`, and `chown` primitives rather than invoking external utilities. Implement directory creation, modes, owners/groups, stripping policy, backups, compare mode, timestamps, SELinux-context policy, and atomic destination replacement.
 
-### Batch 40 — Color database (1 tool)
+### Batch 43 — Color database (1 tool)
 
 - [ ] `dircolors`
 
 Implement the documented database grammar, terminal selectors, file-extension rules, shell-specific output, built-in database, print-database mode, and diagnostics. Produce a reusable `LS_COLORS` parser for the listing family.
 
-### Batch 41 — Directory listing family (3 tools)
+### Batch 44 — Directory listing family (3 tools)
 
 - [ ] `ls`
 - [ ] `dir`
@@ -546,78 +566,78 @@ Implement the documented database grammar, terminal selectors, file-extension ru
 
 Create one listing engine with three thin entry profiles. Implement locale sorting, quoting, color, columns, widths, recursion with cycle protection, symlink policy, inode/block/owner/group/mode metadata, human sizes, time styles, indicators, classification, dereference modes, and terminal-sensitive defaults. Remove independent simplified `dir` and `vdir` implementations.
 
-### Batch 42 — Filesystem usage reporting (2 tools)
+### Batch 45 — Filesystem usage reporting (2 tools)
 
 - [ ] `df`
 - [ ] `du`
 
 Use real allocated-block and filesystem data where available. Implement block-size environment rules, human/SI formats, inode reporting, filesystem types, exclusions, totals, apparent size, hard-link deduplication, symlink and mount policies, depth and summarize modes, NUL input, and controlled platform differences.
 
-### Batch 43 — Data destruction (1 tool)
+### Batch 46 — Data destruction (1 tool)
 
 - [ ] `shred`
 
 Implement pass selection, random sources, exact-size handling, synchronization, removal and renaming policy, device/file distinctions, progress, and failure recovery. Document and test the limits of overwriting on SSDs, copy-on-write filesystems, snapshots, journaling, and remapped storage.
 
-### Batch 44 — Archive engine (1 tool)
+### Batch 47 — Archive engine (1 tool)
 
 - [ ] `tar`
 
 `tar` is deliberately scheduled after canonical path resolution, metadata, timestamps, directory and link mutation, permissions, ownership, recursive traversal, copy/move, installation, listing, filesystem accounting, secure temporary storage, and data-destruction semantics. Implement correct archive entry types, links, sparse files, metadata, formats, compression-process integration, selection/exclusion, incremental policy if in scope, stream operation, and extraction protections against absolute paths, `..`, symlink escapes, hard-link escapes, device creation, and overwrite races.
 
-### Batch 45 — Host and processor context (2 tools)
+### Batch 48 — Host and processor context (2 tools)
 
 - [ ] `hostid`
 - [ ] `nproc`
 
 Add the missing projects. Define reproducible host-ID behavior and implement available/configured processor counts, environment overrides, affinity and quota awareness, and controlled platform differences.
 
-### Batch 46 — Terminal identification (1 tool)
+### Batch 49 — Terminal identification (1 tool)
 
 - [ ] `tty`
 
 Add the missing project. Implement silent mode, terminal-name reporting, correct standard-input inspection, and statuses for terminal versus nonterminal input across supported platforms.
 
-### Batch 47 — Terminal characteristics (1 tool)
+### Batch 50 — Terminal characteristics (1 tool)
 
 - [ ] `stty`
 
 Add the missing project as a dedicated platform batch. Implement reading and changing terminal modes, sane/raw profiles, control characters, speed, machine-readable save/restore form, selected device handling, and a documented Windows capability boundary.
 
-### Batch 48 — Environment and hangup-independent execution (2 tools)
+### Batch 51 — Environment and hangup-independent execution (2 tools)
 
 - [ ] `env`
 - [ ] `nohup`
 
 Build the shared child-process launch environment. Implement environment clearing/removal, split-string parsing, working directory, `argv0`, signal policy, NUL output, command lookup, `nohup` redirection rules, diagnostics, and asynchronous stream forwarding.
 
-### Batch 49 — Priority and time-bounded execution (2 tools)
+### Batch 52 — Priority and time-bounded execution (2 tools)
 
 - [ ] `nice`
 - [ ] `timeout`
 
 Implement priority adjustment without child-start races; parse full duration grammar; support signal choice, kill-after, foreground/process-group behavior, preserve-status, verbose diagnostics, and platform capability mapping.
 
-### Batch 50 — Signal control (1 tool)
+### Batch 53 — Signal control (1 tool)
 
 - [ ] `kill`
 
 Implement signal names and numbers, listing and translation, process and process-group targets, queued values if in scope, exact diagnostics, and Windows substitutions only where semantically defensible.
 
-### Batch 51 — Root-directory execution (1 tool)
+### Batch 54 — Root-directory execution (1 tool)
 
 - [ ] `chroot`
 
 Replace `NotImplementedException` with a real Unix implementation and controlled diagnostics elsewhere. Implement users/groups, group initialization, skip-chdir policy, command lookup after root change, privileges, and process execution without shell interpolation.
 
-### Batch 52 — SELinux context operations (2 tools)
+### Batch 55 — SELinux context operations (2 tools)
 
 - [ ] `chcon`
 - [ ] `runcon`
 
 Treat these as Linux/SELinux capability commands. Use native APIs or stable libraries rather than invoking external commands. Implement reference and component contexts, dereference and recursion policy, preserve-root, compute/process context behavior, and explicit diagnostics when SELinux is unavailable.
 
-### Batch 53 — Standard-stream buffering control (1 tool)
+### Batch 56 — Standard-stream buffering control (1 tool)
 
 - [ ] `stdbuf`
 
