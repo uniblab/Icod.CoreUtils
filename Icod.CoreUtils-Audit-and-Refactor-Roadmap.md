@@ -647,7 +647,7 @@ Begin with a documented feasibility decision. The current silent fallback is una
 10. Add large-input, bounded-memory, cancellation, broken-pipe, standard-stream, multiple-file, invalid-input, and cleanup tests.
 11. Add platform capability and native-ABI tests for `windows-latest`, `ubuntu-latest`, and `macos-latest`.
 12. Run Debug and Release builds, then the entire applicable solution test suite on all three required runners.
-13. Verify UTF-8/CRLF formatting, lowercase assembly names, required project configuration, and absence of generated artifacts.
+13. Verify UTF-8 encoding and LF lineendings, lowercase assembly names, required project configuration, and absence of generated artifacts.
 14. Update this roadmap’s living status and record any deliberately deferred behavior.
 
 ## Batch completion checklist
