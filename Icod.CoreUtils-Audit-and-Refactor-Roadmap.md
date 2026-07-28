@@ -6,10 +6,10 @@
 |---|---|
 | Completed command batches | Batches 0–12 |
 | Current engineering gate | Planned Gate C |
-| Next command batch | Batch 13 — `printf`, `numfmt` |
+| Next command batch | Batch 13 — `od` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
-| Next infrastructure dependency | Completion Gate C — before Batch 16 |
+| Next infrastructure dependency | Completion Gate C — before Batch 17 |
 | Status-maintenance rule | Update this table after every merged batch |
 
 ## Scope
@@ -306,11 +306,11 @@ Implement the complete GNU size operand grammar, `--reference`, `--io-blocks`, c
 
 Replace native-command delegation and no-op success with an explicit platform implementation. Support file-specific data and filesystem flushing where the platform permits it, and produce a controlled diagnostic for semantics that cannot be represented.
 
-### Batch 13 - Binary formatting (1 tool)
+### Batch 13 — Binary formatting (1 tool)
 
 - [ ] `od`
 
-For `od`, build a reusable binary-formatting engine covering address radices, type strings, byte order, duplicate suppression, skip/read limits, string extraction, and nonseekable standard input. The commands share formatting and width infrastructure while retaining separate data engines.
+For `od`, build a reusable binary-formatting engine covering address radices, type strings, byte order, duplicate suppression, skip/read limits, string extraction, and nonseekable standard input. The command establishes reusable formatting and width infrastructure for later consumers.
 
 ### Batch 14 — Formatted and human-readable numeric output (2 tools)
 
@@ -364,7 +364,7 @@ Implement paragraph recognition, sentence spacing, crown/tagged modes, logical-p
 
 Implement complete byte/character/field list grammar, complement and output delimiters, NUL records, delimiter suppression, serial paste, delimiter escape cycles, multiple input streams, and correct behavior on multibyte input.
 
-### Completion Gate D — before the Batch 20
+### Completion Gate D — before Batch 20
 
 [ ] Extend the secure temporary-object infrastructure established by `mktemp`:
 
@@ -428,7 +428,7 @@ Replace the simplified `ptx` token dump with documented input, word, ignore, ref
 
 Implement the documented GNU grep option and pattern model, including multiple pattern sources, basic/extended/fixed/Perl-mode policy, recursive traversal, include/exclude rules, binary policy, context, filename and line metadata, counts, quiet/list modes, NUL behavior, and the required 0/1/2 status distinction. Unsupported regex dialect features must be explicit rather than ignored.
 
-### Batch 27 — Splitting and reversing (3 tools)
+### Batch 27 — Splitting and reversing (2 tools)
 
 - [ ] `split`
 - [ ] `tac`
@@ -436,13 +436,13 @@ Implement the documented GNU grep option and pattern model, including multiple p
 Repair split-output rotation and support nonseekable input, line/byte/chunk modes, suffix alphabets, filters, additional suffixes, numeric suffixes, and exact file-creation cleanup.
 Implement `tac` with backward file scanning or secure temporary spooling rather than whole-input memory loading.
 
-### Batch 28 — Splitting and reversing (3 tools)
+### Batch 28 — Pattern-directed splitting (1 tool)
 
 - [ ] `csplit`
 
 Reuse the regex policy established by `grep` for `csplit`, including numeric and regex addresses, offsets, repetition, suppression, prefix/suffix grammar, keep-files behavior, exact byte counts, and cleanup after failure or cancellation.
 
-### Batch 29 — Page presentation (1 tools)
+### Batch 29 — Page presentation (1 tool)
 
 - [ ] `pr`
 
@@ -540,12 +540,6 @@ Implement source/destination classification, recursive copy, symlink and hard-li
 
 Build on `mkdir`, `cp`, `chmod`, and `chown` primitives rather than invoking external utilities. Implement directory creation, modes, owners/groups, stripping policy, backups, compare mode, timestamps, SELinux-context policy, and atomic destination replacement.
 
-### Batch 43 — Color database (1 tool)
-
-- [ ] `dircolors`
-
-Implement the documented database grammar, terminal selectors, file-extension rules, shell-specific output, built-in database, print-database mode, and diagnostics. Produce a reusable `LS_COLORS` parser for the listing family.
-
 ### Completion Gate F — before Batch 44
 
 [ ] Add shared system/process primitives:
@@ -557,11 +551,14 @@ Implement the documented database grammar, terminal selectors, file-extension ru
 - [ ] child-process stream forwarding;
 - [ ] controlled Windows substitutions where semantics are genuinely equivalent.
 
-### Batch 44 — Directory listing family (3 tools)
+### Batch 44 — Color database and directory listing family (4 tools)
 
+- [ ] `dircolors`
 - [ ] `ls`
 - [ ] `dir`
 - [ ] `vdir`
+
+Implement the documented `dircolors` database grammar, terminal selectors, file-extension rules, shell-specific output, built-in database, print-database mode, and diagnostics. Produce a reusable `LS_COLORS` parser for the listing engine.
 
 Create one listing engine with three thin entry profiles. Implement locale sorting, quoting, color, columns, widths, recursion with cycle protection, symlink policy, inode/block/owner/group/mode metadata, human sizes, time styles, indicators, classification, dereference modes, and terminal-sensitive defaults. Remove independent simplified `dir` and `vdir` implementations.
 
@@ -653,7 +650,7 @@ Begin with a documented feasibility decision. The current silent fallback is una
 - `grep` establishes the regex policy before `csplit`; `diff` precedes `patch`.
 - Filesystem metadata and canonical-path behavior precede conditions, mutation, recursive traversal, copy, listing, usage accounting, and archives.
 - `tar` is moved after the filesystem metadata, permission, ownership, traversal, and copy engines because archive correctness depends on all of them.
-- Process launch precedes priority, timeout, signals, root changes, SELinux execution, and buffering control.
+- Process launch precedes signal control, priority and timeout handling, root changes, SELinux execution, and buffering control.
 - Platform-specialized commands are isolated so Windows substitutions and Unix-only behavior are explicit rather than hidden inside broad batches.
 
 ## Per-batch workflow
@@ -670,7 +667,7 @@ Begin with a documented feasibility decision. The current silent fallback is una
 10. Add large-input, bounded-memory, cancellation, broken-pipe, standard-stream, multiple-file, invalid-input, and cleanup tests.
 11. Add platform capability and native-ABI tests for `windows-latest`, `ubuntu-latest`, and `macos-latest`.
 12. Run Debug and Release builds, then the entire applicable solution test suite on all three required runners.
-13. Verify UTF-8 encoding and LF lineendings, lowercase assembly names, required project configuration, and absence of generated artifacts.
+13. Verify UTF-8 encoding and LF line endings, lowercase assembly names, required project configuration, and absence of generated artifacts.
 14. Update this roadmap’s living status and record any deliberately deferred behavior.
 
 ## Batch completion checklist
@@ -694,9 +691,8 @@ A batch is complete only when:
 - roadmap status and documentation are updated.
 
 ## Immediate next actions
-
-1. Complete Completion Gate A, including migration to `net10.0` LTS and full Debug/Release validation on `windows-latest`, `ubuntu-latest`, and `macos-latest`.
-2. Implement Batch 11 (`truncate`) using the safe size and file-position infrastructure established for `dd`.
-3. Close Batch 11 only after the complete solution passes on all three required runners.
-4. Complete Completion Gate B by adding the Shared flush and allocation capability layer.
-5. Continue with Batch 12 (`sync`) and Batch 13 (`printf`, `numfmt`).
+1. Implement Batch 13 (`od`) to complete the raw-file and binary-formatting sequence established by `dd`, `truncate`, and `sync`.
+2. Continue with Batch 14 (`printf`, `numfmt`).
+3. Rename `mktmp` to `mktemp` and implement Batch 15.
+4. Implement Batch 16 (`expr`).
+5. Complete Completion Gate C before beginning Batch 17.
