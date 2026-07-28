@@ -1,4 +1,4 @@
-namespace Icod.CoreUtils.Basenc;
+namespace Icod.CoreUtils.BasEnc;
 
 using Icod.CoreUtils.Shared.Diagnostics;
 

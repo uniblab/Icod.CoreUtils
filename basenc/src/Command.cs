@@ -1,7 +1,7 @@
 // Original behavior/reference: GNU coreutils
 // Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
 
-namespace Icod.CoreUtils.Basenc;
+namespace Icod.CoreUtils.BasEnc;
 
 using System.Text;
 using Icod.CoreUtils.Shared.Codecs;

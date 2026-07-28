@@ -1,4 +1,4 @@
-namespace Icod.CoreUtils.Dircolors;
+namespace Icod.CoreUtils.DirColors;
 
 using System;
 using System.IO;
