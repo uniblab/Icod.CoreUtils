@@ -45,9 +45,10 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: dotnet tool install --global AzureSignTool
 
-      - name: Sign Assembly via Azure Key Vault
+      - name: Sign All CoreUtils Binaries via Azure Key Vault
         if: matrix.os == 'windows-latest'
-        # Added -kvi "" to trigger OIDC authentication and fixed the folder path
-        run: AzureSignTool sign -kvu "${{ secrets.KEY_VAULT_URL }}" -kvc "${{ secrets.KEY_VAULT_CERT_NAME }}" -kvi "" -tr "http://timestamp.digicert.com" -td sha256 "Icod.CoreUtils/bin/Release/net10.0/Icod.CoreUtils.dll"
+        # Natively uses Azure CLI login session, signing all EXEs and DLLs in the directory
+        run: |
+          AzureSignTool sign -kvu "${{ secrets.KEY_VAULT_URL }}" -kvc "${{ secrets.KEY_VAULT_CERT_NAME }}" -tr "http://digicert.com" -td sha256 "bin/Release/net10.0/*.exe" "bin/Release/net10.0/*.dll"
         env:
           AzureServicesAuthConnectionString: "RunAs=Developer;DeveloperTool=AzureCLI"
