@@ -6,7 +6,7 @@
 |---|---|
 | Completed command batches | Batches 0–11 |
 | Current engineering gate | Planned Gate C |
-| Next command batch | Batch 12 — `sync` |
+| Next command batch | Batch 13 — `printf`, `numfmt` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 | Next infrastructure dependency | Completion Gate C — before Batch 16 |
@@ -166,14 +166,13 @@ These conventions apply to every existing project that is altered and every proj
 
 These gates are repository milestones rather than command batches. They do not alter the historical numbering.
 
-### Completion Gate D — before the external-ordering batch
+### Completion Gate D — before the Batch 20
 
 [ ] Extend the secure temporary-object infrastructure established by `mktemp`:
 
 - [ ] bounded-memory sorted runs;
 - [ ] stable external merge;
 - [ ] configurable locale/key comparison;
-- [ ] temporary-workspace lifecycle management;
 - [ ] deterministic cleanup on success, failure, and cancellation.
 
 ### Completion Gate E — before Batch 28
@@ -334,7 +333,7 @@ Implement the complete GNU size operand grammar, `--reference`, `--io-blocks`, c
 
 ### Batch 12 — Filesystem flushing (1 tool)
 
-- [ ] `sync`
+- [x] `sync`
 
 Replace native-command delegation and no-op success with an explicit platform implementation. Support file-specific data and filesystem flushing where the platform permits it, and produce a controlled diagnostic for semantics that cannot be represented.
 
