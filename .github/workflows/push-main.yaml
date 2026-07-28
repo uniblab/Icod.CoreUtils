@@ -41,13 +41,15 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # 1. RESTORED: Install the official .NET Foundation Sign tool
-      - name: Install .NET Sign CLI
+      # 1. FIXED: Create a local tool manifest and install sign inside the workspace
+      - name: Install .NET Sign CLI Locally
         if: matrix.os == 'windows-latest'
-        run: dotnet tool install --global sign --prerelease
+        run: |
+          dotnet new tool-manifest
+          dotnet tool install sign --prerelease
 
-      # 2. FIXED: Batch-sign using 'dotnet sign' to ensure the tool executes correctly
+      # 2. FIXED: Execute via 'dotnet tool run' to guarantee the runner finds it
       - name: Sign All CoreUtils Binaries via Azure Key Vault
         if: matrix.os == 'windows-latest'
         run: |
-          dotnet sign code azure-key-vault "bin/Release/net10.0/*.exe" "bin/Release/net10.0/*.dll" --azure-key-vault-url "${{ secrets.KEY_VAULT_URL }}" --azure-key-vault-certificate "${{ secrets.KEY_VAULT_CERT_NAME }}" --timestamp-url "http://timestamp.digicert.com"
+          dotnet tool run sign code azure-key-vault "bin/Release/net10.0/*.exe" "bin/Release/net10.0/*.dll" --azure-key-vault-url "${{ secrets.KEY_VAULT_URL }}" --azure-key-vault-certificate "${{ secrets.KEY_VAULT_CERT_NAME }}" --timestamp-url "http://timestamp.digicert.com"
