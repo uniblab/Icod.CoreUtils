@@ -5,18 +5,53 @@ on:
     branches:
       - main
 
+# Required to let the windows runner exchange its GitHub token for an Azure OIDC token
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   build-and-test:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
+    
     steps:
       - uses: actions/checkout@v4
+      
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 9.0.x
-      - run: dotnet clean Icod.CoreUtils.sln -c Debug
+          dotnet-version: 10.0.x
+          
+      - run: dotnet clean Icod.CoreUtils.sln -c Release
+      
       - run: dotnet restore Icod.CoreUtils.sln
-      - run: dotnet build Icod.CoreUtils.sln -c Debug --no-restore
-      - run: dotnet test Icod.CoreUtils.sln -c Debug --no-build --logger trx
+      
+      - run: dotnet build Icod.CoreUtils.sln -c Release --no-restore
+      
+      - run: dotnet test Icod.CoreUtils.sln -c Release --no-build --logger trx
+
+      # SECURE SIGNING STAGE (Only fires when the matrix is processing Windows)
+      - name: Authenticate to Azure via OIDC
+        if: matrix.os == 'windows-latest'
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Install AzureSignTool
+        if: matrix.os == 'windows-latest'
+        run: dotnet tool install --global AzureSignTool
+
+      - name: Sign Assembly via Azure Key Vault
+        if: matrix.os == 'windows-latest'
+        run: |
+          AzureSignTool sign `
+            --vault-url "${{ secrets.KEY_VAULT_URL }}" `
+            --cert-name "${{ secrets.KEY_VAULT_CERT_NAME }}" `
+            --timestamp-rfc3161 "http://digicert.com" `
+            --file-path "bin/Release/net10.0/Icod.CoreUtils.dll"
+        env:
+          AzureServicesAuthConnectionString: "RunAs=Developer;DeveloperTool=AzureCLI"

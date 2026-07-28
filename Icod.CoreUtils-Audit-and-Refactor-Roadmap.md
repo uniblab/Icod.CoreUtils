@@ -15,13 +15,12 @@ This revision preserves the completed work history while reorganizing the remain
 
 | Item | Status |
 |---|---|
-| Completed command batches | Batches 0–10 |
-| Current engineering gate | Completion Gate A |
-| Next command batch | Batch 11 — `truncate` |
-| Current target framework | `net9.0` |
-| Required target framework before Batch 11 closes | `net10.0` LTS |
+| Completed command batches | Batches 0–11 |
+| Current engineering gate | Planned Gate C |
+| Next command batch | Batch 12 — `sync` |
+| Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
-| Next infrastructure dependency | Shared flush and allocation capabilities before Batch 12 |
+| Next infrastructure dependency | Completion Gate C — before Batch 16 |
 | Status-maintenance rule | Update this table after every merged batch |
 
 ## Scope
@@ -63,22 +62,16 @@ Man7 pages are useful synopses and secondary references, but they must not repla
 
 ### Defects and risks that remain
 
-1. **Full-solution test execution must remain mandatory.**  
-   Local scripts and CI must test the entire solution. A passing `Shared.Tests` run alone is not a completion signal.
-
-2. **Historical measurements must never be presented as current state.**  
-   The initial measurements above are retained only as an archival baseline.
-
-3. **Several implementations still silently accept unsupported behavior.**  
+1. **Several implementations still silently accept unsupported behavior.**  
    Unknown or unsupported options are ignored by some commands. Unsupported platform behavior sometimes returns success. Both patterns are incompatible with a conformance-oriented port.
 
-4. **Several commands still throw unhandled `NotImplementedException`.**  
+2. **Several commands still throw unhandled `NotImplementedException`.**  
    The existing `chown`, `chgrp`, `runcon`, and `chroot` implementations are examples. Unsupported operations must produce a controlled diagnostic and documented nonzero status.
 
-5. **Some commands delegate their defining operation to an installed native utility.**  
+3. **Some commands delegate their defining operation to an installed native utility.**  
    Examples include portions of `link`, `chcon`, `install`, `sync`, and `stdbuf`. Production implementations must not obtain apparent compatibility by invoking the same host utility. Native utilities may be used only by optional differential tests.
 
-6. **Some implementations are not yet the command they claim to be.**
+4. **Some implementations are not yet the command they claim to be.**
    - `diff` is not a complete difference algorithm and does not yet implement the required result-status model.
    - `patch` handles a private simplified format rather than normal, context, and unified patches.
    - `link` behaves like a partial `ln` front end rather than the simple two-operand hard-link command.
@@ -87,31 +80,77 @@ Man7 pages are useful synopses and secondary references, but they must not repla
    - `tar` needs correct entry typing, metadata handling, and extraction-path safety.
    - `stdbuf` cannot silently run a child without applying the requested buffering mode.
 
-7. **Several text commands use the wrong data model.**  
+5. **Several text commands use the wrong data model.**  
    Common problems include ordinal comparison instead of locale collation, UTF-16 `char` processing where bytes or locale characters are required, line-based processing for commands that must transform delimiters, and whole-input buffering where bounded memory or temporary spill files are required.
 
-8. **Several recursive filesystem commands lack a common traversal policy.**  
+6. **Several recursive filesystem commands lack a common traversal policy.**  
    Symlink traversal, hard-link identity, cycles, mount boundaries, sparse files, metadata preservation, and destination-inside-source detection must be centralized before `rm`, `cp`, `mv`, `du`, `ls`, and `tar` are considered conformant.
 
-9. **Injected standard streams are not consistently respected or owned correctly.**  
+7. **Injected standard streams are not consistently respected or owned correctly.**  
    A command must use the supplied `stdin`, `stdout`, and `stderr`, and must never dispose a caller-owned standard stream.
 
-10. **The current target framework has a near-term lifecycle deadline.**  
-    Migration from `net9.0` to `net10.0` LTS is part of Completion Gate A and must occur before Batch 11 is closed.
-
+1. 
 ## Project conventions
 
 These conventions apply to every existing project that is altered and every project that is added:
 
 1. Project filenames and namespaces use conventional PascalCase where practical, such as `Icod.CoreUtils.BaseName.csproj` and `Icod.CoreUtils.BaseName`.
 2. `<AssemblyName>` remains the short lowercase command name exactly matching the tool directory, such as `basename`.
-3. All source and project text files are UTF-8 with CRLF line endings.
-4. The first `<PropertyGroup>` of every altered or added `.csproj` contains `<LangVersion>13.0</LangVersion>`, and every project retains the established Debug, Staging, and Release conditional property groups.
+3. All source and project text files are UTF-8.
+4. The first `<PropertyGroup>` of every altered or added `.csproj` contains `<LangVersion>13.0</LangVersion>`, and every project retains the established Debug, Staging, and Release conditional property groups.  Example:
+```xml
+    <PropertyGroup>
+		<LangVersion>13.0</LangVersion>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<OutputPath>..\bin\$(Configuration)\</OutputPath>
+		<AssemblyName>pwd</AssemblyName>
+		<RootNamespace>Icod.CoreUtils.Pwd</RootNamespace>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
+		<PlatformTarget>AnyCPU</PlatformTarget>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Shared\Icod.CoreUtils.Shared.csproj" />
+	</ItemGroup>
+	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+		<ErrorReport>prompt</ErrorReport>
+		<WarningLevel>2</WarningLevel>
+		<DebugSymbols>true</DebugSymbols>
+		<DebugType>full</DebugType>
+		<Optimize>false</Optimize>
+		<DefineConstants>DEBUG;TRACE</DefineConstants>
+		<SignAssembly>false</SignAssembly>
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)' == 'Staging' ">
+		<ErrorReport>prompt</ErrorReport>
+		<WarningLevel>3</WarningLevel>
+		<DebugSymbols>true</DebugSymbols>
+		<DebugType>full</DebugType>
+		<Optimize>false</Optimize>
+		<DefineConstants>TRACE</DefineConstants>
+		<SignAssembly>false</SignAssembly>
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+		<ErrorReport>prompt</ErrorReport>
+		<WarningLevel>4</WarningLevel>
+		<DebugType>pdbonly</DebugType>
+		<Optimize>true</Optimize>
+		<SignAssembly>false</SignAssembly>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
+	</PropertyGroup>
+```
 5. Commands use `CommandContext`, the Shared option/argument processor, Shared diagnostics, and injectable providers where the behavior is platform- or environment-dependent.
 6. Every command exposes cancellation-aware `RunAsync(..., CancellationToken)`, retains a synchronous compatibility wrapper, and uses an asynchronous `Main` where appropriate. Naturally asynchronous I/O and child-process waits use TAP directly rather than `Task.Run`.
 7. Literal newline escapes such as `\n` and `\r\n` are permitted only when they are part of the utility’s data semantics, escape grammar, or documented byte transformation. They are never used as the host platform’s generated line separator.
 8. Generated line endings use `WriteLine`, `WriteLineAsync`, or `Environment.NewLine`. Line-oriented input uses `ReadLine`, `ReadLineAsync`, and `Environment.NewLine` as appropriate. Code must not hard-code `\n` or `\r\n` for host line-reading or line-writing semantics.
-9. When multiple strings are sent to `WriteAsync`, `WriteLineAsync`, or related output methods, combine them with `System.String.Concat` rather than the `+` operator.
+9. When multiple strings are sent to `WriteAsync`, `WriteLineAsync`, or related output methods, combine them with `System.String.Concat` rather than the `+` operator.  Similarly, readaing input one should use `ReadLine` or `ReadLineAsync` unless binary operation is required.
 10. Each command has its own dedicated xUnit test project following the established `tests/<Tool>.Tests` pattern.
 11. Each public command class has class-level XML documentation whose `<summary>` includes the command usage, plus a dedicated usage-printing or usage-writing function.
 12. Every new project is added to the solution, all required configuration mappings, the appropriate solution folder, and every local and CI build/test entry point.
@@ -151,10 +190,10 @@ These gates are repository milestones rather than command batches. They do not a
 - [x] Verify that every test project is included in the solution and is actually discovered on every applicable runner.
 - ~~[ ] Add a repository check for UTF-8 text files and forbidden generated artifacts.~~
 - ~~[ ] Add repository checks for lowercase command assembly names and required project configuration blocks.~~
-- [X] Record the exact authoritative upstream version used for every completed and future batch.
-- [ ] Update the living status section after Batch 11 is merged.
+- [x] Record the exact authoritative upstream version used for every completed and future batch.
+- [x] Update the living status section after Batch 11 is merged.
 
-[x] Recommended local verification sequence after migration:
+- [x] Recommended local verification sequence after migration:
 ```text
 dotnet clean Icod.CoreUtils.sln -c Debug
 dotnet restore Icod.CoreUtils.sln
@@ -164,56 +203,56 @@ dotnet test Icod.CoreUtils.sln -c Debug --no-build --no-restore
 
 ### Completion Gate B — before Batch 12
 
-Add `Shared.FileSystem` flush and allocation capability abstractions needed by `dd`, `truncate`, and `sync`:
+[x] Add `Shared.FileSystem` flush and allocation capability abstractions needed by `dd`, `truncate`, and `sync`:
 
-- data-only versus data-and-metadata flush;
-- file-specific versus filesystem-wide flush;
-- sparse extension and allocated-range capability reporting;
-- controlled platform diagnostics where equivalent semantics are unavailable;
-- injectable abstractions and platform-specific integration tests.
+- [x] data-only versus data-and-metadata flush;
+- [x] file-specific versus filesystem-wide flush;
+- [x] sparse extension and allocated-range capability reporting;
+- [x] controlled platform diagnostics where equivalent semantics are unavailable;
+- [x] injectable abstractions and platform-specific integration tests.
 
 ### Completion Gate C — before Batch 16
 
-Add the shared text model:
+[ ] Add the shared text model:
 
-- byte, Unicode scalar, and display-column iteration;
-- locale-aware collation and character classification;
-- tab-stop grammar;
-- field/range-list grammar;
-- escape-sequence parsing;
-- configurable line and NUL record readers/writers.
+- [ ] byte, Unicode scalar, and display-column iteration;
+- [ ] locale-aware collation and character classification;
+- [ ] tab-stop grammar;
+- [ ] field/range-list grammar;
+- [ ] escape-sequence parsing;
+- [ ] configurable line and NUL record readers/writers.
 
 ### Completion Gate D — before Batch 19
 
-Add secure temporary-workspace and external-ordering infrastructure:
+[ ] Add secure temporary-workspace and external-ordering infrastructure:
 
-- exclusive temporary creation;
-- bounded-memory runs;
-- stable external merge;
-- configurable locale/key comparison;
-- deterministic cleanup on success, failure, and cancellation.
+- [ ] exclusive temporary creation;
+- [ ] bounded-memory runs;
+- [ ] stable external merge;
+- [ ] configurable locale/key comparison;
+- [ ] deterministic cleanup on success, failure, and cancellation.
 
 ### Completion Gate E — before Batch 28
 
-Add the shared filesystem model:
+[ ] Add the shared filesystem model:
 
-- lexical and physical path resolution;
-- symlink and reparse-point inspection;
-- file identity, type, mode, ownership, timestamps, links, device/inode equivalents, and allocated-block accounting;
-- recursive traversal with cycle detection and mount-boundary policy;
-- sparse-file and metadata-preservation helpers;
-- atomic replacement and backup policy.
+- [ ] lexical and physical path resolution;
+- [ ] symlink and reparse-point inspection;
+- [ ] file identity, type, mode, ownership, timestamps, links, device/inode equivalents, and allocated-block accounting;
+- [ ] recursive traversal with cycle detection and mount-boundary policy;
+- [ ] sparse-file and metadata-preservation helpers;
+- [ ] atomic replacement and backup policy.
 
 ### Completion Gate F — before Batch 44
 
-Add shared system/process primitives:
+[ ] Add shared system/process primitives:
 
-- host and processor information;
-- terminal discovery and terminal-mode capability abstractions;
-- signal-name and signal-number parsing;
-- process-group control;
-- child-process stream forwarding;
-- controlled Windows substitutions where semantics are genuinely equivalent.
+- [ ] host and processor information;
+- [ ] terminal discovery and terminal-mode capability abstractions;
+- [ ] signal-name and signal-number parsing;
+- [ ] process-group control;
+- [ ] child-process stream forwarding;
+- [ ] controlled Windows substitutions where semantics are genuinely equivalent.
 
 ## Batch-size policy
 
@@ -312,7 +351,7 @@ Add shared system/process primitives:
 
 ### Batch 11 — File-size manipulation (1 tool)
 
-- [ ] `truncate`
+- [x] `truncate`
 
 Implement the complete GNU size operand grammar, `--reference`, `--io-blocks`, creation policy, relative modifiers, rounding modifiers, overflow checks, sparse extension, and precise diagnostics. Reuse the safe size and file-position infrastructure introduced by `dd`.
 

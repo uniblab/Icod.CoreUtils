@@ -1,7 +1,14 @@
+using Icod.CoreUtils.Shared.Diagnostics;
+
 namespace Icod.CoreUtils.Truncate;
 
-internal class Program {
-	static void Main( string[] args ) {
-		Console.WriteLine( "Hello, World!" );
-	}
+internal static class Program {
+	public static Task<int> Main(
+		string[] args
+	) => Command.RunAsync(
+		args,
+		CommandContext.CreateConsole(
+			"truncate"
+		)
+	);
 }
