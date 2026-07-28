@@ -465,7 +465,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Base32.Tests
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Base64.Tests", "tests\Base64.Tests\Icod.CoreUtils.Base64.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0011}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Basenc.Tests", "tests\Basenc.Tests\Icod.CoreUtils.Basenc.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0012}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.BasEnc.Tests", "tests\BasEnc.Tests\Icod.CoreUtils.BasEnc.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0012}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Checksum.Tests", "tests\Checksum.Tests\Icod.CoreUtils.Checksum.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0013}"
 EndProject
