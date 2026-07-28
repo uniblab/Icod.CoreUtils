@@ -5,18 +5,19 @@ on:
     branches:
       - main
 
-# Required to let the windows runner exchange its GitHub token for an Azure OIDC token
 permissions:
   id-token: write
   contents: read
 
 jobs:
+  # ----------------------------------------------------
+  # STAGE 1: Cross-Platform Build & Test (All 3 OSs)
+  # ----------------------------------------------------
   build-and-test:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
-    
     steps:
       - uses: actions/checkout@v4
       
@@ -25,44 +26,38 @@ jobs:
           dotnet-version: 10.0.x
           
       - run: dotnet clean Icod.CoreUtils.sln -c Release
-      
       - run: dotnet restore Icod.CoreUtils.sln
-      
       - run: dotnet build Icod.CoreUtils.sln -c Release --no-restore
-      
       - run: dotnet test Icod.CoreUtils.sln -c Release --no-build --logger trx
 
-      # SECURE SIGNING STAGE (Only fires when the matrix is processing Windows)
+  # ----------------------------------------------------
+  # STAGE 2: Secure Windows Authenticode Signing
+  # ----------------------------------------------------
+  secure-sign:
+    needs: build-and-test # Only runs if Stage 1 completely passes
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      # Re-compile code on the signing machine to target the binaries
+      - run: dotnet build Icod.CoreUtils.sln -c Release
+
       - name: Authenticate to Azure via OIDC
-        if: matrix.os == 'windows-latest'
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # 1. FIXED: Create a local tool manifest and install sign inside the workspace
       - name: Install .NET Sign CLI Locally
-        if: matrix.os == 'windows-latest'
         run: |
           dotnet new tool-manifest
           dotnet tool install sign --prerelease
 
-      # 2. FIXED: Pass secret via env to prevent injection, and use regex to force valid URL structure
+      # Clean, single-line invocation completely passing variables via native expressions
       - name: Sign All CoreUtils Binaries via Azure Key Vault
-        if: matrix.os == 'windows-latest'
-        run: |
-          # 1. Grab raw environment variable safely
-          $rawUrl = $env:RAW_VAULT_URL
-          
-          # 2. Use regex to extract ONLY the protocol and host (e.g. https://azure.net)
-          if ($rawUrl -match "^(https:\/\/[^\/]+)") {
-              $cleanVaultUrl = $Matches[1]
-          } else {
-              $cleanVaultUrl = $rawUrl
-          }
-          
-          # 3. Execute sign tool with the cleanly scrubbed URL variable
-          dotnet tool run sign code azure-key-vault "bin/Release/net10.0/*.exe" "bin/Release/net10.0/*.dll" --azure-key-vault-url "$cleanVaultUrl" --azure-key-vault-certificate "${{ secrets.KEY_VAULT_CERT_NAME }}" --timestamp-url "http://timestamp.digicert.com"
-        env:
-          RAW_VAULT_URL: ${{ secrets.KEY_VAULT_URL }}
+        run: dotnet tool run sign code azure-key-vault "bin/Release/net10.0/*.exe" "bin/Release/net10.0/*.dll" --azure-key-vault-url "${{ secrets.KEY_VAULT_URL }}" --azure-key-vault-certificate "${{ secrets.KEY_VAULT_CERT_NAME }}" --timestamp-url "http://timestamp.digicert.com"
