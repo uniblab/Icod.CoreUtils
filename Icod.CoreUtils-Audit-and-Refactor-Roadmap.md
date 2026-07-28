@@ -5,7 +5,8 @@
 | Item | Status |
 |---|---|
 | Completed command batches | Batches 0–12 |
-| Current engineering gate | Planned Gate C |
+| Current engineering gate | Planned Completion Gate C1 |
+| Next infrastructure dependency | Completion Gate C1 — before Batch 16 |
 | Next command batch | Batch 13 — `od` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
@@ -286,13 +287,13 @@ dotnet test Icod.CoreUtils.sln -c Debug --no-build --no-restore
 
 ### Completion Gate B — before Batch 12
 
-[x] Add `Shared.FileSystem` flush and allocation capability abstractions needed by `dd`, `truncate`, and `sync`:
+* [x] Add `Shared.FileSystem` flush and allocation capability abstractions needed by `dd`, `truncate`, and `sync`:
 
-- [x] data-only versus data-and-metadata flush;
-- [x] file-specific versus filesystem-wide flush;
-- [x] sparse extension and allocated-range capability reporting;
-- [x] controlled platform diagnostics where equivalent semantics are unavailable;
-- [x] injectable abstractions and platform-specific integration tests.
+  * [x] data-only versus data-and-metadata flush;
+  * [x] file-specific versus filesystem-wide flush;
+  * [x] sparse extension and allocated-range capability reporting;
+  * [x] controlled platform diagnostics where equivalent semantics are unavailable;
+  * [x] injectable abstractions and platform-specific integration tests.
 
 ### Batch 11 — File-size manipulation (1 tool)
 
