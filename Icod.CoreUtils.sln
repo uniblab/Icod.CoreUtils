@@ -85,7 +85,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.DD", "dd\Ico
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "df", "df", "{2554979B-DACE-629E-4BEA-AA789516CEF9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.df", "df\Icod.CoreUtils.df.csproj", "{B1CE2EF8-920E-4EE2-BE09-1928F5BAF210}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Df", "df\Icod.CoreUtils.Df.csproj", "{B1CE2EF8-920E-4EE2-BE09-1928F5BAF210}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "diff", "diff", "{293D9A78-D4DE-2E89-D3AE-F968D6380FA4}"
 EndProject
