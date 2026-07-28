@@ -1,4 +1,4 @@
-name: push-main
+name: build
 
 on:
   push:
@@ -16,114 +16,16 @@ jobs:
   build-and-test:
     strategy:
       matrix:
-#        os: [windows-latest, ubuntu-latest, macos-latest]
-         os: [windows-latest]
-
+        os: [windows-latest, ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
-
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
 
-      - name: Clean
-        run: dotnet clean Icod.CoreUtils.sln -c Release
-
-      - name: Restore
-        run: dotnet restore Icod.CoreUtils.sln
-
-      - name: Build
-        run: dotnet build Icod.CoreUtils.sln -c Release --no-restore
-
-      # ------------------------------------------------
-      # Windows-only Authenticode signing
-      # ------------------------------------------------
-      - name: Install AzureSignTool
-        if: matrix.os == 'windows-latest'
-        shell: pwsh
-        run: |
-          dotnet tool install `
-            --tool-path "$env:RUNNER_TEMP\AzureSignTool" `
-            --version 7.0.1 `
-            AzureSignTool
-
-      - name: Authenticate to Azure
-        if: matrix.os == 'windows-latest'
-        uses: azure/login@v3
-        env:
-          AZURE_CORE_OUTPUT: none
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Validate Key Vault certificate access
-        if: matrix.os == 'windows-latest'
-        shell: pwsh
-        env:
-          KEY_VAULT_URL: ${{ secrets.KEY_VAULT_URL }}
-          KEY_VAULT_CERT_NAME: ${{ secrets.KEY_VAULT_CERT_NAME }}
-        run: |
-          $vaultUri = [Uri] $env:KEY_VAULT_URL
-
-          Write-Host "Vault scheme: $($vaultUri.Scheme)"
-          Write-Host "Vault host:   $($vaultUri.Host)"
-          Write-Host "Vault path:   $($vaultUri.AbsolutePath)"
-
-          if ($vaultUri.Scheme -ne 'https') {
-            throw 'KEY_VAULT_URL must use HTTPS.'
-          }
-
-          if ($vaultUri.Host -notlike '*.vault.azure.net') {
-            throw 'KEY_VAULT_URL is not an Azure Key Vault data-plane URL.'
-          }
-
-          if ($vaultUri.AbsolutePath -ne '/') {
-            throw 'KEY_VAULT_URL must identify the vault itself, without a certificate path.'
-          }
-
-          if ($env:KEY_VAULT_CERT_NAME -notmatch '^[A-Za-z0-9-]+$') {
-            throw 'KEY_VAULT_CERT_NAME must contain only letters, digits, and hyphens.'
-          }
-
-          $vaultName = $vaultUri.Host.Split('.')[0]
-
-          az keyvault certificate show `
-            --vault-name $vaultName `
-            --name $env:KEY_VAULT_CERT_NAME `
-            --query '{certificateId:id,keyId:kid,enabled:attributes.enabled}' `
-            --output json
-
-      - name: Authenticode-sign Windows binaries
-        if: matrix.os == 'windows-latest'
-        shell: pwsh
-        env:
-          KEY_VAULT_URL: ${{ secrets.KEY_VAULT_URL }}
-          KEY_VAULT_CERT_NAME: ${{ secrets.KEY_VAULT_CERT_NAME }}
-        run: |
-          & "$env:RUNNER_TEMP\AzureSignTool\AzureSignTool.exe" sign `
-            --azure-key-vault-url "$env:KEY_VAULT_URL" `
-            --azure-key-vault-certificate "$env:KEY_VAULT_CERT_NAME" `
-            --azure-key-vault-managed-identity `
-            --file-digest sha256 `
-            --timestamp-rfc3161 "http://timestamp.digicert.com" `
-            --timestamp-digest sha256 `
-            --verbose `
-            "$env:GITHUB_WORKSPACE\bin\Release\net10.0\*.exe" `
-            "$env:GITHUB_WORKSPACE\bin\Release\net10.0\*.dll"
-
-          if ($LASTEXITCODE -ne 0) {
-            exit $LASTEXITCODE
-          }
-
-      - name: Test
-        run: >
-          dotnet test
-          Icod.CoreUtils.sln
-          -c Release
-          --no-build
-          --logger trx
+      - run: dotnet clean Icod.CoreUtils.sln -c Release
+      - run: dotnet restore Icod.CoreUtils.sln
+      - run: dotnet build Icod.CoreUtils.sln -c Release --no-restore
+      - run: dotnet test Icod.CoreUtils.sln -c Release --no-build --logger trx
