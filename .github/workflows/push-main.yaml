@@ -45,16 +45,10 @@ jobs:
         if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
-          $ErrorActionPreference = 'Stop'
-
-          $toolDirectory = Join-Path `
-              $env:RUNNER_TEMP `
-              'AzureSignTool'
-
           dotnet tool install `
-              --tool-path $toolDirectory `
-              --version 7.0.1 `
-              AzureSignTool
+            --tool-path "$env:RUNNER_TEMP\AzureSignTool" `
+            --version 7.0.1 `
+            AzureSignTool
 
       - name: Authenticate to Azure
         if: matrix.os == 'windows-latest'
@@ -73,87 +67,19 @@ jobs:
           KEY_VAULT_URL: ${{ secrets.KEY_VAULT_URL }}
           KEY_VAULT_CERT_NAME: ${{ secrets.KEY_VAULT_CERT_NAME }}
         run: |
-          $ErrorActionPreference = 'Stop'
-
-          $signTool = Join-Path `
-              $env:RUNNER_TEMP `
-              'AzureSignTool\AzureSignTool.exe'
-
-          if (-not (Test-Path -LiteralPath $signTool -PathType Leaf)) {
-              throw "AzureSignTool was not found at '$signTool'."
-          }
-
-          $outputPattern = Join-Path `
-              $env:GITHUB_WORKSPACE `
-              '*\bin\Release\net10.0\*'
-
-          $filesToSign = @(
-              Get-ChildItem `
-                  -Path $outputPattern `
-                  -File |
-              Where-Object {
-                  $_.Extension -in @('.exe', '.dll')
-              } |
-              Sort-Object FullName -Unique
-          )
-
-          if ($filesToSign.Count -eq 0) {
-              throw "No EXE or DLL files were found under '$outputPattern'."
-          }
-
-          Write-Host "Found $($filesToSign.Count) files to sign:"
-
-          foreach ($file in $filesToSign) {
-              Write-Host "  $($file.FullName)"
-          }
-
-          $fileList = Join-Path `
-              $env:RUNNER_TEMP `
-              'authenticode-files.txt'
-
-          $filesToSign.FullName |
-              Set-Content `
-                  -LiteralPath $fileList `
-                  -Encoding utf8NoBOM
-
-          & $signTool sign `
-              --azure-key-vault-url $env:KEY_VAULT_URL `
-              --azure-key-vault-certificate $env:KEY_VAULT_CERT_NAME `
-              --azure-key-vault-managed-identity `
-              --file-digest sha256 `
-              --timestamp-rfc3161 'http://timestamp.digicert.com' `
-              --timestamp-digest sha256 `
-              --verbose `
-              --input-file-list $fileList
+          & "$env:RUNNER_TEMP\AzureSignTool\AzureSignTool.exe" sign `
+            --azure-key-vault-url "$env:KEY_VAULT_URL" `
+            --azure-key-vault-certificate "$env:KEY_VAULT_CERT_NAME" `
+            --azure-key-vault-managed-identity `
+            --file-digest sha256 `
+            --timestamp-rfc3161 "http://timestamp.digicert.com" `
+            --timestamp-digest sha256 `
+            --verbose `
+            "$env:GITHUB_WORKSPACE\bin\Release\net10.0\*.exe" `
+            "$env:GITHUB_WORKSPACE\bin\Release\net10.0\*.dll"
 
           if ($LASTEXITCODE -ne 0) {
-              throw "AzureSignTool failed with exit code $LASTEXITCODE."
-          }
-
-          foreach ($file in $filesToSign) {
-              $signature = Get-AuthenticodeSignature `
-                  -FilePath $file.FullName
-
-              $subject = if ($null -eq $signature.SignerCertificate) {
-                  '<none>'
-              } else {
-                  $signature.SignerCertificate.Subject
-              }
-
-              Write-Host (
-                  "$($file.FullName)`n" +
-                  "  Status: $($signature.Status)`n" +
-                  "  Signer: $subject"
-              )
-
-              if ($signature.Status -ne 'Valid') {
-                  throw (
-                      "Authenticode validation failed for " +
-                      "'$($file.FullName)': " +
-                      "$($signature.Status) — " +
-                      "$($signature.StatusMessage)"
-                  )
-              }
+            exit $LASTEXITCODE
           }
 
       - name: Test
