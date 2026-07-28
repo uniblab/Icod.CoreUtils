@@ -22,6 +22,20 @@ public interface IFileSystemOperations {
 		CancellationToken cancellationToken = default
 	);
 
+	/// <summary>
+	/// Opens and flushes a pathname using the requested durability semantics.
+	/// Implementations should support directories and special files where the host APIs permit it.
+	/// </summary>
+	ValueTask<PlatformOperationResult> FlushFileAsync(
+		string path,
+		FileFlushMode mode,
+		CancellationToken cancellationToken = default
+	) => ValueTask.FromResult(
+		PlatformOperationResult.Unsupported(
+			"pathname-specific file flushing is not implemented by this provider"
+		)
+	);
+
 	/// <summary>Flushes the filesystem containing the supplied path.</summary>
 	ValueTask<PlatformOperationResult> FlushFileSystemAsync(
 		string path,

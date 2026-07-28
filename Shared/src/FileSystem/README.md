@@ -8,8 +8,8 @@ Every operation therefore returns `PlatformOperationResult` rather than silently
 
 | Requirement | API |
 |---|---|
-| Data-only file flush | `FlushFileAsync(file, FileFlushMode.DataOnly)` |
-| Data-and-metadata file flush | `FlushFileAsync(file, FileFlushMode.DataAndMetadata)` |
+| Data-only file flush | `FlushFileAsync(fileOrPath, FileFlushMode.DataOnly)` |
+| Data-and-metadata file flush | `FlushFileAsync(fileOrPath, FileFlushMode.DataAndMetadata)` |
 | One containing filesystem | `FlushFileSystemAsync(path)` |
 | All mounted filesystems | `FlushAllFileSystemsAsync()` |
 | Sparse extension | `ExtendSparseAsync(file, newLength)` |
@@ -34,6 +34,8 @@ FreeBSD support is a best-effort implementation based on its documented `fdatasy
 
 The caller owns every supplied `FileStream`. It must remain open, and callers must not concurrently dispose it or alter its native position, until the returned operation completes. The system implementation retains native handles while it performs descriptor- or handle-based work and restores the managed stream position after allocated-range queries.
 
+The pathname file-flush overload opens its own native handle. On Unix it follows the GNU `sync` strategy: open read-only and nonblocking, retry write-only, clear nonblocking mode, perform `fdatasync` or `fsync`, and report close failures. On Windows it uses `CreateFileW` with backup semantics so directory handles can be attempted where the filesystem permits them.
+
 Cancellation is cooperative. Tokens are observed before and between native operations. A kernel flush or a Windows filesystem-control request that is already blocking might not be interrupted immediately.
 
 Sparse extension is not transactional. For example, Windows can successfully mark a file sparse before a later length change or flush fails. A failed result therefore does not guarantee that every earlier native side effect was rolled back.
@@ -45,7 +47,7 @@ Sparse extension is not transactional. For example, Windows can successfully mar
 - `truncate` uses `ExtendSparseAsync` when increasing a file length and can inspect the returned allocation result.
 - `sync FILE...` uses a data-and-metadata file flush for each operand.
 - `sync -d FILE...` uses a data-only file flush for each operand.
-- `sync -f FILE...` uses a containing-filesystem flush for each operand.
+- `sync -f FILE...` uses a containing-filesystem flush for each operand when available; otherwise it follows GNU Coreutils and makes one global flush request.
 - `sync` without operands uses the global flush operation.
 
 Commands should accept `IFileSystemOperations` through an overload or constructor and default to `SystemFileSystemOperations.Instance`. Tests may inject a deterministic implementation without invoking native filesystem APIs.
