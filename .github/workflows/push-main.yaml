@@ -25,8 +25,11 @@ jobs:
           dotnet-version: 10.0.x
           
       - run: dotnet clean Icod.CoreUtils.sln -c Release
+      
       - run: dotnet restore Icod.CoreUtils.sln
+      
       - run: dotnet build Icod.CoreUtils.sln -c Release --no-restore
+      
       - run: dotnet test Icod.CoreUtils.sln -c Release --no-build --logger trx
 
       # SECURE SIGNING STAGE (Only fires when the matrix is processing Windows)
@@ -38,8 +41,13 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # Batch-sign your binaries leveraging Azure CLI context natively
+      # 1. RESTORED: Install the official .NET Foundation Sign tool
+      - name: Install .NET Sign CLI
+        if: matrix.os == 'windows-latest'
+        run: dotnet tool install --global sign --prerelease
+
+      # 2. FIXED: Batch-sign using 'dotnet sign' to ensure the tool executes correctly
       - name: Sign All CoreUtils Binaries via Azure Key Vault
         if: matrix.os == 'windows-latest'
         run: |
-          sign code azure-key-vault "bin/Release/net10.0/*.exe" "bin/Release/net10.0/*.dll" --azure-key-vault-url "${{ secrets.KEY_VAULT_URL }}" --azure-key-vault-certificate "${{ secrets.KEY_VAULT_CERT_NAME }}" --timestamp-url "http://timestamp.digicert.com"
+          dotnet sign code azure-key-vault "bin/Release/net10.0/*.exe" "bin/Release/net10.0/*.dll" --azure-key-vault-url "${{ secrets.KEY_VAULT_URL }}" --azure-key-vault-certificate "${{ secrets.KEY_VAULT_CERT_NAME }}" --timestamp-url "http://timestamp.digicert.com"
