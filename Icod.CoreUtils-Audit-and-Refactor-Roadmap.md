@@ -883,8 +883,4 @@ A batch is complete only when:
 - roadmap status and documentation are updated.
 
 ## Immediate next actions
-1. Implement Batch 13 (`od`) to complete the raw-file and binary-formatting sequence established by `dd`, `truncate`, and `sync`.
-2. Continue with Batch 14 (`printf`, `numfmt`).
-3. Rename `mktmp` to `mktemp` and implement Batch 15.
-4. Implement Batch 16 (`expr`).
-5. Complete Completion Gate C before beginning Batch 17.
+1. Continue with Batch 14 (`printf`, `numfmt`).
