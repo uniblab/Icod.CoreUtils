@@ -48,9 +48,21 @@ jobs:
           dotnet new tool-manifest
           dotnet tool install sign --prerelease
 
-      # 2. FIXED: Trim the trailing slash dynamically from the vault URL secret
+      # 2. FIXED: Pass secret via env to prevent injection, and use regex to force valid URL structure
       - name: Sign All CoreUtils Binaries via Azure Key Vault
         if: matrix.os == 'windows-latest'
         run: |
-          $vaultUrl = "${{ secrets.KEY_VAULT_URL }}".TrimEnd('/')
-          dotnet tool run sign code azure-key-vault "bin/Release/net10.0/*.exe" "bin/Release/net10.0/*.dll" --azure-key-vault-url "$vaultUrl" --azure-key-vault-certificate "${{ secrets.KEY_VAULT_CERT_NAME }}" --timestamp-url "http://timestamp.digicert.com"
+          # 1. Grab raw environment variable safely
+          $rawUrl = $env:RAW_VAULT_URL
+          
+          # 2. Use regex to extract ONLY the protocol and host (e.g. https://azure.net)
+          if ($rawUrl -match "^(https:\/\/[^\/]+)") {
+              $cleanVaultUrl = $Matches[1]
+          } else {
+              $cleanVaultUrl = $rawUrl
+          }
+          
+          # 3. Execute sign tool with the cleanly scrubbed URL variable
+          dotnet tool run sign code azure-key-vault "bin/Release/net10.0/*.exe" "bin/Release/net10.0/*.dll" --azure-key-vault-url "$cleanVaultUrl" --azure-key-vault-certificate "${{ secrets.KEY_VAULT_CERT_NAME }}" --timestamp-url "http://timestamp.digicert.com"
+        env:
+          RAW_VAULT_URL: ${{ secrets.KEY_VAULT_URL }}
