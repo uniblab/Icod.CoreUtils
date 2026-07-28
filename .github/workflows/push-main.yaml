@@ -48,8 +48,9 @@ jobs:
           dotnet new tool-manifest
           dotnet tool install sign --prerelease
 
-      # 2. FIXED: Execute via 'dotnet tool run' to guarantee the runner finds it
+      # 2. FIXED: Trim the trailing slash dynamically from the vault URL secret
       - name: Sign All CoreUtils Binaries via Azure Key Vault
         if: matrix.os == 'windows-latest'
         run: |
-          dotnet tool run sign code azure-key-vault "bin/Release/net10.0/*.exe" "bin/Release/net10.0/*.dll" --azure-key-vault-url "${{ secrets.KEY_VAULT_URL }}" --azure-key-vault-certificate "${{ secrets.KEY_VAULT_CERT_NAME }}" --timestamp-url "http://timestamp.digicert.com"
+          $vaultUrl = "${{ secrets.KEY_VAULT_URL }}".TrimEnd('/')
+          dotnet tool run sign code azure-key-vault "bin/Release/net10.0/*.exe" "bin/Release/net10.0/*.dll" --azure-key-vault-url "$vaultUrl" --azure-key-vault-certificate "${{ secrets.KEY_VAULT_CERT_NAME }}" --timestamp-url "http://timestamp.digicert.com"
