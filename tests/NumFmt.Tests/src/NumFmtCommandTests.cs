@@ -81,8 +81,12 @@ public sealed class NumFmtCommandTests {
 
 	[Fact]
 	public async Task NegativeRoundingDirectionsAreDistinct() {
-		var up = await RunAsync( [ "--round=up", "--to-unit=10", "-15" ] );
-		var down = await RunAsync( [ "--round=down", "--to-unit=10", "-15" ] );
+		var up = await RunAsync( [ "--round=up", "--to-unit=10", "--", "-15" ] );
+		var down = await RunAsync( [ "--round=down", "--to-unit=10", "--", "-15" ] );
+		Assert.Equal( CommandExitCodes.Success, up.Status );
+		Assert.Equal( CommandExitCodes.Success, down.Status );
+		Assert.Empty( up.Error );
+		Assert.Empty( down.Error );
 		Assert.Equal( string.Concat( "-1", Environment.NewLine ), up.Output );
 		Assert.Equal( string.Concat( "-2", Environment.NewLine ), down.Output );
 	}
