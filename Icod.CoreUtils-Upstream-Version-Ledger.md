@@ -49,47 +49,48 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 | 9 | Completed | Platform and process information | `COREUTILS-9.11`; `PROCPS-4.0.6` for `ps` |
 | 10 | Completed | Block copy and conversion: `dd` | `COREUTILS-9.11` |
 | 11 | Completed | File-size manipulation: `truncate` | `COREUTILS-9.11` |
-| 12 | In progress | Filesystem flushing: `sync` | `COREUTILS-9.11` |
-| 13 | Planned | Formatted and human-readable numeric output | `COREUTILS-9.11` |
-| 14 | Planned | Secure temporary objects: `mktemp` | `COREUTILS-9.11` |
-| 15 | Planned | Expression language: `expr` | `COREUTILS-9.11` |
-| 16 | Planned | Tabs and display columns | `COREUTILS-9.11` |
-| 17 | Planned | Paragraph and line-number formatting | `COREUTILS-9.11` |
-| 18 | Planned | Field and record extraction | `COREUTILS-9.11` |
-| 19 | Planned | External ordering and randomization | `COREUTILS-9.11` |
-| 20 | Planned | Sorted-stream consumers | `COREUTILS-9.11` |
-| 21 | Planned | Character transformation, graph ordering, and permuted indexing | `COREUTILS-9.11` |
-| 22 | Planned | Regular-expression search: `grep` | `GREP-3.12` |
-| 23 | Planned | Splitting and reversing | `COREUTILS-9.11`; regex behavior in `csplit` remains the Coreutils contract while reusing internal regex policy established in Batch 22 |
-| 24 | Planned | Page presentation and binary inspection | `COREUTILS-9.11` |
-| 25 | Planned | Difference engine: `diff` | `DIFFUTILS-3.12` |
-| 26 | Planned | Patch application engine: `patch` | `PATCH-2.8` |
-| 27 | Planned | Line editor: `ed` | `ED-1.22.5` |
-| 28 | Planned | Symbolic-link and canonical-path resolution | `COREUTILS-9.11` |
-| 29 | Planned | File metadata and timestamps | `COREUTILS-9.11` |
-| 30 | Planned | Condition evaluator: `test` | `COREUTILS-9.11` |
-| 31 | Planned | Basic directory and name removal | `COREUTILS-9.11` |
-| 32 | Planned | Hard and symbolic links | `COREUTILS-9.11` |
-| 33 | Planned | Special file creation | `COREUTILS-9.11` |
-| 34 | Planned | Permission modes: `chmod` | `COREUTILS-9.11` |
-| 35 | Planned | Ownership and group mutation | `COREUTILS-9.11` |
-| 36 | Planned | Recursive removal: `rm` | `COREUTILS-9.11` |
-| 37 | Planned | Copy and move engine | `COREUTILS-9.11` |
-| 38 | Planned | Installation engine: `install` | `COREUTILS-9.11` |
-| 39 | Planned | Color database: `dircolors` | `COREUTILS-9.11` |
-| 40 | Planned | Directory listing family | `COREUTILS-9.11` |
-| 41 | Planned | Filesystem usage reporting | `COREUTILS-9.11` |
-| 42 | Planned | Data destruction: `shred` | `COREUTILS-9.11` |
-| 43 | Planned | Archive engine: `tar` | `TAR-1.35` |
-| 44 | Planned | Host and processor context | `COREUTILS-9.11` |
-| 45 | Planned | Terminal identification: `tty` | `COREUTILS-9.11` |
-| 46 | Planned | Terminal characteristics: `stty` | `COREUTILS-9.11` |
-| 47 | Planned | Environment and hangup-independent execution | `COREUTILS-9.11` |
-| 48 | Planned | Priority and time-bounded execution | `COREUTILS-9.11` |
-| 49 | Planned | Signal control: `kill` | `COREUTILS-9.11` |
-| 50 | Planned | Root-directory execution: `chroot` | `COREUTILS-9.11` |
-| 51 | Planned | SELinux context operations | `COREUTILS-9.11` |
-| 52 | Planned | Standard-stream buffering control: `stdbuf` | `COREUTILS-9.11` |
+| 12 | Completed | Filesystem flushing: `sync` | `COREUTILS-9.11` |
+| 13 | In progress | Binary formatting: `od` | `COREUTILS-9.11` |
+| 14 | Planned | Formatted and human-readable numeric output | `COREUTILS-9.11` |
+| 15 | Planned | Secure temporary objects: `mktemp` | `COREUTILS-9.11` |
+| 16 | Planned | Expression language: `expr` | `COREUTILS-9.11` |
+| 17 | Planned | Tabs and display columns | `COREUTILS-9.11` |
+| 18 | Planned | Paragraph and line-number formatting | `COREUTILS-9.11` |
+| 19 | Planned | Field and record extraction | `COREUTILS-9.11` |
+| 20 | Planned | External ordering and randomization | `COREUTILS-9.11` |
+| 21 | Planned | Sorted-stream consumers | `COREUTILS-9.11` |
+| 22 | Planned | Character transformation, graph ordering, and permuted indexing | `COREUTILS-9.11` |
+| 23 | Planned | Regular-expression search: `grep` | `GREP-3.12` |
+| 24 | Planned | Splitting and reversing | `COREUTILS-9.11`; regex behavior in `csplit` remains the Coreutils contract while reusing internal regex policy established in Batch 22 |
+| 25 | Planned | Page presentation and binary inspection | `COREUTILS-9.11` |
+| 26 | Planned | Difference engine: `diff` | `DIFFUTILS-3.12` |
+| 27 | Planned | Patch application engine: `patch` | `PATCH-2.8` |
+| 28 | Planned | Line editor: `ed` | `ED-1.22.5` |
+| 29 | Planned | Symbolic-link and canonical-path resolution | `COREUTILS-9.11` |
+| 30 | Planned | File metadata and timestamps | `COREUTILS-9.11` |
+| 31 | Planned | Condition evaluator: `test` | `COREUTILS-9.11` |
+| 32 | Planned | Basic directory and name removal | `COREUTILS-9.11` |
+| 33 | Planned | Hard and symbolic links | `COREUTILS-9.11` |
+| 34 | Planned | Special file creation | `COREUTILS-9.11` |
+| 35 | Planned | Permission modes: `chmod` | `COREUTILS-9.11` |
+| 36 | Planned | Ownership and group mutation | `COREUTILS-9.11` |
+| 37 | Planned | Recursive removal: `rm` | `COREUTILS-9.11` |
+| 38 | Planned | Copy and move engine | `COREUTILS-9.11` |
+| 39 | Planned | Installation engine: `install` | `COREUTILS-9.11` |
+| 40 | Planned | Color database: `dircolors` | `COREUTILS-9.11` |
+| 41 | Planned | Directory listing family | `COREUTILS-9.11` |
+| 42 | Planned | Filesystem usage reporting | `COREUTILS-9.11` |
+| 43 | Planned | Data destruction: `shred` | `COREUTILS-9.11` |
+| 44 | Planned | Archive engine: `tar` | `TAR-1.35` |
+| 45 | Planned | Host and processor context | `COREUTILS-9.11` |
+| 46 | Planned | Terminal identification: `tty` | `COREUTILS-9.11` |
+| 47 | Planned | Terminal characteristics: `stty` | `COREUTILS-9.11` |
+| 48 | Planned | Environment and hangup-independent execution | `COREUTILS-9.11` |
+| 49 | Planned | Priority and time-bounded execution | `COREUTILS-9.11` |
+| 50 | Planned | Signal control: `kill` | `COREUTILS-9.11` |
+| 51 | Planned | Root-directory execution: `chroot` | `COREUTILS-9.11` |
+| 52 | Planned | SELinux context operations | `COREUTILS-9.11` |
+| 53 | Planned | Standard-stream buffering control: `stdbuf` | `COREUTILS-9.11` |
 
 
 ## Batch 11 implementation record
@@ -122,7 +123,23 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 - **GNU fallback retained:** when the provider lacks `syncfs` but supports global flushing, `sync -f FILE...` makes one global flush request, matching GNU Coreutils builds without `syncfs`.
 - **Best-effort platform:** FreeBSD uses its documented `open`, `fcntl`, `fdatasync`, `fsync`, and `sync` interfaces, but is outside the required CI matrix.
 - **Native pathname behavior:** Unix pathname operands are opened with `O_NONBLOCK`, retried write-only when needed, restored to blocking mode, flushed, and closed; Windows pathname operands use `CreateFileW` and `FlushFileBuffers`.
-- **Deferred validation:** the state remains **In progress** until the dedicated test project and complete solution pass on `windows-latest`, `ubuntu-latest`, and `macos-latest`; after merge, change the Batch 12 state to **Completed**.
+- **Validation completed:** the dedicated test project and complete solution passed on `windows-latest`, `ubuntu-latest`, and `macos-latest`; Batch 12 was merged into `main` on 28 July 2026.
+
+
+## Batch 13 implementation record
+
+- **Batch and command:** Batch 13, `od`.
+- **Authority reconfirmed:** 28 July 2026.
+- **Authoritative package:** GNU Coreutils 9.11.
+- **Immutable identity:** tag `v9.11`; commit `c01fd163a47468a8296fb369f5233853bb551bb6`.
+- **Primary manual:** [GNU Coreutils 9.11 `od` invocation](https://www.gnu.org/software/coreutils/manual/html_node/od-invocation.html).
+- **Primary source:** [`src/od.c` at the pinned commit](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/od.c).
+- **Secondary synopsis:** [Linux man-pages `od(1)`](https://man7.org/linux/man-pages/man1/od.1.html).
+- **Differential oracle:** GNU `od` from the Ubuntu CI image; its runtime `od --version` output is to be captured whenever differential tests are run.
+- **Reusable infrastructure:** type-string parsing, byte-order-aware primitive formatting, least-common-multiple width validation, and distributed field padding live in `Shared/src/BinaryFormatting`.
+- **Intentional platform interpretation:** integral `L` follows the host C ABI assumption used by the repository: 4 bytes on Windows and pointer width on Unix-like systems. Extended native `long double` encodings that cannot be represented by .NET are rejected with a controlled diagnostic.
+- **Best-effort platforms:** FreeBSD and other BSD-family systems use the Unix-like ABI assumptions above, but BSD support is **best effort** and is outside the required CI matrix.
+- **Required validation:** the dedicated test project and complete solution must pass on `windows-latest`, `ubuntu-latest`, and `macos-latest`; after merge, change the Batch 13 state to **Completed**.
 
 ## Required batch-start record
 
