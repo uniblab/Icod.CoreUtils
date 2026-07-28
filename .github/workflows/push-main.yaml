@@ -57,6 +57,9 @@ jobs:
           dotnet new tool-manifest
           dotnet tool install sign --prerelease
 
-      # Updated single-line execution passing your new Azure Secret configuration flags
+      # FIXED: Environment variable injection to bypass the host string formatting bug
       - name: Sign All CoreUtils Binaries via Azure Key Vault
-        run: dotnet tool run sign code azure-key-vault "bin/Release/net10.0/*.exe" "bin/Release/net10.0/*.dll" --azure-key-vault-url "${{ secrets.KEY_VAULT_URL }}" --azure-key-vault-certificate "${{ secrets.KEY_VAULT_CERT_NAME }}" --timestamp-url "http://digicert.com" --azure-key-vault-key "IcodStrongNameKey" --key-cryptographic-id "base64"
+        run: |
+          dotnet tool run sign code azure-key-vault "bin/Release/net10.0/*.exe" "bin/Release/net10.0/*.dll" --azure-key-vault-certificate "${{ secrets.KEY_VAULT_CERT_NAME }}" --timestamp-url "http://timestamp.digicert.com" --azure-key-vault-key "IcodStrongNameKey" --key-cryptographic-id "base64"
+        env:
+          AZURE_KEY_VAULT_URL: ${{ secrets.KEY_VAULT_URL }}
