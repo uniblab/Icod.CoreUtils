@@ -47,7 +47,9 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
 
-          $toolDirectory = Join-Path $env:RUNNER_TEMP 'AzureSignTool'
+          $toolDirectory = Join-Path `
+              $env:RUNNER_TEMP `
+              'AzureSignTool'
 
           dotnet tool install `
               --tool-path $toolDirectory `
@@ -81,102 +83,35 @@ jobs:
               throw "AzureSignTool was not found at '$signTool'."
           }
 
-          # Collect each non-test project's primary DLL and Windows apphost EXE.
-          # This avoids signing copies of dependencies found in every output
-          # directory.
-          $projectFiles = @(
-              Get-ChildItem `
-                  -Path $env:GITHUB_WORKSPACE `
-                  -Recurse `
-                  -File `
-                  -Filter '*.csproj' |
-              Where-Object {
-                  $_.FullName -notmatch '[\\/]tests[\\/]'
-              }
-          )
-
-          $filesToSign = [System.Collections.Generic.List[string]]::new()
-
-          foreach ($projectFile in $projectFiles) {
-              [xml] $project = Get-Content `
-                  -LiteralPath $projectFile.FullName `
-                  -Raw
-
-              $assemblyName = [string] (
-                  $project.Project.PropertyGroup.AssemblyName |
-                  Where-Object {
-                      -not [string]::IsNullOrWhiteSpace([string] $_)
-                  } |
-                  Select-Object -First 1
-              )
-
-              $targetFramework = [string] (
-                  $project.Project.PropertyGroup.TargetFramework |
-                  Where-Object {
-                      -not [string]::IsNullOrWhiteSpace([string] $_)
-                  } |
-                  Select-Object -First 1
-              )
-
-              if ([string]::IsNullOrWhiteSpace($assemblyName)) {
-                  Write-Warning (
-                      "Skipping '$($projectFile.FullName)': " +
-                      'AssemblyName was not found.'
-                  )
-
-                  continue
-              }
-
-              if ([string]::IsNullOrWhiteSpace($targetFramework)) {
-                  Write-Warning (
-                      "Skipping '$($projectFile.FullName)': " +
-                      'TargetFramework was not found.'
-                  )
-
-                  continue
-              }
-
-              $outputDirectory = Join-Path `
-                  $projectFile.DirectoryName `
-                  "bin\Release\$targetFramework"
-
-              foreach ($extension in @('.exe', '.dll')) {
-                  $candidate = Join-Path `
-                      $outputDirectory `
-                      "$assemblyName$extension"
-
-                  if (Test-Path -LiteralPath $candidate -PathType Leaf) {
-                      $resolvedPath = (
-                          Resolve-Path -LiteralPath $candidate
-                      ).Path
-
-                      $filesToSign.Add($resolvedPath)
-                  }
-              }
-          }
+          $outputPattern = Join-Path `
+              $env:GITHUB_WORKSPACE `
+              '*\bin\Release\net10.0\*'
 
           $filesToSign = @(
-              $filesToSign |
-              Sort-Object -Unique
+              Get-ChildItem `
+                  -Path $outputPattern `
+                  -File |
+              Where-Object {
+                  $_.Extension -in @('.exe', '.dll')
+              } |
+              Sort-Object FullName -Unique
           )
 
           if ($filesToSign.Count -eq 0) {
-              throw 'No primary Windows binaries were found to sign.'
+              throw "No EXE or DLL files were found under '$outputPattern'."
           }
 
-          Write-Host (
-              "Found $($filesToSign.Count) binaries to sign:"
-          )
+          Write-Host "Found $($filesToSign.Count) files to sign:"
 
           foreach ($file in $filesToSign) {
-              Write-Host "  $file"
+              Write-Host "  $($file.FullName)"
           }
 
           $fileList = Join-Path `
               $env:RUNNER_TEMP `
               'authenticode-files.txt'
 
-          $filesToSign |
+          $filesToSign.FullName |
               Set-Content `
                   -LiteralPath $fileList `
                   -Encoding utf8NoBOM
@@ -192,16 +127,12 @@ jobs:
               --input-file-list $fileList
 
           if ($LASTEXITCODE -ne 0) {
-              throw (
-                  "AzureSignTool failed with exit code " +
-                  "$LASTEXITCODE."
-              )
+              throw "AzureSignTool failed with exit code $LASTEXITCODE."
           }
 
-          # Fail the workflow if any resulting signature is not valid.
           foreach ($file in $filesToSign) {
               $signature = Get-AuthenticodeSignature `
-                  -FilePath $file
+                  -FilePath $file.FullName
 
               $subject = if ($null -eq $signature.SignerCertificate) {
                   '<none>'
@@ -210,14 +141,15 @@ jobs:
               }
 
               Write-Host (
-                  "$file`n" +
+                  "$($file.FullName)`n" +
                   "  Status: $($signature.Status)`n" +
                   "  Signer: $subject"
               )
 
               if ($signature.Status -ne 'Valid') {
                   throw (
-                      "Authenticode validation failed for '$file': " +
+                      "Authenticode validation failed for " +
+                      "'$($file.FullName)': " +
                       "$($signature.Status) — " +
                       "$($signature.StatusMessage)"
                   )
