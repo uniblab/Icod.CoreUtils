@@ -1,6 +1,7 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
+		<LangVersion>13.0</LangVersion>
 		<OutputType>Exe</OutputType>
 		<TargetFramework>net10.0</TargetFramework>
 		<Nullable>enable</Nullable>
@@ -16,32 +17,13 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Shared\Icod.CoreUtils.Shared.csproj" />
 	</ItemGroup>
-	<ItemGroup>
-	  <Folder Include="src\" />
-	</ItemGroup>
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-		<ErrorReport>prompt</ErrorReport>
-		<WarningLevel>2</WarningLevel>
-		<DebugSymbols>true</DebugSymbols>
-		<DebugType>full</DebugType>
-		<Optimize>false</Optimize>
-		<DefineConstants>DEBUG;TRACE</DefineConstants>
-		<NoWarn>1591</NoWarn>
+		<ErrorReport>prompt</ErrorReport><WarningLevel>2</WarningLevel><DebugSymbols>true</DebugSymbols><DebugType>full</DebugType><Optimize>false</Optimize><DefineConstants>DEBUG;TRACE</DefineConstants><SignAssembly>false</SignAssembly><TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(Configuration)' == 'Staging' ">
-		<ErrorReport>prompt</ErrorReport>
-		<WarningLevel>3</WarningLevel>
-		<DebugSymbols>true</DebugSymbols>
-		<DebugType>full</DebugType>
-		<Optimize>false</Optimize>
-		<DefineConstants>TRACE</DefineConstants>
+		<ErrorReport>prompt</ErrorReport><WarningLevel>3</WarningLevel><DebugSymbols>true</DebugSymbols><DebugType>full</DebugType><Optimize>false</Optimize><DefineConstants>TRACE</DefineConstants><SignAssembly>false</SignAssembly><TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-		<AssemblyKeyContainerName>Icod</AssemblyKeyContainerName>
-		<DelaySign>false</DelaySign>
-		<DebugType>pdbonly</DebugType>
-		<Optimize>true</Optimize>
-		<ErrorReport>prompt</ErrorReport>
-		<WarningLevel>4</WarningLevel>
+		<ErrorReport>prompt</ErrorReport><WarningLevel>4</WarningLevel><DebugType>pdbonly</DebugType><Optimize>true</Optimize><SignAssembly>false</SignAssembly><TreatWarningsAsErrors>true</TreatWarningsAsErrors><WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
 	</PropertyGroup>
 </Project>

@@ -4,10 +4,9 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | Batches 0–13 |
-| Next command batch | Batch 14 — `printf`, `anumfmt` |
-| Current engineering gate | Planned Completion Gate C1 |
-| Next infrastructure dependency | Completion Gate C1 — before Batch 16 |
+| Completed command batches | For completion status, see list of batches below |
+| Current engineering gate | For completion status, see list of batches below |
+| Next infrastructure dependency | For completion status, see list of batches below |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 | Status-maintenance rule | Update this table after every merged batch |
@@ -313,8 +312,8 @@ For `od`, build a reusable binary-formatting engine covering address radices, ty
 
 ### Batch 14 — Formatted and human-readable numeric output (2 tools)
 
-- [ ] `printf`
-- [ ] `numfmt`
+- [x] `printf`
+- [x] `numfmt`
 
 Create shared format-string, escape, numeric, grouping, padding, precision, and human-suffix components. These will later be reused by `stat`, `sort -h`, `ls -h`, `df`, and `du`.
 
@@ -449,7 +448,7 @@ Reuse the established text, locale, tokenization, ordering, and spill-storage pr
 
 * [ ] Add the shared read-only pathname traversal model:
 
-  * [ ] centralized pathname expansion policy for eligible operands;
+  * [ ] centralize pathname expansion policy for eligible operands;
   * [ ] recursive directory enumeration;
   * [ ] symlink and reparse-point traversal policy;
   * [ ] file identity sufficient for cycle detection;

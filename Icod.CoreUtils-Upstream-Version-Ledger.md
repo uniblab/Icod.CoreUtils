@@ -50,8 +50,8 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 | 10 | Completed | Block copy and conversion: `dd` | `COREUTILS-9.11` |
 | 11 | Completed | File-size manipulation: `truncate` | `COREUTILS-9.11` |
 | 12 | Completed | Filesystem flushing: `sync` | `COREUTILS-9.11` |
-| 13 | In progress | Binary formatting: `od` | `COREUTILS-9.11` |
-| 14 | Planned | Formatted and human-readable numeric output | `COREUTILS-9.11` |
+| 13 | Completed | Binary formatting: `od` | `COREUTILS-9.11` |
+| 14 | In progress | Formatted and human-readable numeric output: `printf`, `numfmt` | `COREUTILS-9.11` |
 | 15 | Planned | Secure temporary objects: `mktemp` | `COREUTILS-9.11` |
 | 16 | Planned | Expression language: `expr` | `COREUTILS-9.11` |
 | 17 | Planned | Tabs and display columns | `COREUTILS-9.11` |
@@ -139,7 +139,22 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 - **Reusable infrastructure:** type-string parsing, byte-order-aware primitive formatting, least-common-multiple width validation, and distributed field padding live in `Shared/src/BinaryFormatting`.
 - **Intentional platform interpretation:** integral `L` follows the host C ABI assumption used by the repository: 4 bytes on Windows and pointer width on Unix-like systems. Extended native `long double` encodings that cannot be represented by .NET are rejected with a controlled diagnostic.
 - **Best-effort platforms:** FreeBSD and other BSD-family systems use the Unix-like ABI assumptions above, but BSD support is **best effort** and is outside the required CI matrix.
-- **Required validation:** the dedicated test project and complete solution must pass on `windows-latest`, `ubuntu-latest`, and `macos-latest`; after merge, change the Batch 13 state to **Completed**.
+- **Validation completed:** the dedicated test project and complete solution passed on `windows-latest`, `ubuntu-latest`, and `macos-latest`; Batch 13 was merged into `main` on 28 July 2026.
+
+
+## Batch 14 implementation record
+
+- **Batch and commands:** Batch 14, `printf` and `numfmt`.
+- **Authority reconfirmed:** 28 July 2026.
+- **Authoritative package:** GNU Coreutils 9.11.
+- **Immutable identity:** tag `v9.11`; commit `c01fd163a47468a8296fb369f5233853bb551bb6`.
+- **Primary manual:** [GNU Coreutils 9.11 formatted output](https://www.gnu.org/software/coreutils/manual/html_node/printf-invocation.html) and [human-readable number conversion](https://www.gnu.org/software/coreutils/manual/html_node/numfmt-invocation.html).
+- **Primary sources:** [`src/printf.c`](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/printf.c) and [`src/numfmt.c`](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/numfmt.c) at the pinned commit.
+- **Differential oracles:** GNU `printf` and `numfmt` from the Ubuntu CI image; their runtime `--version` output is to be captured whenever differential tests are run.
+- **Reusable infrastructure:** GNU escape decoding lives in `Shared/src/Formatting`; arbitrary-precision exact rational parsing, scaling, decimal formatting, and explicit rounding live in `Shared/src/Numerics`.
+- **Intentional runtime interpretation:** numeric parsing and generated command syntax are culture-aware only where GNU delegates to the active locale; option names, scale keywords, suffix grammar, and decimal source syntax remain invariant.
+- **Platform scope:** the implementation is fully managed. Windows, Linux, and macOS are the required CI platforms. FreeBSD and other BSD-family systems are **best effort** and should behave identically except for host locale data.
+- **Required validation:** both dedicated test projects, Shared tests, and the complete solution must pass on `windows-latest`, `ubuntu-latest`, and `macos-latest`; after merge, change Batch 14 to **Completed**.
 
 ## Required batch-start record
 
