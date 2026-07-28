@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   # ----------------------------------------------------
-  # STAGE 1: Cross-Platform Build & Test (All 3 OSs)
+  # STAGE 1: Single-Pass Build, Sign, and Test Matrix
   # ----------------------------------------------------
   build-and-test:
     strategy:
@@ -25,43 +25,37 @@ jobs:
         with:
           dotnet-version: 10.0.x
           
+      # 1. Clean and Build exactly once per OS target
       - run: dotnet clean Icod.CoreUtils.sln -c Release
       - run: dotnet restore Icod.CoreUtils.sln
       - run: dotnet build Icod.CoreUtils.sln -c Release --no-restore
-      - run: dotnet test Icod.CoreUtils.sln -c Release --no-build --logger trx
 
-  # ----------------------------------------------------
-  # STAGE 2: Secure Windows Authenticode & Strong-Name Signing
-  # ----------------------------------------------------
-  secure-sign:
-    needs: build-and-test # Only runs if Stage 1 completely passes
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 10.0.x
-
-      - run: dotnet build Icod.CoreUtils.sln -c Release
-
+      # 2. Azure Authentication (Only logs in on the Windows runner)
       - name: Authenticate to Azure via OIDC
+        if: matrix.os == 'windows-latest'
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      # 3. Setup local tool definitions inside workspace
       - name: Install .NET Sign CLI Locally
+        if: matrix.os == 'windows-latest'
         run: |
           dotnet new tool-manifest
           dotnet tool install sign --prerelease
 
-      # FIXED: Map secret to env to preserve character data, then use strict type trimming
+      # 4. Standard Practice: Zero argument-flags. Everything passes cleanly via system environment memory
       - name: Sign All CoreUtils Binaries via Azure Key Vault
-        run: |
-          $rawUrl = [string]$env:RAW_SECRET_URL
-          $cleanUrl = $rawUrl.Trim()
-          dotnet tool run sign code azure-key-vault "bin/Release/net10.0/*.exe" "bin/Release/net10.0/*.dll" --azure-key-vault-url "$cleanUrl" --azure-key-vault-certificate "${{ secrets.KEY_VAULT_CERT_NAME }}" --timestamp-url "http://timestamp.digicert.com" --azure-key-vault-key "IcodStrongNameKey" --key-cryptographic-id "base64"
+        if: matrix.os == 'windows-latest'
+        run: dotnet tool run sign code azure-key-vault "bin/Release/net10.0/*.exe" "bin/Release/net10.0/*.dll"
         env:
-          RAW_SECRET_URL: ${{ secrets.KEY_VAULT_URL }}
+          SIGN_AZURE_KEY_VAULT_URL: ${{ secrets.KEY_VAULT_URL }}
+          SIGN_AZURE_KEY_VAULT_CERTIFICATE: ${{ secrets.KEY_VAULT_CERT_NAME }}
+          SIGN_AZURE_KEY_VAULT_KEY: IcodStrongNameKey
+          SIGN_KEY_CRYPTOGRAPHIC_ID: base64
+          SIGN_TIMESTAMP_URL: http://timestamp.digicert.com
+
+      # 5. Final validation execution: tests the signed binaries across all platforms
+      - run: dotnet test Icod.CoreUtils.sln -c Release --no-build --logger trx
