@@ -1,4 +1,4 @@
-name: build
+name: main-build+sign-on-push
 
 on:
   push:
