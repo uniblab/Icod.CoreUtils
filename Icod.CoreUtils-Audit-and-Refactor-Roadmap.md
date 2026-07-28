@@ -154,7 +154,7 @@ These gates are repository milestones rather than command batches. They do not a
 - [X] Record the exact authoritative upstream version used for every completed and future batch.
 - [ ] Update the living status section after Batch 11 is merged.
 
-[x] Recommended local verification sequence after migration:
+- [x] Recommended local verification sequence after migration:
 ```text
 dotnet clean Icod.CoreUtils.sln -c Debug
 dotnet restore Icod.CoreUtils.sln
@@ -164,56 +164,56 @@ dotnet test Icod.CoreUtils.sln -c Debug --no-build --no-restore
 
 ### Completion Gate B — before Batch 12
 
-Add `Shared.FileSystem` flush and allocation capability abstractions needed by `dd`, `truncate`, and `sync`:
+[x] Add `Shared.FileSystem` flush and allocation capability abstractions needed by `dd`, `truncate`, and `sync`:
 
-- data-only versus data-and-metadata flush;
-- file-specific versus filesystem-wide flush;
-- sparse extension and allocated-range capability reporting;
-- controlled platform diagnostics where equivalent semantics are unavailable;
-- injectable abstractions and platform-specific integration tests.
+- [x] data-only versus data-and-metadata flush;
+- [x] file-specific versus filesystem-wide flush;
+- [x] sparse extension and allocated-range capability reporting;
+- [x] controlled platform diagnostics where equivalent semantics are unavailable;
+- [x] injectable abstractions and platform-specific integration tests.
 
 ### Completion Gate C — before Batch 16
 
-Add the shared text model:
+[ ] Add the shared text model:
 
-- byte, Unicode scalar, and display-column iteration;
-- locale-aware collation and character classification;
-- tab-stop grammar;
-- field/range-list grammar;
-- escape-sequence parsing;
-- configurable line and NUL record readers/writers.
+- [ ] byte, Unicode scalar, and display-column iteration;
+- [ ] locale-aware collation and character classification;
+- [ ] tab-stop grammar;
+- [ ] field/range-list grammar;
+- [ ] escape-sequence parsing;
+- [ ] configurable line and NUL record readers/writers.
 
 ### Completion Gate D — before Batch 19
 
-Add secure temporary-workspace and external-ordering infrastructure:
+[ ] Add secure temporary-workspace and external-ordering infrastructure:
 
-- exclusive temporary creation;
-- bounded-memory runs;
-- stable external merge;
-- configurable locale/key comparison;
-- deterministic cleanup on success, failure, and cancellation.
+- [ ] exclusive temporary creation;
+- [ ] bounded-memory runs;
+- [ ] stable external merge;
+- [ ] configurable locale/key comparison;
+- [ ] deterministic cleanup on success, failure, and cancellation.
 
 ### Completion Gate E — before Batch 28
 
-Add the shared filesystem model:
+[ ] Add the shared filesystem model:
 
-- lexical and physical path resolution;
-- symlink and reparse-point inspection;
-- file identity, type, mode, ownership, timestamps, links, device/inode equivalents, and allocated-block accounting;
-- recursive traversal with cycle detection and mount-boundary policy;
-- sparse-file and metadata-preservation helpers;
-- atomic replacement and backup policy.
+- [ ] lexical and physical path resolution;
+- [ ] symlink and reparse-point inspection;
+- [ ] file identity, type, mode, ownership, timestamps, links, device/inode equivalents, and allocated-block accounting;
+- [ ] recursive traversal with cycle detection and mount-boundary policy;
+- [ ] sparse-file and metadata-preservation helpers;
+- [ ] atomic replacement and backup policy.
 
 ### Completion Gate F — before Batch 44
 
-Add shared system/process primitives:
+[ ] Add shared system/process primitives:
 
-- host and processor information;
-- terminal discovery and terminal-mode capability abstractions;
-- signal-name and signal-number parsing;
-- process-group control;
-- child-process stream forwarding;
-- controlled Windows substitutions where semantics are genuinely equivalent.
+- [ ] host and processor information;
+- [ ] terminal discovery and terminal-mode capability abstractions;
+- [ ] signal-name and signal-number parsing;
+- [ ] process-group control;
+- [ ] child-process stream forwarding;
+- [ ] controlled Windows substitutions where semantics are genuinely equivalent.
 
 ## Batch-size policy
 
