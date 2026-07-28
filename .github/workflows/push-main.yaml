@@ -22,7 +22,7 @@ jobs:
       
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 9.0.x
+          dotnet-version: 10.0.x
           
       - run: dotnet clean Icod.CoreUtils.sln -c Release
       
@@ -52,6 +52,6 @@ jobs:
             --vault-url "${{ secrets.KEY_VAULT_URL }}" `
             --cert-name "${{ secrets.KEY_VAULT_CERT_NAME }}" `
             --timestamp-rfc3161 "http://digicert.com" `
-            --file-path "bin/Release/net9.0/Icod.CoreUtils.dll"
+            --file-path "bin/Release/net10.0/Icod.CoreUtils.dll"
         env:
           AzureServicesAuthConnectionString: "RunAs=Developer;DeveloperTool=AzureCLI"
