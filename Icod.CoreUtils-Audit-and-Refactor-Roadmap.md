@@ -5,12 +5,11 @@
 | Item | Status |
 |---|---|
 | Completed command batches | Batches 0–12 |
+| Next command batch | Batch 13 — `od` |
 | Current engineering gate | Planned Completion Gate C1 |
 | Next infrastructure dependency | Completion Gate C1 — before Batch 16 |
-| Next command batch | Batch 13 — `od` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
-| Next infrastructure dependency | Completion Gate C — before Batch 17 |
 | Status-maintenance rule | Update this table after every merged batch |
 
 ## Scope
