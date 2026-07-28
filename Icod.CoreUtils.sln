@@ -209,7 +209,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.MkNod", "mkn
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "mktemp", "mktemp", "{17194975-A1DD-4C7D-A48D-530610EB20BA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.MkTemp", "mktmp\Icod.CoreUtils.MkTemp.csproj", "{2266DB58-DC2A-4F29-BB79-71AE1F5F6271}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.MkTemp", "mktemp\Icod.CoreUtils.MkTemp.csproj", "{2266DB58-DC2A-4F29-BB79-71AE1F5F6271}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "mv", "mv", "{BF8517D3-F14F-B57C-5AA3-118C23F04F78}"
 EndProject
