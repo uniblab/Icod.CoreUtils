@@ -12,7 +12,7 @@ public sealed class MkTempCommandTests {
 		var result = await RunAsync( workspace, Array.Empty<string>() );
 		Assert.Equal( 0, result.Status );
 		Assert.Empty( result.Error );
-		Assert.True( result.Path.StartsWith( workspace.Root, StringComparison.Ordinal ) );
+		Assert.StartsWith( workspace.Root, result.Path, StringComparison.Ordinal );
 		Assert.True( File.Exists( result.Path ) );
 		Assert.Matches( @"tmp\.[A-Za-z0-9]{10}$", result.Path );
 	}
@@ -34,7 +34,7 @@ public sealed class MkTempCommandTests {
 			[ "-p", workspace.Root, "--suffix=.txt", "report.XXXX" ]
 		);
 		Assert.Equal( 0, result.Status );
-		Assert.True( result.Path.EndsWith( ".txt", StringComparison.Ordinal ) );
+		Assert.EndsWith( ".txt", result.Path, StringComparison.Ordinal );
 		Assert.True( File.Exists( result.Path ) );
 	}
 
@@ -46,7 +46,7 @@ public sealed class MkTempCommandTests {
 			[ "-p", workspace.Root, "report.XXXX.json" ]
 		);
 		Assert.Equal( 0, result.Status );
-		Assert.True( result.Path.EndsWith( ".json", StringComparison.Ordinal ) );
+		Assert.EndsWith( ".json", result.Path, StringComparison.Ordinal );
 		Assert.True( File.Exists( result.Path ) );
 	}
 
@@ -58,7 +58,7 @@ public sealed class MkTempCommandTests {
 			[ "--tmpdir", "name.XXXX" ]
 		);
 		Assert.Equal( 0, result.Status );
-		Assert.True( result.Path.StartsWith( workspace.Root, StringComparison.Ordinal ) );
+		Assert.StartsWith( workspace.Root, result.Path, StringComparison.Ordinal );
 	}
 
 	[Fact]
@@ -70,7 +70,7 @@ public sealed class MkTempCommandTests {
 			[ "--tmpdir=" + other, "name.XXXX" ]
 		);
 		Assert.Equal( 0, result.Status );
-		Assert.True( result.Path.StartsWith( other, StringComparison.Ordinal ) );
+		Assert.StartsWith( other, result.Path, StringComparison.Ordinal );
 	}
 
 	[Fact]
@@ -82,7 +82,7 @@ public sealed class MkTempCommandTests {
 			[ "-t", "-p", other, "name.XXXX" ]
 		);
 		Assert.Equal( 0, result.Status );
-		Assert.True( result.Path.StartsWith( workspace.Root, StringComparison.Ordinal ) );
+		Assert.StartsWith( workspace.Root, result.Path, StringComparison.Ordinal );
 	}
 
 	[Fact]
@@ -94,7 +94,7 @@ public sealed class MkTempCommandTests {
 			[ "-p", workspace.Root, Path.Combine( "existing", "name.XXXX" ) ]
 		);
 		Assert.Equal( 0, result.Status );
-		Assert.True( result.Path.StartsWith( existing, StringComparison.Ordinal ) );
+		Assert.StartsWith( existing, result.Path, StringComparison.Ordinal );
 		Assert.True( File.Exists( result.Path ) );
 
 		var missingResult = await RunAsync(
@@ -183,10 +183,11 @@ public sealed class MkTempCommandTests {
 			[ "-u", "-p", workspace.Root, Path.Combine( "missing", "name.XXXX" ) ]
 		);
 		Assert.Equal( 0, result.Status );
-		Assert.True( result.Path.StartsWith(
+		Assert.StartsWith( 
 			Path.Combine( workspace.Root, "missing" ),
+			result.Path, 
 			StringComparison.Ordinal
-		) );
+		);
 		Assert.False( Directory.Exists( Path.Combine( workspace.Root, "missing" ) ) );
 	}
 
@@ -227,7 +228,7 @@ public sealed class MkTempCommandTests {
 			random
 		);
 		Assert.Equal( 0, result.Status );
-		Assert.True( result.Path.EndsWith( "name.bbbb", StringComparison.Ordinal ) );
+		Assert.EndsWith( "name.bbbb", result.Path, StringComparison.Ordinal );
 		Assert.Equal( "existing", await File.ReadAllTextAsync( collision ) );
 	}
 
@@ -252,7 +253,7 @@ public sealed class MkTempCommandTests {
 			new SequenceRandomSource( [ 0, 0, 0, 0, 1, 1, 1, 1 ] )
 		);
 		Assert.Equal( 0, result.Status );
-		Assert.True( result.Path.EndsWith( "name.bbbb", StringComparison.Ordinal ) );
+		Assert.EndsWith( "name.bbbb", result.Path, StringComparison.Ordinal );
 		Assert.Equal( "preserve", await File.ReadAllTextAsync( target ) );
 	}
 
