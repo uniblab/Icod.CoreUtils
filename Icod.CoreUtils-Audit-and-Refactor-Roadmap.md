@@ -325,22 +325,39 @@ Create shared format-string, escape, numeric, grouping, padding, precision, and 
 
 Add secure, exclusive file and directory creation, template validation, `TMPDIR` handling, suffix and directory modes, cleanup tests, and resistance to race and symlink attacks. This infrastructure is required before external sort, reverse processing, diff/patch work, and archive testing.
 
+### Completion Gate C1 — before Batch 16
+
+* [ ] Add the shared regular-expression foundation:
+
+  * [ ] GNU basic regular-expression syntax and matching policy;
+  * [ ] leftmost-longest matching behavior;
+  * [ ] anchoring, captures, and back-references;
+  * [ ] locale-aware character-class abstraction;
+  * [ ] deterministic compilation and matching diagnostics;
+  * [ ] explicit documentation of differences from `System.Text.RegularExpressions`;
+  * [ ] injectable and testable matching providers.
+
+This gate prevents `expr` from introducing an isolated regular-expression implementation. The same foundation will later be extended and reused by `grep`, `csplit`, and `ed`.
+
 ### Batch 16 — Expression language (1 tool)
 
 - [ ] `expr`
 
 Implement a real precedence-aware expression parser with arithmetic, relations, Boolean operators, string operations, regular expressions, overflow behavior, quoting rules, and GNU exit statuses. Do not pair it with `test`; their grammars and result models are materially different.
 
-### Completion Gate C — before Batch 17
+### Completion Gate C2 — before Batch 17
 
-[ ] Add the shared text model:
+* [ ] Add the shared text-unit and display-column model:
 
-- [ ] byte, Unicode scalar, and display-column iteration;
-- [ ] locale-aware collation and character classification;
-- [ ] tab-stop grammar;
-- [ ] field/range-list grammar;
-- [ ] escape-sequence parsing;
-- [ ] configurable line and NUL record readers/writers.
+  * [ ] byte iteration;
+  * [ ] decoded Unicode-scalar iteration;
+  * [ ] explicit invalid-encoding policy;
+  * [ ] display-column width calculation;
+  * [ ] tab-stop grammar and repeated tab intervals;
+  * [ ] backspace and carriage-return column behavior;
+  * [ ] injectable width and locale providers.
+
+This gate provides only the facilities needed by `expand`, `unexpand`, `fold`, and the later page-layout commands. It does not prematurely introduce sorting or external-storage behavior.
 
 ### Batch 17 — Tabs and display columns (3 tools)
 
@@ -357,6 +374,19 @@ Use the shared display-column and tab-stop model. Cover tab lists, repeated tab 
 
 Implement paragraph recognition, sentence spacing, crown/tagged modes, logical-page delimiters, numbering styles, header/body separation, and standard-stream ownership. Share line-layout and display-width components without forcing one combined execution engine.
 
+### Completion Gate C3 — before Batch 19
+
+* [ ] Add the shared record, range, and escape model:
+
+  * [ ] configurable line-delimited and NUL-delimited record readers and writers;
+  * [ ] byte, character, field, and general range-list parsing;
+  * [ ] complement and open-ended range handling;
+  * [ ] delimiter and separator abstractions;
+  * [ ] documented escape-sequence parsing;
+  * [ ] deterministic behavior for malformed ranges and escapes.
+
+This gate directly supports `cut` and `paste`, then remains available to `tr`, `sort`, `grep`, `split`, and related commands.
+
 ### Batch 19 — Field and record extraction (2 tools)
 
 - [ ] `cut`
@@ -366,12 +396,17 @@ Implement complete byte/character/field list grammar, complement and output deli
 
 ### Completion Gate D — before Batch 20
 
-[ ] Extend the secure temporary-object infrastructure established by `mktemp`:
+* [ ] Extend the secure temporary-object infrastructure established by `mktemp` with the shared external-ordering model:
 
-- [ ] bounded-memory sorted runs;
-- [ ] stable external merge;
-- [ ] configurable locale/key comparison;
-- [ ] deterministic cleanup on success, failure, and cancellation.
+  * [ ] locale-aware collation;
+  * [ ] reusable sort-key parsing and comparison;
+  * [ ] stable comparison and original-order tracking;
+  * [ ] bounded-memory sorted runs;
+  * [ ] stable external merge;
+  * [ ] temporary-workspace lifecycle management;
+  * [ ] deterministic cleanup on success, failure, and cancellation.
+
+This gate is intentionally not split because its components jointly form the execution foundation required by `sort`.
 
 ### Batch 20 — External ordering (1 tool)
 
@@ -411,16 +446,20 @@ Implement `tsort` tokenization, deterministic ordering, stable diagnostics, and 
 
 Replace the simplified `ptx` token dump with documented input, word, ignore, reference, width, break-file, collation, spill-storage, and output-format behavior. These commands share text, locale, tokenization, and ordering primitives but not one monolithic execution engine.
 
-### Completion Gate E — before Batch 26
+### Completion Gate E1 — before Batch 26
 
-[ ] Add the shared filesystem model:
+* [ ] Add the shared read-only pathname traversal model:
 
-- [ ] lexical and physical path resolution;
-- [ ] symlink and reparse-point inspection;
-- [ ] file identity, type, mode, ownership, timestamps, links, device/inode equivalents, and allocated-block accounting;
-- [ ] recursive traversal with cycle detection and mount-boundary policy;
-- [ ] sparse-file and metadata-preservation helpers;
-- [ ] atomic replacement and backup policy.
+  * [ ] centralized pathname expansion policy for eligible operands;
+  * [ ] recursive directory enumeration;
+  * [ ] symlink and reparse-point traversal policy;
+  * [ ] file identity sufficient for cycle detection;
+  * [ ] mount-boundary policy;
+  * [ ] include and exclude matching support;
+  * [ ] deterministic error-continuation behavior;
+  * [ ] injectable filesystem-enumeration providers.
+
+This gate is required before recursive `grep` and will later support recursive `diff`, directory listing, filesystem accounting, and archive creation.
 
 ### Batch 26 — Regular-expression search (1 tool)
 
@@ -454,6 +493,20 @@ For `pr`, implement columns, page geometry, headers and footers, form feeds, dat
 
 Implement an actual sequence-difference algorithm, normal/context/unified/ed formats, whitespace and case policies, labels, function context, binary handling, recursive directory comparison, absent-file policy, and statuses 0 for no differences, 1 for differences, and greater than 1 for errors.
 
+### Completion Gate E2 — before Batch 31
+
+* [ ] Add shared transactional file-replacement infrastructure:
+
+  * [ ] secure sibling temporary files;
+  * [ ] atomic replacement where supported;
+  * [ ] backup-name generation and retention policy;
+  * [ ] rollback behavior after partial failure;
+  * [ ] pathname-containment and escape checks;
+  * [ ] deterministic cleanup after success, failure, and cancellation;
+  * [ ] explicit diagnostics where atomic replacement is unavailable.
+
+This gate is placed immediately before `patch`, the first remaining command that requires safe transactional modification of existing files.
+
 ### Batch 31 — Patch application engine (1 tool)
 
 - [ ] `patch`
@@ -466,12 +519,43 @@ Parse normal, context, and unified diffs; implement file selection, strip counts
 
 Complete the address parser, command state machine, global commands, substitutions, marks, buffers, file and shell commands, modified-buffer rules, diagnostics, signals, and exit behavior. Reuse the agreed regex policy but keep the editor state machine isolated.
 
+### Completion Gate E3 — before Batch 33
+
+* [ ] Complete the shared canonical-path model:
+
+  * [ ] lexical path normalization;
+  * [ ] physical path resolution;
+  * [ ] symbolic-link and reparse-point inspection;
+  * [ ] missing-component policies;
+  * [ ] loop detection;
+  * [ ] relative-path calculation;
+  * [ ] platform root, volume, and separator semantics;
+  * [ ] deterministic failure without returning unresolved input as success.
+
+This gate supplies the defining infrastructure for `readlink` and `realpath`.
+
 ### Batch 33 — Symbolic-link and canonical-path resolution (2 tools)
 
 - [ ] `readlink`
 - [ ] `realpath`
 
 Implement lexical versus physical resolution, missing-component policies, canonicalization modes, delimiters, quiet/verbose behavior, relative output, symlink loops, reparse points, and deterministic failures. Never return the unresolved input as a false success.
+
+### Completion Gate E4 — before Batch 34
+
+* [ ] Add the authoritative shared filesystem-metadata model:
+
+  * [ ] file type and size;
+  * [ ] link count and link identity;
+  * [ ] mode, ownership, and group information;
+  * [ ] access, modification, inode-change, and birth timestamps;
+  * [ ] device, inode, and platform-equivalent identity;
+  * [ ] allocated-block accounting;
+  * [ ] filesystem information;
+  * [ ] timestamp mutation capabilities;
+  * [ ] explicit reporting of unavailable platform metadata.
+
+This gate supports `stat`, `touch`, and the file predicates subsequently required by `test`.
 
 ### Batch 34 — File metadata and timestamps (2 tools)
 
@@ -485,6 +569,20 @@ Build the authoritative metadata adapter and format-string engine. Distinguish a
 - [ ] `test`
 
 Implement the complete GNU/POSIX operand-count grammar, file type and characteristic predicates, access checks, string and numeric comparisons, connectives, precedence, ambiguity rules, and statuses 0, 1, and 2. **Do not create a separate `[` project.**
+
+### Completion Gate E5 — before Batch 36
+
+* [ ] Add shared mode and basic pathname-mutation infrastructure:
+
+  * [ ] numeric mode parsing;
+  * [ ] symbolic mode-clause parsing;
+  * [ ] umask application;
+  * [ ] basic directory, file, link, FIFO, and device-node capability providers;
+  * [ ] no-follow and dereference policies;
+  * [ ] race-aware single-path mutation;
+  * [ ] controlled privilege and platform diagnostics.
+
+This gate supports `mkdir`, `rmdir`, `unlink`, `link`, `ln`, `mkfifo`, `mknod`, and the later permission commands.
 
 ### Batch 36 — Basic directory and name removal (3 tools)
 
@@ -507,6 +605,23 @@ Make `link` the documented two-operand hard-link command. Build `ln` as a separa
 - [ ] `mknod`
 
 Add the missing GNU projects. Implement modes, FIFO creation, block/character device operands, major/minor validation, umask behavior, and controlled privilege/platform failure. Never emulate success by creating an ordinary file.
+
+### Completion Gate E6 — before Batch 39
+
+* [ ] Extend the traversal model for recursive mutation and copying:
+
+  * [ ] mutation-safe recursive traversal;
+  * [ ] preserve-root protection;
+  * [ ] one-filesystem boundaries;
+  * [ ] race-aware no-follow operations;
+  * [ ] hard-link identity tracking;
+  * [ ] sparse-file detection and preservation;
+  * [ ] metadata-preservation policy;
+  * [ ] destination-inside-source detection;
+  * [ ] partial-failure and cleanup policy;
+  * [ ] backup and overwrite coordination with Completion Gate E2.
+
+This gate supports recursive `chmod`, `chown`, `chgrp`, `rm`, `cp`, `mv`, `install`, `du`, and `tar`.
 
 ### Batch 39 — Permission modes (1 tool)
 
@@ -540,16 +655,19 @@ Implement source/destination classification, recursive copy, symlink and hard-li
 
 Build on `mkdir`, `cp`, `chmod`, and `chown` primitives rather than invoking external utilities. Implement directory creation, modes, owners/groups, stripping policy, backups, compare mode, timestamps, SELinux-context policy, and atomic destination replacement.
 
-### Completion Gate F — before Batch 44
+### Completion Gate F1 — before Batch 44
 
-[ ] Add shared system/process primitives:
+* [ ] Add shared terminal-aware presentation capabilities:
 
-- [ ] host and processor information;
-- [ ] terminal discovery and terminal-mode capability abstractions;
-- [ ] signal-name and signal-number parsing;
-- [ ] process-group control;
-- [ ] child-process stream forwarding;
-- [ ] controlled Windows substitutions where semantics are genuinely equivalent.
+  * [ ] terminal-versus-redirected stream detection;
+  * [ ] terminal width and height discovery;
+  * [ ] color-capability policy;
+  * [ ] quoting and control-character presentation policy;
+  * [ ] environment and terminal-name inputs used by `dircolors`;
+  * [ ] injectable providers for deterministic tests;
+  * [ ] controlled fallback when terminal information is unavailable.
+
+This gate provides only the presentation capabilities needed by `dircolors`, `ls`, `dir`, and `vdir`.
 
 ### Batch 44 — Color database and directory listing family (4 tools)
 
@@ -581,12 +699,39 @@ Implement pass selection, random sources, exact-size handling, synchronization, 
 
 `tar` is deliberately scheduled after canonical path resolution, metadata, timestamps, directory and link mutation, permissions, ownership, recursive traversal, copy/move, installation, listing, filesystem accounting, secure temporary storage, and data-destruction semantics. Implement correct archive entry types, links, sparse files, metadata, formats, compression-process integration, selection/exclusion, incremental policy if in scope, stream operation, and extraction protections against absolute paths, `..`, symlink escapes, hard-link escapes, device creation, and overwrite races.
 
+### Completion Gate F2 — before Batch 48
+
+* [ ] Add shared host and processor-information capabilities:
+
+  * [ ] host-identifier retrieval and normalization;
+  * [ ] configured, online, and currently available processor counts;
+  * [ ] processor-affinity awareness;
+  * [ ] container and quota awareness where available;
+  * [ ] command-specific environment overrides;
+  * [ ] controlled and documented platform differences.
+
+This gate directly supports `hostid` and `nproc`.
+
 ### Batch 48 — Host and processor context (2 tools)
 
 - [ ] `hostid`
 - [ ] `nproc`
 
 Add the missing projects. Define reproducible host-ID behavior and implement available/configured processor counts, environment overrides, affinity and quota awareness, and controlled platform differences.
+
+### Completion Gate F3 — before Batch 49
+
+* [ ] Add shared terminal-identification and terminal-control capabilities:
+
+  * [ ] terminal pathname discovery;
+  * [ ] terminal attachment inspection for selected file descriptors;
+  * [ ] terminal-mode retrieval and mutation;
+  * [ ] input and output speed reporting;
+  * [ ] control-character representation;
+  * [ ] machine-readable mode serialization and restoration;
+  * [ ] explicit Unix and Windows capability boundaries.
+
+This gate supports `tty` and `stty` without requiring child-process or signal infrastructure prematurely.
 
 ### Batch 49 — Terminal identification (1 tool)
 
@@ -599,6 +744,24 @@ Add the missing project. Implement silent mode, terminal-name reporting, correct
 - [ ] `stty`
 
 Add the missing project as a dedicated platform batch. Implement reading and changing terminal modes, sane/raw profiles, control characters, speed, machine-readable save/restore form, selected device handling, and a documented Windows capability boundary.
+
+### Completion Gate F4 — before Batch 51
+
+* [ ] Add shared child-process and signal primitives:
+
+  * [ ] executable lookup;
+  * [ ] argument-safe process launching without shell interpolation;
+  * [ ] working-directory and environment construction;
+  * [ ] asynchronous standard-stream forwarding;
+  * [ ] cancellation and child-process cleanup;
+  * [ ] signal-name and signal-number parsing;
+  * [ ] signal listing and translation;
+  * [ ] signal-disposition control required by `nohup`;
+  * [ ] process and process-group targeting;
+  * [ ] child termination and exit-status translation;
+  * [ ] controlled Windows substitutions where semantics are defensible.
+
+This gate supports `env` and `nohup`, allows `kill` to validate the signal layer in Batch 52, and allows `nice` and `timeout` to reuse it in Batch 53.
 
 ### Batch 51 — Environment and hangup-independent execution (2 tools)
 
