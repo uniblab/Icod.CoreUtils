@@ -14,7 +14,7 @@ public sealed class OdCommandTests {
 		Assert.Contains( "0000000", result.Output );
 		Assert.Contains( "000001", result.Output );
 		Assert.Contains( "000002", result.Output );
-		Assert.True( result.Output.EndsWith( string.Concat( "0000004", Environment.NewLine ), StringComparison.Ordinal ) );
+		Assert.EndsWith( string.Concat( "0000004", Environment.NewLine ), result.Output, StringComparison.Ordinal );
 	}
 
 	[Fact]
@@ -27,8 +27,8 @@ public sealed class OdCommandTests {
 	[Fact]
 	public async Task HexadecimalAddressesUseSixColumns() {
 		var result = await RunAsync( new byte[] { 1 }, "-A", "x", "-t", "x1" );
-		Assert.True( result.Output.StartsWith( "000000 01", StringComparison.Ordinal ) );
-		Assert.True( result.Output.EndsWith( string.Concat( "000001", Environment.NewLine ), StringComparison.Ordinal ) );
+		Assert.StartsWith( "000000 01", result.Output, StringComparison.Ordinal );
+		Assert.EndsWith( string.Concat( "000001", Environment.NewLine ), result.Output, StringComparison.Ordinal );
 	}
 
 	[Fact]
@@ -142,7 +142,7 @@ public sealed class OdCommandTests {
 		var result = await RunAsync( Enumerable.Range( 0, 33 ).Select( value => ( byte )value ).ToArray(), "-w", "-t", "x1" );
 		var dataLines = result.Output.Split( Environment.NewLine, StringSplitOptions.RemoveEmptyEntries );
 		Assert.Equal( 3, dataLines.Length );
-		Assert.True( dataLines[ 1 ].StartsWith( "0000040", StringComparison.Ordinal ) );
+		Assert.StartsWith( "0000040", dataLines[ 1 ], StringComparison.Ordinal );
 	}
 
 	[Fact]
@@ -160,7 +160,7 @@ public sealed class OdCommandTests {
 			"--traditional", "-A", "n", "-t", "x1", "+0", "+16."
 		);
 		Assert.Contains( "(0000020)", result.Output );
-		Assert.True( result.Output.EndsWith( string.Concat( "(0000022)", Environment.NewLine ), StringComparison.Ordinal ) );
+		Assert.EndsWith( string.Concat( "(0000022)", Environment.NewLine ), result.Output, StringComparison.Ordinal );
 	}
 
 	[Fact]

@@ -1,6 +1,6 @@
 // Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
 
-namespace Icod.CoreUtils.Dircolors;
+namespace Icod.CoreUtils.DirColors;
 
 using System;
 using System.IO;

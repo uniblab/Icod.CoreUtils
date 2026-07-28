@@ -2,7 +2,7 @@ namespace Icod.CoreUtils.Basenc.Tests;
 
 using System.Text;
 using Icod.CoreUtils.Shared.Diagnostics;
-using BasencCommand = Icod.CoreUtils.Basenc.Command;
+using BasencCommand = Icod.CoreUtils.BasEnc.Command;
 using Xunit;
 
 public sealed class BasencCommandTests {

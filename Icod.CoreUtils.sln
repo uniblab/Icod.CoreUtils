@@ -29,7 +29,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.BaseName", "
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "basenc", "basenc", "{7339EAFE-6202-BA0D-6D25-F43AC3752ABD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Basenc", "basenc\Icod.CoreUtils.Basenc.csproj", "{10733BAD-1BC5-4993-94B4-D35341584D0F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.BasEnc", "basenc\Icod.CoreUtils.BasEnc.csproj", "{10733BAD-1BC5-4993-94B4-D35341584D0F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "cat", "cat", "{36753BED-4B2E-4238-DC2F-5A197BC6B8F9}"
 EndProject
@@ -97,7 +97,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Dir", "dir\I
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dircolors", "dircolors", "{A3B8B14E-E372-34A6-83AE-CF9F9E0B4B7A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Dircolors", "dircolors\Icod.CoreUtils.Dircolors.csproj", "{7CF87178-4767-4D91-A2D1-C22B7D052DFB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.DirColors", "dircolors\Icod.CoreUtils.DirColors.csproj", "{7CF87178-4767-4D91-A2D1-C22B7D052DFB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dirname", "dirname", "{7396B46B-650E-F4D1-423C-CC40457C8D0E}"
 EndProject
@@ -105,7 +105,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.DirName", "d
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "du", "du", "{527D87D8-AF78-86A0-9608-0945C42C92D3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.du", "du\Icod.CoreUtils.du.csproj", "{C5A0A395-8F93-4FF1-85C8-B75F27D6379A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.DU", "du\Icod.CoreUtils.DU.csproj", "{C5A0A395-8F93-4FF1-85C8-B75F27D6379A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "echo", "echo", "{E9D7235E-3E68-3A6C-C2CD-A870A30147B3}"
 EndProject
@@ -117,7 +117,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Ed", "ed\Ico
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "env", "env", "{16CB69B2-0419-FDDD-29AD-0C58FA89E8D4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.env", "env\Icod.CoreUtils.env.csproj", "{AFE8C531-7EFB-43EA-81FC-A42896980EA2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Env", "env\Icod.CoreUtils.Env.csproj", "{AFE8C531-7EFB-43EA-81FC-A42896980EA2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "expand", "expand", "{5A95941F-A524-19C8-3557-FDB5BBF87F97}"
 EndProject
@@ -173,7 +173,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Join", "join
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "kill", "kill", "{39305349-60F8-687C-25B8-B063E6021998}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.kill", "kill\Icod.CoreUtils.kill.csproj", "{9D7FF75E-859D-4BE0-85AD-F1BB24BF7E55}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Kill", "kill\Icod.CoreUtils.Kill.csproj", "{9D7FF75E-859D-4BE0-85AD-F1BB24BF7E55}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "link", "link", "{EF7777D9-B559-E211-56D0-7A86C793F6A4}"
 EndProject
@@ -189,7 +189,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.LogName", "l
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ls", "ls", "{F1AE0B8F-829F-5FBC-0F0C-36B42910233E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.ls", "ls\Icod.CoreUtils.ls.csproj", "{B9F0B914-A372-4A39-9DC8-01700FE903F9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Ls", "ls\Icod.CoreUtils.Ls.csproj", "{B9F0B914-A372-4A39-9DC8-01700FE903F9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "md5sum", "md5sum", "{7DC4B754-F622-8271-FD57-0393F7CDEEAF}"
 EndProject
@@ -465,7 +465,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Base32.Tests
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Base64.Tests", "tests\Base64.Tests\Icod.CoreUtils.Base64.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0011}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Basenc.Tests", "tests\Basenc.Tests\Icod.CoreUtils.Basenc.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0012}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.BasEnc.Tests", "tests\BasEnc.Tests\Icod.CoreUtils.BasEnc.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0012}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Checksum.Tests", "tests\Checksum.Tests\Icod.CoreUtils.Checksum.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0013}"
 EndProject
@@ -526,6 +526,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Sync.Tests", "tests\Sync.Tests\Icod.CoreUtils.Sync.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0054}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Od.Tests", "tests\Od.Tests\Icod.CoreUtils.Od.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0055}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Printf.Tests", "tests\Printf.Tests\Icod.CoreUtils.Printf.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0056}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.NumFmt.Tests", "tests\NumFmt.Tests\Icod.CoreUtils.NumFmt.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0057}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -1440,6 +1444,18 @@ Global
 		{F05B4136-23C6-4CF5-8A6A-920F20DC0055}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F05B4136-23C6-4CF5-8A6A-920F20DC0055}.Staging|Any CPU.ActiveCfg = Staging|Any CPU
 		{F05B4136-23C6-4CF5-8A6A-920F20DC0055}.Staging|Any CPU.Build.0 = Staging|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0056}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0056}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0056}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0056}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0056}.Staging|Any CPU.ActiveCfg = Staging|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0056}.Staging|Any CPU.Build.0 = Staging|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0057}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0057}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0057}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0057}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0057}.Staging|Any CPU.ActiveCfg = Staging|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0057}.Staging|Any CPU.Build.0 = Staging|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1596,6 +1612,8 @@ Global
 		{F05B4136-23C6-4CF5-8A6A-920F20DC0053} = {F05B4136-23C6-4CF5-8A6A-920F20DC0001}
 		{F05B4136-23C6-4CF5-8A6A-920F20DC0054} = {F05B4136-23C6-4CF5-8A6A-920F20DC0001}
 		{F05B4136-23C6-4CF5-8A6A-920F20DC0055} = {F05B4136-23C6-4CF5-8A6A-920F20DC0001}
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0056} = {F05B4136-23C6-4CF5-8A6A-920F20DC0001}
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0057} = {F05B4136-23C6-4CF5-8A6A-920F20DC0001}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {30D28C3D-CE6B-4262-8EF1-1D4A49129A6C}

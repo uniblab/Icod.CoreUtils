@@ -6,8 +6,9 @@
 
 - `CommandLine`: declarative GNU/POSIX-style option parsing with short clusters, long options, required and optional values, aliases, `--`, configurable ordering, structured diagnostics, and legacy token rewrites.
 - `Diagnostics`: command contexts, standard exit codes, and program-prefixed diagnostics.
+- `Formatting`: GNU-compatible escape decoding for command format strings and escaped operands.
 - `IO`: asynchronous delimited-record readers and writers, bounded stream operations, standard-input operands, and temporary spooling.
-- `Numerics`: culture-invariant integer and floating quantity parsing with exact suffix tables and overflow policies.
+- `Numerics`: culture-invariant integer and floating quantity parsing, arbitrary-precision rational arithmetic, exact suffix tables, explicit rounding, and overflow policies.
 - `Processes`: shell-free asynchronous child-process execution with redirected stream forwarding, capture, cancellation, and process-tree termination.
 - `Platform`: BCL-first capability reporting and controlled unsupported results.
 

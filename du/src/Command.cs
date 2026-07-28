@@ -1,4 +1,4 @@
-namespace Icod.CoreUtils.Du;
+namespace Icod.CoreUtils.DU;
 
 using System;
 using System.IO;
