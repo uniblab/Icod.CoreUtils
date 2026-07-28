@@ -1,0 +1,49 @@
+namespace Icod.CoreUtils.Shared.FileSystem;
+
+using Icod.CoreUtils.Shared.Platform;
+
+/// <summary>
+/// Supplies injectable, capability-aware durable-flush and sparse-file operations.
+/// Implementations never take ownership of caller-supplied streams.
+/// </summary>
+public interface IFileSystemOperations {
+	/// <summary>Gets the operating-system API capability report.</summary>
+	FileSystemCapabilities Capabilities { get; }
+
+	/// <summary>Flushes a specific file using the requested durability semantics.</summary>
+	ValueTask<PlatformOperationResult> FlushFileAsync(
+		FileStream file,
+		FileFlushMode mode,
+		CancellationToken cancellationToken = default
+	);
+
+	/// <summary>Flushes the filesystem containing the supplied path.</summary>
+	ValueTask<PlatformOperationResult> FlushFileSystemAsync(
+		string path,
+		CancellationToken cancellationToken = default
+	);
+
+	/// <summary>Requests a flush of all mounted filesystems.</summary>
+	ValueTask<PlatformOperationResult> FlushAllFileSystemsAsync(
+		CancellationToken cancellationToken = default
+	);
+
+	/// <summary>Extends a file while requesting sparse allocation semantics.</summary>
+	ValueTask<PlatformOperationResult<SparseExtensionInfo>> ExtendSparseAsync(
+		FileStream file,
+		long newLength,
+		CancellationToken cancellationToken = default
+	);
+
+	/// <summary>Queries allocated logical ranges for an open file.</summary>
+	ValueTask<PlatformOperationResult<FileAllocationMap>> GetAllocatedRangesAsync(
+		FileStream file,
+		CancellationToken cancellationToken = default
+	);
+
+	/// <summary>Queries allocated logical ranges for a pathname.</summary>
+	ValueTask<PlatformOperationResult<FileAllocationMap>> GetAllocatedRangesAsync(
+		string path,
+		CancellationToken cancellationToken = default
+	);
+}
