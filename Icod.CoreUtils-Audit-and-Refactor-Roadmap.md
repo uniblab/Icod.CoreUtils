@@ -139,7 +139,7 @@ These conventions apply to every existing project that is altered and every proj
 6. Every command exposes cancellation-aware `RunAsync(..., CancellationToken)`, retains a synchronous compatibility wrapper, and uses an asynchronous `Main` where appropriate. Naturally asynchronous I/O and child-process waits use TAP directly rather than `Task.Run`.
 7. Literal newline escapes such as `\n` and `\r\n` are permitted only when they are part of the utility’s data semantics, escape grammar, or documented byte transformation. They are never used as the host platform’s generated line separator.
 8. Generated line endings use `WriteLine`, `WriteLineAsync`, or `Environment.NewLine`. Line-oriented input uses `ReadLine`, `ReadLineAsync`, and `Environment.NewLine` as appropriate. Code must not hard-code `\n` or `\r\n` for host line-reading or line-writing semantics.
-9. When multiple strings are sent to `WriteAsync`, `WriteLineAsync`, or related output methods, combine them with `System.String.Concat` rather than the `+` operator.  Similarly, readaing input one should use `ReadLine` or `ReadLineAsync` unless binary operation is required.
+9. When multiple strings are sent to `WriteAsync`, `WriteLineAsync`, or related output methods, combine them with `System.String.Concat` rather than the `+` operator.
 10. Each command has its own dedicated xUnit test project following the established `tests/<Tool>.Tests` pattern.
 11. Each public command class has class-level XML documentation whose `<summary>` includes the command usage, plus a dedicated usage-printing or usage-writing function.
 12. Every new project is added to the solution, all required configuration mappings, the appropriate solution folder, and every local and CI build/test entry point.
