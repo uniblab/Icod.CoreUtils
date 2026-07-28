@@ -1,16 +1,5 @@
 # Icod.CoreUtils Audit and Refactor Roadmap
 
-## Document status
-
-- **Initial audit date:** July 27, 2026
-- **Repository:** `uniblab/Icod.CoreUtils`, `main`
-- **Historical sequence preserved:** Batches 0 through 10 record completed work and remain unchanged in scope.
-- **User scope decision:** Do not create or schedule a separate `[` command project. The existing `test` project is the condition evaluator.
-- **Current execution point:** Batches 0 through 10 are complete. Batch 11 is the next command batch.
-- **Framework transition:** The repository currently targets `net9.0`; migration to `net10.0` LTS is required by Completion Gate A before Batch 11 may be closed.
-
-This revision preserves the completed work history while reorganizing the remaining sequence around the actual implementation dependencies discovered in the repository. It also converts the original audit measurements into an explicitly historical baseline, establishes a short living status section, codifies project conventions, requires all three CI platforms, moves `tar` after the shared filesystem and mutation infrastructure, and splits the former large text-tool batches into smaller batches.
-
 ## Living status
 
 | Item | Status |
