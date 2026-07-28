@@ -12,6 +12,12 @@ using Microsoft.Win32.SafeHandles;
 public sealed class SystemFileSystemOperations : IFileSystemOperations {
 	private const uint FsctlSetSparse = 0x000900c4;
 	private const uint FsctlQueryAllocatedRanges = 0x000940cf;
+	private const uint GenericWrite = 0x40000000;
+	private const uint FileShareRead = 0x00000001;
+	private const uint FileShareWrite = 0x00000002;
+	private const uint FileShareDelete = 0x00000004;
+	private const uint OpenExisting = 3;
+	private const uint FileFlagBackupSemantics = 0x02000000;
 	private const int ErrorInvalidFunction = 1;
 	private const int ErrorNotSupported = 50;
 	private const int ErrorMoreData = 234;
@@ -23,6 +29,10 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 	private const int SeekSet = 0;
 	private const int SeekData = 3;
 	private const int SeekHole = 4;
+	private const int OpenReadOnly = 0;
+	private const int OpenWriteOnly = 1;
+	private const int GetFileStatusFlags = 3;
+	private const int SetFileStatusFlags = 4;
 	private const int WindowsRangeBufferSize = 64 * 1024;
 
 	/// <summary>Gets the process-wide system implementation.</summary>
@@ -142,6 +152,96 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 		}
 	}
 
+
+	/// <inheritdoc />
+	public ValueTask<PlatformOperationResult> FlushFileAsync(
+		string path,
+		FileFlushMode mode,
+		CancellationToken cancellationToken = default
+	) {
+		ArgumentException.ThrowIfNullOrWhiteSpace(
+			path
+		);
+		cancellationToken.ThrowIfCancellationRequested();
+		if (
+			FileFlushMode.DataOnly != mode
+			&& FileFlushMode.DataAndMetadata != mode
+		) {
+			return ValueTask.FromResult(
+				PlatformOperationResult.Failure(
+					"the requested file-flush mode is invalid"
+				)
+			);
+		}
+		if (
+			FileFlushMode.DataOnly == mode
+			&& !this.Capabilities.SupportsDataOnlyFileFlush
+		) {
+			return ValueTask.FromResult(
+				PlatformOperationResult.Unsupported(
+					"data-only file flushing is unavailable on this platform"
+				)
+			);
+		}
+		if (
+			FileFlushMode.DataAndMetadata == mode
+			&& !this.Capabilities.SupportsDataAndMetadataFileFlush
+		) {
+			return ValueTask.FromResult(
+				PlatformOperationResult.Unsupported(
+					"data-and-metadata file flushing is unavailable on this platform"
+				)
+			);
+		}
+
+		try {
+			var result = OperatingSystem.IsWindows()
+				? FlushPathOnWindows( path )
+				: FlushPathOnUnix(
+					path,
+					mode,
+					cancellationToken
+				)
+			;
+			cancellationToken.ThrowIfCancellationRequested();
+			return ValueTask.FromResult(
+				result
+			);
+		} catch ( EntryPointNotFoundException exception ) {
+			return ValueTask.FromResult(
+				PlatformOperationResult.Unsupported(
+					System.String.Concat(
+						"the requested pathname-flush primitive is unavailable: ",
+						exception.Message
+					)
+				)
+			);
+		} catch ( DllNotFoundException exception ) {
+			return ValueTask.FromResult(
+				PlatformOperationResult.Unsupported(
+					System.String.Concat(
+						"the native filesystem library is unavailable: ",
+						exception.Message
+					)
+				)
+			);
+		} catch ( Exception exception ) when (
+			exception is IOException
+			or UnauthorizedAccessException
+			or ObjectDisposedException
+			or NotSupportedException
+			or ArgumentException
+			or Win32Exception
+		) {
+			return ValueTask.FromResult(
+				PlatformOperationResult.Failure(
+					exception.Message,
+					exception
+				)
+			);
+		}
+	}
+
 	/// <inheritdoc />
 	public ValueTask<PlatformOperationResult> FlushFileSystemAsync(
 		string path,
@@ -159,32 +259,13 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			);
 		}
 		try {
-			using var handle = File.OpenHandle(
+			var result = FlushFileSystemPathOnUnix(
 				path,
-				FileMode.Open,
-				FileAccess.Read,
-				FileShare.ReadWrite | FileShare.Delete,
-				FileOptions.None
+				cancellationToken
 			);
-			var addedReference = false;
-			int result;
-			try {
-				result = NativeMethods.FlushFileSystem(
-					AcquireFileDescriptor(
-						handle,
-						out addedReference
-					)
-				);
-			} finally {
-				if ( addedReference ) {
-					handle.DangerousRelease();
-				}
-			}
 			cancellationToken.ThrowIfCancellationRequested();
 			return ValueTask.FromResult(
-				0 == result
-					? PlatformOperationResult.Success()
-					: CreateUnixFailure( "syncfs failed" )
+				result
 			);
 		} catch ( EntryPointNotFoundException exception ) {
 			return ValueTask.FromResult(
@@ -465,6 +546,252 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 				exception
 			);
 		}
+	}
+
+
+	private static PlatformOperationResult FlushPathOnWindows(
+		string path
+	) {
+		using var handle = NativeMethods.OpenWindowsPath(
+			path,
+			GenericWrite,
+			FileShareRead | FileShareWrite | FileShareDelete,
+			IntPtr.Zero,
+			OpenExisting,
+			FileFlagBackupSemantics,
+			IntPtr.Zero
+		);
+		if ( handle.IsInvalid ) {
+			return CreateWindowsFailure(
+				System.String.Concat(
+					"cannot open '",
+					path,
+					"'"
+				)
+			);
+		}
+		if ( NativeMethods.FlushFileBuffers( handle ) ) {
+			return PlatformOperationResult.Success();
+		}
+		return CreateWindowsFailure(
+			System.String.Concat(
+				"cannot synchronize '",
+				path,
+				"'"
+			)
+		);
+	}
+
+	private static PlatformOperationResult FlushPathOnUnix(
+		string path,
+		FileFlushMode mode,
+		CancellationToken cancellationToken
+	) {
+		var nonBlocking = GetUnixNonBlockingFlag();
+		var descriptor = NativeMethods.OpenUnixPath(
+			path,
+			OpenReadOnly | nonBlocking
+		);
+		if ( 0 > descriptor ) {
+			var readError = Marshal.GetLastPInvokeError();
+			descriptor = NativeMethods.OpenUnixPath(
+				path,
+				OpenWriteOnly | nonBlocking
+			);
+			if ( 0 > descriptor ) {
+				// GNU reports the read-only open error because it is more
+				// informative for directories and other special operands.
+				return CreateUnixPathFailure(
+					"cannot open",
+					path,
+					readError
+				);
+			}
+		}
+
+		try {
+			if ( 0 != nonBlocking ) {
+				var flags = NativeMethods.ControlFile(
+					descriptor,
+					GetFileStatusFlags,
+					0
+				);
+				if ( 0 > flags ) {
+					return CreateUnixPathFailure(
+						"cannot read status flags for",
+						path,
+						Marshal.GetLastPInvokeError()
+					);
+				}
+				if (
+					0 > NativeMethods.ControlFile(
+						descriptor,
+						SetFileStatusFlags,
+						flags & ~nonBlocking
+					)
+				) {
+					return CreateUnixPathFailure(
+						"cannot clear nonblocking mode for",
+						path,
+						Marshal.GetLastPInvokeError()
+					);
+				}
+			}
+
+			cancellationToken.ThrowIfCancellationRequested();
+			var synchronized = FileFlushMode.DataOnly == mode
+				? NativeMethods.FlushData( descriptor )
+				: NativeMethods.FlushDataAndMetadata( descriptor )
+			;
+			var synchronizationError = 0 == synchronized
+				? 0
+				: Marshal.GetLastPInvokeError()
+			;
+			cancellationToken.ThrowIfCancellationRequested();
+
+			var closed = NativeMethods.CloseFile(
+				descriptor
+			);
+			descriptor = -1;
+			var closeError = 0 == closed
+				? 0
+				: Marshal.GetLastPInvokeError()
+			;
+			if ( 0 != synchronizationError ) {
+				return CreateUnixPathFailure(
+					FileFlushMode.DataOnly == mode
+						? "cannot synchronize data for"
+						: "cannot synchronize",
+					path,
+					synchronizationError
+				);
+			}
+			if ( 0 != closeError ) {
+				return CreateUnixPathFailure(
+					"cannot close",
+					path,
+					closeError
+				);
+			}
+			return PlatformOperationResult.Success();
+		} finally {
+			if ( 0 <= descriptor ) {
+				_ = NativeMethods.CloseFile(
+					descriptor
+				);
+			}
+		}
+	}
+
+
+	private static PlatformOperationResult FlushFileSystemPathOnUnix(
+		string path,
+		CancellationToken cancellationToken
+	) {
+		var nonBlocking = GetUnixNonBlockingFlag();
+		var descriptor = NativeMethods.OpenUnixPath(
+			path,
+			OpenReadOnly | nonBlocking
+		);
+		if ( 0 > descriptor ) {
+			var readError = Marshal.GetLastPInvokeError();
+			descriptor = NativeMethods.OpenUnixPath(
+				path,
+				OpenWriteOnly | nonBlocking
+			);
+			if ( 0 > descriptor ) {
+				// GNU reports the read-only open error because it is more
+				// informative for directories and other special operands.
+				return CreateUnixPathFailure(
+					"cannot open",
+					path,
+					readError
+				);
+			}
+		}
+
+		try {
+			if ( 0 != nonBlocking ) {
+				var flags = NativeMethods.ControlFile(
+					descriptor,
+					GetFileStatusFlags,
+					0
+				);
+				if ( 0 > flags ) {
+					return CreateUnixPathFailure(
+						"cannot read status flags for",
+						path,
+						Marshal.GetLastPInvokeError()
+					);
+				}
+				if (
+					0 > NativeMethods.ControlFile(
+						descriptor,
+						SetFileStatusFlags,
+						flags & ~nonBlocking
+					)
+				) {
+					return CreateUnixPathFailure(
+						"cannot clear nonblocking mode for",
+						path,
+						Marshal.GetLastPInvokeError()
+					);
+				}
+			}
+
+			cancellationToken.ThrowIfCancellationRequested();
+			var synchronized = NativeMethods.FlushFileSystem(
+				descriptor
+			);
+			var synchronizationError = 0 == synchronized
+				? 0
+				: Marshal.GetLastPInvokeError()
+			;
+			cancellationToken.ThrowIfCancellationRequested();
+
+			var closed = NativeMethods.CloseFile(
+				descriptor
+			);
+			descriptor = -1;
+			var closeError = 0 == closed
+				? 0
+				: Marshal.GetLastPInvokeError()
+			;
+			if ( 0 != synchronizationError ) {
+				return CreateUnixPathFailure(
+					"cannot synchronize filesystem for",
+					path,
+					synchronizationError
+				);
+			}
+			if ( 0 != closeError ) {
+				return CreateUnixPathFailure(
+					"cannot close",
+					path,
+					closeError
+				);
+			}
+			return PlatformOperationResult.Success();
+		} finally {
+			if ( 0 <= descriptor ) {
+				_ = NativeMethods.CloseFile(
+					descriptor
+				);
+			}
+		}
+	}
+
+	private static int GetUnixNonBlockingFlag() {
+		if ( OperatingSystem.IsLinux() ) {
+			return 0x00000800;
+		}
+		if (
+			OperatingSystem.IsMacOS()
+			|| OperatingSystem.IsFreeBSD()
+		) {
+			return 0x00000004;
+		}
+		return 0;
 	}
 
 	private static FileSystemCapabilities CreateCapabilities() {
@@ -1061,6 +1388,27 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 		);
 	}
 
+
+	private static PlatformOperationResult CreateUnixPathFailure(
+		string operation,
+		string path,
+		int error
+	) {
+		var exception = new Win32Exception(
+			error
+		);
+		return PlatformOperationResult.Failure(
+			System.String.Concat(
+				operation,
+				" '",
+				path,
+				"': ",
+				exception.Message
+			),
+			exception
+		);
+	}
+
 	private static PlatformOperationResult<FileAllocationMap> CreateUnixAllocationFailure(
 		string operation,
 		int error
@@ -1101,6 +1449,23 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 		);
 
 
+
+		[DllImport(
+			"kernel32.dll",
+			EntryPoint = "CreateFileW",
+			CharSet = CharSet.Unicode,
+			SetLastError = true
+		)]
+		internal static extern SafeFileHandle OpenWindowsPath(
+			string fileName,
+			uint desiredAccess,
+			uint shareMode,
+			IntPtr securityAttributes,
+			uint creationDisposition,
+			uint flagsAndAttributes,
+			IntPtr templateFile
+		);
+
 		[DllImport( "kernel32.dll", SetLastError = true )]
 		[return: MarshalAs( UnmanagedType.Bool )]
 		internal static extern bool DeviceIoControl(
@@ -1121,6 +1486,25 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			IntPtr overlapped,
 			out int bytesTransferred,
 			[MarshalAs( UnmanagedType.Bool )] bool wait
+		);
+
+
+		[DllImport( "libc", EntryPoint = "open", SetLastError = true )]
+		internal static extern int OpenUnixPath(
+			string path,
+			int flags
+		);
+
+		[DllImport( "libc", EntryPoint = "fcntl", SetLastError = true )]
+		internal static extern int ControlFile(
+			int descriptor,
+			int command,
+			int argument
+		);
+
+		[DllImport( "libc", EntryPoint = "close", SetLastError = true )]
+		internal static extern int CloseFile(
+			int descriptor
 		);
 
 		[DllImport( "libc", EntryPoint = "fdatasync", SetLastError = true )]

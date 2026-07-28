@@ -170,6 +170,96 @@ public sealed class FileSystemOperationsTests {
 		}
 	}
 
+
+	[Fact]
+	public async Task PathnameFileFlushDistinguishesDataOnlyFromDataAndMetadata() {
+		var path = Path.GetTempFileName();
+		try {
+			await File.WriteAllBytesAsync(
+				path,
+				[ 1, 2, 3, 4 ]
+			);
+			var metadata = await Operations.FlushFileAsync(
+				path,
+				FileFlushMode.DataAndMetadata
+			);
+			if ( Operations.Capabilities.SupportsDataAndMetadataFileFlush ) {
+				Assert.True( metadata.Supported );
+				Assert.True(
+					metadata.Succeeded,
+					metadata.Message
+				);
+			} else {
+				Assert.False( metadata.Supported );
+				Assert.False( metadata.Succeeded );
+				Assert.NotNull( metadata.Message );
+			}
+
+			var dataOnly = await Operations.FlushFileAsync(
+				path,
+				FileFlushMode.DataOnly
+			);
+			if ( Operations.Capabilities.SupportsDataOnlyFileFlush ) {
+				Assert.True( dataOnly.Supported );
+				Assert.True(
+					dataOnly.Succeeded,
+					dataOnly.Message
+				);
+			} else {
+				Assert.False( dataOnly.Supported );
+				Assert.False( dataOnly.Succeeded );
+				Assert.NotNull( dataOnly.Message );
+			}
+		} finally {
+			File.Delete(
+				path
+			);
+		}
+	}
+
+	[Fact]
+	public async Task InvalidPathnameFileFlushModeReturnsControlledFailure() {
+		var path = Path.GetTempFileName();
+		try {
+			var result = await Operations.FlushFileAsync(
+				path,
+				(FileFlushMode)Int32.MaxValue
+			);
+			Assert.True( result.Supported );
+			Assert.False( result.Succeeded );
+			Assert.NotNull( result.Message );
+		} finally {
+			File.Delete(
+				path
+			);
+		}
+	}
+
+	[Fact]
+	public async Task MissingPathnameFileFlushReturnsAControlledFailure() {
+		var path = Path.Combine(
+			Path.GetTempPath(),
+			System.String.Concat(
+				"Icod.CoreUtils-missing-",
+				Guid.NewGuid().ToString( "N" )
+			)
+		);
+		var result = await Operations.FlushFileAsync(
+			path,
+			FileFlushMode.DataAndMetadata
+		);
+
+		if ( Operations.Capabilities.SupportsDataAndMetadataFileFlush ) {
+			Assert.True( result.Supported );
+			Assert.False( result.Succeeded );
+			Assert.NotNull( result.Message );
+		} else {
+			Assert.False( result.Supported );
+			Assert.False( result.Succeeded );
+			Assert.NotNull( result.Message );
+		}
+	}
+
 	[Fact]
 	public async Task DisposedFileOperationsReturnControlledResults() {
 		var path = Path.GetTempFileName();
@@ -630,6 +720,15 @@ public sealed class FileSystemOperationsTests {
 			);
 			await Assert.ThrowsAsync<OperationCanceledException>(
 				async () => {
+					_ = await Operations.FlushFileAsync(
+						path,
+						FileFlushMode.DataAndMetadata,
+						cancellation.Token
+					);
+				}
+			);
+			await Assert.ThrowsAsync<OperationCanceledException>(
+				async () => {
 					_ = await Operations.ExtendSparseAsync(
 						file,
 						4096,
@@ -672,6 +771,14 @@ public sealed class FileSystemOperationsTests {
 		Assert.Same(
 			expected,
 			result
+		);
+		var pathnameResult = await operations.FlushFileAsync(
+			"target",
+			FileFlushMode.DataAndMetadata
+		);
+		Assert.Same(
+			expected,
+			pathnameResult
 		);
 	}
 
@@ -752,6 +859,15 @@ public sealed class FileSystemOperationsTests {
 
 		public ValueTask<PlatformOperationResult> FlushFileAsync(
 			FileStream file,
+			FileFlushMode mode,
+			CancellationToken cancellationToken = default
+		) => ValueTask.FromResult(
+			result
+		);
+
+
+		public ValueTask<PlatformOperationResult> FlushFileAsync(
+			string path,
 			FileFlushMode mode,
 			CancellationToken cancellationToken = default
 		) => ValueTask.FromResult(

@@ -48,8 +48,8 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 | 8 | Completed | Identity and login information | `COREUTILS-9.11` |
 | 9 | Completed | Platform and process information | `COREUTILS-9.11`; `PROCPS-4.0.6` for `ps` |
 | 10 | Completed | Block copy and conversion: `dd` | `COREUTILS-9.11` |
-| 11 | In progress | File-size manipulation: `truncate` | `COREUTILS-9.11` |
-| 12 | Planned | Filesystem flushing: `sync` | `COREUTILS-9.11` |
+| 11 | Completed | File-size manipulation: `truncate` | `COREUTILS-9.11` |
+| 12 | In progress | Filesystem flushing: `sync` | `COREUTILS-9.11` |
 | 13 | Planned | Formatted and human-readable numeric output | `COREUTILS-9.11` |
 | 14 | Planned | Secure temporary objects: `mktemp` | `COREUTILS-9.11` |
 | 15 | Planned | Expression language: `expr` | `COREUTILS-9.11` |
@@ -105,7 +105,24 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 - **Intentional platform interpretation:** Windows has no direct `st_blksize` equivalent, so `--io-blocks` uses the target volume's allocation-unit size from `GetDiskFreeSpaceW`.
 - **Best-effort platform:** FreeBSD uses the contemporary `struct stat` layout from the official [FreeBSD `sys/sys/stat.h`](https://github.com/freebsd/freebsd-src/blob/main/sys/sys/stat.h), but is not required in the current CI matrix.
 - **Intentional runtime boundary:** ordinary seekable files are the conformance target; special-file and FIFO opens use portable .NET `FileStream` behavior rather than an exact cross-platform emulation of GNU's `O_NONBLOCK` open.
-- **Deferred validation:** the state remains **In progress** until the dedicated test project passes on `windows-latest`, `ubuntu-latest`, and `macos-latest`; after merge, change the Batch 11 state to **Completed**.
+- **Validation completed:** the dedicated test project passed and Batch 11 was merged into `main` on 28 July 2026.
+
+
+## Batch 12 implementation record
+
+- **Batch and command:** Batch 12, `sync`.
+- **Authority reconfirmed:** 28 July 2026.
+- **Authoritative package:** GNU Coreutils 9.11.
+- **Immutable identity:** tag `v9.11`; commit `c01fd163a47468a8296fb369f5233853bb551bb6`.
+- **Primary manual:** [GNU Coreutils 9.11 `sync` invocation](https://www.gnu.org/software/coreutils/manual/html_node/sync-invocation.html).
+- **Primary source:** [`src/sync.c` at the pinned commit](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/sync.c).
+- **Secondary synopsis:** [Linux man-pages `sync(1)`](https://man7.org/linux/man-pages/man1/sync.1.html).
+- **Differential oracle:** GNU `sync` from the Ubuntu CI image; its runtime `sync --version` output is to be captured whenever differential tests are run.
+- **Intentional platform interpretation:** Windows supplies file-specific data-and-metadata flushing through `FlushFileBuffers`, but no supported process-level equivalent of Unix `sync()` or `syncfs()`; global, filesystem-specific, and data-only requests therefore return controlled unsupported results.
+- **GNU fallback retained:** when the provider lacks `syncfs` but supports global flushing, `sync -f FILE...` makes one global flush request, matching GNU Coreutils builds without `syncfs`.
+- **Best-effort platform:** FreeBSD uses its documented `open`, `fcntl`, `fdatasync`, `fsync`, and `sync` interfaces, but is outside the required CI matrix.
+- **Native pathname behavior:** Unix pathname operands are opened with `O_NONBLOCK`, retried write-only when needed, restored to blocking mode, flushed, and closed; Windows pathname operands use `CreateFileW` and `FlushFileBuffers`.
+- **Deferred validation:** the state remains **In progress** until the dedicated test project and complete solution pass on `windows-latest`, `ubuntu-latest`, and `macos-latest`; after merge, change the Batch 12 state to **Completed**.
 
 ## Required batch-start record
 
