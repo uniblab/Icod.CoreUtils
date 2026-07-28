@@ -4,8 +4,8 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | Batches 0–12 |
-| Next command batch | Batch 13 — `od` |
+| Completed command batches | Batches 0–13 |
+| Next command batch | Batch 14 — `printf`, `anumfmt` |
 | Current engineering gate | Planned Completion Gate C1 |
 | Next infrastructure dependency | Completion Gate C1 — before Batch 16 |
 | Current target framework | `net10.0` |
@@ -78,7 +78,6 @@ Man7 pages are useful synopses and secondary references, but they must not repla
 7. **Injected standard streams are not consistently respected or owned correctly.**  
    A command must use the supplied `stdin`, `stdout`, and `stderr`, and must never dispose a caller-owned standard stream.
 
-1. 
 ## Project conventions
 
 These conventions apply to every existing project that is altered and every project that is added:
@@ -308,7 +307,7 @@ Replace native-command delegation and no-op success with an explicit platform im
 
 ### Batch 13 — Binary formatting (1 tool)
 
-- [ ] `od`
+- [x] `od`
 
 For `od`, build a reusable binary-formatting engine covering address radices, type strings, byte order, duplicate suppression, skip/read limits, string extraction, and nonseekable standard input. The command establishes reusable formatting and width infrastructure for later consumers.
 
