@@ -4,7 +4,7 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | Batches 0–11 |
+| Completed command batches | Batches 0–12 |
 | Current engineering gate | Planned Gate C |
 | Next command batch | Batch 13 — `printf`, `numfmt` |
 | Current target framework | `net10.0` |
