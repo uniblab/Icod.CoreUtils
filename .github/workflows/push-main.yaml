@@ -1,4 +1,4 @@
-name: main-build+sign-on-push
+name: build
 
 on:
   push:
@@ -31,33 +31,32 @@ jobs:
       - run: dotnet test Icod.CoreUtils.sln -c Release --no-build --logger trx
 
   # ----------------------------------------------------
-  # STAGE 2: Secure Windows Authenticode Signing
+  # STAGE 2: Secure Windows Authenticode & Strong-Name Signing
   # ----------------------------------------------------
-#  secure-sign:
-#    needs: build-and-test # Only runs if Stage 1 completely passes
-#    runs-on: windows-latest
-#    steps:
-#      - uses: actions/checkout@v4
-#      
-#      - uses: actions/setup-dotnet@v4
-#        with:
-#          dotnet-version: 10.0.x
-#
-#      # Re-compile code on the signing machine to target the binaries
-#      - run: dotnet build Icod.CoreUtils.sln -c Release
-#
-#      - name: Authenticate to Azure via OIDC
-#        uses: azure/login@v2
-#        with:
-#          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-#          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-#          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  secure-sign:
+    needs: build-and-test # Only runs if Stage 1 completely passes
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
 
-#      - name: Install .NET Sign CLI Locally
-#        run: |
-#          dotnet new tool-manifest
-#          dotnet tool install sign --prerelease
+      - run: dotnet build Icod.CoreUtils.sln -c Release
 
-#      # Clean, single-line invocation completely passing variables via native expressions
-#      - name: Sign All CoreUtils Binaries via Azure Key Vault
-#        run: dotnet tool run sign code azure-key-vault "bin/Release/net10.0/*.exe" "bin/Release/net10.0/*.dll" --azure-key-vault-url "${{ secrets.KEY_VAULT_URL }}" --azure-key-vault-certificate "${{ secrets.KEY_VAULT_CERT_NAME }}" --timestamp-url "http://timestamp.digicert.com"
+      - name: Authenticate to Azure via OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Install .NET Sign CLI Locally
+        run: |
+          dotnet new tool-manifest
+          dotnet tool install sign --prerelease
+
+      # Updated single-line execution passing your new Azure Secret configuration flags
+      - name: Sign All CoreUtils Binaries via Azure Key Vault
+        run: dotnet tool run sign code azure-key-vault "bin/Release/net10.0/*.exe" "bin/Release/net10.0/*.dll" --azure-key-vault-url "${{ secrets.KEY_VAULT_URL }}" --azure-key-vault-certificate "${{ secrets.KEY_VAULT_CERT_NAME }}" --timestamp-url "http://digicert.com" --azure-key-vault-key "IcodStrongNameKey" --key-cryptographic-id "base64"
