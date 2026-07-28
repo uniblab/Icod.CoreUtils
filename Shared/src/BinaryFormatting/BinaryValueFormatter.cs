@@ -2,7 +2,6 @@ namespace Icod.CoreUtils.Shared.BinaryFormatting;
 
 using System.Buffers.Binary;
 using System.Globalization;
-
 /// <summary>
 /// Formats primitive binary values using GNU <c>od</c>-style representations.
 /// </summary>
@@ -13,7 +12,6 @@ public static class BinaryValueFormatter {
 		"dle", "dc1", "dc2", "dc3", "dc4", "nak", "syn", "etb",
 		"can", "em", "sub", "esc", "fs", "gs", "rs", "us"
 	};
-
 	/// <summary>
 	/// Gets the fixed field width normally required by a format.
 	/// </summary>
@@ -49,7 +47,6 @@ public static class BinaryValueFormatter {
 			_ => 24
 		};
 	}
-
 	/// <summary>
 	/// Formats one value. Missing high-order bytes are treated as zero for a partial final unit.
 	/// </summary>
@@ -71,7 +68,6 @@ public static class BinaryValueFormatter {
 		if ( littleEndian != BitConverter.IsLittleEndian && 1 < source.Length ) {
 			source.Reverse();
 		}
-
 		return specification.Kind switch {
 			BinaryFormatKind.NamedCharacter => FormatNamedCharacter( source[ 0 ] ),
 			BinaryFormatKind.Character => FormatCharacter( source[ 0 ] ),
@@ -83,7 +79,6 @@ public static class BinaryValueFormatter {
 			_ => throw new ArgumentOutOfRangeException( nameof( specification ) )
 		};
 	}
-
 	private static string FormatNamedCharacter(
 		byte value
 	) {
@@ -99,7 +94,6 @@ public static class BinaryValueFormatter {
 		}
 		return string.Concat( "  ", ( char )value );
 	}
-
 	private static string FormatCharacter(
 		byte value
 	) {
@@ -116,7 +110,6 @@ public static class BinaryValueFormatter {
 			_ => Convert.ToString( value, 8 ).PadLeft( 3, '0' )
 		};
 	}
-
 	private static string FormatSigned(
 		ReadOnlySpan<byte> value,
 		int size
@@ -130,7 +123,6 @@ public static class BinaryValueFormatter {
 		};
 		return number.ToString( CultureInfo.InvariantCulture );
 	}
-
 	private static string FormatUnsigned(
 		ReadOnlySpan<byte> value,
 		int size,
@@ -144,12 +136,13 @@ public static class BinaryValueFormatter {
 			_ => throw new ArgumentOutOfRangeException( nameof( size ) )
 		};
 		return radix switch {
-			8 => Convert.ToString( unchecked( ( long )number ), 8 ),
-			16 => number.ToString( "x", CultureInfo.InvariantCulture ),
+			8 => Convert.ToString( unchecked( ( long )number ), 8 )
+				.PadLeft( ( size * 8 + 2 ) / 3, '0' ),
+			16 => number.ToString( "x", CultureInfo.InvariantCulture )
+				.PadLeft( size * 2, '0' ),
 			_ => number.ToString( CultureInfo.InvariantCulture )
 		};
 	}
-
 	private static string FormatFloating(
 		ReadOnlySpan<byte> value,
 		BinaryFormatSpecification specification
