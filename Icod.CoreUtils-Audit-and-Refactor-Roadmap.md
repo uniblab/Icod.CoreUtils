@@ -16,12 +16,11 @@ This revision preserves the completed work history while reorganizing the remain
 | Item | Status |
 |---|---|
 | Completed command batches | Batches 0–10 |
-| Current engineering gate | Completion Gate A |
-| Next command batch | Batch 11 — `truncate` |
-| Current target framework | `net9.0` |
-| Required target framework before Batch 11 closes | `net10.0` LTS |
+| Current engineering gate | Planned Gate C |
+| Next command batch | Batch 12 — `sync` |
+| Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
-| Next infrastructure dependency | Shared flush and allocation capabilities before Batch 12 |
+| Next infrastructure dependency | Completion Gate C — before Batch 16 |
 | Status-maintenance rule | Update this table after every merged batch |
 
 ## Scope
@@ -352,7 +351,7 @@ dotnet test Icod.CoreUtils.sln -c Debug --no-build --no-restore
 
 ### Batch 11 — File-size manipulation (1 tool)
 
-- [ ] `truncate`
+- [x] `truncate`
 
 Implement the complete GNU size operand grammar, `--reference`, `--io-blocks`, creation policy, relative modifiers, rounding modifiers, overflow checks, sparse extension, and precise diagnostics. Reuse the safe size and file-position infrastructure introduced by `dd`.
 
