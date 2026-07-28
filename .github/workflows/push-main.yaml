@@ -25,11 +25,8 @@ jobs:
           dotnet-version: 10.0.x
           
       - run: dotnet clean Icod.CoreUtils.sln -c Release
-      
       - run: dotnet restore Icod.CoreUtils.sln
-      
       - run: dotnet build Icod.CoreUtils.sln -c Release --no-restore
-      
       - run: dotnet test Icod.CoreUtils.sln -c Release --no-build --logger trx
 
       # SECURE SIGNING STAGE (Only fires when the matrix is processing Windows)
@@ -41,20 +38,12 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Authenticate to Azure via OIDC
-        if: matrix.os == 'windows-latest'
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      # 1. Install the official .NET Foundation Sign tool
+      # Added the --prerelease flag so NuGet can find the package
       - name: Install .NET Sign CLI
         if: matrix.os == 'windows-latest'
-        run: dotnet tool install --global sign
+        run: dotnet tool install --global sign --prerelease
 
-      # 2. Batch-sign your binaries leveraging Azure CLI context natively
+      # Batch-sign your binaries leveraging Azure CLI context natively
       - name: Sign All CoreUtils Binaries via Azure Key Vault
         if: matrix.os == 'windows-latest'
         run: |
@@ -63,4 +52,4 @@ jobs:
             "bin/Release/net10.0/*.dll" `
             --base-url "${{ secrets.KEY_VAULT_URL }}" `
             --certificate "${{ secrets.KEY_VAULT_CERT_NAME }}" `
-            --timestamp-url "http://timestamp.digicert.com"
+            --timestamp-url "http://digicert.com"
