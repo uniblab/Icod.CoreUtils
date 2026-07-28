@@ -57,8 +57,11 @@ jobs:
           dotnet new tool-manifest
           dotnet tool install sign --prerelease
 
-      # FIXED: Removed 'if:' matrix check and old 'env:' block to ensure seamless execution
+      # FIXED: Map secret to env to preserve character data, then use strict type trimming
       - name: Sign All CoreUtils Binaries via Azure Key Vault
         run: |
-          $cleanUrl = "${{ secrets.KEY_VAULT_URL }}".Trim()
+          $rawUrl = [string]$env:RAW_SECRET_URL
+          $cleanUrl = $rawUrl.Trim()
           dotnet tool run sign code azure-key-vault "bin/Release/net10.0/*.exe" "bin/Release/net10.0/*.dll" --azure-key-vault-url "$cleanUrl" --azure-key-vault-certificate "${{ secrets.KEY_VAULT_CERT_NAME }}" --timestamp-url "http://timestamp.digicert.com" --azure-key-vault-key "IcodStrongNameKey" --key-cryptographic-id "base64"
+        env:
+          RAW_SECRET_URL: ${{ secrets.KEY_VAULT_URL }}
