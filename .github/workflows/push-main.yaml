@@ -47,7 +47,7 @@ jobs:
 
       - name: Sign Assembly via Azure Key Vault
         if: matrix.os == 'windows-latest'
-        # Using the correct flags: -kvu for URL, -kvc for Certificate Name
-        run: AzureSignTool sign -kvu "${{ secrets.KEY_VAULT_URL }}" -kvc "${{ secrets.KEY_VAULT_CERT_NAME }}" -tr "http://timestamp.digicert.com" -td sha256 "bin/Release/net10.0/Icod.CoreUtils.dll"
+        # Added -kvi "" to trigger OIDC authentication and fixed the folder path
+        run: AzureSignTool sign -kvu "${{ secrets.KEY_VAULT_URL }}" -kvc "${{ secrets.KEY_VAULT_CERT_NAME }}" -kvi "" -tr "http://timestamp.digicert.com" -td sha256 "Icod.CoreUtils/bin/Release/net10.0/Icod.CoreUtils.dll"
         env:
           AzureServicesAuthConnectionString: "RunAs=Developer;DeveloperTool=AzureCLI"
