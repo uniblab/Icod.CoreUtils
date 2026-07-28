@@ -41,14 +41,26 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Install AzureSignTool
+      - name: Authenticate to Azure via OIDC
         if: matrix.os == 'windows-latest'
-        run: dotnet tool install --global AzureSignTool
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      # 1. Install the official .NET Foundation Sign tool
+      - name: Install .NET Sign CLI
+        if: matrix.os == 'windows-latest'
+        run: dotnet tool install --global sign
+
+      # 2. Batch-sign your binaries leveraging Azure CLI context natively
       - name: Sign All CoreUtils Binaries via Azure Key Vault
         if: matrix.os == 'windows-latest'
-        # Natively uses Azure CLI login session, signing all EXEs and DLLs in the directory
         run: |
-          AzureSignTool sign -kvu "${{ secrets.KEY_VAULT_URL }}" -kvc "${{ secrets.KEY_VAULT_CERT_NAME }}" -tr "http://digicert.com" -td sha256 "bin/Release/net10.0/*.exe" "bin/Release/net10.0/*.dll"
-        env:
-          AzureServicesAuthConnectionString: "RunAs=Developer;DeveloperTool=AzureCLI"
+          sign code azure-key-vault `
+            "bin/Release/net10.0/*.exe" `
+            "bin/Release/net10.0/*.dll" `
+            --base-url "${{ secrets.KEY_VAULT_URL }}" `
+            --certificate "${{ secrets.KEY_VAULT_CERT_NAME }}" `
+            --timestamp-url "http://timestamp.digicert.com"
