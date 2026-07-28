@@ -51,7 +51,7 @@ jobs:
       - name: Sign All CoreUtils Binaries via Azure Key Vault
         if: matrix.os == 'windows-latest'
         run: |
-          dotnet tool run sign code azure-key-vault "bin/Release/net10.0/*.exe" "bin/Release/net10.0/*.dll" --azure-key-vault-url ${{ secrets.KEY_VAULT_URL }} --azure-key-vault-certificate "${{ secrets.KEY_VAULT_CERT_NAME }}" --timestamp-url "http://digicert.com" --azure-key-vault-key "IcodStrongNameKey" --key-cryptographic-id "base64"
+          dotnet tool run sign code azure-key-vault "bin/Release/net10.0/*.exe" "bin/Release/net10.0/*.dll" --azure-key-vault-url ${{ secrets.KEY_VAULT_URL }} --azure-key-vault-certificate "${{ secrets.KEY_VAULT_CERT_NAME }}" --timestamp-url "http://digicert.com"
 
       # ====================================================
       # FINAL TEST EXECUTION (Runs against signed binaries on Windows)
