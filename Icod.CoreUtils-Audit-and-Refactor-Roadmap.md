@@ -419,7 +419,7 @@ For `sort`, implement key specifications, locale collation, stable and unique mo
 
 - [ ] `shuf`
 
-For `shuf`, use unbiased selection, secure/random-source abstractions, repeat and range modes, and bounded-memory strategies. The commands share temporary-storage and record infrastructure but retain separate execution engines.
+`shuf` reuses the temporary-storage and record infrastructure established by earlier batches while retaining its own randomized execution engine.
 
 ### Batch 22 — Sorted-stream consumers (3 tools)
 
@@ -445,7 +445,7 @@ Implement `tsort` tokenization, deterministic ordering, stable diagnostics, and 
 
 - [ ] `ptx`
 
-Replace the simplified `ptx` token dump with documented input, word, ignore, reference, width, break-file, collation, spill-storage, and output-format behavior. These commands share text, locale, tokenization, and ordering primitives but not one monolithic execution engine.
+Reuse the established text, locale, tokenization, ordering, and spill-storage primitives without coupling `ptx` to the execution engines of earlier commands.
 
 ### Completion Gate E1 — before Batch 26
 
@@ -698,7 +698,7 @@ Implement pass selection, random sources, exact-size handling, synchronization, 
 
 - [ ] `tar`
 
-`tar` is deliberately scheduled after canonical path resolution, metadata, timestamps, directory and link mutation, permissions, ownership, recursive traversal, copy/move, installation, listing, filesystem accounting, secure temporary storage, and data-destruction semantics. Implement correct archive entry types, links, sparse files, metadata, formats, compression-process integration, selection/exclusion, incremental policy if in scope, stream operation, and extraction protections against absolute paths, `..`, symlink escapes, hard-link escapes, device creation, and overwrite races.
+`tar` is deliberately scheduled after canonical path resolution, metadata, timestamps, directory and link mutation, permissions, ownership, recursive traversal, copy/move, installation, listing, filesystem accounting, and secure temporary storage.
 
 ### Completion Gate F2 — before Batch 48
 
