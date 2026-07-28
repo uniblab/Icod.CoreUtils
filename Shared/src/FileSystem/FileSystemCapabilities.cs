@@ -17,6 +17,7 @@ public sealed record FileSystemCapabilities(
 public enum FileFlushMode {
 	/// <summary>Flush file data without requiring unrelated metadata to reach durable storage.</summary>
 	DataOnly,
+
 	/// <summary>Flush file data and the metadata required to describe the file.</summary>
 	DataAndMetadata,
 }
@@ -26,7 +27,10 @@ public readonly record struct FileAllocationRange {
 	/// <summary>Initializes an allocated logical range.</summary>
 	/// <param name="offset">The zero-based byte offset.</param>
 	/// <param name="length">The range length in bytes.</param>
-	public FileAllocationRange( long offset, long length ) {
+	public FileAllocationRange(
+		long offset,
+		long length
+	) {
 		if ( 0 > offset ) {
 			throw new ArgumentOutOfRangeException(
 				nameof( offset )
@@ -44,8 +48,10 @@ public readonly record struct FileAllocationRange {
 
 	/// <summary>Gets the zero-based byte offset.</summary>
 	public long Offset { get; }
+
 	/// <summary>Gets the range length in bytes.</summary>
 	public long Length { get; }
+
 	/// <summary>Gets the first byte offset after the range.</summary>
 	public long End => checked( this.Offset + this.Length );
 }
@@ -70,6 +76,7 @@ public sealed class FileAllocationMap {
 		ArgumentNullException.ThrowIfNull(
 			ranges
 		);
+
 		var copy = ranges.ToArray();
 		var previousEnd = 0L;
 		var reportedAllocatedLength = 0L;
@@ -95,17 +102,23 @@ public sealed class FileAllocationMap {
 				reportedAllocatedLength + range.Length
 			);
 		}
+
 		this.LogicalLength = logicalLength;
-		this.Ranges = copy;
+		this.Ranges = Array.AsReadOnly(
+			copy
+		);
 		this.ReportedAllocatedLength = reportedAllocatedLength;
 	}
 
 	/// <summary>Gets the logical file length.</summary>
 	public long LogicalLength { get; }
-	/// <summary>Gets the ordered allocated logical ranges.</summary>
+
+	/// <summary>Gets the ordered allocated logical ranges as an immutable snapshot.</summary>
 	public IReadOnlyList<FileAllocationRange> Ranges { get; }
+
 	/// <summary>Gets the sum of the reported allocated logical ranges.</summary>
 	public long ReportedAllocatedLength { get; }
+
 	/// <summary>Gets whether the reported ranges leave at least one logical hole.</summary>
 	public bool IsSparse => this.ReportedAllocatedLength < this.LogicalLength;
 }

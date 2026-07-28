@@ -14,15 +14,16 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 	private const uint FsctlQueryAllocatedRanges = 0x000940cf;
 	private const int ErrorInvalidFunction = 1;
 	private const int ErrorNotSupported = 50;
-	private const int ErrorInvalidParameter = 87;
 	private const int ErrorMoreData = 234;
-	private const int LinuxSeekData = 3;
-	private const int LinuxSeekHole = 4;
+	private const int ErrorIoPending = 997;
 	private const int ErrorNoSuchDeviceOrAddress = 6;
 	private const int ErrorInvalidArgument = 22;
 	private const int LinuxOperationNotSupported = 95;
+	private const int FreeBsdOperationNotSupported = 45;
+	private const int SeekSet = 0;
+	private const int SeekData = 3;
+	private const int SeekHole = 4;
 	private const int WindowsRangeBufferSize = 64 * 1024;
-	private const int ErrorIoPending = 997;
 
 	/// <summary>Gets the process-wide system implementation.</summary>
 	public static SystemFileSystemOperations Instance { get; } = new();
@@ -44,28 +45,38 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			file
 		);
 		cancellationToken.ThrowIfCancellationRequested();
-		if ( !file.CanWrite ) {
+		if (
+			FileFlushMode.DataOnly != mode
+			&& FileFlushMode.DataAndMetadata != mode
+		) {
 			return PlatformOperationResult.Failure(
-				"the file is not open for writing"
+				"the requested file-flush mode is invalid"
 			);
 		}
-		if (
-			FileFlushMode.DataOnly == mode
-			&& !this.Capabilities.SupportsDataOnlyFileFlush
-		) {
-			return PlatformOperationResult.Unsupported(
-				"data-only file flushing is unavailable on this platform"
-			);
-		}
-		if (
-			FileFlushMode.DataAndMetadata == mode
-			&& !this.Capabilities.SupportsDataAndMetadataFileFlush
-		) {
-			return PlatformOperationResult.Unsupported(
-				"data-and-metadata file flushing is unavailable on this platform"
-			);
-		}
+
 		try {
+			if ( !file.CanWrite ) {
+				return PlatformOperationResult.Failure(
+					"the file is not open for writing"
+				);
+			}
+			if (
+				FileFlushMode.DataOnly == mode
+				&& !this.Capabilities.SupportsDataOnlyFileFlush
+			) {
+				return PlatformOperationResult.Unsupported(
+					"data-only file flushing is unavailable on this platform"
+				);
+			}
+			if (
+				FileFlushMode.DataAndMetadata == mode
+				&& !this.Capabilities.SupportsDataAndMetadataFileFlush
+			) {
+				return PlatformOperationResult.Unsupported(
+					"data-and-metadata file flushing is unavailable on this platform"
+				);
+			}
+
 			await file.FlushAsync(
 				cancellationToken
 			).ConfigureAwait( false );
@@ -78,21 +89,31 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 					"FlushFileBuffers failed"
 				);
 			}
-			var descriptor = GetFileDescriptor(
-				file.SafeFileHandle
-			);
-			var result = FileFlushMode.DataOnly == mode
-				? NativeMethods.FlushData( descriptor )
-				: NativeMethods.FlushDataAndMetadata( descriptor )
-			;
-			if ( 0 == result ) {
-				return PlatformOperationResult.Success();
+
+			var handle = file.SafeFileHandle;
+			var addedReference = false;
+			try {
+				var descriptor = AcquireFileDescriptor(
+					handle,
+					out addedReference
+				);
+				var result = FileFlushMode.DataOnly == mode
+					? NativeMethods.FlushData( descriptor )
+					: NativeMethods.FlushDataAndMetadata( descriptor )
+				;
+				if ( 0 == result ) {
+					return PlatformOperationResult.Success();
+				}
+				return CreateUnixFailure(
+					FileFlushMode.DataOnly == mode
+						? "fdatasync failed"
+						: "fsync failed"
+				);
+			} finally {
+				if ( addedReference ) {
+					handle.DangerousRelease();
+				}
 			}
-			return CreateUnixFailure(
-				FileFlushMode.DataOnly == mode
-					? "fdatasync failed"
-					: "fsync failed"
-			);
 		} catch ( EntryPointNotFoundException exception ) {
 			return PlatformOperationResult.Unsupported(
 				System.String.Concat(
@@ -112,6 +133,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			or UnauthorizedAccessException
 			or ObjectDisposedException
 			or NotSupportedException
+			or ArgumentException
 		) {
 			return PlatformOperationResult.Failure(
 				exception.Message,
@@ -144,9 +166,20 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 				FileShare.ReadWrite | FileShare.Delete,
 				FileOptions.None
 			);
-			var result = NativeMethods.FlushFileSystem(
-				GetFileDescriptor( handle )
-			);
+			var addedReference = false;
+			int result;
+			try {
+				result = NativeMethods.FlushFileSystem(
+					AcquireFileDescriptor(
+						handle,
+						out addedReference
+					)
+				);
+			} finally {
+				if ( addedReference ) {
+					handle.DangerousRelease();
+				}
+			}
 			cancellationToken.ThrowIfCancellationRequested();
 			return ValueTask.FromResult(
 				0 == result
@@ -241,37 +274,40 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 				"the requested file length cannot be negative"
 			);
 		}
-		if ( !file.CanWrite || !file.CanSeek ) {
-			return PlatformOperationResult<SparseExtensionInfo>.Failure(
-				"the file must be open for writing and seeking"
-			);
-		}
 		if ( !this.Capabilities.SupportsSparseExtension ) {
 			return PlatformOperationResult<SparseExtensionInfo>.Unsupported(
 				"sparse file extension is unavailable on this platform"
 			);
 		}
-		var originalLength = file.Length;
-		if ( newLength < originalLength ) {
-			return PlatformOperationResult<SparseExtensionInfo>.Failure(
-				"sparse extension cannot reduce the file length"
-			);
-		}
-		var originalPosition = file.Position;
-		if ( newLength == originalLength ) {
-			var existingAllocation = await this.GetAllocatedRangesAsync(
-				file,
-				cancellationToken
-			).ConfigureAwait( false );
-			return PlatformOperationResult<SparseExtensionInfo>.Success(
-				new SparseExtensionInfo(
-					originalLength,
-					newLength,
-					existingAllocation
-				)
-			);
-		}
+
 		try {
+			if ( !file.CanWrite || !file.CanSeek ) {
+				return PlatformOperationResult<SparseExtensionInfo>.Failure(
+					"the file must be open for writing and seeking"
+				);
+			}
+
+			var originalLength = file.Length;
+			if ( newLength < originalLength ) {
+				return PlatformOperationResult<SparseExtensionInfo>.Failure(
+					"sparse extension cannot reduce the file length"
+				);
+			}
+			var originalPosition = file.Position;
+			if ( newLength == originalLength ) {
+				var existingAllocation = await this.GetAllocatedRangesAsync(
+					file,
+					cancellationToken
+				).ConfigureAwait( false );
+				return PlatformOperationResult<SparseExtensionInfo>.Success(
+					new SparseExtensionInfo(
+						originalLength,
+						newLength,
+						existingAllocation
+					)
+				);
+			}
+
 			if ( OperatingSystem.IsWindows() ) {
 				var sparseResult = TryMarkSparseOnWindows(
 					file
@@ -288,6 +324,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 					;
 				}
 			}
+
 			file.SetLength(
 				newLength
 			);
@@ -315,6 +352,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			or ObjectDisposedException
 			or NotSupportedException
 			or ArgumentException
+			or OverflowException
 		) {
 			return PlatformOperationResult<SparseExtensionInfo>.Failure(
 				exception.Message,
@@ -332,13 +370,6 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			file
 		);
 		cancellationToken.ThrowIfCancellationRequested();
-		if ( !file.CanSeek ) {
-			return ValueTask.FromResult(
-				PlatformOperationResult<FileAllocationMap>.Failure(
-					"allocated ranges require a seekable file"
-				)
-			);
-		}
 		if ( !this.Capabilities.SupportsAllocatedRangeQuery ) {
 			return ValueTask.FromResult(
 				PlatformOperationResult<FileAllocationMap>.Unsupported(
@@ -346,10 +377,19 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 				)
 			);
 		}
+
 		try {
+			if ( !file.CanSeek ) {
+				return ValueTask.FromResult(
+					PlatformOperationResult<FileAllocationMap>.Failure(
+						"allocated ranges require a seekable file"
+					)
+				);
+			}
+			file.Flush();
 			var result = OperatingSystem.IsWindows()
 				? QueryAllocatedRangesOnWindows( file )
-				: QueryAllocatedRangesOnLinux( file )
+				: QueryAllocatedRangesOnUnix( file )
 			;
 			cancellationToken.ThrowIfCancellationRequested();
 			return ValueTask.FromResult(
@@ -416,6 +456,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 		} catch ( Exception exception ) when (
 			exception is IOException
 			or UnauthorizedAccessException
+			or ObjectDisposedException
 			or NotSupportedException
 			or ArgumentException
 		) {
@@ -464,7 +505,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 				SupportsFileSystemFlush: false,
 				SupportsGlobalFlush: true,
 				SupportsSparseExtension: true,
-				SupportsAllocatedRangeQuery: false
+				SupportsAllocatedRangeQuery: true
 			);
 		}
 		return new FileSystemCapabilities(
@@ -487,6 +528,9 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 		out int bytesReturned,
 		out int error
 	) {
+		ArgumentNullException.ThrowIfNull(
+			file
+		);
 		if ( !file.IsAsync ) {
 			var succeeded = NativeMethods.DeviceIoControl(
 				file.SafeFileHandle,
@@ -509,35 +553,62 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			false,
 			EventResetMode.ManualReset
 		);
-		var addedReference = false;
+		var fileHandle = file.SafeFileHandle;
+		var completionHandle = completion.SafeWaitHandle;
+		var fileReferenceAdded = false;
+		var eventReferenceAdded = false;
+		var overlappedBuffer = IntPtr.Zero;
 		try {
-			completion.SafeWaitHandle.DangerousAddRef(
-				ref addedReference
+			fileHandle.DangerousAddRef(
+				ref fileReferenceAdded
 			);
+			completionHandle.DangerousAddRef(
+				ref eventReferenceAdded
+			);
+
+			var rawEventHandle = completionHandle.DangerousGetHandle();
 			var overlapped = new WindowsOverlapped {
-				EventHandle = completion.SafeWaitHandle.DangerousGetHandle(),
+				Internal = IntPtr.Zero,
+				InternalHigh = IntPtr.Zero,
+				Offset = 0,
+				OffsetHigh = 0,
+				// A low-order bit of one suppresses IOCP notification for this request.
+				// The event is still signalled and GetOverlappedResult can wait for it.
+				EventHandle = new IntPtr(
+					rawEventHandle.ToInt64() | 1L
+				),
 			};
-			var succeeded = NativeMethods.DeviceIoControlOverlapped(
-				file.SafeFileHandle,
+			overlappedBuffer = Marshal.AllocHGlobal(
+				Marshal.SizeOf<WindowsOverlapped>()
+			);
+			Marshal.StructureToPtr(
+				overlapped,
+				overlappedBuffer,
+				false
+			);
+
+			var succeeded = NativeMethods.DeviceIoControl(
+				fileHandle,
 				controlCode,
 				inputBuffer,
 				inputBufferSize,
 				outputBuffer,
 				outputBufferSize,
 				out bytesReturned,
-				ref overlapped
+				overlappedBuffer
 			);
 			if ( succeeded ) {
 				error = 0;
 				return true;
 			}
+
 			error = Marshal.GetLastPInvokeError();
 			if ( ErrorIoPending != error ) {
 				return false;
 			}
 			succeeded = NativeMethods.GetOverlappedResult(
-				file.SafeFileHandle,
-				ref overlapped,
+				fileHandle,
+				overlappedBuffer,
 				out bytesReturned,
 				true
 			);
@@ -547,8 +618,16 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			;
 			return succeeded;
 		} finally {
-			if ( addedReference ) {
-				completion.SafeWaitHandle.DangerousRelease();
+			if ( IntPtr.Zero != overlappedBuffer ) {
+				Marshal.FreeHGlobal(
+					overlappedBuffer
+				);
+			}
+			if ( eventReferenceAdded ) {
+				completionHandle.DangerousRelease();
+			}
+			if ( fileReferenceAdded ) {
+				fileHandle.DangerousRelease();
 			}
 		}
 	}
@@ -582,6 +661,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 		} catch ( Exception exception ) when (
 			exception is IOException
 			or UnauthorizedAccessException
+			or ObjectDisposedException
 			or NotSupportedException
 			or ArgumentException
 		) {
@@ -604,6 +684,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 				)
 			);
 		}
+
 		var nativeRangeSize = Marshal.SizeOf<NativeAllocatedRange>();
 		var input = Marshal.AllocHGlobal(
 			nativeRangeSize
@@ -633,30 +714,8 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 					out var returnedBytes,
 					out var error
 				);
-				var count = returnedBytes / nativeRangeSize;
-				for ( var index = 0; index < count; index++ ) {
-					var native = Marshal.PtrToStructure<NativeAllocatedRange>(
-						IntPtr.Add(
-							output,
-							index * nativeRangeSize
-						)
-					);
-					AddRange(
-						ranges,
-						native.FileOffset,
-						native.Length,
-						length
-					);
-				}
-				if ( succeeded ) {
-					return PlatformOperationResult<FileAllocationMap>.Success(
-						new FileAllocationMap(
-							length,
-							ranges
-						)
-					);
-				}
-				if ( ErrorMoreData != error ) {
+
+				if ( !succeeded && ErrorMoreData != error ) {
 					if ( IsWindowsUnsupportedError( error ) ) {
 						return PlatformOperationResult<FileAllocationMap>.Unsupported(
 							new Win32Exception( error ).Message
@@ -671,9 +730,69 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 						exception
 					);
 				}
-				if ( 0 == count ) {
+
+				if (
+					0 > returnedBytes
+					|| WindowsRangeBufferSize < returnedBytes
+					|| 0 != returnedBytes % nativeRangeSize
+				) {
 					return PlatformOperationResult<FileAllocationMap>.Failure(
-						"FSCTL_QUERY_ALLOCATED_RANGES returned ERROR_MORE_DATA without a range"
+						"FSCTL_QUERY_ALLOCATED_RANGES returned an invalid buffer length"
+					);
+				}
+
+				var count = returnedBytes / nativeRangeSize;
+				for ( var index = 0; index < count; index++ ) {
+					var native = Marshal.PtrToStructure<NativeAllocatedRange>(
+						IntPtr.Add(
+							output,
+							index * nativeRangeSize
+						)
+					);
+					if ( 0 > native.FileOffset || 0 >= native.Length ) {
+						return PlatformOperationResult<FileAllocationMap>.Failure(
+							"FSCTL_QUERY_ALLOCATED_RANGES returned an invalid range"
+						);
+					}
+					long nativeEnd;
+					try {
+						nativeEnd = checked(
+							native.FileOffset + native.Length
+						);
+					} catch ( OverflowException exception ) {
+						return PlatformOperationResult<FileAllocationMap>.Failure(
+							"FSCTL_QUERY_ALLOCATED_RANGES returned an overflowing range",
+							exception
+						);
+					}
+					if (
+						length <= native.FileOffset
+						|| nativeEnd <= queryOffset
+					) {
+						return PlatformOperationResult<FileAllocationMap>.Failure(
+							"FSCTL_QUERY_ALLOCATED_RANGES returned a range outside the requested interval"
+						);
+					}
+					AddRange(
+						ranges,
+						native.FileOffset,
+						native.Length,
+						length
+					);
+				}
+
+				if ( succeeded ) {
+					return PlatformOperationResult<FileAllocationMap>.Success(
+						new FileAllocationMap(
+							length,
+							ranges
+						)
+					);
+				}
+
+				if ( 0 == ranges.Count ) {
+					return PlatformOperationResult<FileAllocationMap>.Failure(
+						"FSCTL_QUERY_ALLOCATED_RANGES returned ERROR_MORE_DATA without a usable range"
 					);
 				}
 				var nextOffset = ranges[^1].End;
@@ -700,7 +819,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 		}
 	}
 
-	private static PlatformOperationResult<FileAllocationMap> QueryAllocatedRangesOnLinux(
+	private static PlatformOperationResult<FileAllocationMap> QueryAllocatedRangesOnUnix(
 		FileStream file
 	) {
 		var length = file.Length;
@@ -712,26 +831,30 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 				)
 			);
 		}
+
 		var originalPosition = file.Position;
 		var ranges = new List<FileAllocationRange>();
+		var handle = file.SafeFileHandle;
+		var addedReference = false;
+		var descriptor = -1;
 		try {
-			file.Flush();
-			var descriptor = GetFileDescriptor(
-				file.SafeFileHandle
+			descriptor = AcquireFileDescriptor(
+				handle,
+				out addedReference
 			);
 			var offset = 0L;
 			while ( offset < length ) {
 				var data = NativeMethods.Seek(
 					descriptor,
 					offset,
-					LinuxSeekData
+					SeekData
 				);
 				if ( 0 > data ) {
 					var error = Marshal.GetLastPInvokeError();
 					if ( ErrorNoSuchDeviceOrAddress == error ) {
 						break;
 					}
-					if ( IsLinuxUnsupportedError( error ) ) {
+					if ( IsUnixSeekUnsupportedError( error ) ) {
 						return PlatformOperationResult<FileAllocationMap>.Unsupported(
 							new Win32Exception( error ).Message
 						);
@@ -741,16 +864,17 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 						error
 					);
 				}
+
 				var hole = NativeMethods.Seek(
 					descriptor,
 					data,
-					LinuxSeekHole
+					SeekHole
 				);
 				if ( 0 > hole ) {
 					var error = Marshal.GetLastPInvokeError();
 					if ( ErrorNoSuchDeviceOrAddress == error ) {
 						hole = length;
-					} else if ( IsLinuxUnsupportedError( error ) ) {
+					} else if ( IsUnixSeekUnsupportedError( error ) ) {
 						return PlatformOperationResult<FileAllocationMap>.Unsupported(
 							new Win32Exception( error ).Message
 						);
@@ -781,10 +905,33 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 				)
 			);
 		} finally {
-			file.Position = Math.Min(
-				originalPosition,
-				file.Length
-			);
+			try {
+				if (
+					0 <= descriptor
+					&& 0 > NativeMethods.Seek(
+						descriptor,
+						originalPosition,
+						SeekSet
+					)
+				) {
+					var error = Marshal.GetLastPInvokeError();
+					var exception = new Win32Exception(
+						error
+					);
+					throw new IOException(
+						System.String.Concat(
+							"could not restore the file position after allocated-range discovery: ",
+							exception.Message
+						),
+						exception
+					);
+				}
+				file.Position = originalPosition;
+			} finally {
+				if ( addedReference ) {
+					handle.DangerousRelease();
+				}
+			}
 		}
 	}
 
@@ -827,15 +974,31 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 		);
 	}
 
-	private static int GetFileDescriptor(
-		SafeFileHandle handle
+	private static int AcquireFileDescriptor(
+		SafeFileHandle handle,
+		out bool addedReference
 	) {
-		if ( handle.IsInvalid || handle.IsClosed ) {
-			throw new ObjectDisposedException(
-				nameof( handle )
+		ArgumentNullException.ThrowIfNull(
+			handle
+		);
+		addedReference = false;
+		try {
+			handle.DangerousAddRef(
+				ref addedReference
 			);
+			if ( handle.IsInvalid ) {
+				throw new ObjectDisposedException(
+					nameof( handle )
+				);
+			}
+			return handle.DangerousGetHandle().ToInt32();
+		} catch {
+			if ( addedReference ) {
+				handle.DangerousRelease();
+				addedReference = false;
+			}
+			throw;
 		}
-		return handle.DangerousGetHandle().ToInt32();
 	}
 
 	private static bool IsWindowsUnsupportedError(
@@ -843,15 +1006,25 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 	) => error is
 		ErrorInvalidFunction
 		or ErrorNotSupported
-		or ErrorInvalidParameter
 	;
 
-	private static bool IsLinuxUnsupportedError(
+	private static bool IsUnixSeekUnsupportedError(
 		int error
-	) => error is
-		ErrorInvalidArgument
-		or LinuxOperationNotSupported
-	;
+	) {
+		if ( ErrorInvalidArgument == error ) {
+			return true;
+		}
+		if (
+			OperatingSystem.IsLinux()
+			&& LinuxOperationNotSupported == error
+		) {
+			return true;
+		}
+		return
+			OperatingSystem.IsFreeBSD()
+			&& FreeBsdOperationNotSupported == error
+		;
+	}
 
 	private static PlatformOperationResult CreateWindowsFailure(
 		string operation,
@@ -941,24 +1114,11 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			IntPtr overlapped
 		);
 
-		[DllImport( "kernel32.dll", EntryPoint = "DeviceIoControl", SetLastError = true )]
-		[return: MarshalAs( UnmanagedType.Bool )]
-		internal static extern bool DeviceIoControlOverlapped(
-			SafeFileHandle device,
-			uint controlCode,
-			IntPtr inputBuffer,
-			int inputBufferSize,
-			IntPtr outputBuffer,
-			int outputBufferSize,
-			out int bytesReturned,
-			ref WindowsOverlapped overlapped
-		);
-
 		[DllImport( "kernel32.dll", SetLastError = true )]
 		[return: MarshalAs( UnmanagedType.Bool )]
 		internal static extern bool GetOverlappedResult(
 			SafeFileHandle file,
-			ref WindowsOverlapped overlapped,
+			IntPtr overlapped,
 			out int bytesTransferred,
 			[MarshalAs( UnmanagedType.Bool )] bool wait
 		);

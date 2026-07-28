@@ -6,6 +6,11 @@ using Icod.CoreUtils.Shared.Platform;
 /// Supplies injectable, capability-aware durable-flush and sparse-file operations.
 /// Implementations never take ownership of caller-supplied streams.
 /// </summary>
+/// <remarks>
+/// The caller must keep every supplied stream open and must not concurrently dispose it or mutate its
+/// native position until the returned operation has completed. Implementations preserve the managed
+/// stream position where the individual operation documents that behavior.
+/// </remarks>
 public interface IFileSystemOperations {
 	/// <summary>Gets the operating-system API capability report.</summary>
 	FileSystemCapabilities Capabilities { get; }
@@ -28,14 +33,16 @@ public interface IFileSystemOperations {
 		CancellationToken cancellationToken = default
 	);
 
-	/// <summary>Extends a file while requesting sparse allocation semantics.</summary>
+	/// <summary>
+	/// Extends a file while requesting sparse allocation semantics and preserves the stream position.
+	/// </summary>
 	ValueTask<PlatformOperationResult<SparseExtensionInfo>> ExtendSparseAsync(
 		FileStream file,
 		long newLength,
 		CancellationToken cancellationToken = default
 	);
 
-	/// <summary>Queries allocated logical ranges for an open file.</summary>
+	/// <summary>Queries allocated logical ranges for an open file without changing its stream position.</summary>
 	ValueTask<PlatformOperationResult<FileAllocationMap>> GetAllocatedRangesAsync(
 		FileStream file,
 		CancellationToken cancellationToken = default

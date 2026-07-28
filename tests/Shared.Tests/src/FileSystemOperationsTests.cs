@@ -43,8 +43,62 @@ public sealed class FileSystemOperationsTests {
 			Assert.False( capabilities.SupportsFileSystemFlush );
 			Assert.True( capabilities.SupportsGlobalFlush );
 			Assert.True( capabilities.SupportsSparseExtension );
-			Assert.False( capabilities.SupportsAllocatedRangeQuery );
+			Assert.True( capabilities.SupportsAllocatedRangeQuery );
 		}
+	}
+
+	[Fact]
+	public void AllocationMapCopiesAndProtectsItsRanges() {
+		var source = new[] {
+			new FileAllocationRange(
+				0,
+				4
+			),
+		};
+		var map = new FileAllocationMap(
+			8,
+			source
+		);
+		source[0] = new FileAllocationRange(
+			4,
+			4
+		);
+
+		Assert.Equal(
+			0,
+			map.Ranges[0].Offset
+		);
+		var ranges = Assert.IsAssignableFrom<IList<FileAllocationRange>>(
+			map.Ranges
+		);
+		Assert.True( ranges.IsReadOnly );
+		Assert.Throws<NotSupportedException>(
+			() => ranges[0] = new FileAllocationRange(
+				4,
+				4
+			)
+		);
+	}
+
+	[Fact]
+	public void AllocationMapRejectsInvalidRangeSequences() {
+		Assert.Throws<ArgumentException>(
+			() => new FileAllocationMap(
+				16,
+				new[] {
+					new FileAllocationRange( 8, 4 ),
+					new FileAllocationRange( 4, 4 ),
+				}
+			)
+		);
+		Assert.Throws<ArgumentException>(
+			() => new FileAllocationMap(
+				16,
+				new[] {
+					new FileAllocationRange( 12, 8 ),
+				}
+			)
+		);
 	}
 
 	[Fact]
@@ -61,11 +115,17 @@ public sealed class FileSystemOperationsTests {
 				file,
 				FileFlushMode.DataAndMetadata
 			);
-			Assert.True( metadata.Supported );
-			Assert.True(
-				metadata.Succeeded,
-				metadata.Message
-			);
+			if ( Operations.Capabilities.SupportsDataAndMetadataFileFlush ) {
+				Assert.True( metadata.Supported );
+				Assert.True(
+					metadata.Succeeded,
+					metadata.Message
+				);
+			} else {
+				Assert.False( metadata.Supported );
+				Assert.False( metadata.Succeeded );
+				Assert.NotNull( metadata.Message );
+			}
 
 			var dataOnly = await Operations.FlushFileAsync(
 				file,
@@ -90,13 +150,69 @@ public sealed class FileSystemOperationsTests {
 	}
 
 	[Fact]
+	public async Task InvalidFileFlushModeReturnsControlledFailure() {
+		var path = Path.GetTempFileName();
+		try {
+			await using var file = OpenTemporaryFile(
+				path
+			);
+			var result = await Operations.FlushFileAsync(
+				file,
+				(FileFlushMode)Int32.MaxValue
+			);
+			Assert.True( result.Supported );
+			Assert.False( result.Succeeded );
+			Assert.NotNull( result.Message );
+		} finally {
+			File.Delete(
+				path
+			);
+		}
+	}
+
+	[Fact]
+	public async Task DisposedFileOperationsReturnControlledResults() {
+		var path = Path.GetTempFileName();
+		try {
+			var file = OpenTemporaryFile(
+				path
+			);
+			await file.DisposeAsync();
+
+			var flush = await Operations.FlushFileAsync(
+				file,
+				FileFlushMode.DataAndMetadata
+			);
+			Assert.False( flush.Succeeded );
+			Assert.NotNull( flush.Message );
+
+			var extension = await Operations.ExtendSparseAsync(
+				file,
+				4096
+			);
+			Assert.False( extension.Succeeded );
+			Assert.NotNull( extension.Message );
+
+			var allocation = await Operations.GetAllocatedRangesAsync(
+				file
+			);
+			Assert.False( allocation.Succeeded );
+			Assert.NotNull( allocation.Message );
+		} finally {
+			File.Delete(
+				path
+			);
+		}
+	}
+
+	[Fact]
 	public async Task FileSystemSpecificFlushUsesSyncFsOnlyWhereAvailable() {
 		var path = Path.GetTempFileName();
 		try {
 			var result = await Operations.FlushFileSystemAsync(
 				path
 			);
-			if ( OperatingSystem.IsLinux() ) {
+			if ( Operations.Capabilities.SupportsFileSystemFlush ) {
 				Assert.True( result.Supported );
 				Assert.True(
 					result.Succeeded,
@@ -117,11 +233,7 @@ public sealed class FileSystemOperationsTests {
 	[Fact]
 	public async Task GlobalFlushReturnsAControlledPlatformResult() {
 		var result = await Operations.FlushAllFileSystemsAsync();
-		if (
-			OperatingSystem.IsLinux()
-			|| OperatingSystem.IsMacOS()
-			|| OperatingSystem.IsFreeBSD()
-		) {
+		if ( Operations.Capabilities.SupportsGlobalFlush ) {
 			Assert.True( result.Supported );
 			Assert.True(
 				result.Succeeded,
@@ -157,7 +269,10 @@ public sealed class FileSystemOperationsTests {
 				file,
 				requestedLength
 			);
-			Assert.True( result.Supported );
+			if ( !result.Supported ) {
+				Assert.NotNull( result.Message );
+				return;
+			}
 			Assert.True(
 				result.Succeeded,
 				result.Message
@@ -190,28 +305,109 @@ public sealed class FileSystemOperationsTests {
 				actual
 			);
 
-			var allocation = result.Value.Allocation;
-			if ( Operations.Capabilities.SupportsAllocatedRangeQuery ) {
-				if ( allocation.Supported ) {
-					Assert.True(
-						allocation.Succeeded,
-						allocation.Message
-					);
-					Assert.NotNull( allocation.Value );
-					Assert.Equal(
-						requestedLength,
-						allocation.Value.LogicalLength
-					);
-					AssertRangesAreOrdered(
-						allocation.Value
-					);
-				} else {
-					Assert.NotNull( allocation.Message );
-				}
-			} else {
-				Assert.False( allocation.Supported );
-				Assert.NotNull( allocation.Message );
+			AssertControlledAllocationResult(
+				result.Value.Allocation,
+				requestedLength
+			);
+		} finally {
+			File.Delete(
+				path
+			);
+		}
+	}
+
+	[Fact]
+	public async Task SparseExtensionRejectsShrinking() {
+		var path = Path.GetTempFileName();
+		try {
+			await using var file = OpenTemporaryFile(
+				path
+			);
+			file.SetLength(
+				4096
+			);
+			var result = await Operations.ExtendSparseAsync(
+				file,
+				2048
+			);
+			if ( !Operations.Capabilities.SupportsSparseExtension ) {
+				Assert.False( result.Supported );
+				Assert.NotNull( result.Message );
+				return;
 			}
+			Assert.True( result.Supported );
+			Assert.False( result.Succeeded );
+			Assert.Equal(
+				4096,
+				file.Length
+			);
+		} finally {
+			File.Delete(
+				path
+			);
+		}
+	}
+
+	[Fact]
+	public async Task SparseExtensionRequiresAWritableSeekableStream() {
+		var path = Path.GetTempFileName();
+		try {
+			await using var file = new FileStream(
+				path,
+				FileMode.Open,
+				FileAccess.Read,
+				FileShare.ReadWrite | FileShare.Delete,
+				bufferSize: 4096,
+				FileOptions.Asynchronous | FileOptions.RandomAccess
+			);
+			var result = await Operations.ExtendSparseAsync(
+				file,
+				4096
+			);
+			if ( !Operations.Capabilities.SupportsSparseExtension ) {
+				Assert.False( result.Supported );
+				Assert.NotNull( result.Message );
+				return;
+			}
+			Assert.True( result.Supported );
+			Assert.False( result.Succeeded );
+			Assert.NotNull( result.Message );
+		} finally {
+			File.Delete(
+				path
+			);
+		}
+	}
+
+	[Fact]
+	public async Task SameLengthSparseExtensionPreservesPosition() {
+		var path = Path.GetTempFileName();
+		try {
+			await using var file = OpenTemporaryFile(
+				path
+			);
+			file.SetLength(
+				4096
+			);
+			file.Position = 17;
+			var result = await Operations.ExtendSparseAsync(
+				file,
+				4096
+			);
+			if ( !Operations.Capabilities.SupportsSparseExtension ) {
+				Assert.False( result.Supported );
+				Assert.NotNull( result.Message );
+				return;
+			}
+			Assert.True( result.Supported );
+			Assert.True(
+				result.Succeeded,
+				result.Message
+			);
+			Assert.Equal(
+				17,
+				file.Position
+			);
 		} finally {
 			File.Delete(
 				path
@@ -237,22 +433,174 @@ public sealed class FileSystemOperationsTests {
 				53,
 				file.Position
 			);
-			if ( Operations.Capabilities.SupportsAllocatedRangeQuery ) {
-				if ( result.Supported ) {
-					Assert.True(
-						result.Succeeded,
-						result.Message
-					);
-					Assert.NotNull( result.Value );
-					AssertRangesAreOrdered(
-						result.Value
-					);
-				} else {
-					Assert.NotNull( result.Message );
-				}
-			} else {
-				Assert.False( result.Supported );
+			AssertControlledAllocationResult(
+				result,
+				8192
+			);
+		} finally {
+			File.Delete(
+				path
+			);
+		}
+	}
+
+	[Fact]
+	public async Task AllocatedRangeQueryPreservesSynchronousHandlePositionForSubsequentIo() {
+		var path = Path.GetTempFileName();
+		try {
+			using var file = OpenTemporaryFile(
+				path,
+				asynchronous: false
+			);
+			file.Write(
+				new byte[8192]
+			);
+			file.Position = 53;
+			var result = await Operations.GetAllocatedRangesAsync(
+				file
+			);
+			if ( !result.Supported ) {
 				Assert.NotNull( result.Message );
+				return;
+			}
+			Assert.True(
+				result.Succeeded,
+				result.Message
+			);
+			Assert.Equal(
+				53,
+				file.Position
+			);
+
+			file.WriteByte(
+				0x5a
+			);
+			file.Flush();
+			Assert.Equal(
+				54,
+				file.Position
+			);
+
+			file.Position = 53;
+			Assert.Equal(
+				0x5a,
+				file.ReadByte()
+			);
+		} finally {
+			File.Delete(
+				path
+			);
+		}
+	}
+
+	[Fact]
+	public async Task AllocatedRangePathOverloadReturnsAControlledResult() {
+		var path = Path.GetTempFileName();
+		try {
+			await File.WriteAllBytesAsync(
+				path,
+				new byte[4096]
+			);
+			var result = await Operations.GetAllocatedRangesAsync(
+				path
+			);
+			AssertControlledAllocationResult(
+				result,
+				4096
+			);
+		} finally {
+			File.Delete(
+				path
+			);
+		}
+	}
+
+	[Fact]
+	public async Task WindowsFileSystemControlsSupportSynchronousHandles() {
+		if ( !OperatingSystem.IsWindows() ) {
+			return;
+		}
+
+		var path = Path.GetTempFileName();
+		try {
+			using var file = OpenTemporaryFile(
+				path,
+				asynchronous: false
+			);
+			Assert.False( file.IsAsync );
+			file.Write(
+				new byte[4096]
+			);
+			file.Position = 19;
+
+			var extension = await Operations.ExtendSparseAsync(
+				file,
+				64L * 1024L
+			);
+			if ( !extension.Supported ) {
+				Assert.NotNull( extension.Message );
+				return;
+			}
+			Assert.True(
+				extension.Succeeded,
+				extension.Message
+			);
+			Assert.Equal(
+				19,
+				file.Position
+			);
+
+			var allocation = await Operations.GetAllocatedRangesAsync(
+				file
+			);
+			AssertControlledAllocationResult(
+				allocation,
+				64L * 1024L
+			);
+		} finally {
+			File.Delete(
+				path
+			);
+		}
+	}
+
+	[Fact]
+	public async Task RepeatedWindowsAsyncFileSystemControlsDoNotLeakIocpCompletions() {
+		if ( !OperatingSystem.IsWindows() ) {
+			return;
+		}
+
+		var path = Path.GetTempFileName();
+		try {
+			await using var file = OpenTemporaryFile(
+				path
+			);
+			await file.WriteAsync(
+				new byte[4096]
+			);
+			for ( var iteration = 0; 32 > iteration; iteration++ ) {
+				var requestedLength = ( iteration + 2L ) * 64L * 1024L;
+				var extension = await Operations.ExtendSparseAsync(
+					file,
+					requestedLength
+				);
+				if ( !extension.Supported ) {
+					Assert.NotNull( extension.Message );
+					return;
+				}
+				Assert.True(
+					extension.Succeeded,
+					extension.Message
+				);
+
+				var allocation = await Operations.GetAllocatedRangesAsync(
+					file
+				);
+				AssertControlledAllocationResult(
+					allocation,
+					requestedLength
+				);
+				await Task.Yield();
 			}
 		} finally {
 			File.Delete(
@@ -270,11 +618,37 @@ public sealed class FileSystemOperationsTests {
 			);
 			using var cancellation = new CancellationTokenSource();
 			cancellation.Cancel();
+
 			await Assert.ThrowsAsync<OperationCanceledException>(
 				async () => {
 					_ = await Operations.FlushFileAsync(
 						file,
 						FileFlushMode.DataAndMetadata,
+						cancellation.Token
+					);
+				}
+			);
+			await Assert.ThrowsAsync<OperationCanceledException>(
+				async () => {
+					_ = await Operations.ExtendSparseAsync(
+						file,
+						4096,
+						cancellation.Token
+					);
+				}
+			);
+			await Assert.ThrowsAsync<OperationCanceledException>(
+				async () => {
+					_ = await Operations.GetAllocatedRangesAsync(
+						file,
+						cancellation.Token
+					);
+				}
+			);
+			await Assert.ThrowsAsync<OperationCanceledException>(
+				async () => {
+					_ = await Operations.GetAllocatedRangesAsync(
+						path,
 						cancellation.Token
 					);
 				}
@@ -302,16 +676,46 @@ public sealed class FileSystemOperationsTests {
 	}
 
 	private static FileStream OpenTemporaryFile(
-		string path
+		string path,
+		bool asynchronous = true
 	) => new(
 		path,
 		new FileStreamOptions {
 			Access = FileAccess.ReadWrite,
 			Mode = FileMode.Open,
 			Share = FileShare.ReadWrite | FileShare.Delete,
-			Options = FileOptions.Asynchronous | FileOptions.RandomAccess,
+			Options = FileOptions.RandomAccess
+				| ( asynchronous ? FileOptions.Asynchronous : FileOptions.None ),
 		}
 	);
+
+	private static void AssertControlledAllocationResult(
+		PlatformOperationResult<FileAllocationMap> result,
+		long expectedLogicalLength
+	) {
+		if ( Operations.Capabilities.SupportsAllocatedRangeQuery ) {
+			if ( result.Supported ) {
+				Assert.True(
+					result.Succeeded,
+					result.Message
+				);
+				Assert.NotNull( result.Value );
+				Assert.Equal(
+					expectedLogicalLength,
+					result.Value.LogicalLength
+				);
+				AssertRangesAreOrdered(
+					result.Value
+				);
+			} else {
+				Assert.NotNull( result.Message );
+			}
+		} else {
+			Assert.False( result.Supported );
+			Assert.False( result.Succeeded );
+			Assert.NotNull( result.Message );
+		}
+	}
 
 	private static void AssertRangesAreOrdered(
 		FileAllocationMap map

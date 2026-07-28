@@ -8,7 +8,7 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<OutputPath>..\bin\$(Configuration)\</OutputPath>
 		<AssemblyName>mkdir</AssemblyName>
-		<RootNamespace>Icod.CoreUtils.Mkdir</RootNamespace>
+		<RootNamespace>Icod.CoreUtils.MkDir</RootNamespace>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
 		<PlatformTarget>AnyCPU</PlatformTarget>
