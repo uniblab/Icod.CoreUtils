@@ -319,7 +319,7 @@ Create shared format-string, escape, numeric, grouping, padding, precision, and 
 
 ### Batch 15 — Secure temporary objects (1 tool)
 
-- [ ] `mktemp`
+- [x] `mktemp`
 
 Add secure, exclusive file and directory creation, template validation, `TMPDIR` handling, suffix and directory modes, cleanup tests, and resistance to race and symlink attacks. This infrastructure is required before external sort, reverse processing, diff/patch work, and archive testing.
 

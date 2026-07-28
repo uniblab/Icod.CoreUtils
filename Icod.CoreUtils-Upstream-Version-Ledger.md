@@ -51,8 +51,8 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 | 11 | Completed | File-size manipulation: `truncate` | `COREUTILS-9.11` |
 | 12 | Completed | Filesystem flushing: `sync` | `COREUTILS-9.11` |
 | 13 | Completed | Binary formatting: `od` | `COREUTILS-9.11` |
-| 14 | In progress | Formatted and human-readable numeric output: `printf`, `numfmt` | `COREUTILS-9.11` |
-| 15 | Planned | Secure temporary objects: `mktemp` | `COREUTILS-9.11` |
+| 14 | Completed | Formatted and human-readable numeric output: `printf`, `numfmt` | `COREUTILS-9.11` |
+| 15 | In progress | Secure temporary objects: `mktemp` | `COREUTILS-9.11` |
 | 16 | Planned | Expression language: `expr` | `COREUTILS-9.11` |
 | 17 | Planned | Tabs and display columns | `COREUTILS-9.11` |
 | 18 | Planned | Paragraph and line-number formatting | `COREUTILS-9.11` |
@@ -154,7 +154,24 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 - **Reusable infrastructure:** GNU escape decoding lives in `Shared/src/Formatting`; arbitrary-precision exact rational parsing, scaling, decimal formatting, and explicit rounding live in `Shared/src/Numerics`.
 - **Intentional runtime interpretation:** numeric parsing and generated command syntax are culture-aware only where GNU delegates to the active locale; option names, scale keywords, suffix grammar, and decimal source syntax remain invariant.
 - **Platform scope:** the implementation is fully managed. Windows, Linux, and macOS are the required CI platforms. FreeBSD and other BSD-family systems are **best effort** and should behave identically except for host locale data.
-- **Required validation:** both dedicated test projects, Shared tests, and the complete solution must pass on `windows-latest`, `ubuntu-latest`, and `macos-latest`; after merge, change Batch 14 to **Completed**.
+- **Validation completed:** both dedicated test projects, Shared tests, and the complete solution passed; Batch 14 was merged into `main` on 28 July 2026.
+
+## Batch 15 implementation record
+
+- **Batch and command:** Batch 15, `mktemp`.
+- **Authority reconfirmed:** 28 July 2026.
+- **Authoritative package:** GNU Coreutils 9.11.
+- **Immutable identity:** tag `v9.11`; commit `c01fd163a47468a8296fb369f5233853bb551bb6`.
+- **Primary manual:** [GNU Coreutils 9.11 `mktemp` invocation](https://www.gnu.org/software/coreutils/manual/html_node/mktemp-invocation.html).
+- **Primary source:** [`src/mktemp.c` at the pinned commit](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/mktemp.c).
+- **Security primitive source:** Gnulib `lib/tempname.c` at commit `fb7312fa8d3df29f0ca0678f669b9a5b88a078ec`, the Gnulib revision recorded for the Coreutils 9.11 release: [pinned source](https://github.com/coreutils/gnulib/blob/fb7312fa8d3df29f0ca0678f669b9a5b88a078ec/lib/tempname.c). This supplies the 62-character alphabet, unbiased random selection, exclusive creation, and minimum `62^3` attempt bound.
+- **Secondary synopsis:** [Linux man-pages `mktemp(1)`](https://man7.org/linux/man-pages/man1/mktemp.1.html).
+- **Differential oracle:** GNU `mktemp` from the Ubuntu CI image; its runtime `mktemp --version` output is to be captured whenever differential tests are run.
+- **Reusable infrastructure:** cryptographic name substitution, final-run template parsing, exclusive file/directory creation, collision-only retries, name-only availability checks, and cleanup support live in `Shared/src/Temporary`.
+- **Security model:** regular files use exclusive create-new semantics; Windows directories use `CreateDirectoryW`; Linux, macOS, and best-effort FreeBSD directories use native `mkdir(..., 0700)`; Unix regular files request `0600`; existing symbolic links are collisions and are not followed or replaced.
+- **Intentional warning:** `--dry-run` reproduces GNU name-only behavior but cannot reserve the returned pathname and is explicitly documented as unsafe.
+- **Best-effort platform:** FreeBSD uses its documented POSIX `mkdir` and `lstat` interfaces but is outside the required CI matrix.
+- **Required validation:** the dedicated test project, Shared tests, and the complete solution must pass on `windows-latest`, `ubuntu-latest`, and `macos-latest`; after merge, change Batch 15 to **Completed**.
 
 ## Required batch-start record
 
