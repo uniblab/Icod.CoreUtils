@@ -143,7 +143,7 @@ These gates are repository milestones rather than command batches. They do not a
 - [x] Change and retain local scripts and CI so they build and test the entire solution rather than a selected test project.
 - [x] Migrate every project, build script, and CI workflow from `net9.0` to `net10.0` LTS.
 - [x] Retain `<LangVersion>13.0</LangVersion>` and the established Debug, Staging, and Release configuration policy during the framework migration.
-- ~~Add and require a Release build in CI in addition to the Debug build and test run.~~
+- ~~[x] Add and require a Release build in CI in addition to the Debug build and test run.~~
 - [x] Run the full applicable solution test suite on all three required runners:
   - [x] `windows-latest`
   - [x] `ubuntu-latest`
@@ -151,11 +151,10 @@ These gates are repository milestones rather than command batches. They do not a
 - [x] Verify that every test project is included in the solution and is actually discovered on every applicable runner.
 - ~~[ ] Add a repository check for UTF-8 text files and forbidden generated artifacts.~~
 - ~~[ ] Add repository checks for lowercase command assembly names and required project configuration blocks.~~
-- [ ] Record the exact authoritative upstream version used for every completed and future batch.
+- [X] Record the exact authoritative upstream version used for every completed and future batch.
 - [ ] Update the living status section after Batch 11 is merged.
 
-Recommended local verification sequence after migration:
-
+[x] Recommended local verification sequence after migration:
 ```text
 dotnet clean Icod.CoreUtils.sln -c Debug
 dotnet restore Icod.CoreUtils.sln
