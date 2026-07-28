@@ -154,8 +154,7 @@ These gates are repository milestones rather than command batches. They do not a
 - [X] Record the exact authoritative upstream version used for every completed and future batch.
 - [ ] Update the living status section after Batch 11 is merged.
 
-Recommended local verification sequence after migration:
-
+[x] Recommended local verification sequence after migration:
 ```text
 dotnet clean Icod.CoreUtils.sln -c Debug
 dotnet restore Icod.CoreUtils.sln
