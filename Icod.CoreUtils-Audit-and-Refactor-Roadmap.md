@@ -166,37 +166,6 @@ These conventions apply to every existing project that is altered and every proj
 
 These gates are repository milestones rather than command batches. They do not alter the historical numbering.
 
-### Completion Gate D — before the Batch 20
-
-[ ] Extend the secure temporary-object infrastructure established by `mktemp`:
-
-- [ ] bounded-memory sorted runs;
-- [ ] stable external merge;
-- [ ] configurable locale/key comparison;
-- [ ] deterministic cleanup on success, failure, and cancellation.
-
-### Completion Gate E — before Batch 28
-
-[ ] Add the shared filesystem model:
-
-- [ ] lexical and physical path resolution;
-- [ ] symlink and reparse-point inspection;
-- [ ] file identity, type, mode, ownership, timestamps, links, device/inode equivalents, and allocated-block accounting;
-- [ ] recursive traversal with cycle detection and mount-boundary policy;
-- [ ] sparse-file and metadata-preservation helpers;
-- [ ] atomic replacement and backup policy.
-
-### Completion Gate F — before Batch 44
-
-[ ] Add shared system/process primitives:
-
-- [ ] host and processor information;
-- [ ] terminal discovery and terminal-mode capability abstractions;
-- [ ] signal-name and signal-number parsing;
-- [ ] process-group control;
-- [ ] child-process stream forwarding;
-- [ ] controlled Windows substitutions where semantics are genuinely equivalent.
-
 ## Batch-size policy
 
 - A batch groups commands only when they share an implementation engine or directly validate the same new infrastructure.
@@ -395,6 +364,15 @@ Implement paragraph recognition, sentence spacing, crown/tagged modes, logical-p
 
 Implement complete byte/character/field list grammar, complement and output delimiters, NUL records, delimiter suppression, serial paste, delimiter escape cycles, multiple input streams, and correct behavior on multibyte input.
 
+### Completion Gate D — before the Batch 20
+
+[ ] Extend the secure temporary-object infrastructure established by `mktemp`:
+
+- [ ] bounded-memory sorted runs;
+- [ ] stable external merge;
+- [ ] configurable locale/key comparison;
+- [ ] deterministic cleanup on success, failure, and cancellation.
+
 ### Batch 20 — External ordering (1 tool)
 
 - [ ] `sort`
@@ -432,6 +410,17 @@ Implement `tsort` tokenization, deterministic ordering, stable diagnostics, and 
 - [ ] `ptx`
 
 Replace the simplified `ptx` token dump with documented input, word, ignore, reference, width, break-file, collation, spill-storage, and output-format behavior. These commands share text, locale, tokenization, and ordering primitives but not one monolithic execution engine.
+
+### Completion Gate E — before Batch 26
+
+[ ] Add the shared filesystem model:
+
+- [ ] lexical and physical path resolution;
+- [ ] symlink and reparse-point inspection;
+- [ ] file identity, type, mode, ownership, timestamps, links, device/inode equivalents, and allocated-block accounting;
+- [ ] recursive traversal with cycle detection and mount-boundary policy;
+- [ ] sparse-file and metadata-preservation helpers;
+- [ ] atomic replacement and backup policy.
 
 ### Batch 26 — Regular-expression search (1 tool)
 
@@ -556,6 +545,17 @@ Build on `mkdir`, `cp`, `chmod`, and `chown` primitives rather than invoking ext
 - [ ] `dircolors`
 
 Implement the documented database grammar, terminal selectors, file-extension rules, shell-specific output, built-in database, print-database mode, and diagnostics. Produce a reusable `LS_COLORS` parser for the listing family.
+
+### Completion Gate F — before Batch 44
+
+[ ] Add shared system/process primitives:
+
+- [ ] host and processor information;
+- [ ] terminal discovery and terminal-mode capability abstractions;
+- [ ] signal-name and signal-number parsing;
+- [ ] process-group control;
+- [ ] child-process stream forwarding;
+- [ ] controlled Windows substitutions where semantics are genuinely equivalent.
 
 ### Batch 44 — Directory listing family (3 tools)
 
