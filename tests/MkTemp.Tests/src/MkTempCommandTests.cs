@@ -34,7 +34,7 @@ public sealed class MkTempCommandTests {
 			[ "-p", workspace.Root, "--suffix=.txt", "report.XXXX" ]
 		);
 		Assert.Equal( 0, result.Status );
-		Assert.EndsWith( ".txt", result.Path, StringComparison.Ordinal ) );
+		Assert.EndsWith( ".txt", result.Path, StringComparison.Ordinal );
 		Assert.True( File.Exists( result.Path ) );
 	}
 
