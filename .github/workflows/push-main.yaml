@@ -60,6 +60,43 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Validate Key Vault certificate access
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        env:
+          KEY_VAULT_URL: ${{ secrets.KEY_VAULT_URL }}
+          KEY_VAULT_CERT_NAME: ${{ secrets.KEY_VAULT_CERT_NAME }}
+        run: |
+          $vaultUri = [Uri] $env:KEY_VAULT_URL
+
+          Write-Host "Vault scheme: $($vaultUri.Scheme)"
+          Write-Host "Vault host:   $($vaultUri.Host)"
+          Write-Host "Vault path:   $($vaultUri.AbsolutePath)"
+
+          if ($vaultUri.Scheme -ne 'https') {
+            throw 'KEY_VAULT_URL must use HTTPS.'
+          }
+
+          if ($vaultUri.Host -notlike '*.vault.azure.net') {
+            throw 'KEY_VAULT_URL is not an Azure Key Vault data-plane URL.'
+          }
+
+          if ($vaultUri.AbsolutePath -ne '/') {
+            throw 'KEY_VAULT_URL must identify the vault itself, without a certificate path.'
+          }
+
+          if ($env:KEY_VAULT_CERT_NAME -notmatch '^[A-Za-z0-9-]+$') {
+            throw 'KEY_VAULT_CERT_NAME must contain only letters, digits, and hyphens.'
+          }
+
+          $vaultName = $vaultUri.Host.Split('.')[0]
+
+          az keyvault certificate show `
+            --vault-name $vaultName `
+            --name $env:KEY_VAULT_CERT_NAME `
+            --query '{certificateId:id,keyId:kid,enabled:attributes.enabled}' `
+            --output json
+
       - name: Authenticode-sign Windows binaries
         if: matrix.os == 'windows-latest'
         shell: pwsh
