@@ -1,4 +1,4 @@
-name: build
+name: push-main
 
 on:
   push:
@@ -17,15 +17,217 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
 
-      - uses: actions/setup-dotnet@v4
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
 
-      - run: dotnet clean Icod.CoreUtils.sln -c Release
-      - run: dotnet restore Icod.CoreUtils.sln
-      - run: dotnet build Icod.CoreUtils.sln -c Release --no-restore
-      - run: dotnet test Icod.CoreUtils.sln -c Release --no-build --logger trx
+      - name: Clean
+        run: dotnet clean Icod.CoreUtils.sln -c Release
+
+      - name: Restore
+        run: dotnet restore Icod.CoreUtils.sln
+
+      - name: Build
+        run: dotnet build Icod.CoreUtils.sln -c Release --no-restore
+
+      # ------------------------------------------------
+      # Windows-only Authenticode signing
+      # ------------------------------------------------
+      - name: Install AzureSignTool
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $toolDirectory = Join-Path $env:RUNNER_TEMP 'AzureSignTool'
+
+          dotnet tool install `
+              --tool-path $toolDirectory `
+              --version 7.0.1 `
+              AzureSignTool
+
+      - name: Authenticate to Azure
+        if: matrix.os == 'windows-latest'
+        uses: azure/login@v3
+        env:
+          AZURE_CORE_OUTPUT: none
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Authenticode-sign Windows binaries
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        env:
+          KEY_VAULT_URL: ${{ secrets.KEY_VAULT_URL }}
+          KEY_VAULT_CERT_NAME: ${{ secrets.KEY_VAULT_CERT_NAME }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $signTool = Join-Path `
+              $env:RUNNER_TEMP `
+              'AzureSignTool\AzureSignTool.exe'
+
+          if (-not (Test-Path -LiteralPath $signTool -PathType Leaf)) {
+              throw "AzureSignTool was not found at '$signTool'."
+          }
+
+          # Collect each non-test project's primary DLL and Windows apphost EXE.
+          # This avoids signing copies of dependencies found in every output
+          # directory.
+          $projectFiles = @(
+              Get-ChildItem `
+                  -Path $env:GITHUB_WORKSPACE `
+                  -Recurse `
+                  -File `
+                  -Filter '*.csproj' |
+              Where-Object {
+                  $_.FullName -notmatch '[\\/]tests[\\/]'
+              }
+          )
+
+          $filesToSign = [System.Collections.Generic.List[string]]::new()
+
+          foreach ($projectFile in $projectFiles) {
+              [xml] $project = Get-Content `
+                  -LiteralPath $projectFile.FullName `
+                  -Raw
+
+              $assemblyName = [string] (
+                  $project.Project.PropertyGroup.AssemblyName |
+                  Where-Object {
+                      -not [string]::IsNullOrWhiteSpace([string] $_)
+                  } |
+                  Select-Object -First 1
+              )
+
+              $targetFramework = [string] (
+                  $project.Project.PropertyGroup.TargetFramework |
+                  Where-Object {
+                      -not [string]::IsNullOrWhiteSpace([string] $_)
+                  } |
+                  Select-Object -First 1
+              )
+
+              if ([string]::IsNullOrWhiteSpace($assemblyName)) {
+                  Write-Warning (
+                      "Skipping '$($projectFile.FullName)': " +
+                      'AssemblyName was not found.'
+                  )
+
+                  continue
+              }
+
+              if ([string]::IsNullOrWhiteSpace($targetFramework)) {
+                  Write-Warning (
+                      "Skipping '$($projectFile.FullName)': " +
+                      'TargetFramework was not found.'
+                  )
+
+                  continue
+              }
+
+              $outputDirectory = Join-Path `
+                  $projectFile.DirectoryName `
+                  "bin\Release\$targetFramework"
+
+              foreach ($extension in @('.exe', '.dll')) {
+                  $candidate = Join-Path `
+                      $outputDirectory `
+                      "$assemblyName$extension"
+
+                  if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+                      $resolvedPath = (
+                          Resolve-Path -LiteralPath $candidate
+                      ).Path
+
+                      $filesToSign.Add($resolvedPath)
+                  }
+              }
+          }
+
+          $filesToSign = @(
+              $filesToSign |
+              Sort-Object -Unique
+          )
+
+          if ($filesToSign.Count -eq 0) {
+              throw 'No primary Windows binaries were found to sign.'
+          }
+
+          Write-Host (
+              "Found $($filesToSign.Count) binaries to sign:"
+          )
+
+          foreach ($file in $filesToSign) {
+              Write-Host "  $file"
+          }
+
+          $fileList = Join-Path `
+              $env:RUNNER_TEMP `
+              'authenticode-files.txt'
+
+          $filesToSign |
+              Set-Content `
+                  -LiteralPath $fileList `
+                  -Encoding utf8NoBOM
+
+          & $signTool sign `
+              --azure-key-vault-url $env:KEY_VAULT_URL `
+              --azure-key-vault-certificate $env:KEY_VAULT_CERT_NAME `
+              --azure-key-vault-managed-identity `
+              --file-digest sha256 `
+              --timestamp-rfc3161 'http://timestamp.digicert.com' `
+              --timestamp-digest sha256 `
+              --verbose `
+              --input-file-list $fileList
+
+          if ($LASTEXITCODE -ne 0) {
+              throw (
+                  "AzureSignTool failed with exit code " +
+                  "$LASTEXITCODE."
+              )
+          }
+
+          # Fail the workflow if any resulting signature is not valid.
+          foreach ($file in $filesToSign) {
+              $signature = Get-AuthenticodeSignature `
+                  -FilePath $file
+
+              $subject = if ($null -eq $signature.SignerCertificate) {
+                  '<none>'
+              } else {
+                  $signature.SignerCertificate.Subject
+              }
+
+              Write-Host (
+                  "$file`n" +
+                  "  Status: $($signature.Status)`n" +
+                  "  Signer: $subject"
+              )
+
+              if ($signature.Status -ne 'Valid') {
+                  throw (
+                      "Authenticode validation failed for '$file': " +
+                      "$($signature.Status) — " +
+                      "$($signature.StatusMessage)"
+                  )
+              }
+          }
+
+      - name: Test
+        run: >
+          dotnet test
+          Icod.CoreUtils.sln
+          -c Release
+          --no-build
+          --logger trx
