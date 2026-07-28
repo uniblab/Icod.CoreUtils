@@ -611,18 +611,18 @@ Add the missing project as a dedicated platform batch. Implement reading and cha
 
 Build the shared child-process launch environment. Implement environment clearing/removal, split-string parsing, working directory, `argv0`, signal policy, NUL output, command lookup, `nohup` redirection rules, diagnostics, and asynchronous stream forwarding.
 
-### Batch 52 — Priority and time-bounded execution (2 tools)
+### Batch 52 — Signal control (1 tool)
 
-- [ ] `nice`
-- [ ] `timeout`
+* [ ] `kill`
 
-Implement priority adjustment without child-start races; parse full duration grammar; support signal choice, kill-after, foreground/process-group behavior, preserve-status, verbose diagnostics, and platform capability mapping.
+Implement signal-name and signal-number parsing, signal listing and translation, process and process-group targets, queued values where supported and in scope, exact diagnostics and exit statuses, and Windows substitutions only where they are semantically defensible.
 
-### Batch 53 — Signal control (1 tool)
+### Batch 53 — Priority and time-bounded execution (2 tools)
 
-- [ ] `kill`
+* [ ] `nice`
+* [ ] `timeout`
 
-Implement signal names and numbers, listing and translation, process and process-group targets, queued values if in scope, exact diagnostics, and Windows substitutions only where semantically defensible.
+Implement priority adjustment without child-start races. Parse the complete duration grammar and support signal selection, kill-after behavior, foreground and process-group handling, status preservation, verbose diagnostics, exact exit-status propagation, and explicit platform-capability handling.
 
 ### Batch 54 — Root-directory execution (1 tool)
 
