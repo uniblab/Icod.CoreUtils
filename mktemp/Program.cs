@@ -1,7 +1,11 @@
-namespace Icod.CoreUtils.MkTmp;
+namespace Icod.CoreUtils.MkTemp;
 
-internal class Program {
-	static void Main( string[] args ) {
-		Console.WriteLine( "Hello, World!" );
+using Icod.CoreUtils.Shared.Diagnostics;
+
+/// <summary>Provides the <c>mktemp</c> process entry point.</summary>
+public static class Program {
+	/// <summary>Runs <c>mktemp</c> against the process console streams.</summary>
+	public static Task<int> Main( string[] args ) {
+		return Command.RunAsync( args, CommandContext.CreateConsole( "mktemp" ) );
 	}
 }
