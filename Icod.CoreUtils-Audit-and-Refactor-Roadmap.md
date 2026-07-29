@@ -13,21 +13,58 @@
 
 ## Scope
 
-This repository is a broad attempt at porting the BSD/Linux coreutils to .net. 
-Primary targets are windows-latest, ubuntu-latest, and macos-latest. 
+This repository is a broad attempt at porting the BSD/Linux coreutils to .NET.
+Primary targets are `windows-latest`, `ubuntu-latest`, and `macos-latest`.
 I am making a "best effort" at supporting BSD. 
 
-Six non-Coreutils programs are also in scope: `ed`, `grep`, `patch`, `ps`, `sed`, and `tar`. 
+Seven commands currently present in the repository are not GNU Coreutils commands:
+`diff`, `ed`, `grep`, `patch`, `ps`, `sed`, and `tar`.
+Their long-term ownership is intentionally separated by upstream family and execution model:
+
+- `diff` moves to `Icod.DiffUtils` together with `cmp`, `diff3`, and `sdiff`;
+- `grep` moves to `Icod.Grep`;
+- `patch` moves to `Icod.Patch`;
+- `ed` moves to `Icod.Ed`, together with `red`;
+- `ps` moves to `Icod.Procps`;
+- `sed` and `tar` remain planned for the broader `Icod.ExtUtils` repository unless a later roadmap gives either command its own repository.
+
+No separate `[` project will be added. The existing `test` project remains the condition evaluator.
 
 ## Eventual Plan
 
-All shared components will reside in Icod.CoreUtils.Shared, which will become it's own repository.  
+Broadly reusable components will reside in `Icod.CoreUtils.Shared`, which will become its own repository and package.
+Suite-specific engines belong to the repository that owns the corresponding command family.
+The CoreUtils repository must not acquire production dependencies on sibling command-suite repositories.
+
+The intended dependency direction is:
+
+```text
+Icod.CoreUtils.Shared
+        ↓
+Suite-specific Shared project, when required
+        ↓
+Command projects
+```
+
+Interoperability between sibling repositories should normally occur through documented command-line behavior and textual formats rather than through runtime project references. Examples include unified diffs flowing from `Icod.DiffUtils` to `Icod.Patch`, and ed scripts flowing from `Icod.DiffUtils` to `Icod.Ed`.
 Those tools which are not Linux coreutils will be moved to a separate repository.  
 The name is tentative, but I'm thinking Icod.ExtUtils.  
 No separate `[` project will be added.  
 
 ### Icod.CoreUtils.Shared
 
+This repository contains suite-neutral facilities such as:
+
+- argument processing;
+- command contexts and injected standard streams;
+- diagnostics and exit-status support;
+- high-performance cross-platform file I/O;
+- text manipulation and formatting;
+- regular-expression policy;
+- secure temporary objects;
+- filesystem, terminal, process, and platform capability abstractions.
+
+Individual command suites consume these facilities in the same way that they consume the BCL. Coreutils-specific command engines remain in `Icod.CoreUtils`; suite-specific comparison, patching, editing, searching, or process-reporting engines do not move into `Icod.CoreUtils.Shared`.
 This has all the shared features in a single place.  These include:
 - Argument processor
 - Command context
@@ -43,24 +80,65 @@ It will also have some of my own very useful tools, such as `md2sum`.
 
 ### Icod.DiffUtils
 
-`diff` will be moved to `Icod.DiffUtils`, which will also include `cmp`, `diff3`, `sdiff`.
+`Icod.DiffUtils` contains `cmp`, `diff`, `diff3`, and `sdiff`.
+`Icod.DiffUtils.Shared` owns suite-specific comparison, differencing, hunk construction, merge, and difference-output infrastructure.
 
+### Icod.Grep
+
+`Icod.Grep` contains `grep`.
+`Icod.Grep.Shared` may own suite-specific pattern-source handling, matcher orchestration, recursive selection, binary-input policy, context grouping, and grep output formatting. It consumes the regular-expression, text-record, and read-only traversal contracts published by `Icod.CoreUtils.Shared`.
+
+Obsolete `egrep` and `fgrep` compatibility launchers are not added implicitly. They require a separate, explicit scope decision.
+
+### Icod.Patch
+
+`Icod.Patch` contains `patch`.
+`Icod.Patch.Shared` may own patch-format parsing, hunk application, offset and fuzz matching, rejection reporting, backup policy, and transactional patch-application behavior.
+
+`Icod.Patch` consumes ordinary textual patch formats. It must not require a production reference to `Icod.DiffUtils.Shared`; compatibility is verified through GNU and Icod-generated fixtures at the public file-format boundary.
+
+### Icod.Ed
+
+`Icod.Ed` contains `ed` and its restricted companion `red`.
+`Icod.Ed.Shared` owns editor-specific address parsing, command parsing, mutable line buffers, marks, substitutions, global commands, undo state, file operations, shell-command integration, and restricted-mode enforcement.
+
+Compatibility with ed scripts produced by GNU Diffutils and `Icod.DiffUtils` is tested through textual scripts rather than a runtime project dependency.
+
+### Icod.Procps
+
+`Icod.Procps` initially contains `ps`.
+`Icod.Procps.Shared` may own process enumeration, selection, process snapshots, field definitions, sorting, personality profiles, terminal association, and platform-specific process metadata.
+
+The extraction of `ps` does not automatically add the rest of the procps-ng command family. Any additional commands require their own scope and roadmap decision.
+
+### Repository extraction policy
+
+Each extraction milestone must:
+
+- preserve relevant source and test history where practical;
+- keep the lowercase executable assembly name unchanged;
+- move projects and namespaces to the new repository family;
+- reproduce the established `net10.0`, C# 13, Debug/Staging/Release, UTF-8/LF, XML documentation, and three-runner CI policies;
+- remove the command from the CoreUtils solution, packaging, inventories, and release workflows;
+- add a migration note identifying the new repository and package;
+- establish cross-repository compatibility fixtures where a textual contract crosses repository boundaries;
+- distinguish clean transfer of ownership from completion of the new repository's conformance roadmap.
 
 ## Authoritative Source
 
 For GNU Coreutils commands, the conformance baseline is the pinned GNU Coreutils manual and source.
-For non-Coreutils programs, use the corresponding upstream project as the primary authority.
+For commands owned by sibling repositories, use the corresponding upstream project as the primary authority.
 
-| Program family | Primary authority |
-|---|---|
-| GNU Coreutils commands | GNU Coreutils manual and source |
-| `sed` | GNU sed |
-| `grep` | GNU grep |
-| `diff` | GNU Diffutils |
-| `patch` | GNU patch |
-| `ed` | GNU ed |
-| `tar` | GNU tar |
-| `ps` | procps-ng, with an explicitly documented portability profile |
+| Program family or command | Eventual owner | Primary authority |
+|---|---|---|
+| GNU Coreutils commands | `Icod.CoreUtils` | GNU Coreutils manual and source |
+| `sed` | `Icod.ExtUtils` | GNU sed |
+| `grep` | `Icod.Grep` | GNU grep 3.12 |
+| `cmp`, `diff`, `diff3`, `sdiff` | `Icod.DiffUtils` | GNU Diffutils 3.12 |
+| `patch` | `Icod.Patch` | GNU patch 2.8 |
+| `ed`, `red` | `Icod.Ed` | GNU ed 1.22.5 |
+| `ps` | `Icod.Procps` | procps-ng 4.0.6, with an explicitly documented portability profile |
+| `tar` | `Icod.ExtUtils` | GNU tar |
 
 Man7 pages are useful synopses and secondary references, but they must not replace the authoritative upstream manual.
 
@@ -69,7 +147,7 @@ Man7 pages are useful synopses and secondary references, but they must not repla
 ### What is working well
 
 - The completed batches established shared command-line, diagnostics, streaming, numeric, platform, identity, process, date/time, and block-I/O abstractions.
-- Batches 1 through 10 have command-specific tests.
+- Batches 1 through 15 have command-specific tests.
 - The complete test suite has been exercised on Windows, Ubuntu, and macOS during Batch 10 stabilization.
 - Source projects consistently reference `Shared` where common behavior is appropriate.
 - Recent projects use asynchronous entry points, injected streams, cancellation, and provider abstractions more consistently than the original implementations.
@@ -87,8 +165,8 @@ Man7 pages are useful synopses and secondary references, but they must not repla
    Examples include portions of `link`, `chcon`, `install`, `sync`, and `stdbuf`. Production implementations must not obtain apparent compatibility by invoking the same host utility. Native utilities may be used only by optional differential tests.
 
 4. **Some implementations are not yet the command they claim to be.**
-   - `diff` is not a complete difference algorithm and does not yet implement the required result-status model.
-   - `patch` handles a private simplified format rather than normal, context, and unified patches.
+   - The existing `diff` implementation is not a complete difference algorithm and does not yet implement the required result-status model; this defect transfers to the initial `Icod.DiffUtils` audit.
+   - The existing `patch` implementation handles a private simplified format rather than normal, context, and unified patches; this defect transfers to the initial `Icod.Patch` audit.
    - `link` behaves like a partial `ln` front end rather than the simple two-operand hard-link command.
    - `stat` substitutes creation time where inode-change time is required.
    - `chmod` does not yet implement GNU/POSIX numeric and symbolic mode semantics correctly.
@@ -170,6 +248,8 @@ These conventions apply to every existing project that is altered and every proj
 12. Every new project is added to the solution, all required configuration mappings, the appropriate solution folder, and every local and CI build/test entry point.
 13. The supported CI platform targets are explicitly `windows-latest`, `ubuntu-latest`, and `macos-latest`. Platform-specific tests may be conditional, but every runner must build the full solution and execute the complete applicable test suite.
 14. Do not use `Assert.True` to check for substrings. Use `Assert.StartsWith`, `Assert.EndsWith` instead. (https://xunit.net/xunit.analyzers/rules/xUnit2009).
+15. Extracted repositories retain these conventions unless their own roadmap records a deliberate exception.
+16. Cross-repository compatibility is tested at the public command-line or textual-format boundary unless a dependency has been deliberately classified as suite-neutral and published through `Icod.CoreUtils.Shared`.
 
 ## Repository-wide engineering rules
 
@@ -187,6 +267,8 @@ These conventions apply to every existing project that is altered and every proj
 12. `--help` and `--version` behavior, write failures, broken pipes, cancellation, and disposal are tested consistently.
 13. Native structures and calls are defined per supported operating-system ABI; a Linux structure declaration must not be assumed valid on macOS or Windows.
 14. The exact upstream package and version used as the conformance baseline is recorded for every batch.
+15. `Icod.CoreUtils` command projects do not take production dependencies on `Icod.DiffUtils`, `Icod.Grep`, `Icod.Patch`, `Icod.Ed`, `Icod.Procps`, or `Icod.ExtUtils`.
+16. Extraction milestones remove stale solution, packaging, namespace, documentation, and CI references from this repository and establish equivalent checks in the destination repository.
 
 ## Engineering completion gates
 
@@ -281,6 +363,8 @@ These gates are repository milestones rather than command batches. They do not a
 - [x] `uptime`
 - [x] `date`
 
+`ps` was implemented and stabilized as part of this historical batch. Its completed history remains recorded here, while ownership will later transfer to `Icod.Procps` under the repository extraction milestone after Batch 32.
+
 ### Batch 10 — Block-oriented copy and conversion (1 tool)
 
 - [x] `dd`
@@ -349,7 +433,7 @@ Create shared format-string, escape, numeric, grouping, padding, precision, and 
 
 - [x] `mktemp`
 
-Add secure, exclusive file and directory creation, template validation, `TMPDIR` handling, suffix and directory modes, cleanup tests, and resistance to race and symlink attacks. This infrastructure is required before external sort, reverse processing, diff/patch work, and archive testing.
+Add secure, exclusive file and directory creation, template validation, `TMPDIR` handling, suffix and directory modes, cleanup tests, and resistance to race and symlink attacks. This infrastructure is required before external sort, reverse processing, sibling diff/patch/editor work, transactional replacement, and archive testing.
 
 ### Completion Gate C1 — before Batch 16
 
@@ -363,7 +447,7 @@ Add secure, exclusive file and directory creation, template validation, `TMPDIR`
   * [x] explicit documentation of differences from `System.Text.RegularExpressions`;
   * [x] injectable and testable matching providers.
 
-This gate prevents `expr` from introducing an isolated regular-expression implementation. The same foundation will later be extended and reused by `grep`, `csplit`, and `ed`.
+This gate prevents `expr` from introducing an isolated regular-expression implementation. The same foundation remains the CoreUtils basis for `csplit` and is published for reuse by `Icod.Grep` and `Icod.Ed`.
 
 ### Batch 16 — Expression language (1 tool)
 
@@ -411,7 +495,7 @@ Implement paragraph recognition, sentence spacing, crown/tagged modes, logical-p
   * [ ] documented escape-sequence parsing;
   * [ ] deterministic behavior for malformed ranges and escapes.
 
-This gate directly supports `cut` and `paste`, then remains available to `tr`, `sort`, `grep`, `split`, and related commands.
+This gate directly supports `cut` and `paste`, then remains available to `tr`, `sort`, `split`, and related CoreUtils commands. Its published record and delimiter contracts may also be consumed by `Icod.Grep`.
 
 ### Batch 19 — Field and record extraction (2 tools)
 
@@ -485,16 +569,21 @@ Reuse the established text, locale, tokenization, ordering, and spill-storage pr
   * [ ] deterministic error-continuation behavior;
   * [ ] injectable filesystem-enumeration providers.
 
-This gate is required before recursive `grep` and will later support directory
-listing, filesystem accounting, and archive creation. Its published traversal
-contracts may also be consumed by Icod.DiffUtils for recursive directory
-comparison.
+This gate is completed before the `Icod.Grep` extraction milestone so the new repository can consume a stable read-only traversal contract for recursive search. It also supports later CoreUtils directory listing, filesystem accounting, and archive creation, and may be consumed by `Icod.DiffUtils` for recursive directory comparison.
 
-### Batch 26 — Regular-expression search (1 tool)
+### Batch 26 — GNU grep extraction milestone
 
-- [ ] `grep`
+- [ ] Remove `grep` from the Icod.CoreUtils solution and repository.
+- [ ] Transfer the existing `grep` implementation, tests, and relevant history to `Icod.Grep`.
+- [ ] Establish the `Icod.Grep` solution, three-runner CI, configuration, documentation, and packaging conventions.
+- [ ] Establish `Icod.Grep.Shared` for suite-specific pattern-source handling, matcher orchestration, recursive selection, binary-input policy, context grouping, and output formatting where those components are genuinely shared.
+- [ ] Consume the regular-expression, text-record, and read-only traversal contracts published by `Icod.CoreUtils.Shared` without moving grep-specific behavior into the neutral library.
+- [ ] Record GNU grep 3.12 as the initial authoritative baseline.
+- [ ] Preserve the required grep status model: 0 for selected lines, 1 for no selected lines, and 2 for errors.
+- [ ] Remove `grep` from CoreUtils packaging, command inventories, and release workflows.
+- [ ] Add a migration note identifying `Icod.Grep` as the command's new home.
 
-Implement the documented GNU grep option and pattern model, including multiple pattern sources, basic/extended/fixed/Perl-mode policy, recursive traversal, include/exclude rules, binary policy, context, filename and line metadata, counts, quiet/list modes, NUL behavior, and the required 0/1/2 status distinction. Unsupported regex dialect features must be explicit rather than ignored.
+Implementation and conformance work for `grep` continues under the `Icod.Grep` roadmap. Completion of this milestone means that ownership has been transferred cleanly; it does not mean that GNU grep compatibility is complete.
 
 ### Batch 27 — Splitting and reversing (2 tools)
 
@@ -508,7 +597,7 @@ Implement `tac` with backward file scanning or secure temporary spooling rather 
 
 - [ ] `csplit`
 
-Reuse the regex policy established by `grep` for `csplit`, including numeric and regex addresses, offsets, repetition, suppression, prefix/suffix grammar, keep-files behavior, exact byte counts, and cleanup after failure or cancellation.
+Reuse the regular-expression policy established by Completion Gate C1 for `csplit`, including numeric and regex addresses, offsets, repetition, suppression, prefix/suffix grammar, keep-files behavior, exact byte counts, and cleanup after failure or cancellation. Do not introduce a runtime dependency on `Icod.Grep`.
 
 ### Batch 29 — Page presentation (1 tool)
 
@@ -525,40 +614,63 @@ For `pr`, implement columns, page geometry, headers and footers, form feeds, dat
 - [ ] Establish Icod.DiffUtils.Shared for suite-specific comparison,
       differencing, merging, and output-format infrastructure.
 - [ ] Record GNU Diffutils 3.12 as the initial authoritative baseline.
-- [ ] Establish cross-repository compatibility tests for `patch` and `ed`.
+- [ ] Establish textual compatibility fixtures for `Icod.Patch` and `Icod.Ed`, including normal, context, unified, and ed-script output where applicable.
+- [ ] Keep `Icod.DiffUtils` independent of `Icod.Patch` and `Icod.Ed` at runtime.
 
 Implementation and conformance work for `cmp`, `diff`, `diff3`, and `sdiff`
 continues under the Icod.DiffUtils roadmap. Completion of this milestone means
 that ownership has been transferred cleanly; it does not mean that the four
 Diffutils commands are complete.
 
-### Completion Gate E2 — before Batch 31
+### Batch 31 — GNU patch extraction milestone
 
-* [ ] Add shared transactional file-replacement infrastructure:
+- [ ] Remove `patch` from the Icod.CoreUtils solution and repository.
+- [ ] Transfer the existing `patch` implementation, tests, and relevant history to `Icod.Patch`.
+- [ ] Establish the `Icod.Patch` solution, three-runner CI, configuration, documentation, and packaging conventions.
+- [ ] Establish `Icod.Patch.Shared` for patch-format parsing, hunk application, fuzz and offset matching, reversal detection, reject generation, backups, and transactional application behavior where those components are genuinely shared.
+- [ ] Record GNU patch 2.8 as the initial authoritative baseline.
+- [ ] Establish checked-in normal, context, and unified patch corpora produced by GNU Diffutils 3.12.
+- [ ] Establish cross-repository compatibility tests using `Icod.DiffUtils` output.
+- [ ] Keep the production dependency boundary textual: `Icod.Patch` must not require `Icod.DiffUtils.Shared` merely to consume patch files.
+- [ ] Plan to consume the transactional replacement contracts published by Completion Gate E6 when the full patch engine is implemented.
+- [ ] Remove `patch` from CoreUtils packaging, command inventories, and release workflows.
+- [ ] Add a migration note identifying `Icod.Patch` as the command's new home.
 
-  * [ ] secure sibling temporary files;
-  * [ ] atomic replacement where supported;
-  * [ ] backup-name generation and retention policy;
-  * [ ] rollback behavior after partial failure;
-  * [ ] pathname-containment and escape checks;
-  * [ ] deterministic cleanup after success, failure, and cancellation;
-  * [ ] explicit diagnostics where atomic replacement is unavailable.
+Implementation and conformance work for `patch` continues under the `Icod.Patch` roadmap. Completion of this milestone means that ownership has been transferred cleanly; it does not mean that GNU patch compatibility is complete.
 
-This gate is placed immediately before `patch`, the first remaining command that requires safe transactional modification of existing files.
+### Batch 32 — GNU ed extraction milestone
 
-### Batch 31 — Patch application engine (1 tool)
+- [ ] Remove `ed` from the Icod.CoreUtils solution and repository.
+- [ ] Transfer the existing `ed` implementation, tests, and relevant history to `Icod.Ed`.
+- [ ] Establish the `Icod.Ed` solution, three-runner CI, configuration, documentation, and packaging conventions.
+- [ ] Add command projects for `ed` and `red`.
+- [ ] Establish `Icod.Ed.Shared` for editor-specific address parsing, command parsing, mutable line buffers, marks, substitutions, global commands, undo state, file operations, shell-command integration, and restricted-mode enforcement.
+- [ ] Record GNU ed 1.22.5 as the initial authoritative baseline.
+- [ ] Consume the published regular-expression and text contracts from `Icod.CoreUtils.Shared` without moving editor state into the neutral library.
+- [ ] Establish textual compatibility tests for ed scripts emitted by GNU Diffutils and `Icod.DiffUtils`.
+- [ ] Plan to consume published process and transactional replacement contracts when the full editor engine is implemented.
+- [ ] Remove `ed` from CoreUtils packaging, command inventories, and release workflows.
+- [ ] Add a migration note identifying `Icod.Ed` as the command's new home.
 
-- [ ] `patch`
+Implementation and conformance work for `ed` and `red` continues under the `Icod.Ed` roadmap. Completion of this milestone means that ownership has been transferred cleanly; it does not mean that GNU ed compatibility is complete.
 
-Parse normal, context, and unified diffs; implement file selection, strip counts, reversal detection, fuzz, offsets, backups, rejects, dry runs, timestamps, atomic replacement, and safe pathname handling. Test against files produced by the preceding `diff` batch.
+### Repository extraction milestone — Icod.Procps
 
-### Batch 32 — Line editor (1 tool)
+This milestone does not alter command-batch numbering. It is placed with the other repository-boundary work so that completed historical Batch 9 does not need to be reopened or renumbered.
 
-- [ ] `ed`
+- [ ] Remove `ps` from the Icod.CoreUtils solution and repository while preserving Batch 9 as the historical implementation record.
+- [ ] Transfer the existing `ps` implementation, tests, and relevant history to `Icod.Procps`.
+- [ ] Establish the `Icod.Procps` solution, three-runner CI, configuration, documentation, and packaging conventions.
+- [ ] Establish `Icod.Procps.Shared` for process enumeration, selection, snapshots, field definitions, sorting, personality profiles, terminal association, and platform-specific process metadata where those components are genuinely shared.
+- [ ] Record procps-ng 4.0.6 as the initial authoritative baseline.
+- [ ] Define and document the Linux procps-ng compatibility profile and the controlled Windows, macOS, and BSD capability boundaries.
+- [ ] Keep the initial repository scope limited to `ps`; do not add other procps-ng commands without an explicit roadmap decision.
+- [ ] Remove `ps` from CoreUtils packaging, command inventories, and release workflows.
+- [ ] Add a migration note identifying `Icod.Procps` as the command's new home.
 
-Complete the address parser, command state machine, global commands, substitutions, marks, buffers, file and shell commands, modified-buffer rules, diagnostics, signals, and exit behavior. Reuse the agreed regex policy but keep the editor state machine isolated.
+Completion of this milestone means that ownership of the already implemented `ps` command has transferred cleanly. Subsequent conformance expansion continues under the `Icod.Procps` roadmap.
 
-### Completion Gate E3 — before Batch 33
+### Completion Gate E2 — before Batch 33
 
 * [ ] Complete the shared canonical-path model:
 
@@ -580,7 +692,7 @@ This gate supplies the defining infrastructure for `readlink` and `realpath`.
 
 Implement lexical versus physical resolution, missing-component policies, canonicalization modes, delimiters, quiet/verbose behavior, relative output, symlink loops, reparse points, and deterministic failures. Never return the unresolved input as a false success.
 
-### Completion Gate E4 — before Batch 34
+### Completion Gate E3 — before Batch 34
 
 * [ ] Add the authoritative shared filesystem-metadata model:
 
@@ -609,7 +721,7 @@ Build the authoritative metadata adapter and format-string engine. Distinguish a
 
 Implement the complete GNU/POSIX operand-count grammar, file type and characteristic predicates, access checks, string and numeric comparisons, connectives, precedence, ambiguity rules, and statuses 0, 1, and 2. **Do not create a separate `[` project.**
 
-### Completion Gate E5 — before Batch 36
+### Completion Gate E4 — before Batch 36
 
 * [ ] Add shared mode and basic pathname-mutation infrastructure:
 
@@ -645,7 +757,7 @@ Make `link` the documented two-operand hard-link command. Build `ln` as a separa
 
 Add the missing GNU projects. Implement modes, FIFO creation, block/character device operands, major/minor validation, umask behavior, and controlled privilege/platform failure. Never emulate success by creating an ordinary file.
 
-### Completion Gate E6 — before Batch 39
+### Completion Gate E5 — before Batch 39
 
 * [ ] Extend the traversal model for recursive mutation and copying:
 
@@ -658,7 +770,7 @@ Add the missing GNU projects. Implement modes, FIFO creation, block/character de
   * [ ] metadata-preservation policy;
   * [ ] destination-inside-source detection;
   * [ ] partial-failure and cleanup policy;
-  * [ ] backup and overwrite coordination with Completion Gate E2.
+  * [ ] integration points for the later transactional replacement and backup model.
 
 This gate supports recursive `chmod`, `chown`, `chgrp`, `rm`, `cp`, `mv`, `install`, `du`, and `tar`.
 
@@ -680,6 +792,21 @@ Replace `NotImplementedException` with real Unix ownership operations and contro
 - [ ] `rm`
 
 Use the shared traversal engine. Implement interactive modes, recursive directory handling, force, one-file-system, preserve-root, empty-directory removal, symlink safety, write-protected prompts, race-aware deletion, glob expansion policy, and error continuation.
+
+### Completion Gate E6 — before Batch 42
+
+* [ ] Add shared transactional file-replacement infrastructure:
+
+  * [ ] secure sibling temporary files;
+  * [ ] atomic replacement where supported;
+  * [ ] backup-name generation and retention policy;
+  * [ ] rollback behavior after partial failure;
+  * [ ] pathname-containment and escape checks;
+  * [ ] deterministic cleanup after success, failure, and cancellation;
+  * [ ] explicit diagnostics where atomic replacement is unavailable;
+  * [ ] integration with the recursive traversal and metadata-preservation contracts established by Completion Gate E5.
+
+This gate is placed immediately before `cp` and `mv`, the first remaining CoreUtils commands that require the complete replacement, backup, and rollback model. The published contracts may also be consumed by `Icod.Patch` and `Icod.Ed` without creating reverse dependencies from CoreUtils to those repositories.
 
 ### Batch 42 — Copy and move engine (2 tools)
 
@@ -843,47 +970,50 @@ Begin with a documented feasibility decision. The current silent fallback is una
 
 ## Why the tools are scheduled this way
 
-* Batches 0 through 10 are preserved as the historical foundation of the project. They establish the shared command-line, diagnostics, streaming, numeric, platform, identity, process, date/time, and block-I/O abstractions used by the remaining commands.
+* Batches 0 through 10 are preserved as the historical foundation of the project. They establish the shared command-line, diagnostics, streaming, numeric, platform, identity, process, date/time, and block-I/O abstractions used by the remaining commands and by the sibling repositories created through later extraction milestones.
+* `ps` remains recorded in completed Batch 9 because that is where it was implemented and stabilized. Its later transfer to `Icod.Procps` changes repository ownership without rewriting project history or reopening a completed command batch.
 * `truncate`, `sync`, and `od` follow `dd` because they exercise closely related raw-file capabilities. Together, these batches establish file sizing, sparse extension, allocation reporting, data and metadata flushing, byte offsets, bounded reads, binary interpretation, and reusable binary formatting before the roadmap moves into higher-level text processing.
 * `printf` and `numfmt` are scheduled early because formatted numeric output, escape processing, padding, precision, grouping, and human-readable quantities recur throughout later commands such as `sort`, `stat`, `ls`, `df`, and `du`.
-* `mktemp` precedes every remaining command that may require secure temporary storage. It establishes exclusive temporary-file and temporary-directory creation before external sorting, reverse processing, patch application, transactional replacement, and archive testing depend upon temporary workspaces.
-* Completion Gate C1 precedes `expr` so the project establishes one documented regular-expression foundation rather than allowing `expr`, `grep`, `csplit`, and `ed` to develop incompatible matching behavior independently.
+* `mktemp` precedes every remaining command or sibling suite that may require secure temporary storage. It establishes exclusive temporary-file and temporary-directory creation before external sorting, reverse processing, patch and editor work, transactional replacement, and archive testing depend upon temporary workspaces.
+* Completion Gate C1 precedes `expr` so the project establishes one documented regular-expression foundation rather than allowing `expr` and `csplit` to develop incompatible matching behavior. The same published foundation can be consumed by `Icod.Grep` and `Icod.Ed` without moving grep- or editor-specific state into CoreUtils Shared.
 * Completion Gate C2 introduces byte, Unicode-scalar, display-column, and tab-stop behavior immediately before `expand`, `unexpand`, and `fold`, the first remaining commands that require those distinctions. `fmt`, `nl`, and the later `pr` batch then reuse the same display-width and line-layout model.
-* Completion Gate C3 introduces record delimiters, range grammars, field selection, separators, and escape processing immediately before `cut` and `paste`. Those primitives are then reused by `tr`, `sort`, `grep`, `split`, and other commands without duplicating parsing behavior.
+* Completion Gate C3 introduces record delimiters, range grammars, field selection, separators, and escape processing immediately before `cut` and `paste`. Those primitives are then reused by `tr`, `sort`, `split`, and related CoreUtils commands and are available to `Icod.Grep` through the published Shared contract.
 * Completion Gate D remains a single gate because locale collation, sort-key comparison, bounded-memory run generation, stable external merging, temporary-workspace management, and cancellation cleanup form one cohesive external-ordering engine. `sort` is the first command to validate that engine.
 * `shuf` follows `sort` because it can reuse the established record and temporary-storage infrastructure, while remaining a separate batch because unbiased random selection and permutation are not sorting operations.
 * `comm`, `join`, and `uniq` follow `sort` so they consume the same collation, ordering, record, and comparison rules. This avoids subtle disagreements about whether inputs are ordered or whether adjacent records and join keys are equal.
 * `tr`, `tsort`, and `ptx` are kept in separate batches because character-set transformation, graph ordering, and permuted indexing are distinct execution engines. They are nevertheless scheduled after the shared text, locale, tokenization, ordering, and spill-storage primitives they can reuse.
-* Completion Gate E1 introduces safe read-only traversal before recursive `grep`, the first remaining command that needs directory enumeration, symlink policy, cycle detection, include and exclude matching, mount-boundary handling, and controlled continuation after filesystem errors.
-* `grep` precedes `csplit` so the project establishes its regular-expression dialect and matching policy in the dedicated search engine before pattern-directed file splitting depends upon it.
-* `split` and `tac` are scheduled after secure temporary storage and the shared record model because both require bounded-memory handling of potentially unbounded input. `csplit` follows separately because its pattern-address grammar and transactional output-file behavior are materially more complex.
+* Completion Gate E1 establishes safe read-only traversal before the `Icod.Grep` extraction milestone. This gives the new repository a stable recursive enumeration, symlink, cycle, include/exclude, mount-boundary, and error-continuation contract. The same contract later supports CoreUtils directory listing, filesystem accounting, archives, and recursive directory comparison in `Icod.DiffUtils`.
+* Batch 26 transfers `grep` to `Icod.Grep` after the regular-expression, record, and read-only traversal foundations are available. Search-specific matching orchestration, binary policy, context grouping, and output formatting remain in the grep repository rather than enlarging `Icod.CoreUtils.Shared`.
+* `split` and `tac` follow secure temporary storage and the shared record model because both require bounded-memory handling of potentially unbounded input. `csplit` follows separately because its pattern-address grammar and transactional output-file behavior are materially more complex. It consumes Completion Gate C1 directly and does not depend on `Icod.Grep`.
 * `pr` follows the earlier display-column and formatting batches so page geometry, columns, headers, footers, separators, and numbering can reuse established width and layout behavior without being coupled to the unrelated binary-formatting engine used by `od`.
-* `diff` precedes `patch` so the project first defines and tests the normal, context, unified, and ed-style difference formats that `patch` must subsequently consume.
-* Completion Gate E2 is placed between `diff` and `patch` because `patch` is the first remaining command that requires secure sibling temporary files, backups, rollback, pathname-containment checks, and atomic replacement of existing files.
-* `ed` follows the regular-expression, temporary-storage, difference, and replacement work because its command language combines pattern matching, mutable text buffers, file replacement, subprocess execution, and a substantial state machine. It remains isolated so editor-specific state does not distort the shared text abstractions.
-* Completion Gate E3 introduces canonical-path and symbolic-link resolution immediately before `readlink` and `realpath`, allowing those commands to validate lexical normalization, physical resolution, missing-component policy, loop detection, and platform root semantics.
-* Completion Gate E4 follows canonical-path resolution and precedes `stat`, `touch`, and `test`. This establishes one authoritative model for file types, sizes, ownership, modes, timestamps, links, allocated blocks, filesystem information, and unavailable platform metadata.
+* Batch 30 transfers `cmp`, `diff`, `diff3`, and `sdiff` to `Icod.DiffUtils`, where comparison, hunk construction, two-way and three-way merging, and difference-output behavior can share a dedicated suite engine. Compatibility with patch consumers and ed scripts is tested through textual formats rather than runtime dependencies.
+* Batch 31 transfers `patch` to `Icod.Patch`. Although `patch` consumes formats emitted by `diff`, it is a transactional file-mutation engine with its own upstream package, parser, fuzz and offset rules, reject handling, backup policy, and security boundary. Its production contract with `Icod.DiffUtils` remains textual.
+* Batch 32 transfers `ed` to `Icod.Ed` and adds `red` as the restricted companion profile over the same editor engine. Address parsing, mutable buffers, editor state, substitutions, global commands, undo, file semantics, shell integration, and restricted-mode enforcement belong in the editor repository rather than CoreUtils.
+* The `Icod.Procps` extraction milestone follows the other repository-boundary work to keep solution, packaging, and migration changes together. It transfers the already completed `ps` implementation without changing Batch 9 history and confines process-reporting personalities and platform-specific process metadata to a dedicated repository.
+* Completion Gate E2 introduces canonical-path and symbolic-link resolution immediately before `readlink` and `realpath`, allowing those commands to validate lexical normalization, physical resolution, missing-component policy, loop detection, and platform root semantics.
+* Completion Gate E3 follows canonical-path resolution and precedes `stat`, `touch`, and `test`. This establishes one authoritative model for file types, sizes, ownership, modes, timestamps, links, allocated blocks, filesystem information, and unavailable platform metadata.
 * `test` follows `stat` and `touch` because its file predicates depend upon the metadata model those commands first exercise. It remains separate from `expr` because operand-count parsing, predicate evaluation, ambiguity rules, and exit statuses constitute a different language. No separate `[` project is required.
-* Completion Gate E5 introduces mode parsing, umask behavior, link creation, directory creation, FIFO and device-node capabilities, dereference policy, and race-aware single-path mutation before the basic filesystem-mutation batches.
+* Completion Gate E4 introduces mode parsing, umask behavior, link creation, directory creation, FIFO and device-node capabilities, dereference policy, and race-aware single-path mutation before the basic filesystem-mutation batches.
 * `mkdir`, `rmdir`, and `unlink` validate basic pathname mutation before link creation and special-file creation add more platform-specific behavior. `link` and `ln` then share link primitives while retaining their different command-line contracts. `mkfifo` and `mknod` follow once mode, privilege, and platform-capability handling are established.
-* Completion Gate E6 extends the read-only traversal model into a mutation-safe recursive engine before recursive permissions, ownership changes, deletion, copying, and moving begin. It adds preserve-root protection, mount boundaries, no-follow operations, hard-link identity, sparse-file handling, metadata preservation, destination-inside-source detection, and partial-failure cleanup.
+* Completion Gate E5 extends the read-only traversal model into a mutation-safe recursive engine before recursive permissions, ownership changes, deletion, copying, and moving begin. It adds preserve-root protection, mount boundaries, no-follow operations, hard-link identity, sparse-file handling, metadata preservation, destination-inside-source detection, and partial-failure cleanup.
 * `chmod` precedes `chown` and `chgrp` so numeric and symbolic mode handling is completed before the roadmap proceeds to the more platform- and privilege-dependent ownership operations.
 * `rm` follows the recursive mutation gate but precedes copying so deletion safety, preserve-root behavior, prompting, symlink handling, and error continuation can be validated independently from destination creation and metadata preservation.
+* Completion Gate E6 appears immediately before `cp` and `mv`, the first remaining CoreUtils commands that require the complete secure-sibling-temporary-file, backup, rollback, pathname-containment, and atomic-replacement model. Publishing this model also gives `Icod.Patch` and `Icod.Ed` a neutral dependency without making CoreUtils depend on either suite.
 * `cp` and `mv` share source/destination classification, overwrite and backup policy, recursive traversal, metadata preservation, sparse-file handling, hard-link tracking, atomic replacement, and cross-filesystem behavior. They precede `install`, which deliberately builds on the completed directory, copy, mode, ownership, timestamp, backup, and replacement primitives.
 * Completion Gate F1 introduces only the terminal-aware presentation capabilities needed by `dircolors`, `ls`, `dir`, and `vdir`. This avoids implementing unrelated host, terminal-control, child-process, and signal facilities prematurely.
 * `dircolors` is grouped with the directory-listing family because it produces the `LS_COLORS` model consumed by the shared listing engine. `ls`, `dir`, and `vdir` are treated as thin command profiles over one implementation so their sorting, quoting, metadata, recursion, color, width, and terminal-sensitive behavior cannot drift apart.
 * `df` and `du` follow the filesystem metadata and traversal work because they depend upon real filesystem statistics, allocated-block accounting, mount policies, hard-link identity, block-size rules, and human-readable numeric formatting.
 * `shred` is isolated because destructive overwrite semantics, storage-device limitations, synchronization, renaming, and removal policy require a focused safety and capability review. Its position before `tar` is organizational rather than a dependency: the archive engine does not depend upon data-destruction behavior.
-* `tar` is scheduled late because archive correctness depends upon nearly the entire filesystem foundation: canonical paths, safe traversal, file types, links, sparse files, modes, ownership, timestamps, copying, temporary storage, compression-process integration, and transactional extraction. Deferring it also allows extraction protections against absolute paths, `..`, symlink escapes, hard-link escapes, device creation, and overwrite races to build upon established security primitives.
-* Completion Gate F2 introduces host and processor information immediately before `hostid` and `nproc`, avoiding premature coupling to terminal or child-process behavior.
+* `tar` is scheduled late because archive correctness depends upon nearly the entire filesystem foundation: canonical paths, safe traversal, file types, links, sparse files, modes, ownership, timestamps, copying, temporary storage, compression-process integration, and transactional extraction. Deferring it also allows extraction protections against absolute paths, `..`, symlink escapes, hard-link escapes, device creation, and overwrite races to build upon established security primitives. Its eventual transfer to `Icod.ExtUtils` can then carry a mature implementation rather than a collection of private filesystem abstractions.
+* Completion Gate F2 introduces host and processor information immediately before `hostid` and `nproc`, avoiding premature coupling to terminal or child-process behavior. Published host/process capability contracts may later be consumed by `Icod.Procps` where appropriate.
 * Completion Gate F3 introduces terminal identification and terminal-mode control immediately before `tty` and `stty`. These commands remain separate because identifying whether a stream is attached to a terminal is substantially simpler than reading, serializing, and mutating terminal characteristics.
-* Completion Gate F4 establishes command lookup, argument-safe process launch, environment construction, asynchronous stream forwarding, process cleanup, signal translation, process groups, and exit-status handling before the remaining process-control commands.
-* `env` and `nohup` are the first consumers of the shared child-process layer because they establish environment construction, command lookup, redirection, signal disposition, and stream forwarding.
+* Completion Gate F4 establishes command lookup, argument-safe process launch, environment construction, asynchronous stream forwarding, process cleanup, signal translation, process groups, and exit-status handling before the remaining process-control commands. Published process primitives may also support `Icod.Ed` shell commands and future `Icod.Procps` work without transferring suite-specific behavior into CoreUtils Shared.
+* `env` and `nohup` are the first CoreUtils consumers of the shared child-process layer because they establish environment construction, command lookup, redirection, signal disposition, and stream forwarding.
 * `kill` follows as the dedicated validator of signal names, signal numbers, listing, translation, process targets, process groups, and platform substitutions. It intentionally precedes `timeout` so timeout handling can reuse an already tested signal-control layer.
 * `nice` and `timeout` are grouped because both alter the conditions under which a child process executes. They share race-free child startup, process-group handling, status propagation, and platform-capability reporting, while adding priority adjustment and time-bounded termination respectively.
 * `chroot`, `chcon`, and `runcon` are scheduled near the end because they require mature child-process, identity, privilege, filesystem, and platform-capability abstractions and have substantial Unix- or Linux-specific security implications.
 * `stdbuf` is last because its defining behavior may require a native preload library or platform-specific shim that cannot be implemented portably through ordinary managed process APIs. By this point, child startup, environment injection, stream forwarding, diagnostics, and exit-status propagation will already be established, allowing the remaining feasibility decision to focus narrowly on buffering control.
-* Complex parsers, state machines, security boundaries, and platform-specialized commands are intentionally isolated in single-command batches. Commands are grouped only where they share a real execution engine or directly validate the same new infrastructure, rather than merely because their traditional descriptions appear related.
+* Complex parsers, state machines, security boundaries, platform-specialized commands, and repository extractions are intentionally isolated. Commands are grouped only where they share a real execution engine or directly validate the same new infrastructure, rather than merely because their traditional descriptions appear related.
 
 ## Per-batch workflow
 
@@ -901,6 +1031,7 @@ Begin with a documented feasibility decision. The current silent fallback is una
 12. Run Debug and Release builds, then the entire applicable solution test suite on all three required runners.
 13. Verify UTF-8 encoding and LF line endings, lowercase assembly names, required project configuration, and absence of generated artifacts.
 14. Update this roadmap’s living status and record any deliberately deferred behavior.
+15. For an extraction milestone, verify history transfer, namespace and project renaming, destination CI, package ownership, migration documentation, and public-format compatibility before removing the source project.
 
 ## Batch completion checklist
 
@@ -920,7 +1051,10 @@ A batch is complete only when:
 - source encoding and line-ending checks pass;
 - lowercase assembly names and PascalCase project/namespace conventions are preserved;
 - the target framework and project configuration satisfy the current completion gate;
-- roadmap status and documentation are updated.
+- roadmap status and documentation are updated;
+- extraction milestones leave no stale source, solution, packaging, CI, or inventory references in CoreUtils and establish green destination-repository CI.
 
 ## Immediate next actions
-1. Continue with Batch 14 (`printf`, `numfmt`).
+1. Complete Batch 16 (`expr`).
+2. Complete Completion Gate C2 before beginning Batch 17.
+3. Continue with Batch 17 (`expand`, `unexpand`, `fold`).
