@@ -1,4 +1,4 @@
-namespace Icod.CoreUtils.Patch;
+namespace Icod.Patch;
 
 using System;
 

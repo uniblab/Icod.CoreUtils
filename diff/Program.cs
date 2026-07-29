@@ -1,4 +1,4 @@
-namespace Icod.CoreUtils.Diff;
+namespace Icod.DiffUtils.Diff;
 
 using System;
 

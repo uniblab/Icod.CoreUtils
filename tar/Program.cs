@@ -1,4 +1,4 @@
-namespace Icod.CoreUtils.Tar;
+namespace Icod.Tar;
 
 using System;
 

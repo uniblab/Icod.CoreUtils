@@ -1,7 +1,7 @@
 // Original behavior/reference: grep (Ken Thompson)
 // Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
 
-namespace Icod.CoreUtils.Grep;
+namespace Icod.Grep;
 
 using System;
 using System.Collections.Generic;

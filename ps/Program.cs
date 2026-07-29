@@ -1,4 +1,4 @@
-﻿namespace Icod.CoreUtils.Ps;
+namespace Icod.ProcPs.Ps;
 
 /// <summary>
 /// Provides the executable entry point for the GNU-compatible <c>ps</c> command for reporting process information.

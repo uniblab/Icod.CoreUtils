@@ -1,9 +1,9 @@
-﻿using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CoreUtils.Shared.Diagnostics;
 using Icod.CoreUtils.Shared.Platform;
 using Xunit;
-using Tool = Icod.CoreUtils.Ps.Command;
+using Tool = Icod.ProcPs.Ps.Command;
 
-namespace Icod.CoreUtils.Ps.Tests;
+namespace Icod.ProcPs.Ps.Tests;
 
 public sealed class PsCommandTests
 {

@@ -3,12 +3,13 @@
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
 		<TargetFramework>net10.0</TargetFramework>
+		<LangVersion>13.0</LangVersion>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<OutputPath>..\bin\$(Configuration)\</OutputPath>
-		<AssemblyName>diff</AssemblyName>
-		<RootNamespace>Icod.CoreUtils.Diff</RootNamespace>
+		<AssemblyName>sed</AssemblyName>
+		<RootNamespace>Icod.LineEditor.Sed</RootNamespace>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
 		<PlatformTarget>AnyCPU</PlatformTarget>
@@ -37,11 +38,11 @@
 		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-		<ErrorReport>prompt</ErrorReport>
-		<WarningLevel>4</WarningLevel>
+		<SignAssembly>false</SignAssembly>
 		<DebugType>pdbonly</DebugType>
 		<Optimize>true</Optimize>
-		<SignAssembly>false</SignAssembly>
+		<ErrorReport>prompt</ErrorReport>
+		<WarningLevel>4</WarningLevel>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
 	</PropertyGroup>

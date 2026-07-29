@@ -1,4 +1,4 @@
-namespace Icod.CoreUtils.Grep;
+namespace Icod.Grep;
 
 using System;
 

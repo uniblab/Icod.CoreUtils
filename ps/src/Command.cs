@@ -3,7 +3,7 @@ using Icod.CoreUtils.Shared.CommandLine;
 using Icod.CoreUtils.Shared.Diagnostics;
 using Icod.CoreUtils.Shared.Platform;
 
-namespace Icod.CoreUtils.Ps;
+namespace Icod.ProcPs.Ps;
 
 /// <summary>
 /// Implements GNU-compatible <c>ps</c> and prints process information obtained from the shared platform provider.

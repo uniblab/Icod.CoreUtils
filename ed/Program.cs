@@ -1,4 +1,4 @@
-namespace Icod.CoreUtils.Ed;
+namespace Icod.LineEditor.Ed;
 
 using System;
 

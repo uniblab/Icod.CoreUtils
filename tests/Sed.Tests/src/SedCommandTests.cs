@@ -1,7 +1,7 @@
-namespace Icod.CoreUtils.Sed.Tests;
+namespace Icod.LineEditor.Sed.Tests;
 
 using System.Text;
-using SedCommand = Icod.CoreUtils.Sed.Command;
+using SedCommand = Icod.LineEditor.Sed.Command;
 using Xunit;
 
 public sealed class SedCommandTests {
@@ -452,7 +452,7 @@ public sealed class SedCommandTests {
 		Assert.Equal( 0, help.ExitCode );
 		Assert.Contains( "Usage: sed", help.Output );
 		Assert.Equal( 0, version.ExitCode );
-		Assert.Contains( "Icod.CoreUtils.Sed", version.Output );
+		Assert.Contains( "Icod.LineEditor.Sed", version.Output );
 		Assert.Equal( 2, invalid.ExitCode );
 		Assert.Contains( "unrecognized option", invalid.Error );
 	}
