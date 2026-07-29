@@ -13,11 +13,11 @@
 
 ## Scope
 
-This repository is a broad attempt at porting the BSD/Linux coreutils to .net.  
-Primary targets are windows-latest, ubuntu-latest, and macos-latest.  
-I am making a "best effort" at supporting FreeBSD and TempleOS.  
+This repository is a broad attempt at porting the BSD/Linux coreutils to .net. 
+Primary targets are windows-latest, ubuntu-latest, and macos-latest. 
+I am making a "best effort" at supporting BSD. 
 
-Seven non-Coreutils programs are also in scope: `diff`, `ed`, `grep`, `patch`, `ps`, `sed`, and `tar`.
+Seven non-Coreutils programs are also in scope: `diff`, `ed`, `grep`, `patch`, `ps`, `sed`, and `tar`. 
 
 ## Eventual Plan
 
@@ -28,7 +28,7 @@ No separate `[` project will be added.
 
 ### Icod.CoreUtils.Shared
 
-This has all the shared features in a single place.  These include
+This has all the shared features in a single place.  These include:
 - Argument processor
 - Command context
 - High performance, coss-platform file I/O

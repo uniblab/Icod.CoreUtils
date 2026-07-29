@@ -10,6 +10,7 @@
 - `IO`: asynchronous delimited-record readers and writers, bounded stream operations, standard-input operands, and temporary spooling.
 - `Numerics`: culture-invariant integer and floating quantity parsing, arbitrary-precision rational arithmetic, exact suffix tables, explicit rounding, and overflow policies.
 - `Processes`: shell-free asynchronous child-process execution with redirected stream forwarding, capture, cancellation, and process-tree termination.
+- `RegularExpressions`: fully managed GNU basic regular-expression parsing, leftmost-longest matching, GNU/Gnulib capture-register behavior, back-references, structured diagnostics, cancellation, and injectable locale/classification providers.
 - `Temporary`: cryptographically secure base-62 name generation, exclusive temporary file/directory creation, collision retries, and deterministic cleanup support.
 - `Platform`: BCL-first capability reporting and controlled unsupported results.
 
@@ -24,6 +25,7 @@ The intended migration is incremental:
 3. Replace `SharedUtils.ParseOptions` with declarative `OptionDefinition` instances and `OptionParser`.
 4. Use `DelimitedRecordReader`, `DelimitedRecordWriter`, and `StreamOperations` instead of command-specific read/copy loops.
 5. Use `QuantityParser`, `ProcessRunner`, and `PlatformCapabilities` where applicable.
+6. Use `IRegularExpressionProvider` instead of translating GNU BRE patterns into `System.Text.RegularExpressions`.
 
 ## Option parser example
 
@@ -70,3 +72,7 @@ Tool-specific obsolete syntax belongs in a token rewrite rule rather than in the
 ## Streaming and ownership
 
 Shared I/O helpers never own injected standard streams. `InputSource` owns only files that it opens. Naturally asynchronous operations accept `CancellationToken` and do not use `Task.Run` as an I/O substitute.
+
+## Regular expressions
+
+Completion Gate C1 adds a reusable GNU BRE engine under `src/RegularExpressions`. It owns GNU/POSIX syntax, leftmost-longest selection, captures, back-references, locale-provider boundaries, cancellation, and controlled diagnostics. See [`src/RegularExpressions/README.md`](src/RegularExpressions/README.md) for the conformance profile and explicit differences from `System.Text.RegularExpressions`.
