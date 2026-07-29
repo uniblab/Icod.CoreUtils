@@ -298,13 +298,15 @@ These conventions apply to every existing project that is altered and every proj
 8. Generated line endings use `WriteLine`, `WriteLineAsync`, or `Environment.NewLine`. Line-oriented input uses `ReadLine`, `ReadLineAsync`, and `Environment.NewLine` as appropriate. Code must not hard-code `\n` or `\r\n` for host line-reading or line-writing semantics.
 9. When multiple strings are sent to `WriteAsync`, `WriteLineAsync`, or related output methods, combine them with `System.String.Concat` rather than the `+` operator.
 10. Each command has its own dedicated xUnit test project following the established `tests/<Tool>.Tests` pattern.
-11. Each public command class has class-level XML documentation whose `<summary>` includes the command usage, plus a dedicated usage-printing or usage-writing function.
-12. Every new project is added to the solution, all required configuration mappings, the appropriate suite solution folder, and every local and CI build/test entry point.
-13. Co-resident projects whose lowercase executable names collide use suite-specific output directories. Tests and packaging identify the suite explicitly; an assembly name is not changed merely to avoid an incubation-time path collision.
-14. The supported CI platform targets are explicitly `windows-latest`, `ubuntu-latest`, and `macos-latest`. Platform-specific tests may be conditional, but every runner must build the full solution and execute the complete applicable test suite.
-15. Do not use `Assert.True` to check for substrings. Use `Assert.StartsWith`, `Assert.EndsWith` instead. (https://xunit.net/xunit.analyzers/rules/xUnit2009).
-16. The eventual extracted repositories retain these conventions unless their own roadmap records a deliberate exception.
-17. Cross-suite compatibility is tested at the public command-line or textual-format boundary unless a dependency has been deliberately classified as cross-suite infrastructure. During the current roadmap such APIs may be incubated in `Icod.CoreUtils.Shared`; their permanent public home is `Icod.CommandFramework` after the final extraction audit.
+11. Each Program.cs file must have class-level XML documentation whose `<summary>` includes the command usage, plus a dedicated usage-printing or usage-writing function.
+12. Every member or type which is declared public, protected, or internal must have XML documentation consisting of valid <summary>, <param>, <returns>, <value>, and <exception> details as appropriate.  These cannot be stubs merely to silence CS1591.
+13. Any directory with more than one source code file must have a README.md file describing the contents and purposes of that directory.
+14. Every new project is added to the solution, all required configuration mappings, the appropriate suite solution folder, and every local and CI build/test entry point.
+15. Co-resident projects whose lowercase executable names collide use suite-specific output directories. Tests and packaging identify the suite explicitly; an assembly name is not changed merely to avoid an incubation-time path collision.
+16. The supported CI platform targets are explicitly `windows-latest`, `ubuntu-latest`, and `macos-latest`. Platform-specific tests may be conditional, but every runner must build the full solution and execute the complete applicable test suite.
+17. Do not use `Assert.True` to check for substrings. Use `Assert.StartsWith`, `Assert.EndsWith` instead. (https://xunit.net/xunit.analyzers/rules/xUnit2009).
+18. The eventual extracted repositories retain these conventions unless their own roadmap records a deliberate exception.
+19. Cross-suite compatibility is tested at the public command-line or textual-format boundary unless a dependency has been deliberately classified as cross-suite infrastructure. During the current roadmap such APIs may be incubated in `Icod.CoreUtils.Shared`; their permanent public home is `Icod.CommandFramework` after the final extraction audit.
 
 ## Repository-wide engineering rules
 

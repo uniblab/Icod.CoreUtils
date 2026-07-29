@@ -14,6 +14,16 @@
 - `Temporary`: cryptographically secure base-62 name generation, exclusive temporary file/directory creation, collision retries, and deterministic cleanup support.
 - `Platform`: BCL-first capability reporting and controlled unsupported results.
 
+## Text processing
+
+The `Icod.CoreUtils.Shared.Text` namespace supplies the reusable Pre-16 Gate C2 foundation for byte-sensitive text-layout commands. `TextUnitReader` can iterate opaque bytes or decode UTF-8 scalars while retaining the exact source bytes for every unit. Invalid UTF-8 is handled explicitly by preserving each invalid byte, returning replacement scalars that still retain the replaced bytes, or throwing at a stable source-byte offset. Byte-order marks are ordinary data and are never removed.
+
+`ITextLocaleProvider` supplies injectable blank classification and the associated byte or UTF-8 decoding profile. `IDisplayWidthProvider` supplies injectable scalar widths; the default managed provider is deterministic across operating systems, uses Unicode 16.0.0 East Asian Width data, treats ambiguous-width scalars as one column, and measures scalars rather than grapheme clusters. `DisplayColumnState` provides checked advancement, bounded backspace movement, carriage-return reset, and tab-stop advancement without imposing command-specific buffering policy.
+
+`TabStopParser` accepts comma- and blank-separated values, repeated specifications, explicit stop lists, globally aligned `/N` continuation, and final-stop-relative `+N` continuation. One unprefixed value denotes a globally recurring interval. Empty specifications, redundant separators, prefix-only specifications, and zero-valued prefixed intervals reproduce GNU's default-stop behavior. Parse failures use structured error codes so command projects can produce their own GNU-compatible diagnostics.
+
+The initial portability profile is exact for the POSIX C byte locale and supplies a deterministic UTF-8 Unicode profile whose blank classification excludes nonbreaking spaces. Locale behavior remains injectable. Other legacy or stateful encodings are not silently normalized through replacement fallback; a future provider may add them when an exact byte-preserving implementation is justified.
+
 ## Compatibility
 
 `SharedUtils` remains source-compatible for existing tools. Newly refactored commands should use the focused APIs instead of extending `SharedUtils`.
