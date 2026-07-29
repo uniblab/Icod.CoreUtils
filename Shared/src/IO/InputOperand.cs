@@ -3,6 +3,7 @@ namespace Icod.CoreUtils.Shared.IO;
 /// <summary>
 /// Represents a file operand, including the conventional standard-input marker.
 /// </summary>
+/// <param name="Value">The value value.</param>
 public readonly record struct InputOperand(
 	string Value
 ) {

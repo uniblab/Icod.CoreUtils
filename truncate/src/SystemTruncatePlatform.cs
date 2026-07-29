@@ -7,15 +7,21 @@ using Icod.CoreUtils.Shared.FileSystem;
 using Icod.CoreUtils.Shared.Platform;
 
 /// <summary>
-/// Implements <c>truncate</c> platform operations for Windows, Linux, macOS, and FreeBSD.
+/// Implements <see cref="ITruncatePlatform"/> with BCL file operations and platform-specific block-size queries.
 /// </summary>
+/// <remarks>
+/// The implementation prefers managed APIs, uses narrowly scoped native metadata calls where required, and reports unsupported or failed operations through <c>PlatformOperationResult</c>.
+/// </remarks>
 public sealed class SystemTruncatePlatform : ITruncatePlatform {
 
 	private const int AtEmptyPath = 0x1000;
 	private const uint StatxBasicStats = 0x000007ff;
 	private readonly IFileSystemOperations myFileSystemOperations;
 
-	/// <summary>Gets the shared system implementation.</summary>
+	/// <summary>
+	/// Gets the shared platform implementation backed by the default filesystem capability provider.
+	/// </summary>
+	/// <value>The shared implementation instance.</value>
 	public static SystemTruncatePlatform Instance {
 		get;
 	} = new SystemTruncatePlatform(
@@ -23,8 +29,10 @@ public sealed class SystemTruncatePlatform : ITruncatePlatform {
 	);
 
 	/// <summary>
-	/// Initializes the system implementation.
+	/// Initializes a platform implementation with the specified filesystem capability provider.
 	/// </summary>
+	/// <param name="fileSystemOperations">The shared filesystem capability provider used by the platform implementation.</param>
+	/// <exception cref="ArgumentNullException"><paramref name="fileSystemOperations"/> is <see langword="null"/>.</exception>
 	public SystemTruncatePlatform(
 		IFileSystemOperations fileSystemOperations
 	) {
@@ -33,7 +41,13 @@ public sealed class SystemTruncatePlatform : ITruncatePlatform {
 		);
 	}
 
-	/// <inheritdoc />
+	/// <summary>
+	/// Gets the filesystem-preferred I/O block size using the best available host metadata API.
+	/// </summary>
+	/// <param name="file">The open file whose filesystem allocation preference is queried.</param>
+	/// <param name="path">The file pathname used by path-based host metadata APIs.</param>
+	/// <param name="cancellationToken">The token checked before and during the host metadata query.</param>
+	/// <returns>A capability result containing the positive preferred block size on success.</returns>
 	public ValueTask<PlatformOperationResult<long>> GetIoBlockSizeAsync(
 		FileStream file,
 		string path,
@@ -113,7 +127,13 @@ public sealed class SystemTruncatePlatform : ITruncatePlatform {
 		}
 	}
 
-	/// <inheritdoc />
+	/// <summary>
+	/// Changes file length and prefers the shared sparse-extension capability when extending.
+	/// </summary>
+	/// <param name="file">The open writable file whose length is changed.</param>
+	/// <param name="length">The requested non-negative logical length in bytes.</param>
+	/// <param name="cancellationToken">The token used to cancel sparse extension or length adjustment.</param>
+	/// <returns>A capability result describing the length-change outcome.</returns>
 	public async ValueTask<PlatformOperationResult> SetLengthAsync(
 		FileStream file,
 		long length,

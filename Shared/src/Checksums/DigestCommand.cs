@@ -7,58 +7,94 @@ using Icod.CoreUtils.Shared.CommandLine;
 using Icod.CoreUtils.Shared.Diagnostics;
 using Icod.CoreUtils.Shared.IO;
 
+/// <summary>
+/// Provides the digest command options implementation.
+/// </summary>
 internal sealed class DigestCommandOptions {
 
+	/// <summary>
+	/// Stores the binary value.
+	/// </summary>
 	public bool Binary {
 		get;
 		set;
 	}
 
+	/// <summary>
+	/// Stores the check value.
+	/// </summary>
 	public bool Check {
 		get;
 		set;
 	}
 
+	/// <summary>
+	/// Stores the ignore missing value.
+	/// </summary>
 	public bool IgnoreMissing {
 		get;
 		set;
 	}
 
+	/// <summary>
+	/// Stores the length bits value.
+	/// </summary>
 	public int? LengthBits {
 		get;
 		set;
 	}
 
+	/// <summary>
+	/// Stores the length specified value.
+	/// </summary>
 	public bool LengthSpecified {
 		get;
 		set;
 	}
 
+	/// <summary>
+	/// Stores the quiet value.
+	/// </summary>
 	public bool Quiet {
 		get;
 		set;
 	}
 
+	/// <summary>
+	/// Stores the status value.
+	/// </summary>
 	public bool Status {
 		get;
 		set;
 	}
 
+	/// <summary>
+	/// Stores the strict value.
+	/// </summary>
 	public bool Strict {
 		get;
 		set;
 	}
 
+	/// <summary>
+	/// Stores the tag value.
+	/// </summary>
 	public bool Tag {
 		get;
 		set;
 	}
 
+	/// <summary>
+	/// Stores the warn value.
+	/// </summary>
 	public bool Warn {
 		get;
 		set;
 	}
 
+	/// <summary>
+	/// Stores the zero value.
+	/// </summary>
 	public bool Zero {
 		get;
 		set;

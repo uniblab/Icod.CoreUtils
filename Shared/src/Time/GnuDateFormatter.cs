@@ -1,10 +1,16 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Text;
 
 namespace Icod.CoreUtils.Shared.Time;
 
+/// <summary>
+/// Provides gnu date formatter operations.
+/// </summary>
 public static class GnuDateFormatter
 {
+    /// <summary>
+    /// Performs the format operation.
+    /// </summary>
     public static string Format(
         DateTimeOffset value,
         string format,

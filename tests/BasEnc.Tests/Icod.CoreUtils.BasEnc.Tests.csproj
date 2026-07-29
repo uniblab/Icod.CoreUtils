@@ -6,8 +6,8 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<IsPackable>false</IsPackable>
 		<IsTestProject>true</IsTestProject>
-		<AssemblyName>Icod.CoreUtils.Basenc.Tests</AssemblyName>
-		<RootNamespace>Icod.CoreUtils.Basenc.Tests</RootNamespace>
+		<AssemblyName>Icod.CoreUtils.BasEnc.Tests</AssemblyName>
+		<RootNamespace>Icod.CoreUtils.BasEnc.Tests</RootNamespace>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
@@ -42,11 +42,11 @@
 		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-		<SignAssembly>false</SignAssembly>
-		<DebugType>pdbonly</DebugType>
-		<Optimize>true</Optimize>
 		<ErrorReport>prompt</ErrorReport>
 		<WarningLevel>4</WarningLevel>
+		<DebugType>pdbonly</DebugType>
+		<Optimize>true</Optimize>
+		<SignAssembly>false</SignAssembly>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
 	</PropertyGroup>

@@ -3,6 +3,12 @@ namespace Icod.CoreUtils.Expr;
 using System.Numerics;
 using Icod.CoreUtils.Shared.RegularExpressions;
 
+/// <summary>
+/// Parses and immediately evaluates a tokenized GNU <c>expr</c> expression.
+/// </summary>
+/// <remarks>
+/// The recursive-descent evaluator implements GNU precedence, left associativity, Boolean short-circuit parsing, arbitrary-precision arithmetic, locale-sensitive text operations, and Gate C1 basic regular expressions.
+/// </remarks>
 internal sealed class ExpressionEvaluator {
 	private const int InvalidExpressionStatus = 2;
 	private const int FailureStatus = 3;
@@ -15,6 +21,14 @@ internal sealed class ExpressionEvaluator {
 	private int argumentIndex;
 	private int nestingDepth;
 
+	/// <summary>
+	/// Initializes an evaluator over the supplied tokens and injectable regular-expression and locale services.
+	/// </summary>
+	/// <param name="arguments">The expression tokens in command-line order.</param>
+	/// <param name="regularExpressionProvider">The Gate C1 provider used to compile GNU basic regular expressions.</param>
+	/// <param name="localeProvider">The provider used for collation and logical-character operations.</param>
+	/// <param name="cancellationToken">The token observed throughout parsing and evaluation.</param>
+	/// <exception cref="ArgumentNullException">A required token collection or provider is <see langword="null"/>.</exception>
 	public ExpressionEvaluator(
 		IReadOnlyList<string> arguments,
 		IRegularExpressionProvider regularExpressionProvider,
@@ -30,6 +44,11 @@ internal sealed class ExpressionEvaluator {
 		this.cancellationToken = cancellationToken;
 	}
 
+	/// <summary>
+	/// Parses and evaluates the complete token sequence and rejects trailing or missing operands.
+	/// </summary>
+	/// <returns>The evaluated integer or string value.</returns>
+	/// <exception cref="ExpressionEvaluationException">The token sequence is syntactically invalid or an evaluated operation fails.</exception>
 	public ExpressionValue Evaluate() {
 		this.cancellationToken.ThrowIfCancellationRequested();
 		var value = this.EvaluateOr( true );

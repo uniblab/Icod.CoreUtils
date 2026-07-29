@@ -7,68 +7,110 @@ using Icod.CoreUtils.Shared.CommandLine;
 using Icod.CoreUtils.Shared.Diagnostics;
 using Icod.CoreUtils.Shared.IO;
 
+/// <summary>
+/// Provides the cksum options implementation.
+/// </summary>
 internal sealed class CksumOptions {
 
+	/// <summary>
+	/// Stores the algorithm name value.
+	/// </summary>
 	public string AlgorithmName {
 		get;
 		set;
 	} = "crc";
 
+	/// <summary>
+	/// Stores the base64 value.
+	/// </summary>
 	public bool Base64 {
 		get;
 		set;
 	}
 
+	/// <summary>
+	/// Stores the check value.
+	/// </summary>
 	public bool Check {
 		get;
 		set;
 	}
 
+	/// <summary>
+	/// Stores the debug value.
+	/// </summary>
 	public bool Debug {
 		get;
 		set;
 	}
 
+	/// <summary>
+	/// Stores the ignore missing value.
+	/// </summary>
 	public bool IgnoreMissing {
 		get;
 		set;
 	}
 
+	/// <summary>
+	/// Stores the length bits value.
+	/// </summary>
 	public int? LengthBits {
 		get;
 		set;
 	}
 
+	/// <summary>
+	/// Stores the quiet value.
+	/// </summary>
 	public bool Quiet {
 		get;
 		set;
 	}
 
+	/// <summary>
+	/// Stores the raw value.
+	/// </summary>
 	public bool Raw {
 		get;
 		set;
 	}
 
+	/// <summary>
+	/// Stores the status value.
+	/// </summary>
 	public bool Status {
 		get;
 		set;
 	}
 
+	/// <summary>
+	/// Stores the strict value.
+	/// </summary>
 	public bool Strict {
 		get;
 		set;
 	}
 
+	/// <summary>
+	/// Stores the tagged value.
+	/// </summary>
 	public bool Tagged {
 		get;
 		set;
 	} = true;
 
+	/// <summary>
+	/// Stores the warn value.
+	/// </summary>
 	public bool Warn {
 		get;
 		set;
 	}
 
+	/// <summary>
+	/// Stores the zero value.
+	/// </summary>
 	public bool Zero {
 		get;
 		set;
@@ -76,6 +118,13 @@ internal sealed class CksumOptions {
 
 }
 
+/// <summary>
+/// Represents numeric checksum manifest record.
+/// </summary>
+/// <param name="Algorithm">The algorithm value.</param>
+/// <param name="ExpectedChecksum">The expected checksum value.</param>
+/// <param name="ExpectedLengthOrBlocks">The expected length or blocks value.</param>
+/// <param name="FileName">The file name value.</param>
 internal sealed record NumericChecksumManifestRecord(
 	ChecksumAlgorithmKind Algorithm,
 	ulong ExpectedChecksum,

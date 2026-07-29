@@ -263,6 +263,9 @@ public sealed class SystemTemporaryObjectFileSystem : ITemporaryObjectFileSystem
 	}
 
 	private static class NativeMethods {
+		/// <summary>
+		/// Creates directory windows.
+		/// </summary>
 		[DllImport(
 			"kernel32.dll",
 			EntryPoint = "CreateDirectoryW",
@@ -275,6 +278,9 @@ public sealed class SystemTemporaryObjectFileSystem : ITemporaryObjectFileSystem
 			IntPtr securityAttributes
 		);
 
+		/// <summary>
+		/// Performs the open reparse point windows operation.
+		/// </summary>
 		[DllImport(
 			"kernel32.dll",
 			EntryPoint = "CreateFileW",
@@ -291,6 +297,9 @@ public sealed class SystemTemporaryObjectFileSystem : ITemporaryObjectFileSystem
 			IntPtr templateFile
 		);
 
+		/// <summary>
+		/// Performs the mkdir linux operation.
+		/// </summary>
 		[DllImport(
 			"libc",
 			EntryPoint = "mkdir",
@@ -299,6 +308,9 @@ public sealed class SystemTemporaryObjectFileSystem : ITemporaryObjectFileSystem
 		)]
 		internal static extern int MkdirLinux( string path, uint mode );
 
+		/// <summary>
+		/// Performs the mkdir mac os operation.
+		/// </summary>
 		[DllImport(
 			"libSystem.B.dylib",
 			EntryPoint = "mkdir",
@@ -307,6 +319,9 @@ public sealed class SystemTemporaryObjectFileSystem : ITemporaryObjectFileSystem
 		)]
 		internal static extern int MkdirMacOs( string path, uint mode );
 
+		/// <summary>
+		/// Performs the mkdir free bsd operation.
+		/// </summary>
 		[DllImport(
 			"libc",
 			EntryPoint = "mkdir",
@@ -315,6 +330,9 @@ public sealed class SystemTemporaryObjectFileSystem : ITemporaryObjectFileSystem
 		)]
 		internal static extern int MkdirFreeBsd( string path, uint mode );
 
+		/// <summary>
+		/// Performs the lstat linux operation.
+		/// </summary>
 		[DllImport(
 			"libc",
 			EntryPoint = "lstat",
@@ -323,6 +341,9 @@ public sealed class SystemTemporaryObjectFileSystem : ITemporaryObjectFileSystem
 		)]
 		internal static extern int LstatLinux( string path, IntPtr buffer );
 
+		/// <summary>
+		/// Performs the lstat mac os operation.
+		/// </summary>
 		[DllImport(
 			"libSystem.B.dylib",
 			EntryPoint = "lstat",
@@ -331,6 +352,9 @@ public sealed class SystemTemporaryObjectFileSystem : ITemporaryObjectFileSystem
 		)]
 		internal static extern int LstatMacOs( string path, IntPtr buffer );
 
+		/// <summary>
+		/// Performs the lstat free bsd operation.
+		/// </summary>
 		[DllImport(
 			"libc",
 			EntryPoint = "lstat",

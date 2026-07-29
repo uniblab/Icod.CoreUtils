@@ -3,6 +3,7 @@ namespace Icod.CoreUtils.Shared.Diagnostics;
 /// <summary>
 /// Represents the result of a command execution.
 /// </summary>
+/// <param name="ExitCode">The exit code value.</param>
 public readonly record struct CommandResult(
 	int ExitCode
 ) {

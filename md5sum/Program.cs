@@ -2,8 +2,16 @@ namespace Icod.CoreUtils.MD5Sum;
 
 using Icod.CoreUtils.Shared.Diagnostics;
 
+/// <summary>
+/// Provides the executable entry point for the GNU-compatible <c>md5sum</c> command for computing and verifying MD5 message digests.
+/// </summary>
 public static class Program {
 
+	/// <summary>
+	/// Runs the <c>md5sum</c> command using the process console and converts a console interrupt into a cancellation request.
+	/// </summary>
+	/// <param name="args">The command-line arguments supplied to <c>md5sum</c>.</param>
+	/// <returns>A task whose result is the command exit status.</returns>
 	public static async Task<int> Main(
 		string[] args
 	) {

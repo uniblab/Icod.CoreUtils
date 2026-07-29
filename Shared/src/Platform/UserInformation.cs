@@ -1,9 +1,18 @@
-﻿using System.Buffers.Binary;
+using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Icod.CoreUtils.Shared.Platform;
 
+/// <summary>
+/// Represents user account info.
+/// </summary>
+/// <param name="UserName">The user name value.</param>
+/// <param name="FullName">The full name value.</param>
+/// <param name="HomeDirectory">The home directory value.</param>
+/// <param name="Shell">The shell value.</param>
+/// <param name="UserId">The user id value.</param>
+/// <param name="GroupId">The group id value.</param>
 public sealed record UserAccountInfo(
     string UserName,
     string FullName,
@@ -13,6 +22,15 @@ public sealed record UserAccountInfo(
     string GroupId
 );
 
+/// <summary>
+/// Represents login session info.
+/// </summary>
+/// <param name="UserName">The user name value.</param>
+/// <param name="Terminal">The terminal value.</param>
+/// <param name="Host">The host value.</param>
+/// <param name="LoginTime">The login time value.</param>
+/// <param name="IdleTime">The idle time value.</param>
+/// <param name="ProcessId">The process id value.</param>
 public sealed record LoginSessionInfo(
     string UserName,
     string Terminal,
@@ -22,30 +40,53 @@ public sealed record LoginSessionInfo(
     int ProcessId
 );
 
+/// <summary>
+/// Supplies user-account and login-session information.
+/// </summary>
 public interface IUserInformationProvider
 {
+    /// <summary>Asynchronously reads the known user accounts.</summary>
+    /// <param name="cancellationToken">A token that can cancel the operation.</param>
+    /// <returns>The known user accounts.</returns>
     ValueTask<IReadOnlyList<UserAccountInfo>> GetAccountsAsync(CancellationToken cancellationToken = default);
 
+    /// <summary>Asynchronously finds an account by user name.</summary>
+    /// <param name="userName">The user name to locate.</param>
+    /// <param name="cancellationToken">A token that can cancel the operation.</param>
+    /// <returns>The matching account, or <see langword="null"/> when no account matches.</returns>
     ValueTask<UserAccountInfo?> FindAccountAsync(
         string userName,
         CancellationToken cancellationToken = default
     );
 
+    /// <summary>Asynchronously enumerates current login sessions.</summary>
+    /// <param name="cancellationToken">A token that can cancel the enumeration.</param>
+    /// <returns>The asynchronous login-session sequence.</returns>
     IAsyncEnumerable<LoginSessionInfo> GetLoginSessionsAsync(
         CancellationToken cancellationToken = default
     );
 
+    /// <summary>Asynchronously resolves a host name for display.</summary>
+    /// <param name="host">The host identifier to resolve.</param>
+    /// <param name="cancellationToken">A token that can cancel the operation.</param>
+    /// <returns>The resolved host name.</returns>
     ValueTask<string> ResolveHostAsync(
         string host,
         CancellationToken cancellationToken = default
     );
 }
 
+/// <summary>
+/// Provides the system user information provider implementation.
+/// </summary>
 public sealed class SystemUserInformationProvider : IUserInformationProvider
 {
     private const int UtmpRecordSize = 384;
     private const short UserProcess = 7;
 
+    /// <summary>
+    /// Gets accounts async.
+    /// </summary>
     public async ValueTask<IReadOnlyList<UserAccountInfo>> GetAccountsAsync(
         CancellationToken cancellationToken = default
     )
@@ -94,6 +135,9 @@ public sealed class SystemUserInformationProvider : IUserInformationProvider
         ];
     }
 
+    /// <summary>
+    /// Performs the find account async operation.
+    /// </summary>
     public async ValueTask<UserAccountInfo?> FindAccountAsync(
         string userName,
         CancellationToken cancellationToken = default
@@ -107,6 +151,9 @@ public sealed class SystemUserInformationProvider : IUserInformationProvider
         );
     }
 
+    /// <summary>
+    /// Gets login sessions async.
+    /// </summary>
     public async IAsyncEnumerable<LoginSessionInfo> GetLoginSessionsAsync(
         [EnumeratorCancellation] CancellationToken cancellationToken = default
     )
@@ -220,6 +267,9 @@ public sealed class SystemUserInformationProvider : IUserInformationProvider
         }
     }
 
+    /// <summary>
+    /// Resolves host async.
+    /// </summary>
     public async ValueTask<string> ResolveHostAsync(
         string host,
         CancellationToken cancellationToken = default

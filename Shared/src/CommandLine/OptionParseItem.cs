@@ -37,6 +37,9 @@ public sealed class OptionParseItem {
 		this.Operand = operand;
 	}
 
+	/// <summary>
+	/// Creates a value from option.
+	/// </summary>
 	internal static OptionParseItem FromOption(
 		OptionOccurrence option
 	) {
@@ -48,6 +51,9 @@ public sealed class OptionParseItem {
 		);
 	}
 
+	/// <summary>
+	/// Creates a value from operand.
+	/// </summary>
 	internal static OptionParseItem FromOperand(
 		string operand,
 		int argumentIndex

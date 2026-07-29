@@ -3,6 +3,14 @@ namespace Icod.CoreUtils.Shared.Checksums;
 using System.Globalization;
 using System.Text;
 
+/// <summary>
+/// Represents checksum manifest record.
+/// </summary>
+/// <param name="Algorithm">The algorithm value.</param>
+/// <param name="LengthBits">The length bits value.</param>
+/// <param name="ExpectedDigest">The expected digest value.</param>
+/// <param name="FileName">The file name value.</param>
+/// <param name="Binary">The binary value.</param>
 internal sealed record ChecksumManifestRecord(
 	ChecksumAlgorithmKind? Algorithm,
 	int LengthBits,
@@ -11,8 +19,14 @@ internal sealed record ChecksumManifestRecord(
 	bool Binary
 );
 
+/// <summary>
+/// Provides checksum text operations.
+/// </summary>
 internal static class ChecksumText {
 
+	/// <summary>
+	/// Converts this value to hex.
+	/// </summary>
 	public static string ToHex(
 		ReadOnlySpan<byte> value
 	) {
@@ -21,6 +35,9 @@ internal static class ChecksumText {
 		).ToLowerInvariant();
 	}
 
+	/// <summary>
+	/// Performs the escape file name operation.
+	/// </summary>
 	public static string EscapeFileName(
 		string value
 	) {
@@ -35,6 +52,9 @@ internal static class ChecksumText {
 		);
 	}
 
+	/// <summary>
+	/// Performs the unescape file name operation.
+	/// </summary>
 	public static string UnescapeFileName(
 		string value
 	) {
@@ -65,6 +85,9 @@ internal static class ChecksumText {
 		return output.ToString();
 	}
 
+	/// <summary>
+	/// Performs the needs escaping operation.
+	/// </summary>
 	public static bool NeedsEscaping(
 		string value
 	) {
@@ -75,6 +98,9 @@ internal static class ChecksumText {
 		);
 	}
 
+	/// <summary>
+	/// Attempts to parse standalone record.
+	/// </summary>
 	public static bool TryParseStandaloneRecord(
 		string line,
 		ChecksumAlgorithmKind fixedAlgorithm,
@@ -209,6 +235,9 @@ internal static class ChecksumText {
 		return true;
 	}
 
+	/// <summary>
+	/// Attempts to parse tagged record.
+	/// </summary>
 	public static bool TryParseTaggedRecord(
 		string line,
 		out ChecksumManifestRecord? record
@@ -285,6 +314,9 @@ internal static class ChecksumText {
 		return true;
 	}
 
+	/// <summary>
+	/// Attempts to parse algorithm label.
+	/// </summary>
 	public static bool TryParseAlgorithmLabel(
 		string value,
 		out ChecksumAlgorithmKind algorithm
@@ -335,6 +367,9 @@ internal static class ChecksumText {
 		}
 	}
 
+	/// <summary>
+	/// Attempts to parse digest.
+	/// </summary>
 	public static bool TryParseDigest(
 		string value,
 		out byte[] digest
@@ -356,6 +391,9 @@ internal static class ChecksumText {
 		}
 	}
 
+	/// <summary>
+	/// Formats decimal.
+	/// </summary>
 	public static string FormatDecimal(
 		ulong value
 	) {

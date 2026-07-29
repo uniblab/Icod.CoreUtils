@@ -2,29 +2,53 @@ using System.Text;
 
 namespace Icod.CoreUtils.Shared.RegularExpressions;
 
+/// <summary>
+/// Represents gnu basic parse result.
+/// </summary>
+/// <param name="Expression">The expression value.</param>
+/// <param name="CaptureCount">The capture count value.</param>
+/// <param name="Diagnostic">The diagnostic value.</param>
 internal sealed record GnuBasicParseResult(
 	RegexNode? Expression,
 	int CaptureCount,
 	RegularExpressionDiagnostic? Diagnostic
 );
 
+/// <summary>
+/// Provides the regex node implementation.
+/// </summary>
 internal abstract class RegexNode {
+	/// <summary>
+	/// Performs the match operation.
+	/// </summary>
 	internal abstract IEnumerable<RegexMatchState> Match( RegexMatchContext context, RegexMatchState state );
 }
 
+/// <summary>
+/// Provides the empty regex node implementation.
+/// </summary>
 internal sealed class EmptyRegexNode : RegexNode {
+	/// <summary>
+	/// Performs the new operation.
+	/// </summary>
 	internal static EmptyRegexNode Instance { get; } = new();
 
 	private EmptyRegexNode() {
 	}
 
+	/// <inheritdoc/>
 	internal override IEnumerable<RegexMatchState> Match( RegexMatchContext context, RegexMatchState state ) {
 		context.RegisterState();
 		yield return state;
 	}
 }
 
+/// <summary>
+/// Provides the literal regex node implementation.
+/// </summary>
+/// <param name="value">The value value.</param>
 internal sealed class LiteralRegexNode( Rune value ) : RegexNode {
+	/// <inheritdoc/>
 	internal override IEnumerable<RegexMatchState> Match( RegexMatchContext context, RegexMatchState state ) {
 		context.CancellationToken.ThrowIfCancellationRequested();
 		if (
@@ -41,7 +65,11 @@ internal sealed class LiteralRegexNode( Rune value ) : RegexNode {
 	}
 }
 
+/// <summary>
+/// Provides the dot regex node implementation.
+/// </summary>
 internal sealed class DotRegexNode : RegexNode {
+	/// <inheritdoc/>
 	internal override IEnumerable<RegexMatchState> Match( RegexMatchContext context, RegexMatchState state ) {
 		context.CancellationToken.ThrowIfCancellationRequested();
 		if ( context.Input.Length <= state.Position ) {
@@ -56,18 +84,50 @@ internal sealed class DotRegexNode : RegexNode {
 	}
 }
 
+/// <summary>
+/// Identifies the available regex assertion kind values.
+/// </summary>
 internal enum RegexAssertionKind {
+	/// <summary>
+	/// Specifies begin line.
+	/// </summary>
 	BeginLine,
+	/// <summary>
+	/// Specifies end line.
+	/// </summary>
 	EndLine,
+	/// <summary>
+	/// Specifies begin input.
+	/// </summary>
 	BeginInput,
+	/// <summary>
+	/// Specifies end input.
+	/// </summary>
 	EndInput,
+	/// <summary>
+	/// Specifies word boundary.
+	/// </summary>
 	WordBoundary,
+	/// <summary>
+	/// Specifies not word boundary.
+	/// </summary>
 	NotWordBoundary,
+	/// <summary>
+	/// Specifies begin word.
+	/// </summary>
 	BeginWord,
+	/// <summary>
+	/// Specifies end word.
+	/// </summary>
 	EndWord
 }
 
+/// <summary>
+/// Provides the assertion regex node implementation.
+/// </summary>
+/// <param name="kind">The kind value.</param>
 internal sealed class AssertionRegexNode( RegexAssertionKind kind ) : RegexNode {
+	/// <inheritdoc/>
 	internal override IEnumerable<RegexMatchState> Match( RegexMatchContext context, RegexMatchState state ) {
 		context.CancellationToken.ThrowIfCancellationRequested();
 		var previousIsWord = 0 < state.Position
@@ -94,29 +154,59 @@ internal sealed class AssertionRegexNode( RegexAssertionKind kind ) : RegexNode 
 	}
 }
 
+/// <summary>
+/// Provides the bracket expression term implementation.
+/// </summary>
 internal abstract class BracketExpressionTerm {
+	/// <summary>
+	/// Matches es.
+	/// </summary>
 	internal abstract bool Matches( RegexMatchContext context, Rune value );
 }
 
+/// <summary>
+/// Provides the bracket literal term implementation.
+/// </summary>
+/// <param name="literal">The literal value.</param>
 internal sealed class BracketLiteralTerm( Rune literal ) : BracketExpressionTerm {
+	/// <summary>
+	/// Gets the literal value.
+	/// </summary>
 	internal Rune Literal { get; } = literal;
 
+	/// <inheritdoc/>
 	internal override bool Matches( RegexMatchContext context, Rune value ) =>
 		context.CharacterClassProvider.AreCharactersEqual( Literal, value, context.Options.IgnoreCase );
 }
 
+/// <summary>
+/// Provides the bracket range term implementation.
+/// </summary>
+/// <param name="start">The start value.</param>
+/// <param name="end">The end value.</param>
 internal sealed class BracketRangeTerm( Rune start, Rune end ) : BracketExpressionTerm {
+	/// <inheritdoc/>
 	internal override bool Matches( RegexMatchContext context, Rune value ) =>
 		0 >= context.CharacterClassProvider.Compare( start, value, context.Options.IgnoreCase )
 		&& 0 <= context.CharacterClassProvider.Compare( end, value, context.Options.IgnoreCase );
 }
 
+/// <summary>
+/// Provides the bracket character class term implementation.
+/// </summary>
+/// <param name="className">The class name value.</param>
 internal sealed class BracketCharacterClassTerm( string className ) : BracketExpressionTerm {
+	/// <inheritdoc/>
 	internal override bool Matches( RegexMatchContext context, Rune value ) =>
 		context.CharacterClassProvider.IsCharacterClass( value, className, context.Options.IgnoreCase );
 }
 
+/// <summary>
+/// Provides the bracket equivalence term implementation.
+/// </summary>
+/// <param name="equivalent">The equivalent value.</param>
 internal sealed class BracketEquivalenceTerm( Rune equivalent ) : BracketExpressionTerm {
+	/// <inheritdoc/>
 	internal override bool Matches( RegexMatchContext context, Rune value ) =>
 		context.CharacterClassProvider.AreCollatingElementsEquivalent(
 			equivalent,
@@ -125,19 +215,32 @@ internal sealed class BracketEquivalenceTerm( Rune equivalent ) : BracketExpress
 		);
 }
 
+/// <summary>
+/// Provides the bracket never term implementation.
+/// </summary>
 internal sealed class BracketNeverTerm : BracketExpressionTerm {
+	/// <summary>
+	/// Performs the new operation.
+	/// </summary>
 	internal static BracketNeverTerm Instance { get; } = new();
 
 	private BracketNeverTerm() {
 	}
 
+	/// <inheritdoc/>
 	internal override bool Matches( RegexMatchContext context, Rune value ) => false;
 }
 
+/// <summary>
+/// Provides the character class regex node implementation.
+/// </summary>
+/// <param name="className">The class name value.</param>
+/// <param name="isNegated">The is negated value.</param>
 internal sealed class CharacterClassRegexNode(
 	string className,
 	bool isNegated
 ) : RegexNode {
+	/// <inheritdoc/>
 	internal override IEnumerable<RegexMatchState> Match( RegexMatchContext context, RegexMatchState state ) {
 		context.CancellationToken.ThrowIfCancellationRequested();
 		if ( context.Input.Length <= state.Position ) {
@@ -161,10 +264,16 @@ internal sealed class CharacterClassRegexNode(
 	}
 }
 
+/// <summary>
+/// Provides the bracket regex node implementation.
+/// </summary>
+/// <param name="terms">The terms value.</param>
+/// <param name="isNegated">The is negated value.</param>
 internal sealed class BracketRegexNode(
 	IReadOnlyList<BracketExpressionTerm> terms,
 	bool isNegated
 ) : RegexNode {
+	/// <inheritdoc/>
 	internal override IEnumerable<RegexMatchState> Match( RegexMatchContext context, RegexMatchState state ) {
 		context.CancellationToken.ThrowIfCancellationRequested();
 		if ( context.Input.Length <= state.Position ) {
@@ -190,13 +299,20 @@ internal sealed class BracketRegexNode(
 	}
 }
 
+/// <summary>
+/// Provides the sequence regex node implementation.
+/// </summary>
 internal sealed class SequenceRegexNode : RegexNode {
 	private readonly IReadOnlyList<RegexNode> nodes;
 
+	/// <summary>
+	/// Initializes a new instance of the SequenceRegexNode class.
+	/// </summary>
 	internal SequenceRegexNode( IReadOnlyList<RegexNode> nodes ) {
 		this.nodes = nodes;
 	}
 
+	/// <inheritdoc/>
 	internal override IEnumerable<RegexMatchState> Match( RegexMatchContext context, RegexMatchState state ) {
 		var current = new List<RegexMatchState> { state };
 		foreach ( var node in nodes ) {
@@ -222,13 +338,20 @@ internal sealed class SequenceRegexNode : RegexNode {
 	}
 }
 
+/// <summary>
+/// Provides the alternation regex node implementation.
+/// </summary>
 internal sealed class AlternationRegexNode : RegexNode {
 	private readonly IReadOnlyList<RegexNode> alternatives;
 
+	/// <summary>
+	/// Initializes a new instance of the AlternationRegexNode class.
+	/// </summary>
 	internal AlternationRegexNode( IReadOnlyList<RegexNode> alternatives ) {
 		this.alternatives = alternatives;
 	}
 
+	/// <inheritdoc/>
 	internal override IEnumerable<RegexMatchState> Match( RegexMatchContext context, RegexMatchState state ) {
 		var results = new HashSet<RegexMatchState>( RegexMatchStateComparer.Instance );
 		foreach ( var alternative in alternatives ) {
@@ -242,7 +365,13 @@ internal sealed class AlternationRegexNode : RegexNode {
 	}
 }
 
+/// <summary>
+/// Provides the group regex node implementation.
+/// </summary>
+/// <param name="captureNumber">The capture number value.</param>
+/// <param name="expression">The expression value.</param>
 internal sealed class GroupRegexNode( int captureNumber, RegexNode expression ) : RegexNode {
+	/// <inheritdoc/>
 	internal override IEnumerable<RegexMatchState> Match( RegexMatchContext context, RegexMatchState state ) {
 		var start = state.Position;
 		var results = new HashSet<RegexMatchState>( RegexMatchStateComparer.Instance );
@@ -256,7 +385,12 @@ internal sealed class GroupRegexNode( int captureNumber, RegexNode expression ) 
 	}
 }
 
+/// <summary>
+/// Provides the back reference regex node implementation.
+/// </summary>
+/// <param name="captureNumber">The capture number value.</param>
 internal sealed class BackReferenceRegexNode( int captureNumber ) : RegexNode {
+	/// <inheritdoc/>
 	internal override IEnumerable<RegexMatchState> Match( RegexMatchContext context, RegexMatchState state ) {
 		context.CancellationToken.ThrowIfCancellationRequested();
 		var capture = state.Captures[ captureNumber - 1 ];
@@ -284,17 +418,24 @@ internal sealed class BackReferenceRegexNode( int captureNumber ) : RegexNode {
 	}
 }
 
+/// <summary>
+/// Provides the repeat regex node implementation.
+/// </summary>
 internal sealed class RepeatRegexNode : RegexNode {
 	private readonly RegexNode expression;
 	private readonly int minimum;
 	private readonly int? maximum;
 
+	/// <summary>
+	/// Initializes a new instance of the RepeatRegexNode class.
+	/// </summary>
 	internal RepeatRegexNode( RegexNode expression, int minimum, int? maximum ) {
 		this.expression = expression;
 		this.minimum = minimum;
 		this.maximum = maximum;
 	}
 
+	/// <inheritdoc/>
 	internal override IEnumerable<RegexMatchState> Match( RegexMatchContext context, RegexMatchState state ) {
 		var yielded = new HashSet<RegexMatchState>( RegexMatchStateComparer.Instance );
 		var pathStates = new HashSet<RegexMatchState>( RegexMatchStateComparer.Instance ) { state };
@@ -360,14 +501,29 @@ internal sealed class RepeatRegexNode : RegexNode {
 		int count,
 		bool addedToPath
 	) {
+		/// <summary>
+		/// Gets the state value.
+		/// </summary>
 		internal RegexMatchState State { get; } = state;
 
+		/// <summary>
+		/// Gets the count value.
+		/// </summary>
 		internal int Count { get; } = count;
 
+		/// <summary>
+		/// Gets the added to path value.
+		/// </summary>
 		internal bool AddedToPath { get; } = addedToPath;
 
+		/// <summary>
+		/// Gets or sets the is initialized value.
+		/// </summary>
 		internal bool IsInitialized { get; set; }
 
+		/// <summary>
+		/// Gets or sets the children value.
+		/// </summary>
 		internal IEnumerator<RegexMatchState>? Children { get; set; }
 	}
 }

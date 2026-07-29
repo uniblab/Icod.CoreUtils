@@ -14,7 +14,17 @@ public static class Command {
 	private const string ProgramName = "dd";
 	private const string Version = "dd (Icod.CoreUtils) 1.0";
 
-	/// <summary>Runs the command synchronously for compatibility.</summary>
+	/// <summary>
+	/// Executes <c>dd</c> synchronously with optional standard-stream substitution.
+	/// </summary>
+	/// <remarks>
+	/// This compatibility entry point blocks on the TAP implementation. A <see langword="null"/> text stream selects the corresponding <see cref="Console"/> stream; caller-supplied streams remain caller-owned.
+	/// </remarks>
+	/// <param name="args">The command-line arguments, excluding the executable name.</param>
+	/// <param name="stdin">The text reader to use as standard input, or <see langword="null"/> to use <see cref="Console.In"/>.</param>
+	/// <param name="stdout">The text writer to use as standard output, or <see langword="null"/> to use <see cref="Console.Out"/>.</param>
+	/// <param name="stderr">The text writer to use as standard error, or <see langword="null"/> to use <see cref="Console.Error"/>.</param>
+	/// <returns>The GNU-compatible process exit status: zero for successful command execution and nonzero for a usage or operational failure.</returns>
 	public static int Run(
 		string[] args,
 		TextReader? stdin = null,
@@ -27,7 +37,18 @@ public static class Command {
 		stderr
 	).GetAwaiter().GetResult();
 
-	/// <summary>Runs the command asynchronously with injectable text streams.</summary>
+	/// <summary>
+	/// Executes <c>dd</c> asynchronously with optional injected standard streams.
+	/// </summary>
+	/// <remarks>
+	/// A <see langword="null"/> text stream selects the corresponding <see cref="Console"/> stream. Caller-supplied streams remain caller-owned.
+	/// </remarks>
+	/// <param name="args">The command-line arguments, excluding the executable name.</param>
+	/// <param name="stdin">The text reader to use as standard input, or <see langword="null"/> to use <see cref="Console.In"/>.</param>
+	/// <param name="stdout">The text writer to use as standard output, or <see langword="null"/> to use <see cref="Console.Out"/>.</param>
+	/// <param name="stderr">The text writer to use as standard error, or <see langword="null"/> to use <see cref="Console.Error"/>.</param>
+	/// <param name="cancellationToken">The token used to cancel parsing, platform queries, and asynchronous I/O.</param>
+	/// <returns>The GNU-compatible process exit status: zero for successful command execution and nonzero for a usage or operational failure.</returns>
 	public static Task<int> RunAsync(
 		string[] args,
 		TextReader? stdin = null,
@@ -45,7 +66,16 @@ public static class Command {
 		)
 	);
 
-	/// <summary>Runs the command asynchronously with a complete command context.</summary>
+	/// <summary>
+	/// Executes <c>dd</c> asynchronously using a complete shared command context.
+	/// </summary>
+	/// <remarks>
+	/// The context carries text and optional binary standard streams, centralized diagnostics, and cancellation. The command does not dispose caller-owned standard streams.
+	/// </remarks>
+	/// <param name="args">The command-line arguments, excluding the executable name.</param>
+	/// <param name="context">The command context that supplies standard streams, diagnostics, and cancellation.</param>
+	/// <returns>The GNU-compatible process exit status: zero for successful command execution and nonzero for a usage or operational failure.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="context"/> is <see langword="null"/>.</exception>
 	public static async Task<int> RunAsync(
 		string[] args,
 		CommandContext context
@@ -124,7 +154,15 @@ public static class Command {
 		}
 	}
 
-	/// <summary>Writes the complete command usage and operand reference.</summary>
+	/// <summary>
+	/// Writes the complete <c>dd</c> usage, operand, conversion, and flag reference to standard output.
+	/// </summary>
+	/// <remarks>
+	/// The write observes the cancellation token carried by the context.
+	/// </remarks>
+	/// <param name="context">The command context that supplies standard streams, diagnostics, and cancellation.</param>
+	/// <returns>A task that represents the asynchronous write.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="context"/> is <see langword="null"/>.</exception>
 	public static Task WriteUsageAsync(
 		CommandContext context
 	) {
@@ -221,11 +259,11 @@ and then resume copying.
 		var copyStarted = false;
 		var reportWritten = false;
 		try {
-			(input, ownsInput) = OpenInput(
+			( input, ownsInput ) = OpenInput(
 				options,
 				context
 			);
-			(output, ownsOutput, textOutputAdapter) = OpenOutput(
+			( output, ownsOutput, textOutputAdapter ) = OpenOutput(
 				options,
 				context
 			);
@@ -570,69 +608,69 @@ and then resume copying.
 	) {
 		switch ( name ) {
 			case "bs": {
-					var blockSize = await ParseBlockSizeAsync( value, context ).ConfigureAwait( false );
-					if ( !blockSize.HasValue ) {
-						return false;
-					}
-					options.BlockSizeOverride = blockSize.Value;
-					return true;
+				var blockSize = await ParseBlockSizeAsync( value, context ).ConfigureAwait( false );
+				if ( !blockSize.HasValue ) {
+					return false;
 				}
+				options.BlockSizeOverride = blockSize.Value;
+				return true;
+			}
 			case "cbs": {
-					var conversionBlockSize = await ParseBlockSizeAsync( value, context ).ConfigureAwait( false );
-					if ( !conversionBlockSize.HasValue ) {
-						return false;
-					}
-					options.ConversionBlockSize = conversionBlockSize.Value;
-					return true;
+				var conversionBlockSize = await ParseBlockSizeAsync( value, context ).ConfigureAwait( false );
+				if ( !conversionBlockSize.HasValue ) {
+					return false;
 				}
+				options.ConversionBlockSize = conversionBlockSize.Value;
+				return true;
+			}
 			case "count": {
-					var count = await ParseQuantityAsync( value, context ).ConfigureAwait( false );
-					if ( !count.HasValue ) {
-						return false;
-					}
-					options.Count = count.Value;
-					return true;
+				var count = await ParseQuantityAsync( value, context ).ConfigureAwait( false );
+				if ( !count.HasValue ) {
+					return false;
 				}
+				options.Count = count.Value;
+				return true;
+			}
 			case "ibs": {
-					var inputBlockSize = await ParseBlockSizeAsync( value, context ).ConfigureAwait( false );
-					if ( !inputBlockSize.HasValue ) {
-						return false;
-					}
-					options.InputBlockSize = inputBlockSize.Value;
-					return true;
+				var inputBlockSize = await ParseBlockSizeAsync( value, context ).ConfigureAwait( false );
+				if ( !inputBlockSize.HasValue ) {
+					return false;
 				}
+				options.InputBlockSize = inputBlockSize.Value;
+				return true;
+			}
 			case "if":
 				options.InputFile = value;
 				return true;
 			case "obs": {
-					var outputBlockSize = await ParseBlockSizeAsync( value, context ).ConfigureAwait( false );
-					if ( !outputBlockSize.HasValue ) {
-						return false;
-					}
-					options.OutputBlockSize = outputBlockSize.Value;
-					return true;
+				var outputBlockSize = await ParseBlockSizeAsync( value, context ).ConfigureAwait( false );
+				if ( !outputBlockSize.HasValue ) {
+					return false;
 				}
+				options.OutputBlockSize = outputBlockSize.Value;
+				return true;
+			}
 			case "of":
 				options.OutputFile = value;
 				return true;
 			case "seek":
 			case "oseek": {
-					var seek = await ParseQuantityAsync( value, context ).ConfigureAwait( false );
-					if ( !seek.HasValue ) {
-						return false;
-					}
-					options.Seek = seek.Value;
-					return true;
+				var seek = await ParseQuantityAsync( value, context ).ConfigureAwait( false );
+				if ( !seek.HasValue ) {
+					return false;
 				}
+				options.Seek = seek.Value;
+				return true;
+			}
 			case "skip":
 			case "iseek": {
-					var skip = await ParseQuantityAsync( value, context ).ConfigureAwait( false );
-					if ( !skip.HasValue ) {
-						return false;
-					}
-					options.Skip = skip.Value;
-					return true;
+				var skip = await ParseQuantityAsync( value, context ).ConfigureAwait( false );
+				if ( !skip.HasValue ) {
+					return false;
 				}
+				options.Skip = skip.Value;
+				return true;
+			}
 			case "conv":
 				return await AddConversionsAsync(
 					value,
@@ -1001,33 +1039,83 @@ and then resume copying.
 	}
 }
 
+/// <summary>
+/// Represents a directory opened as a <see cref="Stream"/> so <c>dd</c> can produce its own read diagnostic.
+/// </summary>
+/// <remarks>
+/// The stream advertises read capability to enter the normal copy path, but every read fails with an <see cref="IOException"/> that names the directory. Seeking, writing, and length operations are unsupported.
+/// </remarks>
 internal sealed class DdDirectoryInputStream : Stream {
 	private readonly string myPath;
 
+	/// <summary>
+	/// Initializes a diagnostic stream for the specified directory path.
+	/// </summary>
+	/// <param name="path">The directory pathname included in read diagnostics.</param>
+	/// <exception cref="ArgumentNullException"><paramref name="path"/> is <see langword="null"/>.</exception>
 	public DdDirectoryInputStream(
 		string path
 	) {
 		this.myPath = path;
 	}
 
+	/// <summary>
+	/// Gets a value indicating that callers may attempt reads so the stream can return a directory-specific error.
+	/// </summary>
+	/// <value>Always <see langword="true"/> so a read attempt reaches the directory diagnostic.</value>
 	public override bool CanRead => true;
+	/// <summary>
+	/// Gets a value indicating that seeking is not supported.
+	/// </summary>
+	/// <value>Always <see langword="false"/>.</value>
 	public override bool CanSeek => false;
+	/// <summary>
+	/// Gets a value indicating that writing is not supported.
+	/// </summary>
+	/// <value>Always <see langword="false"/>.</value>
 	public override bool CanWrite => false;
+	/// <summary>
+	/// Gets the stream length, which is unavailable for a directory diagnostic stream.
+	/// </summary>
+	/// <value>This property always throws <see cref="NotSupportedException"/>.</value>
+	/// <exception cref="NotSupportedException">The property is read.</exception>
 	public override long Length => throw new NotSupportedException();
+	/// <summary>
+	/// Gets or sets the stream position, which is unsupported for this diagnostic stream.
+	/// </summary>
+	/// <value>This property always throws <see cref="NotSupportedException"/> when read or written.</value>
+	/// <exception cref="NotSupportedException">The property is read or assigned.</exception>
 	public override long Position {
 		get => throw new NotSupportedException();
 		set => throw new NotSupportedException();
 	}
 
+	/// <summary>
+	/// Performs no work because the stream never buffers writable data.
+	/// </summary>
 	public override void Flush() {
 	}
 
+	/// <summary>
+	/// Rejects a synchronous read with a directory-specific I/O error.
+	/// </summary>
+	/// <param name="buffer">The destination array supplied by the caller; no bytes are written.</param>
+	/// <param name="offset">The starting destination-array offset supplied by the caller.</param>
+	/// <param name="count">The maximum number of bytes requested by the caller.</param>
+	/// <returns>This method does not return normally; it always throws an <see cref="IOException"/>.</returns>
+	/// <exception cref="IOException">Always thrown to report that the input path is a directory.</exception>
 	public override int Read(
 		byte[] buffer,
 		int offset,
 		int count
 	) => throw this.CreateReadException();
 
+	/// <summary>
+	/// Returns a failed asynchronous read with a directory-specific I/O error.
+	/// </summary>
+	/// <param name="buffer">The destination memory supplied by the caller; no bytes are written.</param>
+	/// <param name="cancellationToken">The cancellation token supplied for the read; the directory error is returned without performing I/O.</param>
+	/// <returns>A value task that completes with the directory-specific <see cref="IOException"/>.</returns>
 	public override ValueTask<int> ReadAsync(
 		Memory<byte> buffer,
 		CancellationToken cancellationToken = default
@@ -1035,15 +1123,34 @@ internal sealed class DdDirectoryInputStream : Stream {
 		this.CreateReadException()
 	);
 
+	/// <summary>
+	/// Rejects attempts to reposition the directory diagnostic stream.
+	/// </summary>
+	/// <param name="offset">The requested byte offset.</param>
+	/// <param name="origin">The requested seek origin.</param>
+	/// <returns>This method does not return normally; it always throws <see cref="NotSupportedException"/>.</returns>
+	/// <exception cref="NotSupportedException">Always thrown because the stream cannot seek.</exception>
 	public override long Seek(
 		long offset,
 		SeekOrigin origin
 	) => throw new NotSupportedException();
 
+	/// <summary>
+	/// Rejects attempts to change the length of the directory diagnostic stream.
+	/// </summary>
+	/// <param name="value">The requested stream length.</param>
+	/// <exception cref="NotSupportedException">Always thrown because the stream has no writable length.</exception>
 	public override void SetLength(
 		long value
 	) => throw new NotSupportedException();
 
+	/// <summary>
+	/// Rejects attempts to write to the directory diagnostic stream.
+	/// </summary>
+	/// <param name="buffer">The source array supplied by the caller; no bytes are consumed.</param>
+	/// <param name="offset">The starting source-array offset supplied by the caller.</param>
+	/// <param name="count">The number of source bytes supplied by the caller.</param>
+	/// <exception cref="NotSupportedException">Always thrown because the stream is read-only.</exception>
 	public override void Write(
 		byte[] buffer,
 		int offset,

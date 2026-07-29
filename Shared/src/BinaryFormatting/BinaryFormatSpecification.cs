@@ -7,12 +7,33 @@ using System.Runtime.InteropServices;
 /// Identifies the semantic representation requested for a binary value.
 /// </summary>
 public enum BinaryFormatKind {
+	/// <summary>
+	/// Specifies named character.
+	/// </summary>
 	NamedCharacter,
+	/// <summary>
+	/// Specifies character.
+	/// </summary>
 	Character,
+	/// <summary>
+	/// Specifies signed decimal.
+	/// </summary>
 	SignedDecimal,
+	/// <summary>
+	/// Specifies unsigned decimal.
+	/// </summary>
 	UnsignedDecimal,
+	/// <summary>
+	/// Specifies octal.
+	/// </summary>
 	Octal,
+	/// <summary>
+	/// Specifies hexadecimal.
+	/// </summary>
 	Hexadecimal,
+	/// <summary>
+	/// Specifies floating point.
+	/// </summary>
 	FloatingPoint
 }
 
@@ -20,14 +41,28 @@ public enum BinaryFormatKind {
 /// Identifies the byte order used to interpret multi-byte values.
 /// </summary>
 public enum BinaryByteOrder {
+	/// <summary>
+	/// Specifies native.
+	/// </summary>
 	Native,
+	/// <summary>
+	/// Specifies little endian.
+	/// </summary>
 	LittleEndian,
+	/// <summary>
+	/// Specifies big endian.
+	/// </summary>
 	BigEndian
 }
 
 /// <summary>
 /// Describes one parsed binary value format.
 /// </summary>
+/// <param name="Kind">The kind value.</param>
+/// <param name="Size">The size value.</param>
+/// <param name="AppendPrintableTrailer">The append printable trailer value.</param>
+/// <param name="SourceText">The source text value.</param>
+/// <param name="FloatingAlias">The floating alias value.</param>
 public sealed record BinaryFormatSpecification(
 	BinaryFormatKind Kind,
 	int Size,

@@ -1,26 +1,50 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 
 namespace Icod.CoreUtils.Shared.Time;
 
+/// <summary>
+/// Supplies current time values and controlled system-clock updates.
+/// </summary>
 public interface IDateTimeProvider
 {
+    /// <summary>Gets the current local time.</summary>
     DateTimeOffset Now { get; }
 
+    /// <summary>Gets the current Coordinated Universal Time.</summary>
     DateTimeOffset UtcNow { get; }
 
+    /// <summary>Asynchronously attempts to set the system clock.</summary>
+    /// <param name="value">The time to set.</param>
+    /// <param name="cancellationToken">A token that can cancel the operation.</param>
+    /// <returns><see langword="true"/> when the system clock was set; otherwise <see langword="false"/>.</returns>
     ValueTask<bool> TrySetSystemTimeAsync(
         DateTimeOffset value,
         CancellationToken cancellationToken = default
     );
 }
 
+/// <summary>
+/// Provides system time through the BCL and platform clock-setting APIs.
+/// </summary>
 public sealed class SystemDateTimeProvider : IDateTimeProvider
 {
     private const int ClockRealtime = 0;
+    /// <summary>
+    /// Gets the current local time.
+    /// </summary>
     public DateTimeOffset Now => DateTimeOffset.Now;
 
+    /// <summary>
+    /// Gets the current Coordinated Universal Time.
+    /// </summary>
     public DateTimeOffset UtcNow => DateTimeOffset.UtcNow;
 
+    /// <summary>
+    /// Asynchronously attempts to set the system clock.
+    /// </summary>
+    /// <param name="value">The time to set.</param>
+    /// <param name="cancellationToken">A token that can cancel the operation.</param>
+    /// <returns><see langword="true"/> when the system clock was set; otherwise <see langword="false"/>.</returns>
     public ValueTask<bool> TrySetSystemTimeAsync(
         DateTimeOffset value,
         CancellationToken cancellationToken = default
@@ -82,27 +106,63 @@ public sealed class SystemDateTimeProvider : IDateTimeProvider
     [StructLayout(LayoutKind.Sequential)]
     private struct Timespec
     {
+        /// <summary>
+        /// Stores the seconds value.
+        /// </summary>
         public long Seconds;
+        /// <summary>
+        /// Stores the nanoseconds value.
+        /// </summary>
         public long Nanoseconds;
     }
 
     [StructLayout(LayoutKind.Sequential)]
     private struct Timeval
     {
+        /// <summary>
+        /// Stores the seconds value.
+        /// </summary>
         public long Seconds;
+        /// <summary>
+        /// Stores the microseconds value.
+        /// </summary>
         public long Microseconds;
     }
 
     [StructLayout(LayoutKind.Sequential)]
     private struct SystemTime
     {
+        /// <summary>
+        /// Stores the year value.
+        /// </summary>
         public ushort Year;
+        /// <summary>
+        /// Stores the month value.
+        /// </summary>
         public ushort Month;
+        /// <summary>
+        /// Stores the day of week value.
+        /// </summary>
         public ushort DayOfWeek;
+        /// <summary>
+        /// Stores the day value.
+        /// </summary>
         public ushort Day;
+        /// <summary>
+        /// Stores the hour value.
+        /// </summary>
         public ushort Hour;
+        /// <summary>
+        /// Stores the minute value.
+        /// </summary>
         public ushort Minute;
+        /// <summary>
+        /// Stores the second value.
+        /// </summary>
         public ushort Second;
+        /// <summary>
+        /// Stores the milliseconds value.
+        /// </summary>
         public ushort Milliseconds;
     }
 }

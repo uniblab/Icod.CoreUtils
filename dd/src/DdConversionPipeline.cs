@@ -1,5 +1,11 @@
-﻿namespace Icod.CoreUtils.DD;
+namespace Icod.CoreUtils.DD;
 
+/// <summary>
+/// Applies stateful GNU <c>dd</c> byte and record conversions across successive input blocks.
+/// </summary>
+/// <remarks>
+/// The pipeline preserves pending <c>swab</c> bytes and partial <c>block</c>/<c>unblock</c> records between calls, updates truncation statistics, and emits any final buffered data from <see cref="Complete"/>.
+/// </remarks>
 internal sealed class DdConversionPipeline {
 	private const byte LineFeed = 0x0A;
 	private const byte Space = 0x20;
@@ -11,6 +17,12 @@ internal sealed class DdConversionPipeline {
 	private byte mySwabPending;
 	private bool mySwabPendingAvailable;
 
+	/// <summary>
+	/// Initializes a stateful conversion pipeline for the selected operands and transfer counters.
+	/// </summary>
+	/// <param name="options">The validated <c>dd</c> operand state.</param>
+	/// <param name="statistics">The transfer counters read or updated by the operation.</param>
+	/// <exception cref="ArgumentNullException"><paramref name="options"/> or <paramref name="statistics"/> is <see langword="null"/>.</exception>
 	public DdConversionPipeline(
 		DdOptions options,
 		DdStatistics statistics
@@ -27,6 +39,12 @@ internal sealed class DdConversionPipeline {
 		;
 	}
 
+	/// <summary>
+	/// Applies padding, byte-pair swapping, translation, case conversion, and record conversion to one input block.
+	/// </summary>
+	/// <param name="source">The source bytes for the current conversion pass.</param>
+	/// <param name="padToInputBlock"><see langword="true"/> to pad a short source block to the configured input block size before conversion.</param>
+	/// <returns>The converted bytes ready for output; the result may be empty while a partial record remains buffered.</returns>
 	public byte[] TransformBlock(
 		ReadOnlySpan<byte> source,
 		bool padToInputBlock
@@ -59,6 +77,10 @@ internal sealed class DdConversionPipeline {
 		);
 	}
 
+	/// <summary>
+	/// Flushes an odd pending swab byte and any partial block or unblock record at end of input.
+	/// </summary>
+	/// <returns>The final converted bytes produced from pending state, or an empty array when no data remains.</returns>
 	public byte[] Complete() {
 		using var output = new MemoryStream();
 		if ( this.mySwabPendingAvailable ) {

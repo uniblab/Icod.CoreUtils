@@ -30,6 +30,17 @@ public enum LoginRecordType : short {
 }
 
 /// <summary>Represents a login-accounting record.</summary>
+/// <param name="Type">The type value.</param>
+/// <param name="ProcessId">The process id value.</param>
+/// <param name="Line">The line value.</param>
+/// <param name="Id">The id value.</param>
+/// <param name="User">The user value.</param>
+/// <param name="Host">The host value.</param>
+/// <param name="TerminationStatus">The termination status value.</param>
+/// <param name="ExitStatus">The exit status value.</param>
+/// <param name="SessionId">The session id value.</param>
+/// <param name="Timestamp">The timestamp value.</param>
+/// <param name="Address">The address value.</param>
 public sealed record LoginRecord(
 	LoginRecordType Type,
 	int ProcessId,
@@ -186,6 +197,9 @@ public sealed class SystemLoginRecordProvider : ILoginRecordProvider {
 	}
 
 	private static class NativeMethods {
+		/// <summary>
+		/// Gets terminal name.
+		/// </summary>
 		[DllImport( "libc", EntryPoint = "ttyname_r" )]
 		internal static extern int GetTerminalName( int fileDescriptor, [Out] byte[] buffer, nuint bufferSize );
 	}

@@ -4,6 +4,14 @@ using System.Net;
 using System.Runtime.InteropServices;
 
 /// <summary>Describes the operating system information displayed by <c>uname</c>.</summary>
+/// <param name="KernelName">The kernel name value.</param>
+/// <param name="NodeName">The node name value.</param>
+/// <param name="KernelRelease">The kernel release value.</param>
+/// <param name="KernelVersion">The kernel version value.</param>
+/// <param name="Machine">The machine value.</param>
+/// <param name="Processor">The processor value.</param>
+/// <param name="HardwarePlatform">The hardware platform value.</param>
+/// <param name="OperatingSystem">The operating system value.</param>
 public sealed record SystemInformationSnapshot(
 	string KernelName,
 	string NodeName,
@@ -102,6 +110,9 @@ public sealed class SystemInformationProvider : ISystemInformationProvider {
 	}
 
 	private static class NativeMethods {
+		/// <summary>
+		/// Performs the uname operation.
+		/// </summary>
 		[DllImport( "libc", EntryPoint = "uname", SetLastError = true )]
 		internal static extern int Uname( IntPtr buffer );
 	}

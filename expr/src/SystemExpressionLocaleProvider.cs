@@ -5,25 +5,44 @@ using System.Globalization;
 using System.Numerics;
 using System.Text;
 
-/// <summary>Implements <c>expr</c> collation with a .NET culture and logical characters with Unicode scalar values.</summary>
+/// <summary>
+/// Implements <c>expr</c> collation with a .NET culture and treats Unicode scalar values as logical characters.
+/// </summary>
+/// <remarks>
+/// Invalid UTF-16 sequences are consumed as replacement characters so operations remain deterministic and make forward progress.
+/// </remarks>
 public sealed class SystemExpressionLocaleProvider : IExpressionLocaleProvider {
 	private readonly CompareInfo compareInfo;
 
-	/// <summary>Initializes a provider using <see cref="CultureInfo.CurrentCulture"/>.</summary>
+	/// <summary>
+	/// Initializes a provider using the current process culture.
+	/// </summary>
 	public SystemExpressionLocaleProvider() : this( CultureInfo.CurrentCulture ) {
 	}
 
-	/// <summary>Initializes a provider using a specified culture.</summary>
+	/// <summary>
+	/// Initializes a provider using the specified culture.
+	/// </summary>
 	/// <param name="culture">The culture whose collation rules are used.</param>
+	/// <exception cref="ArgumentNullException"><paramref name="culture"/> is <see langword="null"/>.</exception>
 	public SystemExpressionLocaleProvider( CultureInfo culture ) {
 		ArgumentNullException.ThrowIfNull( culture );
 		this.compareInfo = culture.CompareInfo;
 	}
 
-	/// <summary>Gets a provider using the culture current when this property is read.</summary>
+	/// <summary>
+	/// Gets a new provider bound to the culture current when the property is read.
+	/// </summary>
+	/// <value>A newly constructed provider.</value>
 	public static SystemExpressionLocaleProvider CurrentCulture => new();
 
-	/// <inheritdoc/>
+	/// <summary>
+	/// Compares two strings with the configured culture collation.
+	/// </summary>
+	/// <param name="left">The left string operand.</param>
+	/// <param name="right">The right string operand.</param>
+	/// <param name="cancellationToken">The token observed before and after culture collation.</param>
+	/// <returns>A negative value, zero, or a positive value according to the configured culture.</returns>
 	public int Compare(
 		string left,
 		string right,
@@ -37,7 +56,12 @@ public sealed class SystemExpressionLocaleProvider : IExpressionLocaleProvider {
 		return result;
 	}
 
-	/// <inheritdoc/>
+	/// <summary>
+	/// Counts Unicode scalar values in a string.
+	/// </summary>
+	/// <param name="value">The string whose Unicode scalar values are counted.</param>
+	/// <param name="cancellationToken">The token checked while Unicode scalar values are counted.</param>
+	/// <returns>The number of Unicode scalar values.</returns>
 	public BigInteger GetLength(
 		string value,
 		CancellationToken cancellationToken = default
@@ -54,7 +78,13 @@ public sealed class SystemExpressionLocaleProvider : IExpressionLocaleProvider {
 		return count;
 	}
 
-	/// <inheritdoc/>
+	/// <summary>
+	/// Finds the one-based scalar position of the first character contained in a scalar-value set.
+	/// </summary>
+	/// <param name="value">The string to search by Unicode scalar value.</param>
+	/// <param name="characterSet">The string whose scalar values form the search set.</param>
+	/// <param name="cancellationToken">The token checked while the search set and source are decoded.</param>
+	/// <returns>The one-based scalar position of the first match, or zero when none is found.</returns>
 	public BigInteger IndexOfAny(
 		string value,
 		string characterSet,
@@ -83,7 +113,14 @@ public sealed class SystemExpressionLocaleProvider : IExpressionLocaleProvider {
 		return BigInteger.Zero;
 	}
 
-	/// <inheritdoc/>
+	/// <summary>
+	/// Extracts a scalar-indexed substring using one-based position and length operands.
+	/// </summary>
+	/// <param name="value">The source string.</param>
+	/// <param name="position">The one-based Unicode-scalar starting position.</param>
+	/// <param name="length">The maximum number of Unicode scalar values to return.</param>
+	/// <param name="cancellationToken">The token checked while the source string is decoded.</param>
+	/// <returns>The selected scalar-aligned substring, or an empty string for an invalid or out-of-range request.</returns>
 	public string Substring(
 		string value,
 		BigInteger position,

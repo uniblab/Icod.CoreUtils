@@ -4,11 +4,17 @@ using System.Text;
 
 namespace Icod.CoreUtils.Shared.RegularExpressions;
 
+/// <summary>
+/// Provides the gnu basic compiled regular expression implementation.
+/// </summary>
 internal sealed class GnuBasicCompiledRegularExpression : ICompiledRegularExpression {
 	private readonly RegexNode expression;
 	private readonly RegularExpressionOptions options;
 	private readonly IRegularExpressionCharacterClassProvider characterClassProvider;
 
+	/// <summary>
+	/// Initializes a new instance of the GnuBasicCompiledRegularExpression class.
+	/// </summary>
 	internal GnuBasicCompiledRegularExpression(
 		string pattern,
 		RegexNode expression,
@@ -127,9 +133,20 @@ internal sealed class GnuBasicCompiledRegularExpression : ICompiledRegularExpres
 
 }
 
+/// <summary>
+/// Represents regex capture span.
+/// </summary>
+/// <param name="Start">The start value.</param>
+/// <param name="End">The end value.</param>
 internal readonly record struct RegexCaptureSpan( int Start, int End );
 
+/// <summary>
+/// Provides the regex match state implementation.
+/// </summary>
 internal sealed class RegexMatchState {
+	/// <summary>
+	/// Initializes a new instance of the RegexMatchState class.
+	/// </summary>
 	internal RegexMatchState( int position, int captureCount ) {
 		Position = position;
 		Captures = new RegexCaptureSpan?[ captureCount ];
@@ -140,12 +157,24 @@ internal sealed class RegexMatchState {
 		Captures = captures;
 	}
 
+	/// <summary>
+	/// Gets the position value.
+	/// </summary>
 	internal int Position { get; }
 
+	/// <summary>
+	/// Gets the captures value.
+	/// </summary>
 	internal RegexCaptureSpan?[] Captures { get; }
 
+	/// <summary>
+	/// Creates a copy with position.
+	/// </summary>
 	internal RegexMatchState WithPosition( int position ) => new( position, Captures );
 
+	/// <summary>
+	/// Creates a copy with capture.
+	/// </summary>
 	internal RegexMatchState WithCapture( int captureNumber, RegexCaptureSpan capture ) {
 		var captures = (RegexCaptureSpan?[])Captures.Clone();
 		captures[ captureNumber - 1 ] = capture;
@@ -153,7 +182,13 @@ internal sealed class RegexMatchState {
 	}
 }
 
+/// <summary>
+/// Provides the regex match state comparer implementation.
+/// </summary>
 internal sealed class RegexMatchStateComparer : IEqualityComparer<RegexMatchState> {
+	/// <summary>
+	/// Performs the new operation.
+	/// </summary>
 	internal static RegexMatchStateComparer Instance { get; } = new();
 
 	private RegexMatchStateComparer() {
@@ -192,9 +227,15 @@ internal sealed class RegexMatchStateComparer : IEqualityComparer<RegexMatchStat
 	}
 }
 
+/// <summary>
+/// Provides the regex match context implementation.
+/// </summary>
 internal sealed class RegexMatchContext {
 	private long stateCount;
 
+	/// <summary>
+	/// Initializes a new instance of the RegexMatchContext class.
+	/// </summary>
 	internal RegexMatchContext(
 		RegexInput input,
 		RegularExpressionOptions options,
@@ -207,14 +248,29 @@ internal sealed class RegexMatchContext {
 		CancellationToken = cancellationToken;
 	}
 
+	/// <summary>
+	/// Gets the input value.
+	/// </summary>
 	internal RegexInput Input { get; }
 
+	/// <summary>
+	/// Gets the options value.
+	/// </summary>
 	internal RegularExpressionOptions Options { get; }
 
+	/// <summary>
+	/// Gets the character class provider value.
+	/// </summary>
 	internal IRegularExpressionCharacterClassProvider CharacterClassProvider { get; }
 
+	/// <summary>
+	/// Gets the cancellation token value.
+	/// </summary>
 	internal CancellationToken CancellationToken { get; }
 
+	/// <summary>
+	/// Performs the register state operation.
+	/// </summary>
 	internal void RegisterState() {
 		CancellationToken.ThrowIfCancellationRequested();
 		stateCount++;
@@ -224,6 +280,9 @@ internal sealed class RegexMatchContext {
 	}
 }
 
+/// <summary>
+/// Provides the regex input implementation.
+/// </summary>
 internal sealed class RegexInput {
 	private readonly Rune[] runes;
 	private readonly int[] utf16Indices;
@@ -234,14 +293,26 @@ internal sealed class RegexInput {
 		this.utf16Indices = utf16Indices;
 	}
 
+	/// <summary>
+	/// Gets the source value.
+	/// </summary>
 	internal string Source { get; }
 
+	/// <summary>
+	/// Gets the length value.
+	/// </summary>
 	internal int Length => runes.Length;
 
 	internal Rune this[ int index ] => runes[ index ];
 
+	/// <summary>
+	/// Gets utf16 index.
+	/// </summary>
 	internal int GetUtf16Index( int runeIndex ) => utf16Indices[ runeIndex ];
 
+	/// <summary>
+	/// Attempts to get rune index.
+	/// </summary>
 	internal bool TryGetRuneIndex( int utf16Index, out int runeIndex ) {
 		if ( 0 > utf16Index || Source.Length < utf16Index ) {
 			runeIndex = -1;
@@ -256,6 +327,9 @@ internal sealed class RegexInput {
 		return true;
 	}
 
+	/// <summary>
+	/// Performs the decode operation.
+	/// </summary>
 	internal static RegexInput Decode( string source, CancellationToken cancellationToken ) {
 		var runes = new List<Rune>( source.Length );
 		var indices = new List<int>( source.Length + 1 );
@@ -280,5 +354,8 @@ internal sealed class RegexInput {
 	}
 }
 
+/// <summary>
+/// Provides the regex match resource limit exception implementation.
+/// </summary>
 internal sealed class RegexMatchResourceLimitException : Exception {
 }

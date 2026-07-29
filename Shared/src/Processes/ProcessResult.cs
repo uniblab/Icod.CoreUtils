@@ -25,6 +25,9 @@ public sealed class ProcessResult {
 		get;
 	}
 
+	/// <summary>
+	/// Initializes a new instance of the ProcessResult class.
+	/// </summary>
 	internal ProcessResult(
 		int? exitCode,
 		bool wasCanceled,

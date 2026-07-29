@@ -1,7 +1,13 @@
-﻿namespace Icod.CoreUtils.DD;
+namespace Icod.CoreUtils.DD;
 
 using Icod.CoreUtils.Shared.Diagnostics;
 
+/// <summary>
+/// Coordinates the asynchronous <c>dd</c> read, conversion, seek, write, and statistics pipeline.
+/// </summary>
+/// <remarks>
+/// The engine honors block sizes, byte-count operands, full-block accumulation, conversion state, cancellation, and signal-triggered status reports without taking ownership of caller-provided streams.
+/// </remarks>
 internal sealed class DdCopyEngine {
 	private readonly CommandContext myContext;
 	private readonly DdConversionPipeline myConversions;
@@ -12,6 +18,16 @@ internal sealed class DdCopyEngine {
 	private readonly DdStatistics myStatistics;
 	private int mySignalReportRequested;
 
+	/// <summary>
+	/// Initializes the copy engine with validated options, caller-owned streams, command context, and reporting state.
+	/// </summary>
+	/// <param name="options">The validated <c>dd</c> operand state.</param>
+	/// <param name="input">The input stream from which blocks are read.</param>
+	/// <param name="output">The output stream to which transformed blocks are written.</param>
+	/// <param name="context">The command context that supplies standard streams, diagnostics, and cancellation.</param>
+	/// <param name="statistics">The transfer counters read or updated by the operation.</param>
+	/// <param name="reporter">The reporter used for progress, signal, and final statistics.</param>
+	/// <exception cref="ArgumentNullException">A required option, stream, context, statistics, or reporter argument is <see langword="null"/>.</exception>
 	public DdCopyEngine(
 		DdOptions options,
 		Stream input,
@@ -50,11 +66,18 @@ internal sealed class DdCopyEngine {
 		);
 	}
 
+	/// <summary>
+	/// Records a thread-safe request to emit transfer statistics at the next safe copy-loop opportunity.
+	/// </summary>
 	public void RequestSignalReport() => Interlocked.Exchange(
 		ref this.mySignalReportRequested,
 		1
 	);
 
+	/// <summary>
+	/// Copies the requested input range through the conversion pipeline and commits the resulting output blocks.
+	/// </summary>
+	/// <returns>A task that represents the asynchronous operation.</returns>
 	public async Task CopyAsync() {
 		await this.SkipInputAsync().ConfigureAwait( false );
 		this.PrepareOutput();
@@ -293,6 +316,12 @@ internal sealed class DdCopyEngine {
 	}
 }
 
+/// <summary>
+/// Buffers and commits <c>dd</c> output blocks while applying seek, append, sparse, and synchronization semantics.
+/// </summary>
+/// <remarks>
+/// The sink tracks logical output position separately from buffered data so zero blocks can become holes on seekable outputs and record statistics remain accurate.
+/// </remarks>
 internal sealed class DdOutputSink {
 	private readonly byte[] myBuffer;
 	private int myBufferLength;
@@ -303,8 +332,22 @@ internal sealed class DdOutputSink {
 	private readonly DdStatistics myStatistics;
 	private long myLogicalPosition;
 
+	/// <summary>
+	/// Gets whether the underlying output supports positioning required by seek and sparse operations.
+	/// </summary>
+	/// <value><see langword="true"/> when the underlying output stream supports seeking.</value>
 	public bool CanSeek => this.myOutput.CanSeek;
 
+	/// <summary>
+	/// Initializes an output sink with buffering, sparse, append, synchronization, and statistics policies.
+	/// </summary>
+	/// <param name="output">The output stream to which transformed blocks are written.</param>
+	/// <param name="blockSize">The output block size used for buffering and record accounting.</param>
+	/// <param name="sparse"><see langword="true"/> to represent complete zero blocks as seek-created holes when possible.</param>
+	/// <param name="append"><see langword="true"/> to preserve append semantics instead of positioning the destination explicitly.</param>
+	/// <param name="synchronizeWrites"><see langword="true"/> to flush each committed block before continuing.</param>
+	/// <param name="statistics">The transfer counters read or updated by the operation.</param>
+	/// <exception cref="ArgumentNullException"><paramref name="output"/> or <paramref name="statistics"/> is <see langword="null"/>.</exception>
 	public DdOutputSink(
 		Stream output,
 		int blockSize,
@@ -329,6 +372,13 @@ internal sealed class DdOutputSink {
 		;
 	}
 
+	/// <summary>
+	/// Buffers or writes converted output while preserving block statistics and sparse-zero-block behavior.
+	/// </summary>
+	/// <param name="data">The byte region to transform in place.</param>
+	/// <param name="preserveBlockBoundary"><see langword="true"/> when the supplied data represents one logical output block for statistics and sparse handling.</param>
+	/// <param name="cancellationToken">The token used to cancel buffered or direct output writes.</param>
+	/// <returns>A task that represents the asynchronous operation.</returns>
 	public async Task WriteAsync(
 		ReadOnlyMemory<byte> data,
 		bool preserveBlockBoundary,
@@ -380,6 +430,11 @@ internal sealed class DdOutputSink {
 		}
 	}
 
+	/// <summary>
+	/// Positions the output before copying and optionally truncates it at the starting offset.
+	/// </summary>
+	/// <param name="offset">The absolute byte offset at which output begins.</param>
+	/// <param name="truncateAtOffset"><see langword="true"/> to truncate seekable output at the prepared offset before writing.</param>
 	public void Prepare(
 		long offset,
 		bool truncateAtOffset
@@ -404,6 +459,11 @@ internal sealed class DdOutputSink {
 		this.myLogicalPosition = offset;
 	}
 
+	/// <summary>
+	/// Writes the final partial output block and completes pending synchronization.
+	/// </summary>
+	/// <param name="cancellationToken">The token used to cancel the final write or flush.</param>
+	/// <returns>A task that represents the asynchronous operation.</returns>
 	public async Task CompleteAsync(
 		CancellationToken cancellationToken
 	) {

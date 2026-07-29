@@ -1,5 +1,11 @@
-﻿namespace Icod.CoreUtils.DD;
+namespace Icod.CoreUtils.DD;
 
+/// <summary>
+/// Provides the fixed translation tables and ASCII case conversions used by <c>dd</c>.
+/// </summary>
+/// <remarks>
+/// Conversions operate in place on bytes and intentionally avoid culture-sensitive character processing.
+/// </remarks>
 internal static class DdConversions {
 	private static readonly byte[] EbcdicToAscii = [
 		0x00, 0x01, 0x02, 0x03, 0x9C, 0x09, 0x86, 0x7F, 0x97, 0x8D, 0x8E, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
@@ -58,6 +64,10 @@ internal static class DdConversions {
 		0xDC, 0xDD, 0xDE, 0xDF, 0xEA, 0xEB, 0xEC, 0xED, 0xEE, 0xEF, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, 0xFF,
 	];
 
+	/// <summary>
+	/// Translates each byte in place from the GNU EBCDIC table to ASCII.
+	/// </summary>
+	/// <param name="data">The byte region to transform in place.</param>
 	public static void TranslateFromEbcdic(
 		Span<byte> data
 	) => Translate(
@@ -65,6 +75,10 @@ internal static class DdConversions {
 		EbcdicToAscii
 	);
 
+	/// <summary>
+	/// Translates each byte in place from ASCII to the standard GNU EBCDIC table.
+	/// </summary>
+	/// <param name="data">The byte region to transform in place.</param>
 	public static void TranslateToEbcdic(
 		Span<byte> data
 	) => Translate(
@@ -72,6 +86,10 @@ internal static class DdConversions {
 		AsciiToEbcdic
 	);
 
+	/// <summary>
+	/// Translates each byte in place from ASCII to the alternate IBM EBCDIC table.
+	/// </summary>
+	/// <param name="data">The byte region to transform in place.</param>
 	public static void TranslateToIbm(
 		Span<byte> data
 	) => Translate(
@@ -79,6 +97,10 @@ internal static class DdConversions {
 		AsciiToIbm
 	);
 
+	/// <summary>
+	/// Converts ASCII uppercase letters in place while leaving all other byte values unchanged.
+	/// </summary>
+	/// <param name="data">The byte region to transform in place.</param>
 	public static void ToLowerAscii(
 		Span<byte> data
 	) {
@@ -92,6 +114,10 @@ internal static class DdConversions {
 		}
 	}
 
+	/// <summary>
+	/// Converts ASCII lowercase letters in place while leaving all other byte values unchanged.
+	/// </summary>
+	/// <param name="data">The byte region to transform in place.</param>
 	public static void ToUpperAscii(
 		Span<byte> data
 	) {

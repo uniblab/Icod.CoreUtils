@@ -4,8 +4,16 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
+/// <summary>
+/// Provides the executable entry point for the GNU-compatible <c>tail</c> command for writing the trailing portion of files or standard input.
+/// </summary>
 public static class Program {
 
+	/// <summary>
+	/// Runs the <c>tail</c> command using both the text and binary process console streams, and converts a console interrupt into a cancellation request.
+	/// </summary>
+	/// <param name="args">The command-line arguments supplied to <c>tail</c>.</param>
+	/// <returns>A task whose result is the command exit status.</returns>
 	public static async Task<int> Main(
 		string[] args
 	) {
@@ -17,7 +25,6 @@ public static class Program {
 				eventArgs.Cancel = true;
 				cancellation.Cancel();
 			};
-
 			return await Command.RunAsync(
 				args,
 				stdin: Console.In,

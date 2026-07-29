@@ -25,6 +25,9 @@ public sealed class OptionTokenRewriteRule {
 		);
 	}
 
+	/// <summary>
+	/// Performs the rewrite operation.
+	/// </summary>
 	internal IReadOnlyList<string>? Rewrite(
 		string token
 	) {
