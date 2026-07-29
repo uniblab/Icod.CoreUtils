@@ -1,6 +1,13 @@
 namespace Icod.CoreUtils.Arch;
-
+/// <summary>
+/// Provides the executable entry point for the GNU-compatible <c>arch</c> command for reporting the machine hardware name.
+/// </summary>
 public static class Program {
+	/// <summary>
+	/// Runs the <c>arch</c> command using the process console and converts a console interrupt into a cancellation request.
+	/// </summary>
+	/// <param name="args">The command-line arguments supplied to <c>arch</c>.</param>
+	/// <returns>A task whose result is the command exit status.</returns>
 	public static async Task<int> Main( string[] args ) {
 		using var cancellation = new CancellationTokenSource();
 		ConsoleCancelEventHandler handler = ( _, eventArgs ) => {
