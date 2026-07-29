@@ -1,4 +1,4 @@
-namespace Icod.CoreUtils.Sed;
+namespace Icod.LineEditor.Sed;
 
 using System.Threading;
 using System.Threading.Tasks;

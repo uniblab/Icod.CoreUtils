@@ -1,7 +1,7 @@
 // Original behavior/reference: ed (Ken Thompson)
 // Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
 
-namespace Icod.CoreUtils.Ed;
+namespace Icod.LineEditor.Ed;
 
 using System;
 using System.Collections.Generic;

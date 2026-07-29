@@ -1,7 +1,7 @@
 // Original behavior/reference: sed (Lee E. McMahon)
 // Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
 
-namespace Icod.CoreUtils.Sed;
+namespace Icod.LineEditor.Sed;
 
 using System;
 using System.Collections.Generic;
@@ -67,7 +67,7 @@ public static class Command {
 	private const int DefaultListWidth = 70;
 	private const int ErrorExitCode = CommandExitCodes.Failure;
 	private const int UsageExitCode = CommandExitCodes.UsageError;
-	private const string VersionText = "Icod.CoreUtils.Sed 1.0";
+	private const string VersionText = "Icod.LineEditor.Sed 1.0";
 	#endregion fields
 
 

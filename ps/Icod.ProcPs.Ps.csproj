@@ -9,7 +9,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <OutputPath>..\bin\$(Configuration)\</OutputPath>
     <AssemblyName>ps</AssemblyName>
-    <RootNamespace>Icod.CoreUtils.Ps</RootNamespace>
+    <RootNamespace>Icod.ProcPs.Ps</RootNamespace>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
