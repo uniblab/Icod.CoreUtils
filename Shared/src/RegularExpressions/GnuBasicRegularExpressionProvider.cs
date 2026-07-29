@@ -36,13 +36,14 @@ public sealed class GnuBasicRegularExpressionProvider : IRegularExpressionProvid
 			cancellationToken
 		);
 		var parseResult = parser.Parse();
-		if ( null is parseResult.Expression ) {
+		var expression = parseResult.Expression;
+		if ( expression is null ) {
 			return RegularExpressionCompileResult.Failed( parseResult.Diagnostic! );
 		}
 		return RegularExpressionCompileResult.Succeeded(
 			new GnuBasicCompiledRegularExpression(
 				pattern,
-				parseResult.Expression,
+				expression,
 				parseResult.CaptureCount,
 				options,
 				characterClassProvider

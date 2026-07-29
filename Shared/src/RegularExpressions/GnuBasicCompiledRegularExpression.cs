@@ -60,13 +60,13 @@ internal sealed class GnuBasicCompiledRegularExpression : ICompiledRegularExpres
 				RegexMatchState? best = null;
 				var initial = new RegexMatchState( start, CaptureCount );
 				foreach ( var candidate in expression.Match( context, initial ) ) {
-					if ( null is best || candidate.Position > best.Position ) {
+					if ( best is null || candidate.Position > best.Position ) {
 						best = candidate;
 					}
 				}
-				if ( null is not best ) {
+				if ( best is RegexMatchState selected ) {
 					return RegularExpressionMatchResult.Succeeded(
-						CreatePublicMatch( decodedInput, start, best, cancellationToken )
+						CreatePublicMatch( decodedInput, start, selected, cancellationToken )
 					);
 				}
 			}
@@ -102,12 +102,12 @@ internal sealed class GnuBasicCompiledRegularExpression : ICompiledRegularExpres
 		for ( var captureIndex = 0; CaptureCount > captureIndex; captureIndex++ ) {
 			cancellationToken.ThrowIfCancellationRequested();
 			var capture = state.Captures[ captureIndex ];
-			if ( null is capture ) {
+			if ( capture is not RegexCaptureSpan captureSpan ) {
 				captures[ captureIndex ] = new( false, -1, 0, null );
 				continue;
 			}
-			var utf16Start = input.GetUtf16Index( capture.Value.Start );
-			var utf16End = input.GetUtf16Index( capture.Value.End );
+			var utf16Start = input.GetUtf16Index( captureSpan.Start );
+			var utf16End = input.GetUtf16Index( captureSpan.End );
 			captures[ captureIndex ] = new(
 				true,
 				utf16Start,
@@ -164,7 +164,10 @@ internal sealed class RegexMatchStateComparer : IEqualityComparer<RegexMatchStat
 		if ( ReferenceEquals( left, right ) ) {
 			return true;
 		}
-		if ( null is left || null is right || left.Position != right.Position ) {
+		if ( left is null || right is null ) {
+			return false;
+		}
+		if ( left.Position != right.Position ) {
 			return false;
 		}
 		if ( left.Captures.Length != right.Captures.Length ) {

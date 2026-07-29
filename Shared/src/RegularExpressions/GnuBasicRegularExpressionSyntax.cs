@@ -260,10 +260,10 @@ internal sealed class BackReferenceRegexNode( int captureNumber ) : RegexNode {
 	internal override IEnumerable<RegexMatchState> Match( RegexMatchContext context, RegexMatchState state ) {
 		context.CancellationToken.ThrowIfCancellationRequested();
 		var capture = state.Captures[ captureNumber - 1 ];
-		if ( null is capture ) {
+		if ( capture is not RegexCaptureSpan captureSpan ) {
 			yield break;
 		}
-		var length = capture.Value.End - capture.Value.Start;
+		var length = captureSpan.End - captureSpan.Start;
 		if ( length > context.Input.Length - state.Position ) {
 			yield break;
 		}
@@ -271,7 +271,7 @@ internal sealed class BackReferenceRegexNode( int captureNumber ) : RegexNode {
 			context.CancellationToken.ThrowIfCancellationRequested();
 			if (
 				!context.CharacterClassProvider.AreCharactersEqual(
-					context.Input[ capture.Value.Start + offset ],
+					context.Input[ captureSpan.Start + offset ],
 					context.Input[ state.Position + offset ],
 					context.Options.IgnoreCase
 				)
@@ -306,14 +306,14 @@ internal sealed class RepeatRegexNode : RegexNode {
 				var frame = stack.Peek();
 				if ( !frame.IsInitialized ) {
 					frame.IsInitialized = true;
-					if ( null is maximum || frame.Count < maximum.Value ) {
+					if ( maximum is not int maximumValue || frame.Count < maximumValue ) {
 						frame.Children = expression.Match( context, frame.State ).GetEnumerator();
 					}
 				}
 
 				var descended = false;
 				var children = frame.Children;
-				if ( null is not children ) {
+				if ( children is not null ) {
 					while ( children.MoveNext() ) {
 						context.CancellationToken.ThrowIfCancellationRequested();
 						var child = children.Current;

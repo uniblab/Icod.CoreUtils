@@ -11,7 +11,7 @@ public sealed class RegularExpressionCompileResult {
 	}
 
 	/// <summary>Gets whether compilation succeeded.</summary>
-	public bool IsSuccess => null is not Expression;
+	public bool IsSuccess => Expression is not null;
 
 	/// <summary>Gets the compiled expression when compilation succeeded.</summary>
 	public ICompiledRegularExpression? Expression { get; }

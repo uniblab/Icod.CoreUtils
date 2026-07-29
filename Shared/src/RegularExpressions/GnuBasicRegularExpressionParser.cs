@@ -31,7 +31,7 @@ internal sealed class GnuBasicRegularExpressionParser {
 	internal GnuBasicParseResult Parse() {
 		cancellationToken.ThrowIfCancellationRequested();
 		var expression = ParseAlternation( false, 0 );
-		if ( null is diagnostic && pattern.Length != index ) {
+		if ( diagnostic is null && pattern.Length != index ) {
 			if ( IsEscapedOperator( index, ')' ) ) {
 				Fail(
 					RegularExpressionDiagnosticCode.UnmatchedClosingSubexpression,
@@ -51,7 +51,7 @@ internal sealed class GnuBasicRegularExpressionParser {
 		var alternatives = new List<RegexNode>();
 		while ( true ) {
 			alternatives.Add( ParseSequence( insideSubexpression, nestingDepth ) );
-			if ( null is not diagnostic || !IsEscapedOperator( index, '|' ) ) {
+			if ( diagnostic is not null || !IsEscapedOperator( index, '|' ) ) {
 				break;
 			}
 			index += 2;
@@ -66,7 +66,7 @@ internal sealed class GnuBasicRegularExpressionParser {
 		var nodes = new List<RegexNode>();
 		var atBranchStart = true;
 		while (
-			null is diagnostic
+			diagnostic is null
 			&& pattern.Length > index
 			&& !IsEscapedOperator( index, '|' )
 			&& !( insideSubexpression && IsEscapedOperator( index, ')' ) )
@@ -82,7 +82,7 @@ internal sealed class GnuBasicRegularExpressionParser {
 			} else {
 				atom = ParseAtom( nestingDepth );
 			}
-			if ( null is diagnostic ) {
+			if ( diagnostic is null ) {
 				nodes.Add( ParseRepetition( atom ) );
 			}
 			atBranchStart = false;
@@ -133,7 +133,7 @@ internal sealed class GnuBasicRegularExpressionParser {
 				index += 2;
 				var captureNumber = ++captureCount;
 				var expression = ParseAlternation( true, nestingDepth + 1 );
-				if ( null is diagnostic ) {
+				if ( diagnostic is null ) {
 					if ( !IsEscapedOperator( index, ')' ) ) {
 						Fail(
 							RegularExpressionDiagnosticCode.UnterminatedSubexpression,
@@ -221,13 +221,13 @@ internal sealed class GnuBasicRegularExpressionParser {
 	}
 
 	private RegexNode ParseRepetition( ParsedAtom atom ) {
-		if ( null is diagnostic || pattern.Length <= index || !atom.IsRepeatable ) {
+		if ( diagnostic is not null || pattern.Length <= index || !atom.IsRepeatable ) {
 			return atom.Node;
 		}
 		var node = atom.Node;
 		var hasRepetition = false;
 		var repetitionDepth = 0;
-		while ( null is diagnostic && pattern.Length > index ) {
+		while ( diagnostic is null && pattern.Length > index ) {
 			int minimum;
 			int? maximum;
 			var repetitionIndex = index;
@@ -330,8 +330,8 @@ internal sealed class GnuBasicRegularExpressionParser {
 		index += 2;
 		if (
 			MaximumInterval < minimum
-			|| ( null is not maximum && MaximumInterval < maximum.Value )
-			|| ( null is not maximum && minimum > maximum.Value )
+			|| ( maximum is int maximumValue
+				&& ( MaximumInterval < maximumValue || minimum > maximumValue ) )
 		) {
 			Fail(
 				RegularExpressionDiagnosticCode.InvalidInterval,
@@ -372,24 +372,24 @@ internal sealed class GnuBasicRegularExpressionParser {
 				return EmptyRegexNode.Instance;
 			}
 			var element = ParseBracketElement();
-			if ( null is diagnostic ) {
+			if ( diagnostic is null ) {
 				if (
-					null is not element.RangeEndpoint
+					element.RangeEndpoint is Rune rangeStart
 					&& pattern.Length > index + 1
 					&& '-' == pattern[ index ]
 					&& ']' != pattern[ index + 1 ]
 				) {
 					index++;
 					var endElement = ParseBracketElement();
-					if ( null is endElement.RangeEndpoint ) {
+					if ( endElement.RangeEndpoint is not Rune rangeEnd ) {
 						Fail(
 							RegularExpressionDiagnosticCode.InvalidRange,
 							"a bracket range endpoint must be one collating element",
 							index
 						);
 					} else if ( 0 < characterClassProvider.Compare(
-						element.RangeEndpoint.Value,
-						endElement.RangeEndpoint.Value,
+						rangeStart,
+						rangeEnd,
 						options.IgnoreCase
 					) ) {
 						if ( options.AllowEmptyRanges ) {
@@ -402,14 +402,14 @@ internal sealed class GnuBasicRegularExpressionParser {
 							);
 						}
 					} else {
-						terms.Add( new BracketRangeTerm( element.RangeEndpoint.Value, endElement.RangeEndpoint.Value ) );
+						terms.Add( new BracketRangeTerm( rangeStart, rangeEnd ) );
 					}
 				} else {
 					terms.Add( element.Term );
 				}
 			}
 			first = false;
-			if ( null is not diagnostic ) {
+			if ( diagnostic is not null ) {
 				return EmptyRegexNode.Instance;
 			}
 		}

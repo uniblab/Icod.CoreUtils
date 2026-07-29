@@ -17,7 +17,7 @@ This repository is a broad attempt at porting the BSD/Linux coreutils to .net.
 Primary targets are windows-latest, ubuntu-latest, and macos-latest. 
 I am making a "best effort" at supporting BSD. 
 
-Seven non-Coreutils programs are also in scope: `diff`, `ed`, `grep`, `patch`, `ps`, `sed`, and `tar`. 
+Six non-Coreutils programs are also in scope: `ed`, `grep`, `patch`, `ps`, `sed`, and `tar`. 
 
 ## Eventual Plan
 
@@ -349,15 +349,15 @@ Add secure, exclusive file and directory creation, template validation, `TMPDIR`
 
 ### Completion Gate C1 — before Batch 16
 
-* [ ] Add the shared regular-expression foundation:
+* [x] Add the shared regular-expression foundation:
 
-  * [ ] GNU basic regular-expression syntax and matching policy;
-  * [ ] leftmost-longest matching behavior;
-  * [ ] anchoring, captures, and back-references;
-  * [ ] locale-aware character-class abstraction;
-  * [ ] deterministic compilation and matching diagnostics;
-  * [ ] explicit documentation of differences from `System.Text.RegularExpressions`;
-  * [ ] injectable and testable matching providers.
+  * [x] GNU basic regular-expression syntax and matching policy;
+  * [x] leftmost-longest matching behavior;
+  * [x] anchoring, captures, and back-references;
+  * [x] locale-aware character-class abstraction;
+  * [x] deterministic compilation and matching diagnostics;
+  * [x] explicit documentation of differences from `System.Text.RegularExpressions`;
+  * [x] injectable and testable matching providers.
 
 This gate prevents `expr` from introducing an isolated regular-expression implementation. The same foundation will later be extended and reused by `grep`, `csplit`, and `ed`.
 
@@ -509,11 +509,21 @@ Reuse the regex policy established by `grep` for `csplit`, including numeric and
 
 For `pr`, implement columns, page geometry, headers and footers, form feeds, dates, numbering, merge modes, separators, and terminal-independent output.
 
-### Batch 30 — Difference engine (1 tool)
+### Batch 30 — Diffutils extraction milestone
 
-- [ ] `diff`
+- [ ] Remove `diff` from the Icod.CoreUtils solution and repository.
+- [ ] Transfer the existing `diff` implementation and history to Icod.DiffUtils.
+- [ ] Establish the Icod.DiffUtils solution and CI conventions.
+- [ ] Add projects for `cmp`, `diff`, `diff3`, and `sdiff`.
+- [ ] Establish Icod.DiffUtils.Shared for suite-specific comparison,
+      differencing, merging, and output-format infrastructure.
+- [ ] Record GNU Diffutils 3.12 as the initial authoritative baseline.
+- [ ] Establish cross-repository compatibility tests for `patch` and `ed`.
 
-Implement an actual sequence-difference algorithm, normal/context/unified/ed formats, whitespace and case policies, labels, function context, binary handling, recursive directory comparison, absent-file policy, and statuses 0 for no differences, 1 for differences, and greater than 1 for errors.
+Implementation and conformance work for `cmp`, `diff`, `diff3`, and `sdiff`
+continues under the Icod.DiffUtils roadmap. Completion of this milestone means
+that ownership has been transferred cleanly; it does not mean that the four
+Diffutils commands are complete.
 
 ### Completion Gate E2 — before Batch 31
 

@@ -16,7 +16,7 @@ public sealed class RegularExpressionMatchResult {
 	public bool IsSuccess { get; }
 
 	/// <summary>Gets whether a match was found.</summary>
-	public bool IsMatch => null is not Match;
+	public bool IsMatch => Match is not null;
 
 	/// <summary>Gets the selected leftmost-longest match, or <see langword="null"/> when none was found.</summary>
 	public RegularExpressionMatch? Match { get; }
