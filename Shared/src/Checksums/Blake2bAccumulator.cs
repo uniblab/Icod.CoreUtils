@@ -3,6 +3,9 @@ namespace Icod.CoreUtils.Shared.Checksums;
 using System.Buffers.Binary;
 using System.Numerics;
 
+/// <summary>
+/// Provides the blake2b accumulator implementation.
+/// </summary>
 internal sealed class Blake2bAccumulator : IChecksumAccumulator {
 
 	private static readonly ulong[] InitializationVector = new ulong[] {
@@ -39,6 +42,9 @@ internal sealed class Blake2bAccumulator : IChecksumAccumulator {
 	private ulong myTotalHigh;
 	private ulong myTotalLow;
 
+	/// <summary>
+	/// Initializes a new instance of the Blake2bAccumulator class.
+	/// </summary>
 	public Blake2bAccumulator(
 		int digestLength
 	) {
@@ -60,6 +66,9 @@ internal sealed class Blake2bAccumulator : IChecksumAccumulator {
 		);
 	}
 
+	/// <summary>
+	/// Performs the append operation.
+	/// </summary>
 	public void Append(
 		ReadOnlySpan<byte> data
 	) {
@@ -127,6 +136,9 @@ internal sealed class Blake2bAccumulator : IChecksumAccumulator {
 		}
 	}
 
+	/// <summary>
+	/// Completes the operation and returns its result.
+	/// </summary>
 	public byte[] Complete(
 		long length
 	) {
@@ -169,6 +181,9 @@ internal sealed class Blake2bAccumulator : IChecksumAccumulator {
 		).ToArray();
 	}
 
+	/// <summary>
+	/// Releases resources used by this instance.
+	/// </summary>
 	public void Dispose() {
 		Array.Clear(
 			this.myBuffer

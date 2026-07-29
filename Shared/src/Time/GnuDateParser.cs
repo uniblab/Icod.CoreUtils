@@ -1,8 +1,15 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace Icod.CoreUtils.Shared.Time;
 
+/// <summary>
+/// Represents date parse result.
+/// </summary>
+/// <param name="Success">The success value.</param>
+/// <param name="Value">The value value.</param>
+/// <param name="TimeZone">The time zone value.</param>
+/// <param name="Diagnostic">The diagnostic value.</param>
 public sealed record DateParseResult(
     bool Success,
     DateTimeOffset Value,
@@ -10,8 +17,14 @@ public sealed record DateParseResult(
     string Diagnostic
 );
 
+/// <summary>
+/// Provides gnu date parser operations.
+/// </summary>
 public static partial class GnuDateParser
 {
+    /// <summary>
+    /// Performs the parse operation.
+    /// </summary>
     public static DateParseResult Parse(
         string input,
         DateTimeOffset baseTime,

@@ -4,6 +4,12 @@ namespace Icod.CoreUtils.Shared.FileSystem;
 /// Describes the host operating system APIs available for durable flush and sparse-file operations.
 /// Individual filesystems may still reject an operation that the operating system exposes.
 /// </summary>
+/// <param name="SupportsDataOnlyFileFlush">The supports data only file flush value.</param>
+/// <param name="SupportsDataAndMetadataFileFlush">The supports data and metadata file flush value.</param>
+/// <param name="SupportsFileSystemFlush">The supports file system flush value.</param>
+/// <param name="SupportsGlobalFlush">The supports global flush value.</param>
+/// <param name="SupportsSparseExtension">The supports sparse extension value.</param>
+/// <param name="SupportsAllocatedRangeQuery">The supports allocated range query value.</param>
 public sealed record FileSystemCapabilities(
 	bool SupportsDataOnlyFileFlush,
 	bool SupportsDataAndMetadataFileFlush,
@@ -124,6 +130,9 @@ public sealed class FileAllocationMap {
 }
 
 /// <summary>Describes a completed sparse-extension request.</summary>
+/// <param name="OriginalLength">The original length value.</param>
+/// <param name="NewLength">The new length value.</param>
+/// <param name="Allocation">The allocation value.</param>
 public sealed record SparseExtensionInfo(
 	long OriginalLength,
 	long NewLength,

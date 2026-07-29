@@ -36,6 +36,9 @@ public sealed class OptionParseError {
 		get;
 	}
 
+	/// <summary>
+	/// Initializes a new instance of the OptionParseError class.
+	/// </summary>
 	internal OptionParseError(
 		OptionParseErrorKind kind,
 		int argumentIndex,

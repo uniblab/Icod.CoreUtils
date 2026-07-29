@@ -3,6 +3,10 @@ namespace Icod.CoreUtils.Shared.Numerics;
 /// <summary>
 /// Contains the result of parsing a floating-point quantity.
 /// </summary>
+/// <param name="IsSuccess">The is success value.</param>
+/// <param name="Value">The value value.</param>
+/// <param name="ErrorKind">The error kind value.</param>
+/// <param name="Suffix">The suffix value.</param>
 public readonly record struct FloatingQuantityParseResult(
 	bool IsSuccess,
 	double Value,

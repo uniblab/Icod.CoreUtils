@@ -48,6 +48,9 @@ public sealed class OptionParseResult {
 
 	}
 
+	/// <summary>
+	/// Initializes a new instance of the OptionParseResult class.
+	/// </summary>
 	internal OptionParseResult(
 		IEnumerable<OptionOccurrence> options,
 		IEnumerable<string> operands,

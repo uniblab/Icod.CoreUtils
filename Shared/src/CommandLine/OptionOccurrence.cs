@@ -30,6 +30,9 @@ public sealed class OptionOccurrence {
 		get;
 	}
 
+	/// <summary>
+	/// Initializes a new instance of the OptionOccurrence class.
+	/// </summary>
 	internal OptionOccurrence(
 		OptionDefinition definition,
 		string spelling,

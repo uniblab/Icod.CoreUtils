@@ -3,6 +3,9 @@ namespace Icod.CoreUtils.Shared.Checksums;
 using System.Buffers.Binary;
 using System.Numerics;
 
+/// <summary>
+/// Provides the sm3 accumulator implementation.
+/// </summary>
 internal sealed class Sm3Accumulator : IChecksumAccumulator {
 
 	private readonly byte[] myBuffer = new byte[ 64 ];
@@ -20,6 +23,9 @@ internal sealed class Sm3Accumulator : IChecksumAccumulator {
 	};
 	private ulong myTotalLength;
 
+	/// <summary>
+	/// Performs the append operation.
+	/// </summary>
 	public void Append(
 		ReadOnlySpan<byte> data
 	) {
@@ -57,6 +63,9 @@ internal sealed class Sm3Accumulator : IChecksumAccumulator {
 		}
 	}
 
+	/// <summary>
+	/// Completes the operation and returns its result.
+	/// </summary>
 	public byte[] Complete(
 		long length
 	) {
@@ -111,6 +120,9 @@ internal sealed class Sm3Accumulator : IChecksumAccumulator {
 		return output;
 	}
 
+	/// <summary>
+	/// Releases resources used by this instance.
+	/// </summary>
 	public void Dispose() {
 		Array.Clear(
 			this.myBuffer

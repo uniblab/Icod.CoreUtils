@@ -3,6 +3,9 @@ namespace Icod.CoreUtils.Shared.Checksums;
 using System.Buffers.Binary;
 using System.Numerics;
 
+/// <summary>
+/// Provides the sha224 accumulator implementation.
+/// </summary>
 internal sealed class Sha224Accumulator : IChecksumAccumulator {
 
 	private static readonly uint[] Constants = new uint[] {
@@ -39,6 +42,9 @@ internal sealed class Sha224Accumulator : IChecksumAccumulator {
 	};
 	private ulong myTotalLength;
 
+	/// <summary>
+	/// Performs the append operation.
+	/// </summary>
 	public void Append(
 		ReadOnlySpan<byte> data
 	) {
@@ -76,6 +82,9 @@ internal sealed class Sha224Accumulator : IChecksumAccumulator {
 		}
 	}
 
+	/// <summary>
+	/// Completes the operation and returns its result.
+	/// </summary>
 	public byte[] Complete(
 		long length
 	) {
@@ -130,6 +139,9 @@ internal sealed class Sha224Accumulator : IChecksumAccumulator {
 		return output;
 	}
 
+	/// <summary>
+	/// Releases resources used by this instance.
+	/// </summary>
 	public void Dispose() {
 		Array.Clear(
 			this.myBuffer

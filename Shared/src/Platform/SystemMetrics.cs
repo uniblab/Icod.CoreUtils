@@ -1,8 +1,17 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Globalization;
 
 namespace Icod.CoreUtils.Shared.Platform;
 
+/// <summary>
+/// Represents system metrics snapshot.
+/// </summary>
+/// <param name="CurrentTime">The current time value.</param>
+/// <param name="Uptime">The uptime value.</param>
+/// <param name="UserCount">The user count value.</param>
+/// <param name="LoadAverageOneMinute">The load average one minute value.</param>
+/// <param name="LoadAverageFiveMinutes">The load average five minutes value.</param>
+/// <param name="LoadAverageFifteenMinutes">The load average fifteen minutes value.</param>
 public sealed record SystemMetricsSnapshot(
     DateTimeOffset CurrentTime,
     TimeSpan Uptime,
@@ -12,23 +21,39 @@ public sealed record SystemMetricsSnapshot(
     double LoadAverageFifteenMinutes
 );
 
+/// <summary>
+/// Supplies host and container-aware system metrics.
+/// </summary>
 public interface ISystemMetricsProvider
 {
+    /// <summary>Asynchronously captures the current system metrics.</summary>
+    /// <param name="container">Whether container-aware metrics should be preferred.</param>
+    /// <param name="cancellationToken">A token that can cancel the operation.</param>
+    /// <returns>The captured system metrics.</returns>
     ValueTask<SystemMetricsSnapshot> GetSnapshotAsync(
         bool container,
         CancellationToken cancellationToken = default
     );
 }
 
+/// <summary>
+/// Provides the system metrics provider implementation.
+/// </summary>
 public sealed class SystemMetricsProvider : ISystemMetricsProvider
 {
     private readonly IUserInformationProvider _users;
 
+    /// <summary>
+    /// Performs the system metrics provider operation.
+    /// </summary>
     public SystemMetricsProvider(IUserInformationProvider? users = null)
     {
         _users = users ?? new SystemUserInformationProvider();
     }
 
+    /// <summary>
+    /// Gets snapshot async.
+    /// </summary>
     public async ValueTask<SystemMetricsSnapshot> GetSnapshotAsync(
         bool container,
         CancellationToken cancellationToken = default

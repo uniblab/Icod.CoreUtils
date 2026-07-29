@@ -4,6 +4,8 @@ using System.Globalization;
 using System.Text;
 
 /// <summary>Describes the result of decoding GNU command-line escape sequences.</summary>
+/// <param name="Text">The text value.</param>
+/// <param name="StopOutput">The stop output value.</param>
 public sealed record GnuEscapeDecodeResult(
 	string Text,
 	bool StopOutput

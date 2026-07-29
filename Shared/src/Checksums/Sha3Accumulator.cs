@@ -3,6 +3,9 @@ namespace Icod.CoreUtils.Shared.Checksums;
 using System.Buffers.Binary;
 using System.Numerics;
 
+/// <summary>
+/// Provides the sha3 accumulator implementation.
+/// </summary>
 internal sealed class Sha3Accumulator : IChecksumAccumulator {
 
 	private static readonly ulong[] RoundConstants = new ulong[] {
@@ -47,6 +50,9 @@ internal sealed class Sha3Accumulator : IChecksumAccumulator {
 	private readonly int myRate;
 	private readonly ulong[] myState = new ulong[ 25 ];
 
+	/// <summary>
+	/// Initializes a new instance of the Sha3Accumulator class.
+	/// </summary>
 	public Sha3Accumulator(
 		int digestLength
 	) {
@@ -65,6 +71,9 @@ internal sealed class Sha3Accumulator : IChecksumAccumulator {
 		];
 	}
 
+	/// <summary>
+	/// Performs the append operation.
+	/// </summary>
 	public void Append(
 		ReadOnlySpan<byte> data
 	) {
@@ -99,6 +108,9 @@ internal sealed class Sha3Accumulator : IChecksumAccumulator {
 		}
 	}
 
+	/// <summary>
+	/// Completes the operation and returns its result.
+	/// </summary>
 	public byte[] Complete(
 		long length
 	) {
@@ -150,6 +162,9 @@ internal sealed class Sha3Accumulator : IChecksumAccumulator {
 		return output;
 	}
 
+	/// <summary>
+	/// Releases resources used by this instance.
+	/// </summary>
 	public void Dispose() {
 		Array.Clear(
 			this.myBuffer

@@ -1428,20 +1428,44 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 
 	[StructLayout( LayoutKind.Sequential )]
 	private struct WindowsOverlapped {
+		/// <summary>
+		/// Stores the internal value.
+		/// </summary>
 		public IntPtr Internal;
+		/// <summary>
+		/// Stores the internal high value.
+		/// </summary>
 		public IntPtr InternalHigh;
+		/// <summary>
+		/// Stores the offset value.
+		/// </summary>
 		public uint Offset;
+		/// <summary>
+		/// Stores the offset high value.
+		/// </summary>
 		public uint OffsetHigh;
+		/// <summary>
+		/// Stores the event handle value.
+		/// </summary>
 		public IntPtr EventHandle;
 	}
 
 	[StructLayout( LayoutKind.Sequential )]
 	private struct NativeAllocatedRange {
+		/// <summary>
+		/// Stores the file offset value.
+		/// </summary>
 		public long FileOffset;
+		/// <summary>
+		/// Stores the length value.
+		/// </summary>
 		public long Length;
 	}
 
 	private static class NativeMethods {
+		/// <summary>
+		/// Performs the flush file buffers operation.
+		/// </summary>
 		[DllImport( "kernel32.dll", SetLastError = true )]
 		[return: MarshalAs( UnmanagedType.Bool )]
 		internal static extern bool FlushFileBuffers(
@@ -1450,6 +1474,9 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 
 
 
+		/// <summary>
+		/// Performs the open windows path operation.
+		/// </summary>
 		[DllImport(
 			"kernel32.dll",
 			EntryPoint = "CreateFileW",
@@ -1466,6 +1493,9 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			IntPtr templateFile
 		);
 
+		/// <summary>
+		/// Performs the device io control operation.
+		/// </summary>
 		[DllImport( "kernel32.dll", SetLastError = true )]
 		[return: MarshalAs( UnmanagedType.Bool )]
 		internal static extern bool DeviceIoControl(
@@ -1479,6 +1509,9 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			IntPtr overlapped
 		);
 
+		/// <summary>
+		/// Gets overlapped result.
+		/// </summary>
 		[DllImport( "kernel32.dll", SetLastError = true )]
 		[return: MarshalAs( UnmanagedType.Bool )]
 		internal static extern bool GetOverlappedResult(
@@ -1489,12 +1522,18 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 		);
 
 
+		/// <summary>
+		/// Performs the open unix path operation.
+		/// </summary>
 		[DllImport( "libc", EntryPoint = "open", SetLastError = true )]
 		internal static extern int OpenUnixPath(
 			string path,
 			int flags
 		);
 
+		/// <summary>
+		/// Performs the control file operation.
+		/// </summary>
 		[DllImport( "libc", EntryPoint = "fcntl", SetLastError = true )]
 		internal static extern int ControlFile(
 			int descriptor,
@@ -1502,29 +1541,47 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			int argument
 		);
 
+		/// <summary>
+		/// Performs the close file operation.
+		/// </summary>
 		[DllImport( "libc", EntryPoint = "close", SetLastError = true )]
 		internal static extern int CloseFile(
 			int descriptor
 		);
 
+		/// <summary>
+		/// Performs the flush data operation.
+		/// </summary>
 		[DllImport( "libc", EntryPoint = "fdatasync", SetLastError = true )]
 		internal static extern int FlushData(
 			int descriptor
 		);
 
+		/// <summary>
+		/// Performs the flush data and metadata operation.
+		/// </summary>
 		[DllImport( "libc", EntryPoint = "fsync", SetLastError = true )]
 		internal static extern int FlushDataAndMetadata(
 			int descriptor
 		);
 
+		/// <summary>
+		/// Performs the flush file system operation.
+		/// </summary>
 		[DllImport( "libc", EntryPoint = "syncfs", SetLastError = true )]
 		internal static extern int FlushFileSystem(
 			int descriptor
 		);
 
+		/// <summary>
+		/// Performs the flush all file systems operation.
+		/// </summary>
 		[DllImport( "libc", EntryPoint = "sync" )]
 		internal static extern void FlushAllFileSystems();
 
+		/// <summary>
+		/// Performs the seek operation.
+		/// </summary>
 		[DllImport( "libc", EntryPoint = "lseek", SetLastError = true )]
 		internal static extern long Seek(
 			int descriptor,

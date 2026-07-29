@@ -1273,6 +1273,9 @@ public static class BaseEncodingProcessor {
 		private long myColumn;
 		private bool myWroteData;
 
+		/// <summary>
+		/// Initializes a new instance of the WrappedAsciiWriter class.
+		/// </summary>
 		public WrappedAsciiWriter(
 			Stream output,
 			long wrapColumns
@@ -1281,6 +1284,9 @@ public static class BaseEncodingProcessor {
 			this.myWrapColumns = wrapColumns;
 		}
 
+		/// <summary>
+		/// Writes async.
+		/// </summary>
 		public async Task WriteAsync(
 			ReadOnlyMemory<byte> data,
 			CancellationToken cancellationToken
@@ -1326,6 +1332,9 @@ public static class BaseEncodingProcessor {
 			}
 		}
 
+		/// <summary>
+		/// Completes the operation and returns its result.
+		/// </summary>
 		public async Task CompleteAsync(
 			CancellationToken cancellationToken
 		) {

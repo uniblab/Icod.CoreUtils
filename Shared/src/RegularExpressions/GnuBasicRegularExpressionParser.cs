@@ -4,6 +4,9 @@ using System.Text;
 
 namespace Icod.CoreUtils.Shared.RegularExpressions;
 
+/// <summary>
+/// Provides the gnu basic regular expression parser implementation.
+/// </summary>
 internal sealed class GnuBasicRegularExpressionParser {
 	internal const int MaximumInterval = 32_767;
 
@@ -16,6 +19,9 @@ internal sealed class GnuBasicRegularExpressionParser {
 	private int captureCount;
 	private RegularExpressionDiagnostic? diagnostic;
 
+	/// <summary>
+	/// Initializes a new instance of the GnuBasicRegularExpressionParser class.
+	/// </summary>
 	internal GnuBasicRegularExpressionParser(
 		string pattern,
 		RegularExpressionOptions options,
@@ -28,6 +34,9 @@ internal sealed class GnuBasicRegularExpressionParser {
 		this.cancellationToken = cancellationToken;
 	}
 
+	/// <summary>
+	/// Performs the parse operation.
+	/// </summary>
 	internal GnuBasicParseResult Parse() {
 		cancellationToken.ThrowIfCancellationRequested();
 		var expression = ParseAlternation( false, 0 );

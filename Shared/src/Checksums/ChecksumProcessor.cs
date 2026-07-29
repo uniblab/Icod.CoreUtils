@@ -4,22 +4,36 @@ using System.Buffers;
 using System.Buffers.Binary;
 using System.Security.Cryptography;
 
+/// <summary>
+/// Defines the incremental contract used by checksum implementations.
+/// </summary>
 internal interface IChecksumAccumulator : IDisposable {
 
+	/// <summary>Appends source bytes to the checksum state.</summary>
+	/// <param name="data">The source bytes.</param>
 	void Append(
 		ReadOnlySpan<byte> data
 	);
 
+	/// <summary>Completes the checksum and returns its binary representation.</summary>
+	/// <param name="length">The total number of source bytes processed.</param>
+	/// <returns>The completed checksum bytes.</returns>
 	byte[] Complete(
 		long length
 	);
 
 }
 
+/// <summary>
+/// Provides the incremental hash accumulator implementation.
+/// </summary>
 internal sealed class IncrementalHashAccumulator : IChecksumAccumulator {
 
 	private readonly IncrementalHash myHash;
 
+	/// <summary>
+	/// Initializes a new instance of the IncrementalHashAccumulator class.
+	/// </summary>
 	public IncrementalHashAccumulator(
 		HashAlgorithmName algorithm
 	) {
@@ -28,6 +42,9 @@ internal sealed class IncrementalHashAccumulator : IChecksumAccumulator {
 		);
 	}
 
+	/// <summary>
+	/// Performs the append operation.
+	/// </summary>
 	public void Append(
 		ReadOnlySpan<byte> data
 	) {
@@ -36,23 +53,35 @@ internal sealed class IncrementalHashAccumulator : IChecksumAccumulator {
 		);
 	}
 
+	/// <summary>
+	/// Completes the operation and returns its result.
+	/// </summary>
 	public byte[] Complete(
 		long length
 	) {
 		return this.myHash.GetHashAndReset();
 	}
 
+	/// <summary>
+	/// Releases resources used by this instance.
+	/// </summary>
 	public void Dispose() {
 		this.myHash.Dispose();
 	}
 
 }
 
+/// <summary>
+/// Provides the posix crc accumulator implementation.
+/// </summary>
 internal sealed class PosixCrcAccumulator : IChecksumAccumulator {
 
 	private static readonly uint[] Table = CreateTable();
 	private uint myCrc;
 
+	/// <summary>
+	/// Performs the append operation.
+	/// </summary>
 	public void Append(
 		ReadOnlySpan<byte> data
 	) {
@@ -71,6 +100,9 @@ internal sealed class PosixCrcAccumulator : IChecksumAccumulator {
 		}
 	}
 
+	/// <summary>
+	/// Completes the operation and returns its result.
+	/// </summary>
 	public byte[] Complete(
 		long length
 	) {
@@ -105,6 +137,9 @@ internal sealed class PosixCrcAccumulator : IChecksumAccumulator {
 		return output;
 	}
 
+	/// <summary>
+	/// Releases resources used by this instance.
+	/// </summary>
 	public void Dispose() {
 	}
 
@@ -142,11 +177,17 @@ internal sealed class PosixCrcAccumulator : IChecksumAccumulator {
 
 }
 
+/// <summary>
+/// Provides the crc32b accumulator implementation.
+/// </summary>
 internal sealed class Crc32bAccumulator : IChecksumAccumulator {
 
 	private static readonly uint[] Table = CreateTable();
 	private uint myCrc = uint.MaxValue;
 
+	/// <summary>
+	/// Performs the append operation.
+	/// </summary>
 	public void Append(
 		ReadOnlySpan<byte> data
 	) {
@@ -165,6 +206,9 @@ internal sealed class Crc32bAccumulator : IChecksumAccumulator {
 		}
 	}
 
+	/// <summary>
+	/// Completes the operation and returns its result.
+	/// </summary>
 	public byte[] Complete(
 		long length
 	) {
@@ -176,6 +220,9 @@ internal sealed class Crc32bAccumulator : IChecksumAccumulator {
 		return output;
 	}
 
+	/// <summary>
+	/// Releases resources used by this instance.
+	/// </summary>
 	public void Dispose() {
 	}
 
@@ -211,10 +258,16 @@ internal sealed class Crc32bAccumulator : IChecksumAccumulator {
 
 }
 
+/// <summary>
+/// Provides the bsd sum accumulator implementation.
+/// </summary>
 internal sealed class BsdSumAccumulator : IChecksumAccumulator {
 
 	private ushort myValue;
 
+	/// <summary>
+	/// Performs the append operation.
+	/// </summary>
 	public void Append(
 		ReadOnlySpan<byte> data
 	) {
@@ -236,6 +289,9 @@ internal sealed class BsdSumAccumulator : IChecksumAccumulator {
 		}
 	}
 
+	/// <summary>
+	/// Completes the operation and returns its result.
+	/// </summary>
 	public byte[] Complete(
 		long length
 	) {
@@ -247,15 +303,24 @@ internal sealed class BsdSumAccumulator : IChecksumAccumulator {
 		return output;
 	}
 
+	/// <summary>
+	/// Releases resources used by this instance.
+	/// </summary>
 	public void Dispose() {
 	}
 
 }
 
+/// <summary>
+/// Provides the sys v sum accumulator implementation.
+/// </summary>
 internal sealed class SysVSumAccumulator : IChecksumAccumulator {
 
 	private ulong myValue;
 
+	/// <summary>
+	/// Performs the append operation.
+	/// </summary>
 	public void Append(
 		ReadOnlySpan<byte> data
 	) {
@@ -264,6 +329,9 @@ internal sealed class SysVSumAccumulator : IChecksumAccumulator {
 		}
 	}
 
+	/// <summary>
+	/// Completes the operation and returns its result.
+	/// </summary>
 	public byte[] Complete(
 		long length
 	) {
@@ -287,6 +355,9 @@ internal sealed class SysVSumAccumulator : IChecksumAccumulator {
 		return output;
 	}
 
+	/// <summary>
+	/// Releases resources used by this instance.
+	/// </summary>
 	public void Dispose() {
 	}
 

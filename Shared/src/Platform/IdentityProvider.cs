@@ -1,13 +1,19 @@
-﻿namespace Icod.CoreUtils.Shared.Platform;
+namespace Icod.CoreUtils.Shared.Platform;
 
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Security.Principal;
 
 /// <summary>Describes an operating-system group.</summary>
+/// <param name="Id">The id value.</param>
+/// <param name="Name">The name value.</param>
 public sealed record GroupIdentity( string Id, string Name );
 
 /// <summary>Describes an operating-system user and their groups.</summary>
+/// <param name="Id">The id value.</param>
+/// <param name="Name">The name value.</param>
+/// <param name="PrimaryGroup">The primary group value.</param>
+/// <param name="Groups">The groups value.</param>
 public sealed record UserIdentity(
 	string Id,
 	string Name,
@@ -16,6 +22,12 @@ public sealed record UserIdentity(
 );
 
 /// <summary>Describes the real and effective identities of the current process.</summary>
+/// <param name="RealUser">The real user value.</param>
+/// <param name="EffectiveUser">The effective user value.</param>
+/// <param name="RealGroup">The real group value.</param>
+/// <param name="EffectiveGroup">The effective group value.</param>
+/// <param name="Groups">The groups value.</param>
+/// <param name="SecurityContext">The security context value.</param>
 public sealed record ProcessIdentity(
 	UserIdentity RealUser,
 	UserIdentity EffectiveUser,
@@ -280,41 +292,98 @@ public sealed class SystemIdentityProvider : IIdentityProvider {
 	// marshalling buffer on BSD-derived systems.
 	[StructLayout( LayoutKind.Sequential, Size = 128 )]
 	private struct Passwd {
+		/// <summary>
+		/// Stores the name value.
+		/// </summary>
 		public IntPtr Name;
+		/// <summary>
+		/// Stores the password value.
+		/// </summary>
 		public IntPtr Password;
+		/// <summary>
+		/// Stores the user id value.
+		/// </summary>
 		public uint UserId;
+		/// <summary>
+		/// Stores the group id value.
+		/// </summary>
 		public uint GroupId;
 	}
 
 	[StructLayout( LayoutKind.Sequential )]
 	private struct Group {
+		/// <summary>
+		/// Stores the name value.
+		/// </summary>
 		public IntPtr Name;
+		/// <summary>
+		/// Stores the password value.
+		/// </summary>
 		public IntPtr Password;
+		/// <summary>
+		/// Stores the group id value.
+		/// </summary>
 		public uint GroupId;
+		/// <summary>
+		/// Stores the members value.
+		/// </summary>
 		public IntPtr Members;
 	}
 
 	private static class NativeMethods {
+		/// <summary>
+		/// Gets uid.
+		/// </summary>
 		[DllImport( "libc", EntryPoint = "getuid" )]
 		internal static extern uint GetUid();
+		/// <summary>
+		/// Gets effective uid.
+		/// </summary>
 		[DllImport( "libc", EntryPoint = "geteuid" )]
 		internal static extern uint GetEffectiveUid();
+		/// <summary>
+		/// Gets gid.
+		/// </summary>
 		[DllImport( "libc", EntryPoint = "getgid" )]
 		internal static extern uint GetGid();
+		/// <summary>
+		/// Gets effective gid.
+		/// </summary>
 		[DllImport( "libc", EntryPoint = "getegid" )]
 		internal static extern uint GetEffectiveGid();
+		/// <summary>
+		/// Gets groups count.
+		/// </summary>
 		[DllImport( "libc", EntryPoint = "getgroups" )]
 		internal static extern int GetGroupsCount( int size, IntPtr groups );
+		/// <summary>
+		/// Gets groups.
+		/// </summary>
 		[DllImport( "libc", EntryPoint = "getgroups" )]
 		internal static extern int GetGroups( int size, [Out] uint[] groups );
+		/// <summary>
+		/// Gets group list.
+		/// </summary>
 		[DllImport( "libc", EntryPoint = "getgrouplist", CharSet = CharSet.Ansi )]
 		internal static extern int GetGroupList( string userName, uint primaryGroup, [Out] uint[] groups, ref int groupCount );
+		/// <summary>
+		/// Gets password by uid.
+		/// </summary>
 		[DllImport( "libc", EntryPoint = "getpwuid_r" )]
 		internal static extern int GetPasswordByUid( uint userId, out Passwd password, IntPtr buffer, nuint bufferSize, out IntPtr result );
+		/// <summary>
+		/// Gets password by name.
+		/// </summary>
 		[DllImport( "libc", EntryPoint = "getpwnam_r", CharSet = CharSet.Ansi )]
 		internal static extern int GetPasswordByName( string userName, out Passwd password, IntPtr buffer, nuint bufferSize, out IntPtr result );
+		/// <summary>
+		/// Gets group by gid.
+		/// </summary>
 		[DllImport( "libc", EntryPoint = "getgrgid_r" )]
 		internal static extern int GetGroupByGid( uint groupId, out Group group, IntPtr buffer, nuint bufferSize, out IntPtr result );
+		/// <summary>
+		/// Gets login name.
+		/// </summary>
 		[DllImport( "libc", EntryPoint = "getlogin_r" )]
 		internal static extern int GetLoginName( [Out] byte[] buffer, nuint bufferSize );
 	}
