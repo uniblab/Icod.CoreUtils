@@ -41,6 +41,10 @@ The individual tools consume this behaviour to perform their specific task, like
 I intend this to hold things like `ed` or `tar` and so forth.
 It will also have some of my own very useful tools, such as `md2sum`.
 
+### Icod.DiffUtils
+
+`diff` will be moved to `Icod.DiffUtils`, which will also include `cmp`, `diff3`, `sdiff`.
+
 
 ## Authoritative Source
 
@@ -481,7 +485,10 @@ Reuse the established text, locale, tokenization, ordering, and spill-storage pr
   * [ ] deterministic error-continuation behavior;
   * [ ] injectable filesystem-enumeration providers.
 
-This gate is required before recursive `grep` and will later support recursive `diff`, directory listing, filesystem accounting, and archive creation.
+This gate is required before recursive `grep` and will later support directory
+listing, filesystem accounting, and archive creation. Its published traversal
+contracts may also be consumed by Icod.DiffUtils for recursive directory
+comparison.
 
 ### Batch 26 — Regular-expression search (1 tool)
 
