@@ -20,6 +20,8 @@ The version recorded here is the authority for synopsis, options, operands, envi
 | Key | Upstream authority | Pinned version | Immutable release identity | Primary specification |
 |---|---|---:|---|---|
 | `COREUTILS-9.11` | GNU Coreutils | 9.11 | tag `v9.11`; commit `c01fd163a47468a8296fb369f5233853bb551bb6` | [GNU Coreutils 9.11 manual](https://www.gnu.org/software/coreutils/manual/coreutils.html) |
+| `GNULIB-COREUTILS-9.11` | GNU Gnulib regular-expression implementation used by Coreutils 9.11 | pinned revision | commit `fb7312fa8d3df29f0ca0678f669b9a5b88a078ec` | [GNU Gnulib regular expressions](https://www.gnu.org/software/gnulib/manual/html_node/Regular-expressions.html) |
+| `POSIX-2024` | The Open Group Base Specifications Issue 8 / IEEE Std 1003.1-2024 | Issue 8 | document number `9799919799` | [POSIX.1-2024 regular-expression definitions and rationale](https://pubs.opengroup.org/onlinepubs/9799919799/) |
 | `SED-4.10` | GNU sed | 4.10 | tag `v4.10`; commit `89b7a2224d4faa9d8baf76094b1232ad1477ef3e` | [GNU sed 4.10 release](https://lists.gnu.org/archive/html/info-gnu/2026-04/msg00009.html) |
 | `NETTOOLS-2.10` | net-tools `hostname` | 2.10 | tag `v2.10` | [net-tools project and release files](https://sourceforge.net/projects/net-tools/) |
 | `PROCPS-4.0.6` | procps-ng `ps` | 4.0.6 | tag `v4.0.6`; release commit `4dafddf4` | [procps-ng 4.0.6 tag](https://gitlab.com/procps-ng/procps/-/tags) |
@@ -52,7 +54,7 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 | 12 | Completed | Filesystem flushing: `sync` | `COREUTILS-9.11` |
 | 13 | Completed | Binary formatting: `od` | `COREUTILS-9.11` |
 | 14 | Completed | Formatted and human-readable numeric output: `printf`, `numfmt` | `COREUTILS-9.11` |
-| 15 | In progress | Secure temporary objects: `mktemp` | `COREUTILS-9.11` |
+| 15 | Completed | Secure temporary objects: `mktemp` | `COREUTILS-9.11` |
 | 16 | Planned | Expression language: `expr` | `COREUTILS-9.11` |
 | 17 | Planned | Tabs and display columns | `COREUTILS-9.11` |
 | 18 | Planned | Paragraph and line-number formatting | `COREUTILS-9.11` |
@@ -92,6 +94,12 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 | 52 | Planned | SELinux context operations | `COREUTILS-9.11` |
 | 53 | Planned | Standard-stream buffering control: `stdbuf` | `COREUTILS-9.11` |
 
+
+## Engineering-gate-to-authority mapping
+
+| Gate | State | Shared subject | Authoritative pin |
+|---|---|---|---|
+| C1 | Implementation prepared; CI validation pending | GNU basic regular expressions | `COREUTILS-9.11`; `GNULIB-COREUTILS-9.11`; `POSIX-2024` |
 
 ## Batch 11 implementation record
 
@@ -171,7 +179,29 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 - **Security model:** regular files use exclusive create-new semantics; Windows directories use `CreateDirectoryW`; Linux, macOS, and best-effort FreeBSD directories use native `mkdir(..., 0700)`; Unix regular files request `0600`; existing symbolic links are collisions and are not followed or replaced.
 - **Intentional warning:** `--dry-run` reproduces GNU name-only behavior but cannot reserve the returned pathname and is explicitly documented as unsafe.
 - **Best-effort platform:** FreeBSD uses its documented POSIX `mkdir` and `lstat` interfaces but is outside the required CI matrix.
-- **Required validation:** the dedicated test project, Shared tests, and the complete solution must pass on `windows-latest`, `ubuntu-latest`, and `macos-latest`; after merge, change Batch 15 to **Completed**.
+- **Validation status:** Batch 15 is marked completed in the authoritative roadmap. Its dedicated tests, Shared tests, and full-solution three-runner validation remain part of the permanent completion contract.
+
+## Completion Gate C1 implementation record
+
+- **Gate and subject:** Completion Gate C1, shared GNU basic regular-expression foundation.
+- **Authority reconfirmed:** 28 July 2026.
+- **First consuming command:** Batch 16, GNU Coreutils 9.11 `expr`.
+- **Coreutils identity:** tag `v9.11`; commit `c01fd163a47468a8296fb369f5233853bb551bb6`.
+- **Gnulib identity:** commit `fb7312fa8d3df29f0ca0678f669b9a5b88a078ec`, the revision associated with the Coreutils 9.11 release.
+- **POSIX identity:** The Open Group Base Specifications Issue 8, IEEE Std 1003.1-2024, document number `9799919799`.
+- **Primary Coreutils source:** [`src/expr.c` at the pinned commit](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/expr.c), especially its `RE_SYNTAX_POSIX_BASIC & ~RE_CONTEXT_INVALID_DUP & ~RE_NO_EMPTY_RANGES` matching profile.
+- **Primary Gnulib sources:** [`lib/regex.h`](https://github.com/coreutils/gnulib/blob/fb7312fa8d3df29f0ca0678f669b9a5b88a078ec/lib/regex.h), [`lib/regcomp.c`](https://github.com/coreutils/gnulib/blob/fb7312fa8d3df29f0ca0678f669b9a5b88a078ec/lib/regcomp.c), and [`lib/regexec.c`](https://github.com/coreutils/gnulib/blob/fb7312fa8d3df29f0ca0678f669b9a5b88a078ec/lib/regexec.c).
+- **Primary specifications:** [Gnulib predefined syntaxes](https://www.gnu.org/software/gnulib/manual/html_node/Predefined-Syntaxes.html), [Gnulib matching policy](https://www.gnu.org/software/gnulib/manual/html_node/What-Gets-Matched_003f.html), and [POSIX.1-2024](https://pubs.opengroup.org/onlinepubs/9799919799/).
+- **Matching policy:** a purpose-built managed parser and state matcher implement GNU BRE syntax, leftmost-longest whole-match selection, and deterministic GNU/Gnulib `re_match` register selection for equal endpoints and repeated subexpressions. `System.Text.RegularExpressions` is not used as the semantic engine.
+- **TAP/TPL policy:** synchronous methods remain available; asynchronous methods return `ValueTask`, share the same semantics, accept `CancellationToken`, and do not use `Task.Run` to disguise CPU-bound work.
+- **Locale boundary:** `IRegularExpressionCharacterClassProvider` is injectable. The supplied Unicode provider uses BCL `Rune`, Unicode categories, and `CompareInfo`; the supplied POSIX C-locale provider supplies deterministic ASCII classification and ordinal collation.
+- **First-consumer compatibility:** `RegularExpressionOptions.GnuExprCompatibility` reproduces the `expr` removal of `RE_CONTEXT_INVALID_DUP` and `RE_NO_EMPTY_RANGES` without weakening strict default compilation for other consumers. `RegularExpressionMatchOptions.RequireMatchAtStart` supplies `expr`'s anchored `re_match(..., 0, ...)` behavior.
+- **Controlled diagnostics:** malformed patterns, invalid back-references, invalid ranges, unsupported multi-scalar collating elements, invalid UTF-16 start indices, nesting limits, and match-state limits return stable structured diagnostics. Cancellation retains the standard `OperationCanceledException` contract.
+- **Intentional BCL boundary:** .NET does not expose a culture's complete collating-element inventory. Single-scalar collating symbols and equivalence classes are supported; multi-scalar collating elements return `UnsupportedCollatingElement`. POSIX leaves multi-character bracket matching partly unspecified, and a later provider can extend this boundary without changing command code.
+- **Encoding model:** matching iterates Unicode scalars, public indices and lengths are UTF-16, and malformed UTF-16 code units are matched as U+FFFD while returned source slices preserve their original code units.
+- **Platform scope:** the engine is fully managed and identical on `windows-latest`, `ubuntu-latest`, and `macos-latest`. BSD-family systems are best effort under a compatible .NET runtime. TempleOS is best effort and can use the C-locale provider when globalization services are unavailable.
+- **Differential oracles:** pinned GNU `expr` semantics and GNU regex/Grep test vectors; Ubuntu CI must record the runtime versions of any installed GNU executables used by optional differential tests.
+- **Validation status:** implementation and Shared unit tests are prepared. Completion Gate C1 remains unchecked until the complete solution builds and all applicable tests pass on `windows-latest`, `ubuntu-latest`, and `macos-latest`.
 
 ## Required batch-start record
 
