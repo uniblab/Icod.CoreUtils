@@ -331,8 +331,8 @@ public sealed class ExprCommandTests {
 		);
 		return new CommandResult(
 			status,
-			standardOutput.ToString(),
-			standardError.ToString()
+			standardOutput is StringWriter outputWriter ? outputWriter.ToString() : string.Empty,
+			standardError is StringWriter errorWriter ? errorWriter.ToString() : string.Empty
 		);
 	}
 
