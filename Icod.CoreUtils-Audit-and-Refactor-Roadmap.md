@@ -75,8 +75,7 @@ The individual tools consume this behaviour to perform their specific task, like
 
 ### Icod.ExtUtils
 
-I intend this to hold things like `ed` or `tar` and so forth.
-It will also have some of my own very useful tools, such as `md2sum`.
+`Icod.ExtUtils` remains the intended home for miscellaneous non-Coreutils commands that do not yet justify an independent suite repository. The current candidates are `sed`, `tar`, and project-specific tools such as `md2sum`.
 
 ### Icod.DiffUtils
 
