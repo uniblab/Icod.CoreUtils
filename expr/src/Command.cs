@@ -10,12 +10,17 @@ public static class Command {
 	private const int FailureStatus = 3;
 	private const string VersionText = "expr (Icod.CoreUtils) 1.0";
 
-	/// <summary>Runs <c>expr</c> synchronously.</summary>
-	/// <param name="args">The expression tokens.</param>
-	/// <param name="stdin">Optional standard input; <c>expr</c> does not read it.</param>
-	/// <param name="stdout">Optional standard output.</param>
-	/// <param name="stderr">Optional standard error.</param>
-	/// <returns>The command exit status.</returns>
+	/// <summary>
+	/// Executes <c>expr</c> synchronously with optional standard-stream substitution.
+	/// </summary>
+	/// <remarks>
+	/// This compatibility entry point blocks on the TAP implementation. A <see langword="null"/> text stream selects the corresponding <see cref="Console"/> stream; caller-supplied streams remain caller-owned.
+	/// </remarks>
+	/// <param name="args">The command-line arguments, excluding the executable name.</param>
+	/// <param name="stdin">The text reader to use as standard input, or <see langword="null"/> to use <see cref="Console.In"/>.</param>
+	/// <param name="stdout">The text writer to use as standard output, or <see langword="null"/> to use <see cref="Console.Out"/>.</param>
+	/// <param name="stderr">The text writer to use as standard error, or <see langword="null"/> to use <see cref="Console.Error"/>.</param>
+	/// <returns>The GNU <c>expr</c> status: 0 for a non-null result, 1 for a null result, 2 for an invalid expression, or 3 for an internal failure.</returns>
 	public static int Run(
 		string[] args,
 		TextReader? stdin = null,
@@ -34,13 +39,18 @@ public static class Command {
 		).GetAwaiter().GetResult();
 	}
 
-	/// <summary>Runs <c>expr</c> asynchronously with injectable text streams.</summary>
-	/// <param name="args">The expression tokens.</param>
-	/// <param name="stdin">Optional standard input; <c>expr</c> does not read it.</param>
-	/// <param name="stdout">Optional standard output.</param>
-	/// <param name="stderr">Optional standard error.</param>
-	/// <param name="cancellationToken">A cancellation token.</param>
-	/// <returns>The command exit status.</returns>
+	/// <summary>
+	/// Executes <c>expr</c> asynchronously with optional injected standard streams.
+	/// </summary>
+	/// <remarks>
+	/// A <see langword="null"/> text stream selects the corresponding <see cref="Console"/> stream. Caller-supplied streams remain caller-owned.
+	/// </remarks>
+	/// <param name="args">The command-line arguments, excluding the executable name.</param>
+	/// <param name="stdin">The text reader to use as standard input, or <see langword="null"/> to use <see cref="Console.In"/>.</param>
+	/// <param name="stdout">The text writer to use as standard output, or <see langword="null"/> to use <see cref="Console.Out"/>.</param>
+	/// <param name="stderr">The text writer to use as standard error, or <see langword="null"/> to use <see cref="Console.Error"/>.</param>
+	/// <param name="cancellationToken">The token used to cancel parsing, platform queries, and asynchronous I/O.</param>
+	/// <returns>The GNU <c>expr</c> status: 0 for a non-null result, 1 for a null result, 2 for an invalid expression, or 3 for an internal failure.</returns>
 	public static Task<int> RunAsync(
 		string[] args,
 		TextReader? stdin = null,
@@ -61,12 +71,18 @@ public static class Command {
 		);
 	}
 
-	/// <summary>Runs <c>expr</c> with an injected command context and semantic providers.</summary>
-	/// <param name="args">The expression tokens.</param>
-	/// <param name="context">The command execution context.</param>
-	/// <param name="regularExpressionProvider">Optional GNU BRE provider.</param>
-	/// <param name="localeProvider">Optional collation and logical-character provider.</param>
-	/// <returns>The command exit status.</returns>
+	/// <summary>
+	/// Executes <c>expr</c> asynchronously using a complete shared command context.
+	/// </summary>
+	/// <remarks>
+	/// The context carries text and optional binary standard streams, centralized diagnostics, and cancellation. The command does not dispose caller-owned standard streams.
+	/// </remarks>
+	/// <param name="args">The command-line arguments, excluding the executable name.</param>
+	/// <param name="context">The command context that supplies standard streams, diagnostics, and cancellation.</param>
+	/// <param name="regularExpressionProvider">The shared GNU basic-regular-expression provider used by match operations.</param>
+	/// <param name="localeProvider">The provider used for collation and logical-character operations.</param>
+	/// <returns>The GNU <c>expr</c> status: 0 for a non-null result, 1 for a null result, 2 for an invalid expression, or 3 for an internal failure.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="context"/> is <see langword="null"/>.</exception>
 	public static async Task<int> RunAsync(
 		string[] args,
 		CommandContext context,

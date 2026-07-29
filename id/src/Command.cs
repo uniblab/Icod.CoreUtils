@@ -10,9 +10,32 @@ public static class Command {
 	private const string ProgramName = "id";
 	private const string Version = "id (Icod.CoreUtils) 1.0";
 
+	/// <summary>
+	/// Executes <c>id</c> synchronously with optional standard-stream substitution.
+	/// </summary>
+	/// <remarks>
+	/// This compatibility entry point blocks on the TAP implementation. A <see langword="null"/> text stream selects the corresponding <see cref="Console"/> stream; caller-supplied streams remain caller-owned.
+	/// </remarks>
+	/// <param name="args">The command-line arguments, excluding the executable name.</param>
+	/// <param name="stdin">The text reader to use as standard input, or <see langword="null"/> to use <see cref="Console.In"/>.</param>
+	/// <param name="stdout">The text writer to use as standard output, or <see langword="null"/> to use <see cref="Console.Out"/>.</param>
+	/// <param name="stderr">The text writer to use as standard error, or <see langword="null"/> to use <see cref="Console.Error"/>.</param>
+	/// <returns>The GNU-compatible process exit status: zero for successful command execution and nonzero for a usage or operational failure.</returns>
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) =>
 		RunAsync( args, stdin, stdout, stderr ).GetAwaiter().GetResult();
 
+	/// <summary>
+	/// Executes <c>id</c> asynchronously with optional injected standard streams.
+	/// </summary>
+	/// <remarks>
+	/// A <see langword="null"/> text stream selects the corresponding <see cref="Console"/> stream. Caller-supplied streams remain caller-owned.
+	/// </remarks>
+	/// <param name="args">The command-line arguments, excluding the executable name.</param>
+	/// <param name="stdin">The text reader to use as standard input, or <see langword="null"/> to use <see cref="Console.In"/>.</param>
+	/// <param name="stdout">The text writer to use as standard output, or <see langword="null"/> to use <see cref="Console.Out"/>.</param>
+	/// <param name="stderr">The text writer to use as standard error, or <see langword="null"/> to use <see cref="Console.Error"/>.</param>
+	/// <param name="cancellationToken">The token used to cancel parsing, platform queries, and asynchronous I/O.</param>
+	/// <returns>The GNU-compatible process exit status: zero for successful command execution and nonzero for a usage or operational failure.</returns>
 	public static Task<int> RunAsync(
 		string[] args,
 		TextReader? stdin = null,
@@ -24,6 +47,17 @@ public static class Command {
 		new CommandContext( ProgramName, stdin ?? Console.In, stdout ?? Console.Out, stderr ?? Console.Error, cancellationToken: cancellationToken )
 	);
 
+	/// <summary>
+	/// Executes <c>id</c> asynchronously using a complete shared command context.
+	/// </summary>
+	/// <remarks>
+	/// The context carries text and optional binary standard streams, centralized diagnostics, and cancellation. The command does not dispose caller-owned standard streams.
+	/// </remarks>
+	/// <param name="args">The command-line arguments, excluding the executable name.</param>
+	/// <param name="context">The command context that supplies standard streams, diagnostics, and cancellation.</param>
+	/// <param name="provider">The injectable identity provider; <see langword="null"/> selects the system implementation when supported by this overload.</param>
+	/// <returns>The GNU-compatible process exit status: zero for successful command execution and nonzero for a usage or operational failure.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="context"/> is <see langword="null"/>.</exception>
 	public static async Task<int> RunAsync( string[] args, CommandContext context, IIdentityProvider? provider = null ) {
 		ArgumentNullException.ThrowIfNull( context );
 		provider ??= SystemIdentityProvider.Instance;

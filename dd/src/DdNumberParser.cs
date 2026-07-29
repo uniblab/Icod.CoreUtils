@@ -1,12 +1,25 @@
-﻿namespace Icod.CoreUtils.DD;
+namespace Icod.CoreUtils.DD;
 
 using System.Globalization;
 using System.Numerics;
 
+/// <summary>
+/// Parses GNU <c>dd</c> block-size and quantity operands, including multiplicative suffixes and byte-count markers.
+/// </summary>
+/// <remarks>
+/// Parsing is non-throwing for invalid user input: methods return <see langword="false"/> and provide a diagnostic string.
+/// </remarks>
 internal static class DdNumberParser {
 	private static readonly IReadOnlyDictionary<string, BigInteger> SuffixMultipliers =
 		CreateSuffixMultipliers();
 
+	/// <summary>
+	/// Attempts to parse a positive GNU <c>dd</c> block size that fits in a managed buffer length.
+	/// </summary>
+	/// <param name="value">The block-size operand, including any GNU multiplicative suffixes.</param>
+	/// <param name="blockSize">When parsing succeeds, receives the positive block size in bytes.</param>
+	/// <param name="error">When parsing fails, receives a user-facing diagnostic; otherwise receives an empty string.</param>
+	/// <returns><see langword="true"/> when parsing succeeds; otherwise <see langword="false"/>.</returns>
 	public static bool TryParseBlockSize(
 		string value,
 		out int blockSize,
@@ -36,6 +49,13 @@ internal static class DdNumberParser {
 		return true;
 	}
 
+	/// <summary>
+	/// Attempts to parse a non-negative GNU <c>dd</c> count, skip, or seek quantity.
+	/// </summary>
+	/// <param name="value">The count, skip, or seek operand, including suffixes and an optional trailing <c>B</c>.</param>
+	/// <param name="quantity">When parsing succeeds, receives the parsed magnitude and byte-count interpretation.</param>
+	/// <param name="error">When parsing fails, receives a user-facing diagnostic; otherwise receives an empty string.</param>
+	/// <returns><see langword="true"/> when parsing succeeds; otherwise <see langword="false"/>.</returns>
 	public static bool TryParseQuantity(
 		string value,
 		out DdQuantity quantity,

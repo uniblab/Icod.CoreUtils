@@ -9,7 +9,17 @@ public static class Command {
 	private static readonly TimeSpan MaximumDelayChunk = TimeSpan.FromDays( 1 );
 	private const string VersionText = "sleep (Icod.CoreUtils) 1.0";
 
-	/// <summary>Runs the command synchronously.</summary>
+	/// <summary>
+	/// Executes <c>sleep</c> synchronously with optional standard-stream substitution.
+	/// </summary>
+	/// <remarks>
+	/// This compatibility entry point blocks on the TAP implementation. A <see langword="null"/> text stream selects the corresponding <see cref="Console"/> stream; caller-supplied streams remain caller-owned.
+	/// </remarks>
+	/// <param name="args">The command-line arguments, excluding the executable name.</param>
+	/// <param name="stdin">The text reader to use as standard input, or <see langword="null"/> to use <see cref="Console.In"/>.</param>
+	/// <param name="stdout">The text writer to use as standard output, or <see langword="null"/> to use <see cref="Console.Out"/>.</param>
+	/// <param name="stderr">The text writer to use as standard error, or <see langword="null"/> to use <see cref="Console.Error"/>.</param>
+	/// <returns>The GNU-compatible process exit status: zero for successful command execution and nonzero for a usage or operational failure.</returns>
 	public static int Run(
 		string[] args,
 		TextReader? stdin = null,
@@ -24,7 +34,18 @@ public static class Command {
 		).GetAwaiter().GetResult();
 	}
 
-	/// <summary>Runs the command asynchronously.</summary>
+	/// <summary>
+	/// Executes <c>sleep</c> asynchronously with optional injected standard streams.
+	/// </summary>
+	/// <remarks>
+	/// A <see langword="null"/> text stream selects the corresponding <see cref="Console"/> stream. Caller-supplied streams remain caller-owned.
+	/// </remarks>
+	/// <param name="args">The command-line arguments, excluding the executable name.</param>
+	/// <param name="stdin">The text reader to use as standard input, or <see langword="null"/> to use <see cref="Console.In"/>.</param>
+	/// <param name="stdout">The text writer to use as standard output, or <see langword="null"/> to use <see cref="Console.Out"/>.</param>
+	/// <param name="stderr">The text writer to use as standard error, or <see langword="null"/> to use <see cref="Console.Error"/>.</param>
+	/// <param name="cancellationToken">The token used to cancel parsing, platform queries, and asynchronous I/O.</param>
+	/// <returns>The GNU-compatible process exit status: zero for successful command execution and nonzero for a usage or operational failure.</returns>
 	public static async Task<int> RunAsync(
 		string[] args,
 		TextReader? stdin = null,
