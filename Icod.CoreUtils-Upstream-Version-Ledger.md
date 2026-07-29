@@ -55,7 +55,7 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 | 13 | Completed | Binary formatting: `od` | `COREUTILS-9.11` |
 | 14 | Completed | Formatted and human-readable numeric output: `printf`, `numfmt` | `COREUTILS-9.11` |
 | 15 | Completed | Secure temporary objects: `mktemp` | `COREUTILS-9.11` |
-| 16 | Planned | Expression language: `expr` | `COREUTILS-9.11` |
+| 16 | Implementation prepared; CI validation pending | Expression language: `expr` | `COREUTILS-9.11` |
 | 17 | Planned | Tabs and display columns | `COREUTILS-9.11` |
 | 18 | Planned | Paragraph and line-number formatting | `COREUTILS-9.11` |
 | 19 | Planned | Field and record extraction | `COREUTILS-9.11` |
@@ -99,7 +99,7 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 
 | Gate | State | Shared subject | Authoritative pin |
 |---|---|---|---|
-| C1 | Implementation prepared; CI validation pending | GNU basic regular expressions | `COREUTILS-9.11`; `GNULIB-COREUTILS-9.11`; `POSIX-2024` |
+| C1 | Completed | GNU basic regular expressions | `COREUTILS-9.11`; `GNULIB-COREUTILS-9.11`; `POSIX-2024` |
 
 ## Batch 11 implementation record
 
@@ -201,7 +201,26 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 - **Encoding model:** matching iterates Unicode scalars, public indices and lengths are UTF-16, and malformed UTF-16 code units are matched as U+FFFD while returned source slices preserve their original code units.
 - **Platform scope:** the engine is fully managed and identical on `windows-latest`, `ubuntu-latest`, and `macos-latest`. BSD-family systems are best effort under a compatible .NET runtime. TempleOS is best effort and can use the C-locale provider when globalization services are unavailable.
 - **Differential oracles:** pinned GNU `expr` semantics and GNU regex/Grep test vectors; Ubuntu CI must record the runtime versions of any installed GNU executables used by optional differential tests.
-- **Validation status:** implementation and Shared unit tests are prepared. Completion Gate C1 remains unchecked until the complete solution builds and all applicable tests pass on `windows-latest`, `ubuntu-latest`, and `macos-latest`.
+- **Validation completed:** the Gate C1 corrections were accepted and merged into `main` on 29 July 2026. The complete-solution `windows-latest`, `ubuntu-latest`, and `macos-latest` contract remains the permanent regression requirement.
+
+
+## Batch 16 implementation record
+
+- **Batch and command:** Batch 16, `expr`.
+- **Authority reconfirmed:** 29 July 2026.
+- **Authoritative package:** GNU Coreutils 9.11.
+- **Immutable identity:** tag `v9.11`; commit `c01fd163a47468a8296fb369f5233853bb551bb6`.
+- **Primary manual:** [GNU Coreutils 9.11 `expr` invocation](https://www.gnu.org/software/coreutils/manual/html_node/expr-invocation.html), including its string, numeric, relation, and example subnodes.
+- **Primary source:** [`src/expr.c` at the pinned commit](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/expr.c).
+- **Differential oracle:** GNU `expr` 9.7 available in the implementation environment, run with `LC_ALL=C.UTF-8`; CI must capture the runtime `expr --version` whenever optional differential tests are run.
+- **Parser and evaluation model:** the command uses an immediate, precedence-aware evaluator matching GNU's `eval` through `eval7` structure. Boolean branches still parse skipped expressions; arithmetic, comparisons, and regular-expression matching honor GNU's `evaluate` flag, while `length`, `index`, and `substr` retain GNU's normal prefix-operation behavior. Prefix string operators recurse at their own precedence level, and binary operators associate from the left.
+- **Numeric model:** all arithmetic and integer comparisons use BCL `BigInteger`, reproducing GNU multiple-precision behavior and truncating division and remainder toward zero without native GMP or P/Invoke.
+- **Regular-expression model:** `:` and `match` consume Completion Gate C1 through `RegularExpressionOptions.GnuExprCompatibility` and `RegularExpressionMatchOptions.RequireMatchAtStart`. The first capture determines a string result; otherwise the result is the matched logical-character count.
+- **Locale and text model:** `IExpressionLocaleProvider` is injectable. The default uses BCL `CompareInfo` for current-culture collation and Unicode scalar values for `length`, `index`, `substr`, and regex match length. .NET argument strings cannot preserve arbitrary invalid byte sequences or emulate every host C library's single-byte locale, so those cases remain an explicit managed-runtime boundary rather than invoking native locale APIs.
+- **TAP/TPL policy:** synchronous compatibility remains available; command execution and Gate C1 calls are cancellation-aware; naturally asynchronous output is awaited; CPU work is not wrapped in `Task.Run`.
+- **Controlled statuses:** 0 denotes a non-null/nonzero result, 1 a null or zero result, 2 an invalid expression, 3 an internal/provider/output failure, and the repository cancellation status is returned for requested cancellation. Excessive expression nesting is diagnosed with status 2 rather than risking an uncatchable stack overflow.
+- **Platform scope:** the implementation is fully managed and intended to behave identically on `windows-latest`, `ubuntu-latest`, and `macos-latest`. BSD-family systems are best effort under a compatible .NET runtime. TempleOS is best effort and would require a compatible managed runtime and an appropriate injected locale provider.
+- **Validation status:** source structure and repository conventions were checked, and representative semantics were differentially compared with GNU `expr` 9.7. A .NET SDK was unavailable in the implementation container, so the dedicated test project and complete solution still require build/test validation on all three required CI platforms before Batch 16 is marked complete.
 
 ## Required batch-start record
 
