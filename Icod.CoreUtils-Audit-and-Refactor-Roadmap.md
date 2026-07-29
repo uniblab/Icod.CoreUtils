@@ -450,7 +450,7 @@ This gate prevents `expr` from introducing an isolated regular-expression implem
 
 ### Batch 16 — Expression language (1 tool)
 
-- [ ] `expr`
+- [x] `expr`
 
 Implement a real precedence-aware expression parser with arithmetic, relations, Boolean operators, string operations, regular expressions, overflow behavior, quoting rules, and GNU exit statuses. Do not pair it with `test`; their grammars and result models are materially different.
 
