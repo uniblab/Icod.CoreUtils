@@ -13,16 +13,39 @@
 
 ## Scope
 
-The repository is a broader BSD/Linux utility collection rather than only GNU Coreutils:
+This repository is a broad attempt at porting the BSD/Linux coreutils to .net.  
+Primary targets are windows-latest, ubuntu-latest, and macos-latest.  
+I am making a "best effort" at supporting FreeBSD and TempleOS.  
 
-- At the July 27, 2026 audit, **104 command projects** existed, plus `Shared`.
-- At that audit, the solution contained **37 test/support projects** under `tests`, including `Shared.Tests` and `ProcessTestHost`.
-- Seven non-Coreutils programs remain in scope: `diff`, `ed`, `grep`, `patch`, `ps`, `sed`, and `tar`.
-- Ten GNU Coreutils programs are not yet present and should be added: `hostid`, `mkfifo`, `mknod`, `mktemp`, `nohup`, `nproc`, `numfmt`, `printf`, `stty`, and `tty`.
-- No separate `[` project will be added.
-- On completion, the planned command-project count is **114**.
+Seven non-Coreutils programs are also in scope: `diff`, `ed`, `grep`, `patch`, `ps`, `sed`, and `tar`.
 
-For GNU Coreutils commands, the conformance baseline is the pinned GNU Coreutils manual and source. For non-Coreutils programs, use the corresponding upstream project as the primary authority:
+## Eventual Plan
+
+All shared components will reside in Icod.CoreUtils.Shared, which will become it's own repository.  
+Those tools which are not Linux coreutils will be moved to a separate repository.  
+The name is tentative, but I'm thinking Icod.ExtUtils.  
+No separate `[` project will be added.  
+
+### Icod.CoreUtils.Shared
+
+This has all the shared features in a single place.  These include
+- Argument processor
+- Command context
+- High performance, coss-platform file I/O
+- Text manipulation and formatting
+
+The individual tools consume this behaviour to perform their specific task, like we consume the BCL to do our things.
+
+### Icod.ExtUtils
+
+I intend this to hold things like `ed` or `tar` and so forth.
+It will also have some of my own very useful tools, such as `md2sum`.
+
+
+## Authoritative Source
+
+For GNU Coreutils commands, the conformance baseline is the pinned GNU Coreutils manual and source.
+For non-Coreutils programs, use the corresponding upstream project as the primary authority.
 
 | Program family | Primary authority |
 |---|---|
@@ -142,6 +165,7 @@ These conventions apply to every existing project that is altered and every proj
 11. Each public command class has class-level XML documentation whose `<summary>` includes the command usage, plus a dedicated usage-printing or usage-writing function.
 12. Every new project is added to the solution, all required configuration mappings, the appropriate solution folder, and every local and CI build/test entry point.
 13. The supported CI platform targets are explicitly `windows-latest`, `ubuntu-latest`, and `macos-latest`. Platform-specific tests may be conditional, but every runner must build the full solution and execute the complete applicable test suite.
+14. Do not use `Assert.True` to check for substrings. Use `Assert.StartsWith`, `Assert.EndsWith` instead. (https://xunit.net/xunit.analyzers/rules/xUnit2009).
 
 ## Repository-wide engineering rules
 
