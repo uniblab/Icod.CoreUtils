@@ -70,9 +70,9 @@
 		</Content>
 	</ItemGroup>
 
-	<Target Name="RmContent" AfterTargets="Clean" Condition=" '$(OutDir)' != '' ">
-		<Delete ContinueOnError="false" Files="$(OutDir)\$(AssemblyName).LICENSE.txt" />
-		<Delete ContinueOnError="false" Files="$(OutDir)\$(AssemblyName).README.md" />
+	<Target Name="RmContent" AfterTargets="Clean" BeforeTargets="Build" Condition=" '$(OutDir)' != '' ">
+		<Delete ContinueOnError="false" Files="$(OutDir)\$(AssemblyName).LICENSE.txt" Condition="Exists('$(OutDir)\$(AssemblyName).LICENSE.txt')" />
+		<Delete ContinueOnError="false" Files="$(OutDir)\$(AssemblyName).README.md" Condition="Exists('$(OutDir)\$(AssemblyName).README.md')" />
 	</Target>
 	<Target Name="MvContent" AfterTargets="Build" Condition=" '$(OutDir)' != '' ">
 		<Move ContinueOnError="false" SourceFiles="$(OutDir)\LICENSE" DestinationFiles="$(OutDir)\$(AssemblyName).LICENSE.txt" />

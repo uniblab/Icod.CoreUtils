@@ -56,7 +56,7 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 | 14 | Completed | Formatted and human-readable numeric output: `printf`, `numfmt` | `COREUTILS-9.11` |
 | 15 | Completed | Secure temporary objects: `mktemp` | `COREUTILS-9.11` |
 | 16 | Implementation prepared; CI validation pending | Expression language: `expr` | `COREUTILS-9.11` |
-| 17 | Planned | Tabs and display columns | `COREUTILS-9.11` |
+| 17 | Implementation prepared; CI validation pending | Tabs and display columns | `COREUTILS-9.11` |
 | 18 | Planned | Paragraph and line-number formatting | `COREUTILS-9.11` |
 | 19 | Planned | Field and record extraction | `COREUTILS-9.11` |
 | 20 | Planned | External ordering and randomization | `COREUTILS-9.11` |
@@ -100,6 +100,7 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 | Gate | State | Shared subject | Authoritative pin |
 |---|---|---|---|
 | C1 | Completed | GNU basic regular expressions | `COREUTILS-9.11`; `GNULIB-COREUTILS-9.11`; `POSIX-2024` |
+| C2 | Completed | Byte-preserving text units, locale blanks, display columns, and tab stops | `COREUTILS-9.11` |
 
 ## Batch 11 implementation record
 
@@ -221,6 +222,38 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 - **Controlled statuses:** 0 denotes a non-null/nonzero result, 1 a null or zero result, 2 an invalid expression, 3 an internal/provider/output failure, and the repository cancellation status is returned for requested cancellation. Excessive expression nesting is diagnosed with status 2 rather than risking an uncatchable stack overflow.
 - **Platform scope:** the implementation is fully managed and intended to behave identically on `windows-latest`, `ubuntu-latest`, and `macos-latest`. BSD-family systems are best effort under a compatible .NET runtime. TempleOS is best effort and would require a compatible managed runtime and an appropriate injected locale provider.
 - **Validation status:** source structure and repository conventions were checked, and representative semantics were differentially compared with GNU `expr` 9.7. A .NET SDK was unavailable in the implementation container, so the dedicated test project and complete solution still require build/test validation on all three required CI platforms before Batch 16 is marked complete.
+
+
+## Completion Gate C2 implementation record
+
+- **Gate and subject:** Completion Gate C2, shared byte-preserving text units, locale-aware blanks, display columns, checked column movement, and GNU tab-stop grammar.
+- **Authority reconfirmed:** 29 July 2026.
+- **First consuming commands:** Batch 17, GNU Coreutils 9.11 `expand`, `unexpand`, and `fold`.
+- **Coreutils identity:** tag `v9.11`; commit `c01fd163a47468a8296fb369f5233853bb551bb6`.
+- **Primary sources:** [`src/expand-common.c`](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/expand-common.c), [`src/expand.c`](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/expand.c), [`src/unexpand.c`](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/unexpand.c), and [`src/fold.c`](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/fold.c).
+- **Reusable infrastructure:** `Shared/src/Text` supplies incremental byte and UTF-8 scalar iteration, exact source-byte retention, explicit malformed-input policy, injectable locale and width providers, deterministic Unicode display widths, checked display-column operations, and reusable explicit and recurring tab-stop models.
+- **Encoding boundary:** the managed implementation provides exact C/POSIX byte behavior and deterministic UTF-8 decoding. Arbitrary stateful legacy multibyte encodings are not silently approximated through replacement decoding.
+- **Width boundary:** production display widths use a checked-in deterministic Unicode table rather than host `wcwidth`; providers remain injectable for alternate locale or terminal profiles.
+- **Provisional classification:** the text-unit, locale, width, and tab-stop APIs remain cross-suite `Icod.CommandFramework` candidates incubated in `Icod.CoreUtils.Shared` until later consumers establish the permanent package boundary.
+- **Validation completed:** the Gate C2 implementation and its dedicated Shared tests were accepted and merged into `main` on 29 July 2026. The complete-solution three-runner contract remains the permanent regression requirement.
+
+## Batch 17 implementation record
+
+- **Batch and commands:** Batch 17, `expand`, `unexpand`, and `fold`.
+- **Authority reconfirmed:** 29 July 2026.
+- **Authoritative package:** GNU Coreutils 9.11.
+- **Immutable identity:** tag `v9.11`; commit `c01fd163a47468a8296fb369f5233853bb551bb6`.
+- **Primary manuals:** [GNU Coreutils 9.11 `expand`](https://www.gnu.org/software/coreutils/manual/html_node/expand-invocation.html), [`unexpand`](https://www.gnu.org/software/coreutils/manual/html_node/unexpand-invocation.html), and [`fold`](https://www.gnu.org/software/coreutils/manual/html_node/fold-invocation.html) invocation documentation.
+- **Primary sources:** [`src/expand.c`](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/expand.c), [`src/unexpand.c`](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/unexpand.c), [`src/fold.c`](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/fold.c), and their shared [`src/expand-common.c`](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/expand-common.c) parser at the pinned commit.
+- **Differential oracle:** GNU `expand`, `unexpand`, and `fold` from the Ubuntu CI image; their runtime `--version` output is to be captured whenever optional differential tests are run.
+- **Text and byte model:** all three commands process `TextUnit` values from Gate C2, preserve untouched source bytes including BOMs and malformed sequences, and use explicit C/POSIX or deterministic UTF-8 locale profiles.
+- **Tab model:** `expand` and `unexpand` share the Gate C2 parser for explicit stops, repeated `-t` values, periodic single stops, `/N` globally aligned continuation, `+N` continuation relative to the final explicit stop, and finite-list exhaustion. The obsolete command-specific numeric forms remain command-local preprocessing.
+- **Command distinctions:** `expand` and `unexpand` preserve logical-line state across unterminated operand boundaries; `fold` resets its current column for each operand while retaining GNU's preceding-character-width state used by backspace. `unexpand --tabs` implies all-line conversion, obsolete `-LIST` does not, and `--first-only` overrides either all-line request.
+- **Folding model:** `fold` implements byte, decoded-character, and display-column counting; locale-blank word boundaries; tab, carriage-return, and backspace movement; multibyte-scalar integrity; and bounded buffering for arbitrarily long zero-column input.
+- **TAP/TPL policy:** asynchronous stream opening, reading, output, help, version, usage, and diagnostics are awaited and cancellation-aware. Synchronous compatibility wrappers block only at the public boundary. Operand processing remains ordered and is not wrapped in `Task.Run` or parallelized.
+- **Intentional line-ending interpretation:** untouched input line endings are reproduced exactly. New fold boundaries use `Environment.NewLine`, following the repository's generated-output convention rather than forcing GNU's LF byte on Windows.
+- **Documentation and tests:** each command has command-level and source-directory documentation, class-level XML usage text, dedicated usage/help/version writers, XML documentation on every public, protected, or internal declaration, and a dedicated xUnit test project covering options, binary fidelity, Unicode widths, invalid input, operand boundaries, cancellation, ownership, and read/write failures.
+- **Validation status:** source structure, project and solution wiring, XML documentation presence, UTF-8/LF policy, and conformance-oriented state-machine cases were checked. A .NET SDK was unavailable in the implementation container, so the three dedicated test projects and complete solution still require build/test validation on `windows-latest`, `ubuntu-latest`, and `macos-latest` before the implementation record can be changed to fully validated.
 
 ## Required batch-start record
 

@@ -44,6 +44,8 @@ The current `Shared` project continues to incubate both:
 1. functionality that may ultimately become cross-suite `Icod.CommandFramework` APIs; and
 2. functionality that may remain specific to GNU Coreutils, Fileutils, and Textutils in `Icod.CoreUtils.Shared`.
 
+The project's present physical name does not establish permanent ownership. The common argument processor is the existing example: it resides in the current `Icod.CoreUtils.Shared` project during incubation, but use by independent suites makes it a likely `Icod.CommandFramework` candidate. The same rule applies to host, processor-resource, process-identity, process-targeting, process-launch, waiting, signal, priority, clock, and terminal mechanics that are consumed by both Coreutils and ProcPs or by other suites.
+
 The suite projects developed here may add their own Shared libraries when the reuse is genuinely suite-specific:
 
 - `Icod.DiffUtils.Shared`;
@@ -130,15 +132,19 @@ At that point:
 - byte, text, record, delimiter, locale, and display-width abstractions;
 - secure temporary-object and workspace infrastructure;
 - general filesystem capability, traversal, and metadata abstractions;
-- terminal, child-process, signal, and platform-capability abstractions.
-
+- host identity, processor-resource availability, affinity, quota, and provenance abstractions;
+- process identity, PID-reuse-aware targeting, process groups, sessions, lifetime, liveness, and waiting abstractions;
+- argument-safe process launch, environment construction, standard-stream forwarding, signal, priority, exit-status, and termination-reason abstractions;
+- monotonic clocks, cancellation-aware delay, periodic scheduling, terminal control, and platform-capability abstractions.
 An API moves to `Icod.CommandFramework` because multiple independent suites use the same contract, not merely because it currently resides in `Shared`.
 
 ### Icod.CoreUtils.Shared
 
 `Icod.CoreUtils.Shared` may remain after framework extraction. Its purpose is narrower: behavior shared among Coreutils, Fileutils, and Textutils commands that is not a suitable cross-suite framework contract.
 
-Likely examples include Coreutils-specific option combinations, backup and overwrite policies, block-size conventions, ownership and mode presentation, listing models, copy/move/install policies, and other engines reused by multiple Coreutils commands but not by Diffutils, Grep, Patch, Ed, Sed, Tar, or ProcPs.
+During incubation, code common to Coreutils and ProcPs may still be implemented physically in the current `Icod.CoreUtils.Shared` project because that is the available shared foundation. Such code must be marked as a provisional `Icod.CommandFramework` candidate and must not be treated as permanently Coreutils-owned merely because of its temporary project location.
+
+Likely eventual `Icod.CoreUtils.Shared` examples include Coreutils-specific option combinations, backup and overwrite policies, block-size conventions, ownership and mode presentation, listing models, copy/move/install policies, and other engines reused by multiple Coreutils commands but not by Diffutils, Grep, Patch, Ed, Sed, Tar, or ProcPs.
 
 The final dependency would be:
 
@@ -158,7 +164,7 @@ Icod.CommandFramework
 - `Icod.Ed.Shared` owns address parsing, editor commands, mutable line buffers, substitutions, global commands, undo, file operations, shell integration, and restricted-mode enforcement for `ed` and `red`.
 - `Icod.Sed` owns its parser, addresses, pattern and hold spaces, substitutions, branching, command cycle, and in-place-editing semantics.
 - `Icod.Tar` owns archive formats, entry models, sparse-file archive behavior, selection and exclusion rules, compression integration, and extraction security.
-- `Icod.ProcPs.Shared` owns process enumeration, `/proc` and other platform providers, selection, snapshots, field definitions, sorting, personalities, terminal association, process metrics, and full-screen process-tool support.
+- `Icod.ProcPs.Shared` owns procps-ng-specific process enumeration, Linux `/proc` parsing and equivalent observation providers, selection grammar, detailed snapshots, field definitions, sorting, personalities, terminal association, CPU and memory metric interpretation, kernel-data models, and full-screen process-tool support. It consumes rather than duplicates the general processor-resource, process-identity, target, launch, wait, signal, priority, clock, and terminal contracts incubated in the current Shared project.
 
 ### Co-resident suite incubation policy
 
@@ -171,6 +177,7 @@ Each non-Coreutils suite developed in this repository must:
 - reproduce the established `net10.0`, C# 13, Debug/Staging/Release, UTF-8/LF, XML documentation, and three-runner CI policies;
 - use project references during co-resident development;
 - keep suite-specific state out of the general Shared incubation project;
+- consume existing cross-suite abstractions rather than recreating parallel processor, process, signal, priority, waiting, timing, or terminal contracts inside a suite-specific Shared project;
 - classify every new shared API provisionally as cross-suite, Coreutils-specific, suite-specific, or command-local;
 - establish textual compatibility fixtures where public formats cross suite boundaries;
 - document output-path handling for duplicate executable names;
@@ -305,8 +312,9 @@ These conventions apply to every existing project that is altered and every proj
 15. Co-resident projects whose lowercase executable names collide use suite-specific output directories. Tests and packaging identify the suite explicitly; an assembly name is not changed merely to avoid an incubation-time path collision.
 16. The supported CI platform targets are explicitly `windows-latest`, `ubuntu-latest`, and `macos-latest`. Platform-specific tests may be conditional, but every runner must build the full solution and execute the complete applicable test suite.
 17. Do not use `Assert.True` to check for substrings. Use `Assert.StartsWith`, `Assert.EndsWith` instead. (https://xunit.net/xunit.analyzers/rules/xUnit2009).
-18. The eventual extracted repositories retain these conventions unless their own roadmap records a deliberate exception.
-19. Cross-suite compatibility is tested at the public command-line or textual-format boundary unless a dependency has been deliberately classified as cross-suite infrastructure. During the current roadmap such APIs may be incubated in `Icod.CoreUtils.Shared`; their permanent public home is `Icod.CommandFramework` after the final extraction audit.
+18. Do not use `Assert.Equal` to check for boolean conditions. Use `Assert.True` instead. (https://xunit.net/xunit.analyzers/rules/xUnit2004)
+19. The eventual extracted repositories retain these conventions unless their own roadmap records a deliberate exception.
+20. Cross-suite compatibility is tested at the public command-line or textual-format boundary unless a dependency has been deliberately classified as cross-suite infrastructure. During the current roadmap such APIs may be incubated in `Icod.CoreUtils.Shared`; their permanent public home is `Icod.CommandFramework` after the final extraction audit.
 
 ## Repository-wide engineering rules
 
@@ -326,7 +334,9 @@ These conventions apply to every existing project that is altered and every proj
 14. The exact upstream package and version used as the conformance baseline is recorded for every batch.
 15. `Icod.CoreUtils` command projects do not take production dependencies on `Icod.DiffUtils`, `Icod.Grep`, `Icod.Patch`, `Icod.Ed`, `Icod.ProcPs`, `Icod.Sed`, or `Icod.Tar`.
 16. Co-resident suite projects remain isolated by namespace, solution folder, tests, and output paths; Completion Gate G performs the final solution, repository, packaging, and CI extraction.
-17. Until the final framework audit, every substantial Shared API records a provisional classification: cross-suite `Icod.CommandFramework` candidate, Coreutils-only `Icod.CoreUtils.Shared` candidate, or command-local implementation. The classification may change when real consumers provide better evidence.
+17. Until the final framework audit, every substantial Shared API records a provisional classification: cross-suite `Icod.CommandFramework` candidate, Coreutils-only `Icod.CoreUtils.Shared` candidate, suite-specific Shared candidate, or command-local implementation. The classification may change when real consumers provide better evidence.
+18. A type's current assembly is not proof of final ownership. Cross-suite process and processor mechanics may reside temporarily in the current `Icod.CoreUtils.Shared` project, while ProcPs-specific enumeration, `/proc` parsing, field catalogs, selection grammar, metrics, and screen state remain in `Icod.ProcPs.Shared`.
+19. Suite-specific projects must not introduce parallel abstractions for processor availability, process identity, targets, launching, waiting, signals, priorities, clocks, or terminals when the current Shared incubation project already provides the required cross-suite contract.
 
 ## Engineering completion gates
 
@@ -531,9 +541,9 @@ This gate provides only the facilities needed by `expand`, `unexpand`, `fold`, a
 
 ### Batch 17 — Tabs and display columns (3 tools)
 
-- [ ] `expand`
-- [ ] `unexpand`
-- [ ] `fold`
+- [x] `expand`
+- [x] `unexpand`
+- [x] `fold`
 
 Use the shared display-column and tab-stop model. Cover tab lists, repeated tab intervals, initial/all modes, byte versus character behavior, word-boundary folding, backspaces, carriage returns, wide characters, and invalid multibyte input.
 
@@ -928,25 +938,32 @@ Use real allocated-block and filesystem data where available. Implement block-si
 
 Implement pass selection, random sources, exact-size handling, synchronization, removal and renaming policy, device/file distinctions, progress, and failure recovery. Document and test the limits of overwriting on SSDs, copy-on-write filesystems, snapshots, journaling, and remapped storage.
 
-### Completion Gate F2 — before Batch 49
+### Completion Gate F2 — shared host and processor-resource foundation before Batch 49
 
-* [ ] Add shared host and processor-information capabilities:
+* [ ] Add shared host and processor-resource capabilities to the current Shared incubation project:
 
   * [ ] host-identifier retrieval and normalization;
-  * [ ] configured, online, and currently available processor counts;
-  * [ ] processor-affinity awareness;
-  * [ ] container and quota awareness where available;
-  * [ ] command-specific environment overrides;
+  * [ ] configured processor count;
+  * [ ] installed processor count;
+  * [ ] online processor count;
+  * [ ] processors available to the current process;
+  * [ ] current-process affinity inspection;
+  * [ ] container, job-object, processor-set, and cgroup quota inspection where available;
+  * [ ] optional processor topology and NUMA descriptors where supported;
+  * [ ] capability and data-provenance reporting;
+  * [ ] injectable providers and deterministic tests;
   * [ ] controlled and documented platform differences.
 
-This gate directly supports `hostid` and `nproc`.
+These factual provider contracts are provisionally classified as `Icod.CommandFramework` candidates even though they are implemented physically in the current `Icod.CoreUtils.Shared` project during incubation. They support `hostid` and `nproc` immediately and later supply processor-resource facts to `Icod.ProcPs.Shared`, `ps`, `top`, `vmstat`, and other consumers.
+
+GNU `nproc` interpretation of `OMP_NUM_THREADS`, `OMP_THREAD_LIMIT`, `--all`, `--ignore`, minimum-result policy, diagnostics, and exit statuses remains command-specific and must not be embedded in the general processor provider.
 
 ### Batch 49 — Host and processor context (2 tools)
 
 - [ ] `hostid`
 - [ ] `nproc`
 
-Add the missing projects. Define reproducible host-ID behavior and implement available/configured processor counts, environment overrides, affinity and quota awareness, and controlled platform differences.
+Add the missing projects. Define reproducible host-ID behavior. Build `nproc` as the first consumer of the shared processor-resource provider, then apply GNU-specific environment overrides, `--all`, `--ignore`, minimum-result, affinity, quota, diagnostics, and exit-status policy in the command project.
 
 ### Completion Gate F3 — before Batch 50
 
@@ -974,23 +991,31 @@ Add the missing project. Implement silent mode, terminal-name reporting, correct
 
 Add the missing project as a dedicated platform batch. Implement reading and changing terminal modes, sane/raw profiles, control characters, speed, machine-readable save/restore form, selected device handling, and a documented Windows capability boundary.
 
-### Completion Gate F4 — before Batch 52
+### Completion Gate F4 — shared process execution and control foundation before Batch 52
 
-* [ ] Add shared child-process and signal primitives:
+* [ ] Add cross-suite process execution and control primitives to the current Shared incubation project:
 
+  * [ ] process identity with optional PID-reuse detection tokens where supported;
+  * [ ] process, process-group, and session target models;
   * [ ] executable lookup;
   * [ ] argument-safe process launching without shell interpolation;
   * [ ] working-directory and environment construction;
   * [ ] asynchronous standard-stream forwarding;
-  * [ ] cancellation and child-process cleanup;
+  * [ ] child-process lifetime, cancellation, cleanup, and orphan policy;
+  * [ ] process liveness and deterministic vanished-process results;
+  * [ ] child-process waiting;
+  * [ ] arbitrary-process waiting capability contracts for later `pidwait` use;
   * [ ] signal-name and signal-number parsing;
-  * [ ] signal listing and translation;
-  * [ ] signal-disposition control required by `nohup`;
-  * [ ] process and process-group targeting;
-  * [ ] child termination and exit-status translation;
-  * [ ] controlled Windows substitutions where semantics are defensible.
+  * [ ] signal listing, translation, disposition, and delivery;
+  * [ ] process-priority retrieval and mutation;
+  * [ ] monotonic-clock, cancellation-aware delay, and periodic-scheduling contracts;
+  * [ ] exit-status, signal-termination, timeout, and other termination-reason translation;
+  * [ ] controlled Windows substitutions where semantics are defensible;
+  * [ ] injectable providers and cross-platform integration tests.
 
-This gate supports `env` and `nohup`, allows Coreutils `kill` to validate the signal layer in Batch 53, allows `nice` and `timeout` to reuse it in Batch 54, and supplies the cross-suite process primitives consumed immediately by the ProcPs block and later by `Icod.Tar` and `Icod.Ed`.
+These contracts are provisionally classified as `Icod.CommandFramework` candidates even though they are implemented physically in the current `Icod.CoreUtils.Shared` project during incubation.
+
+This gate supports `env` and `nohup`, allows Coreutils `kill` to validate signal parsing, targets, and delivery in Batch 53, allows `nice` and `timeout` to validate priority, waiting, process groups, clocks, termination, and status propagation in Batch 54, and supplies the common mechanics consumed immediately by the ProcPs block and later by `Icod.Tar`, `Icod.Ed`, and other suites.
 
 ### Batch 52 — Environment and hangup-independent execution (2 tools)
 
@@ -1012,41 +1037,46 @@ Implement signal-name and signal-number parsing, signal listing and translation,
 
 Implement priority adjustment without child-start races. Parse the complete duration grammar and support signal selection, kill-after behavior, foreground and process-group handling, status preservation, verbose diagnostics, exact exit-status propagation, and explicit platform-capability handling.
 
-### Completion Gate P1 — before Batch 55
+### Completion Gate P1 — ProcPs classification and provider foundation before Batch 55
 
 - [ ] Establish the co-resident procps-ng suite foundation:
 
   - [ ] pin procps-ng 4.0.6 and audit its exact command, launcher, alias, and install inventory;
   - [ ] resolve the pinned-baseline relationship between `pidwait` and `pwait`;
-  - [ ] define Linux `/proc` as the canonical semantic provider;
-  - [ ] define Windows, macOS, and BSD process and system provider capabilities;
-  - [ ] attach provenance to every field that is exact, approximated, synthesized from equivalent native data, or unavailable;
-  - [ ] define process snapshot, identity, lifetime, race, permission, namespace, container, affinity, and quota behavior;
-  - [ ] define memory, swap, CPU, load, uptime, virtual-memory, process-map, slab, hugepage, user-session, and kernel-parameter provider boundaries;
-  - [ ] define deterministic sampling-clock, interval, counter-delta, wraparound, and refresh behavior;
-  - [ ] define testable terminal-screen, resize, input, color, suspension, cancellation, and restoration abstractions;
-  - [ ] establish suite-specific output directories for command names that collide with existing CoreUtils projects;
-  - [ ] establish fixture-driven `/proc` parsing and injectable provider tests.
+  - [ ] audit every processor- and process-related API created by Completion Gates F2 through F4 and record its actual Coreutils, ProcPs, Tar, Ed, and other suite consumers;
+  - [ ] keep genuinely cross-suite processor-resource, process-identity, target, launch, wait, signal, priority, clock, scheduler, status, and terminal contracts in the current Shared incubation project and classify them as future `Icod.CommandFramework` candidates;
+  - [ ] prohibit `Icod.ProcPs.Shared` from introducing duplicate abstractions for those common mechanics;
+  - [ ] define Linux `/proc` as the canonical ProcPs observation provider;
+  - [ ] define Windows, macOS, and BSD process and system observation capabilities;
+  - [ ] attach provenance to every field that is exact, equivalent, approximated, synthesized, or unavailable;
+  - [ ] define the boundary between general process mechanics and ProcPs-specific enumeration, detailed snapshots, selection grammar, fields, personalities, metrics, sorting, and presentation;
+  - [ ] define process lifetime races, permissions, namespaces, containers, affinity, and quota interpretation for ProcPs observations without redefining the underlying common identity and resource contracts;
+  - [ ] define memory, swap, CPU activity, load, uptime, virtual-memory, process-map, slab, hugepage, user-session, and kernel-parameter provider boundaries;
+  - [ ] consume the shared monotonic clock and periodic scheduler while defining ProcPs-specific sampling intervals, counter deltas, wraparound, and refresh semantics;
+  - [ ] consume shared terminal primitives while defining testable ProcPs screen models, interaction, sorting, filtering, and configuration behavior;
+  - [ ] establish suite-specific output directories for command names that collide with existing Coreutils projects;
+  - [ ] establish fixture-driven `/proc` parsing and injectable ProcPs provider tests.
 
 Linux behavior remains authoritative for procps-ng. Other supported platforms must expose honest capability and provenance information rather than fabricated Linux fields, misleading zero values, or silent success.
 
-This gate follows Batches 52 through 54 so ProcPs can consume already tested child-process, signal, process-group, status-propagation, priority, and timeout foundations. It precedes the ProcPs block so those cross-suite facilities are not rediscovered independently by each procps-ng command.
+This gate follows Batches 52 through 54 so ProcPs can consume already tested process launch, identity, targets, waiting, signals, process groups, status propagation, priorities, clocks, and timeout foundations. It precedes the ProcPs block so those cross-suite facilities are not rediscovered independently by each procps-ng command and so ProcPs-specific observation begins at the correct architectural layer.
 
 ### Batch 55 — `Icod.ProcPs.Shared` provider foundation (1 library)
 
 - [ ] `Icod.ProcPs.Shared`
 
-Create the suite-specific Shared project and its dedicated test project inside the current solution. Implement the common procps-ng provider and domain foundation:
+Create the suite-specific Shared project and its dedicated test project inside the current solution. Implement the procps-ng-specific observation and domain foundation:
 
-- process enumeration, identity, snapshots, parent and child relationships, sessions, groups, users, terminals, namespaces, containers, and lifetime races;
-- Linux `/proc` parsing and equivalent Windows, macOS, and BSD providers;
+- process enumeration and detailed snapshots built on the common process-identity model;
+- parent and child relationships, sessions, groups, users, terminals, namespaces, containers, and lifetime-race interpretation required by procps-ng;
+- Linux `/proc` parsing and equivalent Windows, macOS, and BSD observation providers;
 - field provenance and capability reporting;
-- shared process-selection, signal-targeting, waiting, and priority models;
-- memory, swap, CPU, load, uptime, virtual-memory, map, slab, hugepage, and user-session metrics;
-- deterministic sampling clocks and counter-delta calculation;
-- field catalogs, sorting, personalities, display-width policy, and reusable terminal-screen models.
+- the procps-ng process-selection grammar and adapters over the common signal, arbitrary-wait, priority, and target providers;
+- memory, swap, CPU activity, load, uptime, virtual-memory, map, slab, hugepage, and user-session metrics;
+- counter-delta, sampling-window, wraparound, and refresh calculations over the common monotonic clock and scheduler;
+- field catalogs, sorting, personalities, display policy, configuration, and reusable ProcPs screen models.
 
-`Icod.ProcPs.Shared` uses project references to the current Shared incubation project during development. Procps-specific fields, personalities, `/proc` parsers, kernel models, and screen state must not move into the general Shared project merely because `Icod.CommandFramework` has not yet been extracted.
+`Icod.ProcPs.Shared` uses project references to the current Shared incubation project during development. It consumes common processor-resource, process identity, targets, launching, waiting, signals, priorities, clocks, scheduling, statuses, and terminal primitives from that project. Procps-specific enumeration, fields, selection, personalities, `/proc` parsers, kernel models, metric interpretation, and screen state remain here. Neither layer should duplicate the other merely because `Icod.CommandFramework` has not yet been extracted.
 
 ### Batch 56 — Basic system summaries (2 tools)
 
@@ -1271,11 +1301,13 @@ Completion of this gate establishes `Icod.CommandFramework` as the neutral cross
 
 - Completion Gates E2 through E6 remain focused on Coreutils/Fileutils path resolution, metadata, modes, mutation, recursive traversal, and transactional replacement. The co-resident sibling suites provide additional consumers, helping distinguish framework contracts from Coreutils-specific policy.
 
-- Completion Gates F1 through F4 establish terminal presentation, host information, terminal control, child-process launch, signals, process groups, status translation, priority adjustment, and timeout behavior before the most platform-intensive suite begins.
+- Completion Gates F1 through F4 establish cross-suite terminal presentation and control, host and processor-resource facts, process identity and targets, argument-safe launch, child and arbitrary-process waiting contracts, signals, process groups, priorities, monotonic timing, status translation, and timeout behavior before the most platform-intensive suite begins. These APIs live physically in the current Shared incubation project but are provisionally classified as `Icod.CommandFramework` candidates.
 
-- Completion Gate P1 follows Coreutils `env`, `nohup`, `kill`, `nice`, and `timeout`, then defines the procps-ng provider and provenance model just before its first consumer. Linux `/proc` remains the authoritative semantic source; Windows, macOS, and BSD providers must identify exact, equivalent, approximated, and unavailable data honestly.
+- Completion Gate P1 follows Coreutils `env`, `nohup`, `kill`, `nice`, and `timeout`, audits those shared processor and process APIs against their first large sibling-suite consumer, prohibits duplicate ProcPs abstractions, and then defines the procps-ng-specific observation and provenance layer. Linux `/proc` remains the authoritative semantic source; Windows, macOS, and BSD providers must identify exact, equivalent, approximated, and unavailable data honestly.
 
 - Batches 55 through 68 are consecutive so `Icod.ProcPs.Shared` and the complete pinned procps-ng family evolve together. The order progresses from narrow system summaries, through sampled statistics and process targeting, to process maps and `ps`, then to user, kernel, terminal, specialized-memory, and finally full-screen process monitoring.
+
+- The architectural boundary is facts and mechanics versus suite interpretation: common processor availability, identity, targeting, launch, wait, signal, priority, clock, status, and terminal contracts remain in the current Shared incubation project, while ProcPs owns `/proc` parsing, process enumeration, detailed snapshots, selection grammar, field catalogs, metric interpretation, personalities, sorting, and screen behavior.
 
 - `uptime` and `free` validate the narrowest load and memory providers; `vmstat` validates interval sampling and counter deltas; `pgrep`, `pkill`, and `pidwait` establish one selection engine; and `pidof`, `pwdx`, `kill`, `skill`, and `snice` exercise identity, path, signal, and priority behavior before `ps` consumes the complete process model.
 
@@ -1314,7 +1346,8 @@ Completion of this gate establishes `Icod.CommandFramework` as the neutral cross
 13. Verify UTF-8 encoding and LF line endings, lowercase assembly names, required project configuration, and absence of generated artifacts.
 14. Update this roadmap’s living status and record any deliberately deferred behavior.
 15. For a co-resident suite milestone, verify the final namespace, solution folder, output path, test coverage, suite-specific Shared boundary, transitional project references, and public-format compatibility.
-16. For Completion Gate G, verify every extracted repository against the published `Icod.CommandFramework` and other applicable NuGet packages before declaring the architecture stable.
+16. For a ProcPs milestone, verify that common processor, process, signal, priority, waiting, timing, status, and terminal mechanics are consumed from the current Shared incubation project rather than duplicated in `Icod.ProcPs.Shared`.
+17. For Completion Gate G, verify every extracted repository against the published `Icod.CommandFramework` and other applicable NuGet packages before declaring the architecture stable.
 
 ## Batch completion checklist
 
@@ -1336,4 +1369,5 @@ A batch is complete only when:
 - the target framework and project configuration satisfy the current completion gate;
 - roadmap status and documentation are updated;
 - co-resident suite batches preserve suite-correct namespaces, isolated output paths, tests, and dependency direction; Completion Gate G leaves no stale solution, packaging, CI, or inventory references after extraction;
+- ProcPs batches consume the shared processor and process foundation without duplicating its identities, targets, launch, wait, signal, priority, timing, status, or terminal contracts;
 - Completion Gate G leaves `Icod.CommandFramework` free of suite dependencies, preserves `Icod.CoreUtils.Shared` only where Coreutils/Fileutils/Textutils-specific reuse remains, and verifies all consumers against published packages.

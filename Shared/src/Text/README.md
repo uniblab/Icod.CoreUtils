@@ -8,6 +8,7 @@ This namespace contains the shared Pre-16 Gate C2 text-unit and display-column f
 - Treat a UTF-8 byte-order mark as ordinary input rather than metadata.
 - Make malformed-input handling explicit: preserve each byte, replace while retaining the source byte, or throw at a stable byte offset.
 - Keep locale blank classification and display-width calculation independently injectable.
+- Resolve the process profile through `LC_ALL`, `LC_CTYPE`, then `LANG`, treating only `C` and `POSIX` as raw-byte locales.
 - Use checked `ulong` display columns and recurring tab-stop arithmetic.
 - Expose the maximum configured tab-stop distance so consumers can bound pending storage.
 - Share mechanisms, not command semantics. Command projects retain ownership of option precedence, pending-blank buffers, fold buffers, file-boundary behavior, and output diagnostics.
