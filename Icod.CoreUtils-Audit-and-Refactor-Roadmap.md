@@ -517,15 +517,15 @@ Implement a real precedence-aware expression parser with arithmetic, relations, 
 
 ### Completion Gate C2 — before Batch 17
 
-* [ ] Add the shared text-unit and display-column model:
+* [x] Add the shared text-unit and display-column model:
 
-  * [ ] byte iteration;
-  * [ ] decoded Unicode-scalar iteration;
-  * [ ] explicit invalid-encoding policy;
-  * [ ] display-column width calculation;
-  * [ ] tab-stop grammar and repeated tab intervals;
-  * [ ] backspace and carriage-return column behavior;
-  * [ ] injectable width and locale providers.
+  * [x] byte iteration;
+  * [x] decoded Unicode-scalar iteration;
+  * [x] explicit invalid-encoding policy;
+  * [x] display-column width calculation;
+  * [x] tab-stop grammar and repeated tab intervals;
+  * [x] backspace and carriage-return column behavior;
+  * [X] injectable width and locale providers.
 
 This gate provides only the facilities needed by `expand`, `unexpand`, `fold`, and the later page-layout commands. It does not prematurely introduce sorting or external-storage behavior.
 
