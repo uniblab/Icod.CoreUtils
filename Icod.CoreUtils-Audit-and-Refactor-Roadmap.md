@@ -1052,8 +1052,3 @@ A batch is complete only when:
 - the target framework and project configuration satisfy the current completion gate;
 - roadmap status and documentation are updated;
 - extraction milestones leave no stale source, solution, packaging, CI, or inventory references in CoreUtils and establish green destination-repository CI.
-
-## Immediate next actions
-1. Complete Batch 16 (`expr`).
-2. Complete Completion Gate C2 before beginning Batch 17.
-3. Continue with Batch 17 (`expand`, `unexpand`, `fold`).
