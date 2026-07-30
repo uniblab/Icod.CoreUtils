@@ -88,7 +88,7 @@ internal static class PtxContextReader {
 			var next = null == separator
 				? bytes.Length
 				: checked( separator.Value.Start + separator.Value.Length );
-			var end = TrimTrailingWhitespaceIndex( bytes, cursor, next );
+			var end = TrimTrailingWhitespaceIndex( bytes.AsSpan(), cursor, next );
 			if ( cursor < end ) {
 				yield return new PtxContextSegment(
 					bytes.AsSpan( cursor, end - cursor ).ToArray(),
