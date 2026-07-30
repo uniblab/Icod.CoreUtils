@@ -4,9 +4,9 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | For completion status, see list of batches below |
-| Current engineering gate | For completion status, see list of batches below |
-| Next infrastructure dependency | For completion status, see list of batches below |
+| Completed command batches | `0` through `19` |
+| Current engineering gate | Completion Gate D complete |
+| Next infrastructure dependency | Batch 20 — External ordering (`sort`) |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -577,17 +577,17 @@ Implement complete byte/character/field list grammar, complement and output deli
 
 ### Completion Gate D — before Batch 20
 
-* [ ] Extend the secure temporary-object infrastructure established by `mktemp` with the shared external-ordering model:
+* [x] Extend the secure temporary-object infrastructure established by `mktemp` with the shared external-ordering model:
 
-  * [ ] locale-aware collation;
-  * [ ] reusable sort-key parsing and comparison;
-  * [ ] stable comparison and original-order tracking;
-  * [ ] bounded-memory sorted runs;
-  * [ ] stable external merge;
-  * [ ] temporary-workspace lifecycle management;
-  * [ ] deterministic cleanup on success, failure, and cancellation.
+  * [x] locale-aware collation;
+  * [x] reusable sort-key parsing and comparison;
+  * [x] stable comparison and original-order tracking;
+  * [x] bounded-memory sorted runs;
+  * [x] stable external merge;
+  * [x] temporary-workspace lifecycle management;
+  * [x] deterministic cleanup on success, failure, and cancellation.
 
-This gate is intentionally not split because its components jointly form the execution foundation required by `sort`.
+This gate is intentionally not split because its components jointly form the execution foundation required by `sort`. The implementation resides entirely in `Icod.CoreUtils.Shared.Ordering` and `Icod.CoreUtils.Shared.Temporary`; it introduces no dependencies between individual command projects.
 
 ### Batch 20 — External ordering (1 tool)
 
