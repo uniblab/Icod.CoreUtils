@@ -95,6 +95,7 @@ public static class Command {
 			return CommandExitCodes.Canceled;
 		} catch ( Exception exception ) when (
 			exception is IOException
+			or InvalidDataException
 			or UnauthorizedAccessException
 			or InvalidOperationException
 			or ArgumentException
@@ -309,26 +310,73 @@ Compare sorted files FILE1 and FILE2 record by record.
 		await context.StandardOutput.WriteAsync( help.AsMemory(), context.CancellationToken ).ConfigureAwait( false );
 	}
 
-	private sealed record CommOptions(
-		string FirstPath,
-		string SecondPath,
-		bool ShowFirst,
-		bool ShowSecond,
-		bool ShowCommon,
-		OrderCheckMode CheckMode,
-		ReadOnlyMemory<byte> OutputDelimiter,
-		bool ShowTotal,
-		RecordSeparator RecordSeparator
-	);
+	private sealed class CommOptions {
+		/// <summary>Initializes the immutable command options.</summary>
+		/// <param name="firstPath">The first input path.</param>
+		/// <param name="secondPath">The second input path.</param>
+		/// <param name="showFirst">Whether to emit records unique to the first input.</param>
+		/// <param name="showSecond">Whether to emit records unique to the second input.</param>
+		/// <param name="showCommon">Whether to emit records common to both inputs.</param>
+		/// <param name="checkMode">The sorted-input checking mode.</param>
+		/// <param name="outputDelimiter">The delimiter inserted between output columns.</param>
+		/// <param name="showTotal">Whether to emit the totals record.</param>
+		/// <param name="recordSeparator">The input and output record separator.</param>
+		public CommOptions(
+			string firstPath,
+			string secondPath,
+			bool showFirst,
+			bool showSecond,
+			bool showCommon,
+			OrderCheckMode checkMode,
+			ReadOnlyMemory<byte> outputDelimiter,
+			bool showTotal,
+			RecordSeparator recordSeparator
+		) {
+			this.FirstPath = firstPath;
+			this.SecondPath = secondPath;
+			this.ShowFirst = showFirst;
+			this.ShowSecond = showSecond;
+			this.ShowCommon = showCommon;
+			this.CheckMode = checkMode;
+			this.OutputDelimiter = outputDelimiter;
+			this.ShowTotal = showTotal;
+			this.RecordSeparator = recordSeparator;
+		}
+
+		/// <summary>Gets the first input path.</summary>
+		public string FirstPath { get; }
+		/// <summary>Gets the second input path.</summary>
+		public string SecondPath { get; }
+		/// <summary>Gets whether records unique to the first input are emitted.</summary>
+		public bool ShowFirst { get; }
+		/// <summary>Gets whether records unique to the second input are emitted.</summary>
+		public bool ShowSecond { get; }
+		/// <summary>Gets whether records common to both inputs are emitted.</summary>
+		public bool ShowCommon { get; }
+		/// <summary>Gets the sorted-input checking mode.</summary>
+		public OrderCheckMode CheckMode { get; }
+		/// <summary>Gets the delimiter inserted between output columns.</summary>
+		public ReadOnlyMemory<byte> OutputDelimiter { get; }
+		/// <summary>Gets whether the totals record is emitted.</summary>
+		public bool ShowTotal { get; }
+		/// <summary>Gets the input and output record separator.</summary>
+		public RecordSeparator RecordSeparator { get; }
+	}
 
 	private sealed class InputState {
+		/// <summary>Initializes state for one input stream.</summary>
+		/// <param name="displayName">The input name used in diagnostics.</param>
 		public InputState( string displayName ) {
 			this.DisplayName = displayName;
 		}
 
+		/// <summary>Gets the input name used in diagnostics.</summary>
 		public string DisplayName { get; }
+		/// <summary>Gets or sets whether a descending adjacent record pair was observed.</summary>
 		public bool IsDisordered { get; set; }
+		/// <summary>Gets or sets the one-based number of the most recently read record.</summary>
 		public long LineNumber { get; set; }
+		/// <summary>Gets or sets the previously read record used for order checking.</summary>
 		public ByteRecord? Previous { get; set; }
 	}
 

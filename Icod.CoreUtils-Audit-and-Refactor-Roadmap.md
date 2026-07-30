@@ -646,9 +646,9 @@ This gate is completed before the co-resident `Icod.Grep` batch so recursive sea
 
 ### Batch 26 — `Icod.Grep` search engine (1 tool)
 
-- [ ] `Icod.Grep`
+- [ ] `grep`
 
-Create the suite-correct `Icod.Grep` project inside the current solution, migrate the existing grep seed implementation and tests into that namespace, and implement the documented GNU grep 3.12 option and pattern model. Cover multiple pattern sources, basic/extended/fixed/Perl-mode policy, recursive traversal, include/exclude rules, binary policy, context, filename and line metadata, counts, quiet/list modes, NUL behavior, and the required 0/1/2 status distinction.
+Implement the documented GNU grep 3.12 option and pattern model. Cover multiple pattern sources, basic/extended/fixed/Perl-mode policy, recursive traversal, include/exclude rules, binary policy, context, filename and line metadata, counts, quiet/list modes, NUL behavior, and the required 0/1/2 status distinction.
 
 `Icod.Grep` consumes the current regular-expression, record, diagnostic, and read-only traversal abstractions through project references during incubation. Grep-specific matcher orchestration, binary-input policy, context grouping, and output formatting remain in the grep project or a repository-local engine if later testing justifies one. Completion Gate G will move genuine cross-suite dependencies to `Icod.CommandFramework` and extract `Icod.Grep` into its own solution and repository.
 

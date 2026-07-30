@@ -701,21 +701,41 @@ Filter adjacent matching records from INPUT, writing to OUTPUT.
 	}
 
 	private sealed class UniqOptions {
+		/// <summary>Initializes a mutable set of parsed command options.</summary>
+		public UniqOptions() {
+		}
+
+		/// <summary>Gets the input path.</summary>
 		public string InputPath { get; init; } = string.Empty;
+		/// <summary>Gets the output path, or <see langword="null"/> for standard output.</summary>
 		public string? OutputPath { get; init; }
+		/// <summary>Gets whether occurrence counts are prefixed to selected records.</summary>
 		public bool Count { get; init; }
+		/// <summary>Gets whether unique groups are emitted.</summary>
 		public bool OutputUnique { get; init; }
+		/// <summary>Gets whether the first record of repeated groups is emitted.</summary>
 		public bool OutputFirstRepeated { get; init; }
+		/// <summary>Gets whether later records of repeated groups are emitted.</summary>
 		public bool OutputLaterRepeated { get; init; }
+		/// <summary>Gets the delimiter method used with all-repeated output.</summary>
 		public DelimiterMethod RepeatedMethod { get; init; }
+		/// <summary>Gets whether every group is emitted with group delimiters.</summary>
 		public bool Group { get; init; }
+		/// <summary>Gets the delimiter method used with group output.</summary>
 		public DelimiterMethod GroupMethod { get; init; }
+		/// <summary>Gets whether case differences are ignored.</summary>
 		public bool IgnoreCase { get; init; }
+		/// <summary>Gets or sets whether character operations use raw bytes.</summary>
 		public bool BytewiseCharacters { get; set; }
+		/// <summary>Gets or sets the culture used for character case folding.</summary>
 		public CultureInfo? CharacterCulture { get; set; }
+		/// <summary>Gets the number of leading fields excluded from comparison.</summary>
 		public long SkipFields { get; init; }
+		/// <summary>Gets the number of leading characters excluded from comparison.</summary>
 		public long SkipChars { get; init; }
+		/// <summary>Gets the maximum number of characters compared, when specified.</summary>
 		public long? CheckChars { get; init; }
+		/// <summary>Gets the input and output record separator.</summary>
 		public RecordSeparator RecordSeparator { get; init; }
 	}
 

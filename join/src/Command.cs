@@ -95,6 +95,7 @@ public static class Command {
 			return CommandExitCodes.Canceled;
 		} catch ( Exception exception ) when (
 			exception is IOException
+			or InvalidDataException
 			or UnauthorizedAccessException
 			or InvalidOperationException
 			or ArgumentException
@@ -356,9 +357,9 @@ public static class Command {
 				var firstGroup = await ReadGroupAsync( first, key, comparer, context ).ConfigureAwait( false );
 				var secondGroup = await ReadGroupAsync( second, key, comparer, context ).ConfigureAwait( false );
 				if ( options.OutputPairable ) {
-					foreach ( var firstRe in firstGroup ) {
+					foreach ( var firstRec in firstGroup ) {
 						foreach ( var secondRec in secondGroup ) {
-							await writer.WriteAsync( firstRe, secondRec, context.CancellationToken ).ConfigureAwait( false );
+							await writer.WriteAsync( firstRec, secondRec, context.CancellationToken ).ConfigureAwait( false );
 						}
 					}
 				}
@@ -530,21 +531,41 @@ Join records of two sorted files on a common field.
 	}
 
 	private sealed class JoinOptions {
+		/// <summary>Initializes a mutable set of parsed command options.</summary>
+		public JoinOptions() {
+		}
+
+		/// <summary>Gets the first input path.</summary>
 		public string FirstPath { get; init; } = string.Empty;
+		/// <summary>Gets the second input path.</summary>
 		public string SecondPath { get; init; } = string.Empty;
+		/// <summary>Gets the join-field number for the first input.</summary>
 		public int FirstJoinField { get; init; }
+		/// <summary>Gets the join-field number for the second input.</summary>
 		public int SecondJoinField { get; init; }
+		/// <summary>Gets whether unpairable records from the first input are emitted.</summary>
 		public bool IncludeFirstUnpaired { get; init; }
+		/// <summary>Gets whether unpairable records from the second input are emitted.</summary>
 		public bool IncludeSecondUnpaired { get; init; }
+		/// <summary>Gets whether pairable records are emitted.</summary>
 		public bool OutputPairable { get; init; }
+		/// <summary>Gets whether ASCII case differences are ignored while comparing keys.</summary>
 		public bool IgnoreCase { get; init; }
+		/// <summary>Gets the sorted-input checking mode.</summary>
 		public OrderCheckMode CheckMode { get; init; }
+		/// <summary>Gets whether the first record of each input is a header.</summary>
 		public bool Header { get; init; }
+		/// <summary>Gets the input and output record separator.</summary>
 		public RecordSeparator RecordSeparator { get; init; }
+		/// <summary>Gets the exact input field separator, or <see langword="null"/> for blank-separated fields.</summary>
 		public byte[]? FieldSeparator { get; init; }
+		/// <summary>Gets the separator written between output fields.</summary>
 		public ReadOnlyMemory<byte> OutputSeparator { get; init; }
+		/// <summary>Gets the bytes substituted for missing or empty fields.</summary>
 		public ReadOnlyMemory<byte> MissingReplacement { get; init; }
+		/// <summary>Gets or sets the explicit output-field sequence.</summary>
 		public List<OutputField> OutputFields { get; set; } = new();
+		/// <summary>Gets whether the output-field sequence is inferred from the first records.</summary>
 		public bool OutputAuto { get; init; }
 	}
 
@@ -558,6 +579,13 @@ Join records of two sorted files on a common field.
 		private ReadOnlyMemory<byte>? myPreviousKey;
 		private long myRecordNumber;
 
+		/// <summary>Initializes a cursor over one sorted join input.</summary>
+		/// <param name="reader">The record reader.</param>
+		/// <param name="displayName">The input name used in diagnostics.</param>
+		/// <param name="joinField">The one-based join-field number.</param>
+		/// <param name="fieldSeparator">The exact field separator, or <see langword="null"/> for blank-separated fields.</param>
+		/// <param name="comparer">The join-key comparer.</param>
+		/// <param name="checkMode">The sorted-input checking mode.</param>
 		public JoinCursor(
 			ByteRecordReader reader,
 			string displayName,
@@ -574,9 +602,15 @@ Join records of two sorted files on a common field.
 			this.myCheckMode = checkMode;
 		}
 
-		public JoinRecord? Current { get; set; }
-		public bool IsDisordered { get; set; }
+		/// <summary>Gets the current parsed record, or <see langword="null"/> after end of input.</summary>
+		public JoinRecord? Current { get; private set; }
+		/// <summary>Gets whether a descending adjacent key pair was observed.</summary>
+		public bool IsDisordered { get; private set; }
 
+		/// <summary>Advances to the next record and optionally checks key ordering.</summary>
+		/// <param name="context">The command context.</param>
+		/// <param name="checkOrder">Whether this record participates in sorted-input checking.</param>
+		/// <returns>A value task representing the asynchronous read.</returns>
 		public async ValueTask AdvanceAsync( CommandContext context, bool checkOrder ) {
 			var record = await this.myReader.ReadAsync( context.CancellationToken ).ConfigureAwait( false );
 			if ( null == record ) {
@@ -606,24 +640,44 @@ Join records of two sorted files on a common field.
 	}
 
 	private sealed class JoinRecord {
+		/// <summary>Initializes a parsed join record.</summary>
+		/// <param name="record">The original byte record.</param>
+		/// <param name="fields">The parsed field slices.</param>
+		/// <param name="joinField">The one-based join-field number.</param>
 		public JoinRecord( ByteRecord record, List<FieldSlice> fields, int joinField ) {
 			this.Record = record;
 			this.Fields = fields;
 			this.Key = GetField( fields, record.Content, joinField );
 		}
 
+		/// <summary>Gets the original byte record.</summary>
 		public ByteRecord Record { get; }
+		/// <summary>Gets the parsed field slices.</summary>
 		public List<FieldSlice> Fields { get; }
+		/// <summary>Gets the selected join key.</summary>
 		public ReadOnlyMemory<byte> Key { get; }
 
+		/// <summary>Gets a one-based field value, or an empty value when the field is absent.</summary>
+		/// <param name="number">The one-based field number.</param>
+		/// <returns>The selected field bytes.</returns>
 		public ReadOnlyMemory<byte> Field( int number ) {
 			return GetField( this.Fields, this.Record.Content, number );
 		}
 
+		/// <summary>Parses a byte record into fields and selects its join key.</summary>
+		/// <param name="record">The original byte record.</param>
+		/// <param name="joinField">The one-based join-field number.</param>
+		/// <param name="separator">The exact field separator, or <see langword="null"/> for blank-separated fields.</param>
+		/// <returns>The parsed join record.</returns>
 		public static JoinRecord Create( ByteRecord record, int joinField, byte[]? separator ) {
 			return new JoinRecord( record, SplitFields( record.Content, separator ), joinField );
 		}
 
+		/// <summary>Gets a one-based field from parsed slices.</summary>
+		/// <param name="fields">The parsed field slices.</param>
+		/// <param name="content">The original record content.</param>
+		/// <param name="number">The one-based field number.</param>
+		/// <returns>The field bytes, or an empty value when the field is absent.</returns>
 		public static ReadOnlyMemory<byte> GetField(
 			IReadOnlyList<FieldSlice> fields,
 			ReadOnlyMemory<byte> content,
@@ -642,12 +696,20 @@ Join records of two sorted files on a common field.
 		private readonly DelimitedByteRecordWriter myWriter;
 		private readonly ReadOnlyMemory<byte> myOutputSeparator;
 
+		/// <summary>Initializes a writer for formatted join output.</summary>
+		/// <param name="stream">The destination stream.</param>
+		/// <param name="options">The parsed command options.</param>
 		public JoinOutputWriter( Stream stream, JoinOptions options ) {
 			this.myOptions = options;
 			this.myWriter = new DelimitedByteRecordWriter( stream, options.RecordSeparator );
 			this.myOutputSeparator = options.OutputSeparator;
 		}
 
+		/// <summary>Writes one paired or unpaired output record.</summary>
+		/// <param name="first">The record from the first input, when present.</param>
+		/// <param name="second">The record from the second input, when present.</param>
+		/// <param name="cancellationToken">The cancellation token.</param>
+		/// <returns>A value task representing the asynchronous write.</returns>
 		public async ValueTask WriteAsync(
 			JoinRecord? first,
 			JoinRecord? second,
@@ -666,10 +728,18 @@ Join records of two sorted files on a common field.
 			await this.myWriter.WriteSeparatorAsync( cancellationToken ).ConfigureAwait( false );
 		}
 
+		/// <summary>Flushes buffered output.</summary>
+		/// <param name="cancellationToken">The cancellation token.</param>
+		/// <returns>A value task representing the asynchronous flush.</returns>
 		public ValueTask FlushAsync( CancellationToken cancellationToken ) {
 			return this.myWriter.FlushAsync( cancellationToken );
 		}
 
+		/// <summary>Creates the conventional output-field sequence for the available records.</summary>
+		/// <param name="first">The record from the first input, when present.</param>
+		/// <param name="second">The record from the second input, when present.</param>
+		/// <param name="options">The parsed command options.</param>
+		/// <returns>The output-field sequence.</returns>
 		public static List<OutputField> CreateDefaultFormat(
 			JoinRecord? first,
 			JoinRecord? second,
@@ -689,6 +759,12 @@ Join records of two sorted files on a common field.
 			return fields;
 		}
 
+		/// <summary>Resolves one output-field specification.</summary>
+		/// <param name="field">The output-field specification.</param>
+		/// <param name="first">The record from the first input, when present.</param>
+		/// <param name="second">The record from the second input, when present.</param>
+		/// <param name="options">The parsed command options.</param>
+		/// <returns>The field bytes or the configured missing-value replacement.</returns>
 		public static ReadOnlyMemory<byte> ResolveField(
 			OutputField field,
 			JoinRecord? first,
@@ -709,11 +785,37 @@ Join records of two sorted files on a common field.
 		}
 	}
 
-	private readonly record struct OutputField( int FileNumber, int FieldNumber ) {
+	private readonly record struct OutputField {
+		/// <summary>Initializes an output-field specification.</summary>
+		/// <param name="fileNumber">The source file number, or zero for the common join key.</param>
+		/// <param name="fieldNumber">The one-based source field number.</param>
+		public OutputField( int fileNumber, int fieldNumber ) {
+			this.FileNumber = fileNumber;
+			this.FieldNumber = fieldNumber;
+		}
+
+		/// <summary>Gets the source file number, or zero for the common join key.</summary>
+		public int FileNumber { get; }
+		/// <summary>Gets the one-based source field number.</summary>
+		public int FieldNumber { get; }
+		/// <summary>Gets the special output specification for the common join key.</summary>
 		public static OutputField JoinKey { get; } = new( 0, 0 );
 	}
 
-	private readonly record struct FieldSlice( int Start, int Length );
+	private readonly record struct FieldSlice {
+		/// <summary>Initializes a field slice.</summary>
+		/// <param name="start">The zero-based byte offset.</param>
+		/// <param name="length">The field length in bytes.</param>
+		public FieldSlice( int start, int length ) {
+			this.Start = start;
+			this.Length = length;
+		}
+
+		/// <summary>Gets the zero-based byte offset.</summary>
+		public int Start { get; }
+		/// <summary>Gets the field length in bytes.</summary>
+		public int Length { get; }
+	}
 
 	private static List<FieldSlice> SplitFields( ReadOnlyMemory<byte> content, byte[]? separator ) {
 		var result = new List<FieldSlice>();
@@ -759,9 +861,12 @@ Join records of two sorted files on a common field.
 	private static bool IsBlank( byte value ) => value is (byte)' ' or (byte)'\t';
 
 	private sealed class JoinKeyComparer : IComparer<ReadOnlyMemory<byte>> {
-		public readonly ByteCollationComparer myCollation;
-		public readonly bool myIgnoreCase;
+		private readonly ByteCollationComparer myCollation;
+		private readonly bool myIgnoreCase;
 
+		/// <summary>Initializes a join-key comparer.</summary>
+		/// <param name="collation">The locale-aware byte collation comparer.</param>
+		/// <param name="ignoreCase">Whether ASCII case differences are ignored.</param>
 		public JoinKeyComparer(
 			ByteCollationComparer collation,
 			bool ignoreCase
@@ -770,6 +875,10 @@ Join records of two sorted files on a common field.
 			this.myIgnoreCase = ignoreCase;
 		}
 
+		/// <summary>Compares two join keys.</summary>
+		/// <param name="left">The left key.</param>
+		/// <param name="right">The right key.</param>
+		/// <returns>A value less than, equal to, or greater than zero according to key order.</returns>
 		public int Compare(
 			ReadOnlyMemory<byte> left,
 			ReadOnlyMemory<byte> right
@@ -801,7 +910,10 @@ Join records of two sorted files on a common field.
 			ReadOnlyMemory<byte> right
 		) => this.Compare( left, right );
 
-		private static byte FoldAscii( byte value ) {
+		/// <summary>Folds an ASCII uppercase byte to lowercase.</summary>
+		/// <param name="value">The byte to fold.</param>
+		/// <returns>The folded byte.</returns>
+		public static byte FoldAscii( byte value ) {
 			return value is >= (byte)'A' and <= (byte)'Z'
 				? (byte)( value + ( (byte)'a' - (byte)'A' ) )
 				: value;
