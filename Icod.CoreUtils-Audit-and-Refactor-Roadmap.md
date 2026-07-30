@@ -622,7 +622,7 @@ The completed implementation adds a reusable byte-record collation adapter to `I
 
 ### Batch 23 — Character transformation (1 tool)
 
-- [ ] `tr`
+- [x] `tr`
 
 Implement the full `tr` set-expression grammar, including ranges, escapes, repetition, character classes, equivalence classes, complement, delete, squeeze, locale behavior, and delimiter bytes.
 
