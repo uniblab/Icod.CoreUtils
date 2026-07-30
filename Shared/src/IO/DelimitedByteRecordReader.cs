@@ -1,24 +1,19 @@
 namespace Icod.CoreUtils.Shared.IO;
 
-using System.Buffers;
+using Icod.CoreUtils.Shared.Records;
 
 /// <summary>
 /// Reads byte records from a forward-only stream while preserving each record's
 /// delimiter and a final unterminated record exactly as supplied.
 /// </summary>
 /// <remarks>
-/// The reader owns only its rented buffer. Ownership of the source stream remains
-/// with the caller. Each returned array is independent and may be retained.
+/// <para>The reader owns only its shared materializing reader. Ownership of the source stream remains with the caller. Each returned array is independent and may be retained.</para>
+/// <para>New consumers that need explicit termination metadata should prefer <see cref="ByteRecordReader"/>. Consumers that can process a record incrementally should prefer <see cref="DelimitedByteRecordSegmentReader"/>.</para>
 /// </remarks>
 public sealed class DelimitedByteRecordReader : IDisposable {
 
-	private readonly byte[] myBuffer;
-	private int myCount;
-	private bool myDisposed;
-	private bool myEndOfInput;
-	private int myIndex;
+	private readonly ByteRecordReader myReader;
 	private readonly byte mySeparator;
-	private readonly Stream myStream;
 
 	/// <summary>
 	/// Initializes a byte-record reader.
@@ -31,24 +26,10 @@ public sealed class DelimitedByteRecordReader : IDisposable {
 		byte separator = (byte)'\n',
 		int bufferSize = StreamOperations.DefaultBufferSize
 	) {
-		ArgumentNullException.ThrowIfNull(
-			stream
-		);
-		if ( !stream.CanRead ) {
-			throw new ArgumentException(
-				"The source stream must be readable.",
-				nameof( stream )
-			);
-		}
-		if ( bufferSize <= 0 ) {
-			throw new ArgumentOutOfRangeException(
-				nameof( bufferSize )
-			);
-		}
-
-		this.myStream = stream;
 		this.mySeparator = separator;
-		this.myBuffer = ArrayPool<byte>.Shared.Rent(
+		this.myReader = new ByteRecordReader(
+			stream,
+			separator,
 			bufferSize
 		);
 	}
@@ -63,94 +44,26 @@ public sealed class DelimitedByteRecordReader : IDisposable {
 	public async ValueTask<byte[]?> ReadAsync(
 		CancellationToken cancellationToken = default
 	) {
-		this.ThrowIfDisposed();
 		cancellationToken.ThrowIfCancellationRequested();
-		if ( this.myEndOfInput ) {
+		var record = await this.myReader.ReadAsync(
+			cancellationToken
+		).ConfigureAwait( false );
+		if ( null == record ) {
 			return null;
 		}
-
-		ArrayBufferWriter<byte>? builder = null;
-		while ( true ) {
-			if ( this.myCount <= this.myIndex ) {
-				this.myCount = await this.myStream.ReadAsync(
-					this.myBuffer.AsMemory(),
-					cancellationToken
-				).ConfigureAwait( false );
-				this.myIndex = 0;
-				if ( 0 == this.myCount ) {
-					this.myEndOfInput = true;
-					return null == builder
-						? null
-						: builder.WrittenSpan.ToArray()
-					;
-				}
-			}
-
-			var start = this.myIndex;
-			while (
-				this.myIndex < this.myCount
-				&& this.mySeparator != this.myBuffer[ this.myIndex ]
-			) {
-				this.myIndex++;
-			}
-
-			if (
-				this.myIndex < this.myCount
-				&& this.mySeparator == this.myBuffer[ this.myIndex ]
-			) {
-				var length = this.myIndex - start + 1;
-				this.myIndex++;
-				if ( null == builder ) {
-					var output = new byte[ length ];
-					this.myBuffer.AsSpan(
-						start,
-						length
-					).CopyTo(
-						output
-					);
-					return output;
-				}
-
-				builder.Write(
-					this.myBuffer.AsSpan(
-						start,
-						length
-					)
-				);
-				return builder.WrittenSpan.ToArray();
-			}
-
-			builder ??= new ArrayBufferWriter<byte>(
-				Math.Max(
-					256,
-					this.myCount - start
-				)
-			);
-			builder.Write(
-				this.myBuffer.AsSpan(
-					start,
-					this.myIndex - start
-				)
-			);
+		var result = new byte[
+			record.Content.Length + ( record.IsTerminated ? 1 : 0 )
+		];
+		record.Content.Span.CopyTo( result );
+		if ( record.IsTerminated ) {
+			result[^1] = this.mySeparator;
 		}
+		return result;
 	}
 
 	/// <inheritdoc/>
 	public void Dispose() {
-		if ( this.myDisposed ) {
-			return;
-		}
-		this.myDisposed = true;
-		ArrayPool<byte>.Shared.Return(
-			this.myBuffer
-		);
-	}
-
-	private void ThrowIfDisposed() {
-		ObjectDisposedException.ThrowIf(
-			this.myDisposed,
-			this
-		);
+		this.myReader.Dispose();
 	}
 
 }

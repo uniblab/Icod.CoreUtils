@@ -6,8 +6,8 @@
 
 - `CommandLine`: declarative GNU/POSIX-style option parsing with short clusters, long options, required and optional values, aliases, `--`, configurable ordering, structured diagnostics, and legacy token rewrites.
 - `Diagnostics`: command contexts, standard exit codes, and program-prefixed diagnostics.
-- `Formatting`: GNU-compatible escape decoding for command format strings and escaped operands.
-- `IO`: asynchronous delimited-record readers and writers, bounded stream operations, standard-input operands, and temporary spooling.
+- `Formatting`: GNU-compatible formatting escape decoding for command format strings and escaped operands; neutral scanning is shared with the explicit C3 escape profiles.
+- `IO`: compatibility delimited-record readers and writers, bounded stream operations, standard-input operands, and temporary spooling.
 - `Numerics`: culture-invariant integer and floating quantity parsing, arbitrary-precision rational arithmetic, exact suffix tables, explicit rounding, and overflow policies.
 - `Processes`: shell-free asynchronous child-process execution with redirected stream forwarding, capture, cancellation, and process-tree termination.
 - `RegularExpressions`: fully managed GNU basic regular-expression parsing, leftmost-longest matching, GNU/Gnulib capture-register behavior, back-references, structured diagnostics, cancellation, and injectable locale/classification providers.
@@ -26,6 +26,17 @@ The `Icod.CoreUtils.Shared.Text` namespace supplies the reusable Completion Gate
 
 The initial portability profile is exact for the POSIX C byte locale and supplies a deterministic UTF-8 Unicode profile whose blank classification excludes nonbreaking spaces. Locale behavior remains injectable. Other legacy or stateful encodings are not silently normalized through replacement fallback; a future provider may add them when an exact byte-preserving implementation is justified.
 
+## Record, range, delimiter, and escape processing
+
+Completion Gate C3 adds four composable namespaces without placing command policy in Shared.
+
+- `Icod.CoreUtils.Shared.Records` frames line-feed or NUL byte records. `DelimitedByteRecordSegmentReader` bounds input retention even for enormous records and reports record termination explicitly; `ByteRecordReader` provides the corresponding content-plus-termination materializing model; `DelimitedByteRecordWriter` writes content and separators separately.
+- `Icod.CoreUtils.Shared.Ranges` parses and normalizes GNU positional range lists, including leading-open, trailing-open, complement, and configurable general domains. Overlaps merge, but adjacent ranges deliberately remain separate so consumers can observe requested range starts.
+- `Icod.CoreUtils.Shared.Delimiters` distinguishes nonempty match delimiters from possibly empty output separators, supplies repeating separator cycles, and incrementally matches multibyte delimiters across arbitrary input buffers.
+- `Icod.CoreUtils.Shared.Escapes` supplies neutral backslash scanning, structured diagnostics, GNU `paste` delimiter parsing, and the low-level escaped-byte stream required by later GNU `tr` parsing. Formatting, `paste`, and `tr` remain separate grammar profiles because identical source escapes intentionally have different meanings.
+
+The existing `Icod.CoreUtils.Shared.IO.DelimitedByteRecordReader` remains source-compatible and delegates to the C3 `ByteRecordReader`, which in turn uses the segmented framing engine. Decoded `TextReader`/`TextWriter` record APIs remain available when exact source bytes are not part of a command's contract.
+
 ## Compatibility
 
 `SharedUtils` remains source-compatible for existing tools. Newly refactored commands should use the focused APIs instead of extending `SharedUtils`.
@@ -35,7 +46,7 @@ The intended migration is incremental:
 1. Keep the command's existing synchronous `Run` entry point as a compatibility wrapper.
 2. Add `RunAsync(..., CancellationToken)` and use `CommandContext` for injected and console streams.
 3. Replace `SharedUtils.ParseOptions` with declarative `OptionDefinition` instances and `OptionParser`.
-4. Use `DelimitedRecordReader`, `DelimitedRecordWriter`, and `StreamOperations` instead of command-specific read/copy loops.
+4. Use `DelimitedRecordReader` and `DelimitedRecordWriter` for intentionally decoded text; use `Icod.CoreUtils.Shared.Records` when record bytes, NUL termination, or unterminated-final-record state must remain exact. Use `StreamOperations` instead of command-specific copy loops.
 5. Use `QuantityParser`, `ProcessRunner`, and `PlatformCapabilities` where applicable.
 6. Use `IRegularExpressionProvider` instead of translating GNU BRE patterns into `System.Text.RegularExpressions`.
 
@@ -83,7 +94,7 @@ Tool-specific obsolete syntax belongs in a token rewrite rule rather than in the
 
 ## Streaming and ownership
 
-Shared I/O helpers never own injected standard streams. `InputSource` owns only files that it opens. Naturally asynchronous operations accept `CancellationToken` and do not use `Task.Run` as an I/O substitute.
+Shared I/O and record helpers never own injected standard streams. `InputSource` owns only files that it opens. Naturally asynchronous operations accept `CancellationToken` and do not use `Task.Run` as an I/O substitute.
 
 ## Regular expressions
 
