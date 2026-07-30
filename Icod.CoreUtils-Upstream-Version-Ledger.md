@@ -101,6 +101,7 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 |---|---|---|---|
 | C1 | Completed | GNU basic regular expressions | `COREUTILS-9.11`; `GNULIB-COREUTILS-9.11`; `POSIX-2024` |
 | C2 | Completed | Byte-preserving text units, locale blanks, display columns, and tab stops | `COREUTILS-9.11` |
+| C3 | Implementation prepared; CI validation pending | Byte records, positional ranges, delimiters, and escape profiles | `COREUTILS-9.11` |
 
 ## Batch 11 implementation record
 
@@ -236,6 +237,23 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 - **Width boundary:** production display widths use a checked-in deterministic Unicode table rather than host `wcwidth`; providers remain injectable for alternate locale or terminal profiles.
 - **Provisional classification:** the text-unit, locale, width, and tab-stop APIs remain cross-suite `Icod.CommandFramework` candidates incubated in `Icod.CoreUtils.Shared` until later consumers establish the permanent package boundary.
 - **Validation completed:** the Gate C2 implementation and its dedicated Shared tests were accepted and merged into `main` on 29 July 2026. The complete-solution three-runner contract remains the permanent regression requirement.
+
+## Completion Gate C3 implementation record
+
+- **Gate and subject:** Completion Gate C3, shared byte-record framing, positional range lists, byte delimiters and separator cycles, and command-profile escape parsing.
+- **Authority reconfirmed:** 29 July 2026.
+- **First consuming commands:** Batch 19, GNU Coreutils 9.11 `cut` and `paste`; the low-level escaped-byte profile is retained for later `tr`.
+- **Coreutils identity:** tag `v9.11`; commit `c01fd163a47468a8296fb369f5233853bb551bb6`.
+- **Primary sources:** [`src/set-fields.c`](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/set-fields.c), [`src/set-fields.h`](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/set-fields.h), [`src/cut.c`](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/cut.c), [`src/paste.c`](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/paste.c), and the low-level escape handling in [`src/tr.c`](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/tr.c).
+- **Record model:** `Shared/src/Records` supplies line-feed and NUL separators, bounded independently owned record segments, explicit terminated-versus-unterminated state, and writer operations that leave separator synthesis to the consuming command. `ByteRecordReader` supplies the preferred materialized content-plus-termination model. The existing whole-record `Shared.IO.DelimitedByteRecordReader` remains source-compatible and delegates through that model to the segmented core.
+- **Range model:** `Shared/src/Ranges` parses ASCII-decimal `N`, `N-`, `N-M`, and `-M` forms separated by commas, ASCII spaces, or horizontal tabs, supports configurable domains, complement, and open-ended ranges, and returns stable source-positioned diagnostics. Overlapping ranges merge; adjacent ranges intentionally remain separate because GNU consumers can observe requested range starts.
+- **Delimiter model:** `Shared/src/Delimiters` distinguishes required nonempty match delimiters from possibly empty output separators, supplies deterministic repeating separator cycles, and incrementally matches multibyte delimiters across input-buffer boundaries.
+- **Escape model:** `Shared/src/Escapes` extracts neutral backslash scanning and structured diagnostics while retaining separate GNU profiles. `paste` maps `\0` to an empty separator, drops the backslash on unknown escapes, and rejects a trailing backslash. The future `tr` profile retains escaped-state metadata, one-to-three-digit octal parsing, and GNU warnings for a trailing backslash or an overflowing three-digit octal form. `GnuEscapeDecoder` retains its established formatting grammar.
+- **Managed argument boundary:** .NET supplies command operands as decoded UTF-16 strings rather than original `argv` bytes. The escape profiles therefore default to deterministic UTF-8 and permit an injected stateless encoding; they do not claim exact stateful legacy command-line encoding behavior.
+- **Intentional boundary:** C3 does not implement `cut`, `paste`, field splitting, the complete `tr` set-expression grammar, sorting, Grep, or Sed policy. It shares byte framing and syntax mechanics while leaving command semantics and final diagnostic wording to consumers.
+- **TAP/TPL and ownership:** naturally asynchronous stream reads, writes, and flushes accept cancellation tokens and use awaited BCL operations. Shared record helpers never dispose caller-owned streams and do not wrap CPU parsing in `Task.Run`.
+- **Documentation and tests:** every public, protected, or internal declaration has XML documentation; each multi-file source and test directory has a README; Shared tests characterize the old materializing record API and cover bounded segmentation, NUL records, final unterminated records, range normalization and errors, complements, delimiter cycles, multibyte matching, all escape profiles, malformed input, cancellation, and stream ownership.
+- **Validation status:** source structure, XML documentation presence, repository-relative placement, UTF-8/LF policy, project wildcard inclusion, and conformance-oriented cases were checked. A .NET SDK was unavailable in the implementation container, so `Shared.Tests` and the complete solution still require build/test validation on `windows-latest`, `ubuntu-latest`, and `macos-latest` before this record is changed to fully validated.
 
 ## Batch 17 implementation record
 

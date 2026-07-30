@@ -2,6 +2,7 @@ namespace Icod.CoreUtils.Shared.Formatting;
 
 using System.Globalization;
 using System.Text;
+using Icod.CoreUtils.Shared.Escapes;
 
 /// <summary>Describes the result of decoding GNU command-line escape sequences.</summary>
 /// <param name="Text">The text value.</param>
@@ -31,7 +32,12 @@ public static class GnuEscapeDecoder {
 				output.Append( current );
 				continue;
 			}
-			if ( ++index >= value.Length ) {
+			EscapeSequenceScanner.TryRead(
+				value,
+				ref index,
+				out var sequence
+			);
+			if ( sequence.IsTrailing ) {
 				output.Append( '\\' );
 				break;
 			}

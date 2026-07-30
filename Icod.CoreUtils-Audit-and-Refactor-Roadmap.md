@@ -557,14 +557,14 @@ Implement paragraph recognition, sentence spacing, crown/tagged modes, logical-p
 
 ### Completion Gate C3 — before Batch 19
 
-* [ ] Add the shared record, range, and escape model:
+* [x] Add the shared record, range, and escape model:
 
-  * [ ] configurable line-delimited and NUL-delimited record readers and writers;
-  * [ ] byte, character, field, and general range-list parsing;
-  * [ ] complement and open-ended range handling;
-  * [ ] delimiter and separator abstractions;
-  * [ ] documented escape-sequence parsing;
-  * [ ] deterministic behavior for malformed ranges and escapes.
+  * [x] configurable line-delimited and NUL-delimited record readers and writers;
+  * [x] byte, character, field, and general range-list parsing;
+  * [x] complement and open-ended range handling;
+  * [x] delimiter and separator abstractions;
+  * [x] documented escape-sequence parsing;
+  * [x] deterministic behavior for malformed ranges and escapes.
 
 This gate directly supports `cut` and `paste`, then remains available to `tr`, `sort`, `split`, and related Coreutils and Textutils commands. The genuinely cross-suite record and delimiter contracts are candidates for eventual extraction into `Icod.CommandFramework` for use by `Icod.Grep` and `Icod.Sed`.
 
