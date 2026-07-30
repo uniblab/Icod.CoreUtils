@@ -3,6 +3,14 @@ namespace Icod.CoreUtils.Fmt;
 using System.Text;
 
 /// <summary>Optimizes and writes one GNU <c>fmt</c> paragraph.</summary>
+/// <remarks>
+/// <para>
+/// Every eligible paragraph is processed by this optimizer, including the single-line paragraphs produced by <c>--split-only</c>. Split-only mode prevents different input lines from being joined; it does not replace GNU's cost-based line-breaking algorithm with greedy wrapping.
+/// </para>
+/// <para>
+/// The configured maximum width is inclusive, matching GNU Coreutils 9.11: a candidate line whose byte length equals the maximum width remains eligible for consideration. The optimizer may nevertheless choose a shorter line when its complete paragraph cost is lower.
+/// </para>
+/// </remarks>
 internal sealed class ParagraphFormatter {
 	private const long LineCost = 4900;
 	private const long NoBreakCost = 360000;
@@ -92,6 +100,12 @@ internal sealed class ParagraphFormatter {
 				}
 				length = checked(length + words[next - 1].SpaceAfter + words[next].Length);
 				next++;
+
+				// The maximum is deliberately inclusive. GNU Coreutils 9.11 considers a
+				// candidate whose byte length is exactly MaximumWidth; only a longer
+				// candidate is rejected. This is not a greedy fill rule: an exact-width
+				// candidate can still lose to a shorter line when the paragraph-wide
+				// sentence, orphan, widow, punctuation, and raggedness costs favor it.
 				if ( this.myOptions.MaximumWidth < length ) {
 					break;
 				}

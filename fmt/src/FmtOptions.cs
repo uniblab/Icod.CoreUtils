@@ -5,7 +5,7 @@ internal sealed class FmtOptions {
 	/// <summary>Initializes a validated option set.</summary>
 	/// <param name="crownMargin">Whether crown-margin paragraph recognition is enabled.</param>
 	/// <param name="taggedParagraph">Whether tagged-paragraph recognition is enabled.</param>
-	/// <param name="splitOnly">Whether input lines may only be split, not joined.</param>
+	/// <param name="splitOnly">Whether separate input lines must remain separate paragraphs. Each line is still reformatted by the normal GNU paragraph optimizer and may be split into multiple output lines.</param>
 	/// <param name="uniformSpacing">Whether inter-word and sentence spacing is normalized uniformly.</param>
 	/// <param name="maximumWidth">The maximum output width.</param>
 	/// <param name="goalWidth">The preferred output width.</param>
@@ -46,7 +46,12 @@ internal sealed class FmtOptions {
 	/// <summary>Gets the normalized required prefix.</summary>
 	internal FmtPrefix Prefix { get; }
 
-	/// <summary>Gets whether input lines may only be split.</summary>
+	/// <summary>Gets whether separate input lines must remain separate paragraphs.</summary>
+	/// <remarks>
+	/// <para>
+	/// This option prevents the command from joining words from different input lines. It does not disable paragraph optimization: each eligible input line is still passed independently to the GNU-style optimizer and may be split wherever the optimizer selects the lowest-cost line breaks.
+	/// </para>
+	/// </remarks>
 	internal bool SplitOnly { get; }
 
 	/// <summary>Gets whether tagged-paragraph recognition is enabled.</summary>

@@ -27,12 +27,15 @@ public sealed class CommandTests {
 		Assert.Equal( Generated( expected.Split( '|' ) ), result.Output );
 	}
 
-	/// <summary>Verifies split-only behavior.</summary>
+	/// <summary>Verifies that split-only preserves input-line boundaries while retaining GNU paragraph optimization within each line.</summary>
 	/// <returns>A task that represents the asynchronous test.</returns>
 	[Fact]
-	public async Task SplitOnlyDoesNotJoinInputLines() {
+	public async Task SplitOnlyOptimizesEachInputLineIndependently() {
 		var result = await RunAsync( [ "--split-only", "--width=5" ], "aa bb cc\ndd ee\n"u8.ToArray() );
-		Assert.Equal( Generated( "aa", "bb", "cc", "dd ee" ), result.Output );
+
+		// The first input line remains a separate paragraph, but GNU's optimizer
+		// chooses "aa" and "bb cc" rather than greedily filling "aa bb".
+		Assert.Equal( Generated( "aa", "bb cc", "dd ee" ), result.Output );
 	}
 
 	/// <summary>Verifies retained versus uniform spacing.</summary>

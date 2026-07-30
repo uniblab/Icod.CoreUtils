@@ -83,6 +83,11 @@ internal sealed class FmtProcessor {
 
 			var paragraph = new List<FmtInputLine> { current };
 			var otherIndent = current.ContentColumn;
+
+			// GNU --split-only changes paragraph recognition, not paragraph optimization.
+			// When enabled, this one input line remains a one-line source paragraph, but it
+			// is still sent to ParagraphFormatter below and may be split according to the
+			// same cost model used for paragraphs assembled from multiple input lines.
 			if ( !this.myOptions.SplitOnly ) {
 				var next = await this.ReadLineAsync( reader, cancellationToken ).ConfigureAwait( false );
 				if ( next is not null ) {
