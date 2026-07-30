@@ -75,9 +75,10 @@ public sealed class ByteTokenReaderTests {
 		var read = reader.ReadTokenAsync( cancellation.Token ).AsTask();
 		await input.ReadStarted;
 		cancellation.Cancel();
-		await Assert.ThrowsAsync<OperationCanceledException>( async () => {
+		var exception = await Assert.ThrowsAnyAsync<OperationCanceledException>( async () => {
 			_ = await read;
 		} );
+		Assert.Equal( cancellation.Token, exception.CancellationToken );
 	}
 
 	/// <summary>Verifies bounded incremental reading of a token much larger than the read buffer.</summary>
