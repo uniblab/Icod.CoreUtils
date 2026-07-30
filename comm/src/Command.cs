@@ -1,153 +1,388 @@
+// Original behavior/reference: GNU coreutils
 // Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
 
 namespace Icod.CoreUtils.Comm;
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+using System.Globalization;
 using System.Text;
+using Icod.CoreUtils.Shared.CommandLine;
+using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CoreUtils.Shared.IO;
+using Icod.CoreUtils.Shared.Ordering;
+using Icod.CoreUtils.Shared.Records;
 
-/// <summary>
-/// comm: compare two sorted files line by line and produce three-column output:
-///   column 1: lines unique to file1
-///   column 2: lines unique to file2
-///   column 3: lines common to both
-/// Supported options:
-///   -1  suppress column 1
-///   -2  suppress column 2
-///   -3  suppress column 3
-///   -?  display help
-/// Behavior:
-///   comm FILE1 FILE2
-/// Use '-' for stdin. Input must be sorted for meaningful output (this implementation assumes input is sorted).
-/// </summary>
+/// <summary>Implements GNU-compatible comparison of two sorted record streams.</summary>
 public static class Command {
-	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
-		stdout ??= Console.Out;
-		stderr ??= Console.Error;
+	private const string VersionText = "comm (Icod.CoreUtils) 1.0";
+	private static readonly UTF8Encoding Utf8 = new( false, false );
 
-		var suppress1 = false;
-		var suppress2 = false;
-		var suppress3 = false;
-		var files = new List<string>();
+	/// <summary>Runs <c>comm</c> synchronously with optional injected text streams.</summary>
+	/// <param name="args">The command-line arguments.</param>
+	/// <param name="standardInput">The standard-input reader.</param>
+	/// <param name="standardOutput">The standard-output writer.</param>
+	/// <param name="standardError">The standard-error writer.</param>
+	/// <returns>The command exit status.</returns>
+	public static int Run(
+		string[] args,
+		TextReader? standardInput = null,
+		TextWriter? standardOutput = null,
+		TextWriter? standardError = null
+	) => RunAsync( args, standardInput, standardOutput, standardError ).GetAwaiter().GetResult();
 
-		for ( var i = 0; i < args.Length; i++ ) {
-			var a = args[ i ];
-			switch ( a ) {
-				case "-1":
-					suppress1 = true;
-					break;
-				case "-2":
-					suppress2 = true;
-					break;
-				case "-3":
-					suppress3 = true;
-					break;
-				case "-?":
-				case "--help":
-					PrintUsage( stdout );
-					return 0;
-				default:
-					files.Add( a );
-					break;
-			}
-		}
+	/// <summary>Runs <c>comm</c> asynchronously with optional injected text streams.</summary>
+	/// <param name="args">The command-line arguments.</param>
+	/// <param name="standardInput">The standard-input reader.</param>
+	/// <param name="standardOutput">The standard-output writer.</param>
+	/// <param name="standardError">The standard-error writer.</param>
+	/// <param name="cancellationToken">The cancellation token.</param>
+	/// <returns>A task whose result is the command exit status.</returns>
+	public static async Task<int> RunAsync(
+		string[] args,
+		TextReader? standardInput = null,
+		TextWriter? standardOutput = null,
+		TextWriter? standardError = null,
+		CancellationToken cancellationToken = default
+	) {
+		standardInput ??= Console.In;
+		standardOutput ??= Console.Out;
+		standardError ??= Console.Error;
+		using var inputAdapter = new TextReaderStream( standardInput, leaveOpen: true );
+		return await RunAsync(
+			args,
+			new CommandContext(
+				"comm",
+				standardInput,
+				standardOutput,
+				standardError,
+				inputAdapter,
+				null,
+				null,
+				cancellationToken
+			)
+		).ConfigureAwait( false );
+	}
 
-		if ( files.Count < 2 ) {
-			stderr.WriteLine( "comm: two input files required" );
-			PrintUsage( stderr );
-			return 2;
-		}
-
-		var file1 = files[ 0 ];
-		var file2 = files[ 1 ];
-
+	/// <summary>Runs <c>comm</c> asynchronously against a command context.</summary>
+	/// <param name="args">The command-line arguments.</param>
+	/// <param name="context">The command context.</param>
+	/// <returns>A task whose result is the command exit status.</returns>
+	public static async Task<int> RunAsync( string[] args, CommandContext context ) {
+		ArgumentNullException.ThrowIfNull( args );
+		ArgumentNullException.ThrowIfNull( context );
 		try {
-			using var r1 = OpenReader( file1, stdin );
-			using var r2 = OpenReader( file2, stdin );
-
-			var e1 = ReadLines( r1 ).GetEnumerator();
-			var e2 = ReadLines( r2 ).GetEnumerator();
-
-			var has1 = e1.MoveNext();
-			var has2 = e2.MoveNext();
-
-			while ( has1 || has2 ) {
-				if ( has1 && has2 ) {
-					var cmp = string.CompareOrdinal( e1.Current, e2.Current );
-					if ( cmp == 0 ) {
-						if ( !suppress3 ) {
-							WriteCols( stdout, null, null, e1.Current, suppress1, suppress2, suppress3 );
-						}
-						has1 = e1.MoveNext();
-						has2 = e2.MoveNext();
-					} else if ( cmp < 0 ) {
-						if ( !suppress1 ) {
-							WriteCols( stdout, e1.Current, null, null, suppress1, suppress2, suppress3 );
-						}
-						has1 = e1.MoveNext();
-					} else {
-						if ( !suppress2 ) {
-							WriteCols( stdout, null, e2.Current, null, suppress1, suppress2, suppress3 );
-						}
-						has2 = e2.MoveNext();
-					}
-				} else if ( has1 ) {
-					if ( !suppress1 ) {
-						WriteCols( stdout, e1.Current, null, null, suppress1, suppress2, suppress3 );
-					}
-					has1 = e1.MoveNext();
-				} else {
-					if ( !suppress2 ) {
-						WriteCols( stdout, null, e2.Current, null, suppress1, suppress2, suppress3 );
-					}
-					has2 = e2.MoveNext();
-				}
+			var parsed = CreateParser().Parse( args );
+			if ( !parsed.IsSuccess ) {
+				await context.StandardError.WriteLineAsync(
+					OptionDiagnosticFormatter.Format( context.ProgramName, parsed.Errors[0] ).AsMemory(),
+					context.CancellationToken
+				).ConfigureAwait( false );
+				return CommandExitCodes.Failure;
 			}
-
-			return 0;
-		} catch ( Exception ex ) {
-			stderr.WriteLine( $"comm: {ex.Message}" );
-			return 1;
+			if ( parsed.HasOption( "help" ) ) {
+				await WriteHelpAsync( context ).ConfigureAwait( false );
+				return CommandExitCodes.Success;
+			}
+			if ( parsed.HasOption( "version" ) ) {
+				await context.StandardOutput.WriteLineAsync( VersionText.AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+				return CommandExitCodes.Success;
+			}
+			if ( !TryCreateOptions( parsed, out var options, out var error ) ) {
+				await context.Diagnostics.ErrorAsync( error!, context.CancellationToken ).ConfigureAwait( false );
+				return CommandExitCodes.Failure;
+			}
+			return await ExecuteAsync( options!, context ).ConfigureAwait( false );
+		} catch ( OperationCanceledException ) {
+			return CommandExitCodes.Canceled;
+		} catch ( Exception exception ) when (
+			exception is IOException
+			or InvalidDataException
+			or UnauthorizedAccessException
+			or InvalidOperationException
+			or ArgumentException
+			or NotSupportedException
+		) {
+			try {
+				await context.Diagnostics.ErrorAsync( exception.Message, CancellationToken.None ).ConfigureAwait( false );
+			} catch {
+				// A diagnostic failure must not replace the conventional command status.
+			}
+			return CommandExitCodes.Failure;
 		}
 	}
 
-	private static TextReader OpenReader( string path, TextReader? stdin ) {
-		if ( path == "-" ) {
-			return stdin ?? Console.In;
+	private static OptionParser CreateParser() => new(
+		new[] {
+			new OptionDefinition( "suppress-one", '1' ),
+			new OptionDefinition( "suppress-two", '2' ),
+			new OptionDefinition( "suppress-three", '3' ),
+			new OptionDefinition( "check-order", null, new[] { "check-order" } ),
+			new OptionDefinition( "nocheck-order", null, new[] { "nocheck-order" } ),
+			new OptionDefinition( "output-delimiter", null, new[] { "output-delimiter" }, OptionValueArity.Required ),
+			new OptionDefinition( "total", null, new[] { "total" } ),
+			new OptionDefinition( "zero-terminated", 'z', new[] { "zero-terminated" } ),
+			new OptionDefinition( "help", null, new[] { "help" } ),
+			new OptionDefinition( "version", null, new[] { "version" } )
+		},
+		new OptionParserSettings {
+			AllowLongOptionAbbreviations = true,
+			Ordering = OptionOrdering.Permute
 		}
-		return new StreamReader( path, System.Text.Encoding.UTF8, detectEncodingFromByteOrderMarks: true );
+	);
+
+	private static bool TryCreateOptions(
+		OptionParseResult parsed,
+		out CommOptions? options,
+		out string? error
+	) {
+		options = null;
+		error = null;
+		if ( 2 != parsed.Operands.Count ) {
+			error = 2 > parsed.Operands.Count ? "missing operand" : string.Concat( "extra operand '", parsed.Operands[2], "'" );
+			return false;
+		}
+		if ( parsed.Operands[0] == "-" && parsed.Operands[1] == "-" ) {
+			error = "both files cannot be standard input";
+			return false;
+		}
+		if ( parsed.HasOption( "check-order" ) && parsed.HasOption( "nocheck-order" ) ) {
+			error = "options --check-order and --nocheck-order are mutually exclusive";
+			return false;
+		}
+		var delimiterValues = parsed.GetOccurrences( "output-delimiter" )
+			.Select( occurrence => occurrence.Value ?? string.Empty )
+			.ToArray();
+		if ( 1 < delimiterValues.Length && delimiterValues.Skip( 1 ).Any( value => value != delimiterValues[0] ) ) {
+			error = "multiple output delimiters specified";
+			return false;
+		}
+		var delimiter = 0 == delimiterValues.Length
+			? new byte[] { (byte)'\t' }
+			: string.IsNullOrEmpty( delimiterValues[^1] )
+				? new byte[] { 0 }
+				: Utf8.GetBytes( delimiterValues[^1] );
+		options = new CommOptions(
+			parsed.Operands[0],
+			parsed.Operands[1],
+			!parsed.HasOption( "suppress-one" ),
+			!parsed.HasOption( "suppress-two" ),
+			!parsed.HasOption( "suppress-three" ),
+			parsed.HasOption( "nocheck-order" ) ? OrderCheckMode.Never : parsed.HasOption( "check-order" ) ? OrderCheckMode.Always : OrderCheckMode.Default,
+			delimiter,
+			parsed.HasOption( "total" ),
+			parsed.HasOption( "zero-terminated" ) ? RecordSeparator.Null : RecordSeparator.LineFeed
+		);
+		return true;
 	}
 
-	private static IEnumerable<string> ReadLines( TextReader reader ) {
-		string? line;
-		while ( ( line = reader.ReadLine() ) is not null ) {
-			yield return line;
+	private static async Task<int> ExecuteAsync( CommOptions options, CommandContext context ) {
+		var resolution = CollationEnvironment.ResolveCurrent();
+		if ( !resolution.IsSuccess ) {
+			throw new NotSupportedException( resolution.ErrorMessage );
 		}
+		var comparer = new ByteCollationComparer( new SystemCollationProvider( resolution.Profile! ) );
+		await using var firstSource = InputSource.OpenBinary( InputOperand.Create( options.FirstPath ), context );
+		await using var secondSource = InputSource.OpenBinary( InputOperand.Create( options.SecondPath ), context );
+		using var firstReader = new ByteRecordReader( firstSource.BinaryStream!, options.RecordSeparator );
+		using var secondReader = new ByteRecordReader( secondSource.BinaryStream!, options.RecordSeparator );
+		await using var output = new ByteOutputStream( context.StandardOutput, context.StandardOutputStream );
+		var writer = new DelimitedByteRecordWriter( output, options.RecordSeparator );
+		var firstState = new InputState( firstSource.DisplayName );
+		var secondState = new InputState( secondSource.DisplayName );
+		var first = await ReadAsync( firstReader, firstState, comparer, options.CheckMode, context ).ConfigureAwait( false );
+		var second = await ReadAsync( secondReader, secondState, comparer, options.CheckMode, context ).ConfigureAwait( false );
+		ulong firstOnly = 0;
+		ulong secondOnly = 0;
+		ulong common = 0;
+		while ( null != first || null != second ) {
+			context.CancellationToken.ThrowIfCancellationRequested();
+			if ( null == second || ( null != first && comparer.Compare( first.Content, second.Content ) < 0 ) ) {
+				firstOnly++;
+				if ( options.ShowFirst ) {
+					await WriteColumnAsync( writer, options, 1, first!.Content, context.CancellationToken ).ConfigureAwait( false );
+				}
+				first = await ReadAsync( firstReader, firstState, comparer, options.CheckMode, context ).ConfigureAwait( false );
+			} else if ( null == first || comparer.Compare( first.Content, second.Content ) > 0 ) {
+				secondOnly++;
+				if ( options.ShowSecond ) {
+					await WriteColumnAsync( writer, options, 2, second!.Content, context.CancellationToken ).ConfigureAwait( false );
+				}
+				second = await ReadAsync( secondReader, secondState, comparer, options.CheckMode, context ).ConfigureAwait( false );
+			} else {
+				common++;
+				if ( options.ShowCommon ) {
+					await WriteColumnAsync( writer, options, 3, first.Content, context.CancellationToken ).ConfigureAwait( false );
+				}
+				first = await ReadAsync( firstReader, firstState, comparer, options.CheckMode, context ).ConfigureAwait( false );
+				second = await ReadAsync( secondReader, secondState, comparer, options.CheckMode, context ).ConfigureAwait( false );
+			}
+		}
+		if ( options.ShowTotal ) {
+			await WriteTotalAsync( writer, options, firstOnly, secondOnly, common, context.CancellationToken ).ConfigureAwait( false );
+		}
+		await writer.FlushAsync( context.CancellationToken ).ConfigureAwait( false );
+		await output.CompleteAsync( context.CancellationToken ).ConfigureAwait( false );
+		if (
+			options.CheckMode == OrderCheckMode.Default
+			&& 0 < firstOnly + secondOnly
+			&& ( firstState.IsDisordered || secondState.IsDisordered )
+		) {
+			throw new InvalidDataException( "input is not in sorted order" );
+		}
+		return CommandExitCodes.Success;
 	}
 
-	private static void WriteCols( TextWriter w, string? col1, string? col2, string? col3, bool sup1, bool sup2, bool sup3 ) {
-		// columns separated by single tab where preceding columns are present
-		if ( col1 is not null ) {
-			w.WriteLine( col1 );
-			return;
+	private static async ValueTask<ByteRecord?> ReadAsync(
+		ByteRecordReader reader,
+		InputState state,
+		ByteCollationComparer comparer,
+		OrderCheckMode checkMode,
+		CommandContext context
+	) {
+		var record = await reader.ReadAsync( context.CancellationToken ).ConfigureAwait( false );
+		if ( null == record ) {
+			return null;
 		}
-		if ( col2 is not null ) {
-			w.WriteLine( $"\t{col2}" );
-			return;
+		state.LineNumber++;
+		if ( checkMode != OrderCheckMode.Never && null != state.Previous && 0 < comparer.Compare( state.Previous.Content, record.Content ) ) {
+			if ( checkMode == OrderCheckMode.Always ) {
+				throw new InvalidDataException(
+					string.Concat( state.DisplayName, ": is not in sorted order at record ", state.LineNumber.ToString( CultureInfo.InvariantCulture ) )
+				);
+			}
+			state.IsDisordered = true;
 		}
-		if ( col3 is not null ) {
-			w.WriteLine( $"\t\t{col3}" );
-			return;
-		}
+		state.Previous = record;
+		return record;
 	}
 
-	private static void PrintUsage( TextWriter stdout ) {
-		stdout.WriteLine( "Usage: comm [-1] [-2] [-3] FILE1 FILE2" );
-		stdout.WriteLine( "  -1    suppress column 1 (lines unique to FILE1)" );
-		stdout.WriteLine( "  -2    suppress column 2 (lines unique to FILE2)" );
-		stdout.WriteLine( "  -3    suppress column 3 (lines common to both)" );
-		stdout.WriteLine( "  -?, --help    display this help and exit" );
+	private static async ValueTask WriteColumnAsync(
+		DelimitedByteRecordWriter writer,
+		CommOptions options,
+		int column,
+		ReadOnlyMemory<byte> content,
+		CancellationToken cancellationToken
+	) {
+		var preceding = column switch {
+			1 => 0,
+			2 => options.ShowFirst ? 1 : 0,
+			3 => ( options.ShowFirst ? 1 : 0 ) + ( options.ShowSecond ? 1 : 0 ),
+			_ => throw new ArgumentOutOfRangeException( nameof( column ) )
+		};
+		for ( var index = 0; index < preceding; index++ ) {
+			await writer.WriteContentAsync( options.OutputDelimiter, cancellationToken ).ConfigureAwait( false );
+		}
+		await writer.WriteRecordAsync( content, terminate: true, cancellationToken ).ConfigureAwait( false );
+	}
+
+	private static async ValueTask WriteTotalAsync(
+		DelimitedByteRecordWriter writer,
+		CommOptions options,
+		ulong firstOnly,
+		ulong secondOnly,
+		ulong common,
+		CancellationToken cancellationToken
+	) {
+		await writer.WriteContentAsync( Utf8.GetBytes( firstOnly.ToString( CultureInfo.InvariantCulture ) ), cancellationToken ).ConfigureAwait( false );
+		await writer.WriteContentAsync( options.OutputDelimiter, cancellationToken ).ConfigureAwait( false );
+		await writer.WriteContentAsync( Utf8.GetBytes( secondOnly.ToString( CultureInfo.InvariantCulture ) ), cancellationToken ).ConfigureAwait( false );
+		await writer.WriteContentAsync( options.OutputDelimiter, cancellationToken ).ConfigureAwait( false );
+		await writer.WriteContentAsync( Utf8.GetBytes( common.ToString( CultureInfo.InvariantCulture ) ), cancellationToken ).ConfigureAwait( false );
+		await writer.WriteContentAsync( options.OutputDelimiter, cancellationToken ).ConfigureAwait( false );
+		await writer.WriteRecordAsync( "total"u8.ToArray(), terminate: true, cancellationToken ).ConfigureAwait( false );
+	}
+
+	private static async Task WriteHelpAsync( CommandContext context ) {
+		const string help = """
+Usage: comm [OPTION]... FILE1 FILE2
+Compare sorted files FILE1 and FILE2 record by record.
+
+  -1                      suppress column 1 (records unique to FILE1)
+  -2                      suppress column 2 (records unique to FILE2)
+  -3                      suppress column 3 (records common to both files)
+      --check-order       check that input is correctly sorted
+      --nocheck-order     do not check that input is correctly sorted
+      --output-delimiter=STR  separate columns with STR
+      --total             output a summary
+  -z, --zero-terminated  end records with NUL instead of newline
+      --help              display this help and exit
+      --version           output version information and exit
+""";
+		await context.StandardOutput.WriteAsync( help.AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+	}
+
+	private sealed class CommOptions {
+		/// <summary>Initializes the immutable command options.</summary>
+		/// <param name="firstPath">The first input path.</param>
+		/// <param name="secondPath">The second input path.</param>
+		/// <param name="showFirst">Whether to emit records unique to the first input.</param>
+		/// <param name="showSecond">Whether to emit records unique to the second input.</param>
+		/// <param name="showCommon">Whether to emit records common to both inputs.</param>
+		/// <param name="checkMode">The sorted-input checking mode.</param>
+		/// <param name="outputDelimiter">The delimiter inserted between output columns.</param>
+		/// <param name="showTotal">Whether to emit the totals record.</param>
+		/// <param name="recordSeparator">The input and output record separator.</param>
+		public CommOptions(
+			string firstPath,
+			string secondPath,
+			bool showFirst,
+			bool showSecond,
+			bool showCommon,
+			OrderCheckMode checkMode,
+			ReadOnlyMemory<byte> outputDelimiter,
+			bool showTotal,
+			RecordSeparator recordSeparator
+		) {
+			this.FirstPath = firstPath;
+			this.SecondPath = secondPath;
+			this.ShowFirst = showFirst;
+			this.ShowSecond = showSecond;
+			this.ShowCommon = showCommon;
+			this.CheckMode = checkMode;
+			this.OutputDelimiter = outputDelimiter;
+			this.ShowTotal = showTotal;
+			this.RecordSeparator = recordSeparator;
+		}
+
+		/// <summary>Gets the first input path.</summary>
+		public string FirstPath { get; }
+		/// <summary>Gets the second input path.</summary>
+		public string SecondPath { get; }
+		/// <summary>Gets whether records unique to the first input are emitted.</summary>
+		public bool ShowFirst { get; }
+		/// <summary>Gets whether records unique to the second input are emitted.</summary>
+		public bool ShowSecond { get; }
+		/// <summary>Gets whether records common to both inputs are emitted.</summary>
+		public bool ShowCommon { get; }
+		/// <summary>Gets the sorted-input checking mode.</summary>
+		public OrderCheckMode CheckMode { get; }
+		/// <summary>Gets the delimiter inserted between output columns.</summary>
+		public ReadOnlyMemory<byte> OutputDelimiter { get; }
+		/// <summary>Gets whether the totals record is emitted.</summary>
+		public bool ShowTotal { get; }
+		/// <summary>Gets the input and output record separator.</summary>
+		public RecordSeparator RecordSeparator { get; }
+	}
+
+	private sealed class InputState {
+		/// <summary>Initializes state for one input stream.</summary>
+		/// <param name="displayName">The input name used in diagnostics.</param>
+		public InputState( string displayName ) {
+			this.DisplayName = displayName;
+		}
+
+		/// <summary>Gets the input name used in diagnostics.</summary>
+		public string DisplayName { get; }
+		/// <summary>Gets or sets whether a descending adjacent record pair was observed.</summary>
+		public bool IsDisordered { get; set; }
+		/// <summary>Gets or sets the one-based number of the most recently read record.</summary>
+		public long LineNumber { get; set; }
+		/// <summary>Gets or sets the previously read record used for order checking.</summary>
+		public ByteRecord? Previous { get; set; }
+	}
+
+	private enum OrderCheckMode {
+		Default,
+		Always,
+		Never
 	}
 }
