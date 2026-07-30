@@ -26,8 +26,8 @@ The repository and solution will also serve as the **temporary development home*
 - `Icod.DiffUtils.Shared`, `Icod.DiffUtils.Cmp`, `Icod.DiffUtils.Diff`, `Icod.DiffUtils.Diff3`, and `Icod.DiffUtils.SDiff`;
 - `Icod.Grep.Grep`;
 - `Icod.Patch.Patch`;
-- `Icod.LineEditor.Shared`, `Icod.LineEditor.Ed`, and `Icod.LineEditor.Red`;
-- `Icod.LineEditor.Sed`;
+- `Icod.LineEditor.Ed.Shared`, `Icod.LineEditor.Ed`, `Icod.LineEditor.Red`, and `Icod.LineEditor.Sed`;
+- an optional `Icod.LineEditor.Shared` only if the completed Ed and Sed engines later demonstrate cohesive family-specific reuse that is neither cross-suite framework material nor specific to one engine;
 - `Icod.Tar.Tar`;
 - `Icod.ProcPs.Shared` and the complete procps-ng command family.
 
@@ -49,8 +49,9 @@ The project's present physical name does not establish permanent ownership. The 
 The suite projects developed here may add their own Shared libraries when the reuse is genuinely suite-specific:
 
 - `Icod.DiffUtils.Shared`;
-- `Icod.Ed.Shared`;
+- `Icod.LineEditor.Ed.Shared`;
 - `Icod.ProcPs.Shared`;
+- an optional `Icod.LineEditor.Shared` only after an evidence-based Ed/Sed consumer audit;
 - other suite-local engine projects only when a concrete reuse or testability need is demonstrated.
 
 During the incubation phase, projects use `ProjectReference` relationships inside the solution. The intended dependency direction is:
@@ -98,7 +99,7 @@ At the end of the implementation roadmap, Completion Gate G performs an evidence
 The intended final architecture has three layers:
 
 1. **`Icod.CommandFramework`** — contracts demonstrated to be common across independent command suites;
-2. **suite-specific Shared libraries** — functionality shared only inside one upstream family, such as `Icod.CoreUtils.Shared`, `Icod.DiffUtils.Shared`, `Icod.Ed.Shared`, or `Icod.ProcPs.Shared`;
+2. **suite-specific Shared libraries** — functionality shared only inside one upstream family, such as `Icod.CoreUtils.Shared`, `Icod.DiffUtils.Shared`, `Icod.LineEditor.Ed.Shared`, or `Icod.ProcPs.Shared`; a general `Icod.LineEditor.Shared` exists only if completed Ed and Sed implementations prove a cohesive residual family layer;
 3. **individual command projects** — thin command front ends over the applicable framework and suite engine.
 
 The final dependency direction is:
@@ -119,7 +120,7 @@ At that point:
 - cross-repository dependencies become versioned NuGet `PackageReference` entries;
 - project references remain appropriate within each extracted suite unless an additional package boundary is independently justified.
 
-`Icod.CoreUtils` must not acquire permanent production dependencies on sibling command suites. Interoperability should normally occur through documented command-line behavior and textual formats. Unified diffs flow from `Icod.DiffUtils` to `Icod.Patch`, and ed scripts flow from `Icod.DiffUtils` to `Icod.Ed`, without requiring runtime references between their suite-specific Shared libraries.
+`Icod.CoreUtils` must not acquire permanent production dependencies on sibling command suites. Interoperability should normally occur through documented command-line behavior and textual formats. Unified diffs flow from `Icod.DiffUtils` to `Icod.Patch`, and ed scripts flow from `Icod.DiffUtils` to `Icod.LineEditor.Ed`, without requiring runtime references between their suite-specific Shared libraries.
 
 ### Icod.CommandFramework
 
@@ -162,8 +163,9 @@ Icod.CommandFramework
 - `Icod.DiffUtils.Shared` owns comparison, differencing, hunk construction, two-way and three-way merge, and difference-output behavior reused by `cmp`, `diff`, `diff3`, and `sdiff`.
 - `Icod.Grep.Grep` owns grep-specific pattern sources, matcher orchestration, recursive selection, binary-input policy, context grouping, and output formatting.
 - `Icod.Patch.Patch` owns patch parsing, hunk application, fuzz and offset matching, reversal detection, rejects, backups, and transactional application.
-- `Icod.LineEditor.Shared` owns address parsing, editor commands, mutable line buffers, substitutions, global commands, undo, file operations, shell integration, and restricted-mode enforcement for `ed` and `red`.
-- `Icod.LineEditor.Sed` owns its parser, addresses, pattern and hold spaces, substitutions, branching, command cycle, and in-place-editing semantics.
+- `Icod.LineEditor.Ed.Shared` owns Ed/Red address parsing, command parsing, mutable line buffers, marks, substitutions, global commands, undo, file operations, shell integration, and restricted-mode enforcement. `Icod.LineEditor.Ed` and `Icod.LineEditor.Red` are thin executable profiles over that one engine.
+- `Icod.LineEditor.Sed` owns Sed-specific script parsing, address and range state, pattern and hold spaces, branching, command-cycle behavior, substitutions, sandbox policy, and in-place-editing semantics.
+- A general `Icod.LineEditor.Shared` project is created only if completed Ed and Sed implementations demonstrate cohesive editor-family reuse that is neither cross-suite `Icod.CommandFramework` material nor specific to one engine. It must not be created merely to wrap the regular-expression, record, diagnostic, process, temporary, filesystem, or text APIs already incubating in the current Shared project.
 - `Icod.Tar.Tar` owns archive formats, entry models, sparse-file archive behavior, selection and exclusion rules, compression integration, and extraction security.
 - `Icod.ProcPs.Shared` owns procps-ng-specific process enumeration, Linux `/proc` parsing and equivalent observation providers, selection grammar, detailed snapshots, field definitions, sorting, personalities, terminal association, CPU and memory metric interpretation, kernel-data models, and full-screen process-tool support. It consumes rather than duplicates the general processor-resource, process-identity, target, launch, wait, signal, priority, clock, and terminal contracts incubated in the current Shared project.
 
@@ -178,7 +180,8 @@ Each non-Coreutils suite developed in this repository must:
 - reproduce the established `net10.0`, C# 13, Debug/Staging/Release, UTF-8/LF, XML documentation, and three-runner CI policies;
 - use project references during co-resident development;
 - keep suite-specific state out of the general Shared incubation project;
-- consume existing cross-suite abstractions rather than recreating parallel processor, process, signal, priority, waiting, timing, or terminal contracts inside a suite-specific Shared project;
+- do not create `Icod.LineEditor.Shared` as a prerequisite or use it to wrap APIs already supplied by the current Shared incubation project; create it only after the completed Sed and Ed engines leave a cohesive, evidence-based family-specific remainder;
+- consume existing cross-suite abstractions rather than recreating parallel regular-expression, record, diagnostic, process, temporary, filesystem, processor, signal, priority, waiting, timing, or terminal contracts inside a suite-specific Shared project;
 - classify every new shared API provisionally as cross-suite, Coreutils-specific, suite-specific, or command-local;
 - establish textual compatibility fixtures where public formats cross suite boundaries;
 - document output-path handling for duplicate executable names;
@@ -194,7 +197,7 @@ For the co-resident sibling-suite projects, use the corresponding upstream proje
 | Program family or command | Project family | Primary authority |
 |---|---|---|
 | GNU Coreutils, including historical GNU Fileutils and GNU Textutils families | `Icod.CoreUtils` | GNU Coreutils manual and source |
-| `sed` | `Icod.LineEditor.Sed` | GNU sed |
+| `sed` | `Icod.LineEditor.Sed` | GNU sed 4.10 |
 | `grep` | `Icod.Grep.Grep` | GNU grep 3.12 |
 | `cmp`, `diff`, `diff3`, `sdiff` | `Icod.DiffUtils` | GNU Diffutils 3.12 |
 | `patch` | `Icod.Patch.Patch` | GNU patch 2.8 |
@@ -212,6 +215,7 @@ Man7 pages are useful synopses and secondary references, but they must not repla
 - Batches 1 through 16 have command-specific tests.
 - The complete test suite has been exercised on Windows, Ubuntu, and macOS during Batch 10 stabilization.
 - Source projects consistently reference `Shared` where common behavior is appropriate; that project currently incubates both future `Icod.CommandFramework` APIs and Coreutils-specific `Icod.CoreUtils.Shared` APIs while co-resident sibling suites supply additional real consumers.
+- `Icod.LineEditor.Sed` has already completed its project and namespace migration: it uses assembly name `sed`, root namespace and public command class `Icod.LineEditor.Sed.Command`, an asynchronous entry point, a dedicated test identity, and a project reference to the current Shared incubation project.
 - Recent projects use asynchronous entry points, injected streams, cancellation, and provider abstractions more consistently than the original implementations.
 - Cross-platform test failures have exposed and corrected line-ending assumptions, test-vector defects, and native ABI assumptions that Windows- or Linux-only validation would have missed.
 
@@ -244,11 +248,14 @@ Man7 pages are useful synopses and secondary references, but they must not repla
 7. **Injected standard streams are not consistently respected or owned correctly.**  
    A command must use the supplied `stdin`, `stdout`, and `stderr`, and must never dispose a caller-owned standard stream.
 
+8. **The current Sed implementation has not yet exposed its final internal boundaries.**  
+   `Icod.LineEditor.Sed.Command` presently contains a large monolithic interpreter with nested option, parser, address, instruction, execution, record, substitution, process, and in-place-editing types. It also translates GNU BRE syntax into `System.Text.RegularExpressions`, uses a decoded record reader that may normalize CR before LF, combines script fragments with a host-generated line ending, and performs in-place replacement through command-local file moves. The LineEditor sequence must first characterize and decompose this implementation, then migrate regex, record, security, and replacement mechanics to the applicable shared contracts without moving Sed's pattern-space and command-cycle state into a general library.
+
 ## Project conventions
 
 These conventions apply to every existing project that is altered and every project that is added:
 
-1. Project filenames and namespaces use conventional PascalCase and the correct suite family, such as `Icod.CoreUtils.BaseName.csproj`, `Icod.DiffUtils.Diff.csproj`, `Icod.Ed.Ed.csproj`, or `Icod.ProcPs.Ps.csproj`.
+1. Project filenames and namespaces use conventional PascalCase and the correct suite family, such as `Icod.CoreUtils.BaseName.csproj`, `Icod.DiffUtils.Diff.csproj`, `Icod.LineEditor.Ed.csproj`, or `Icod.ProcPs.Ps.csproj`.
 2. `<AssemblyName>` remains the short lowercase command name exactly matching the tool directory, such as `basename`.
 3. All source and project text files are UTF-8.
 4. The first `<PropertyGroup>` of every altered or added `.csproj` contains `<LangVersion>13.0</LangVersion>`, and every project retains the established Debug, Staging, and Release conditional property groups.  Example:
@@ -372,6 +379,8 @@ These gates are repository milestones rather than command batches. They do not a
 ### Batch 2 — Stabilize the stream editor (1 tool)
 
 - [x] `sed`
+
+This historical completion remains authoritative. The command has since moved to the suite-correct `Icod.LineEditor.Sed` project and public `Icod.LineEditor.Sed.Command` identity. The later LineEditor incubation sequence decomposes and re-audits the implementation against GNU sed 4.10 without rewriting Batch 2 history.
 
 ### Batch 3 — Core streaming byte and record I/O (3 tools)
 
@@ -518,7 +527,7 @@ Add secure, exclusive file and directory creation, template validation, `TMPDIR`
   * [x] explicit documentation of differences from `System.Text.RegularExpressions`;
   * [x] injectable and testable matching providers.
 
-This gate prevents `expr` from introducing an isolated regular-expression implementation. The same foundation remains the CoreUtils basis for `csplit` and is a candidate for eventual extraction into `Icod.CommandFramework` for reuse by `Icod.Grep`, `Icod.Sed`, and `Icod.Ed`.
+This gate prevents `expr` from introducing an isolated regular-expression implementation. The same foundation remains the CoreUtils basis for `csplit` and is a candidate for eventual extraction into `Icod.CommandFramework` for reuse by `Icod.Grep`, `Icod.LineEditor.Sed`, and `Icod.LineEditor.Ed`.
 
 ### Batch 16 — Expression language (1 tool)
 
@@ -566,7 +575,7 @@ Implement paragraph recognition, sentence spacing, crown/tagged modes, logical-p
   * [x] documented escape-sequence parsing;
   * [x] deterministic behavior for malformed ranges and escapes.
 
-This gate directly supports `cut` and `paste`, then remains available to `tr`, `sort`, `split`, and related Coreutils and Textutils commands. The genuinely cross-suite record and delimiter contracts are candidates for eventual extraction into `Icod.CommandFramework` for use by `Icod.Grep` and `Icod.Sed`.
+This gate directly supports `cut` and `paste`, then remains available to `tr`, `sort`, `split`, and related Coreutils and Textutils commands. The genuinely cross-suite record and delimiter contracts are candidates for eventual extraction into `Icod.CommandFramework` for use by `Icod.Grep` and `Icod.LineEditor.Sed`.
 
 ### Batch 19 — Field and record extraction (2 tools)
 
@@ -644,13 +653,25 @@ Reuse the established text, locale, tokenization, ordering, and spill-storage pr
 
 This gate is completed before the co-resident `Icod.Grep` batch so recursive search consumes a stable read-only traversal contract. It also supports later Coreutils directory listing and filesystem accounting, recursive directory comparison in `Icod.DiffUtils`, and archive traversal in `Icod.Tar`. The cross-suite portions remain candidates for `Icod.CommandFramework`.
 
+### Completion Gate R1 — shared BRE/ERE foundation before Batch 26
+
+- [ ] Complete the current Shared regular-expression foundation for its first full cross-suite search consumer:
+  - [ ] add an explicit GNU/POSIX Basic-versus-Extended syntax profile while preserving Basic as the source-compatible default;
+  - [ ] implement ERE directly in the managed parser and leftmost-longest matcher rather than translating patterns to `System.Text.RegularExpressions`;
+  - [ ] cover alternation, grouping, repetition, intervals, brackets, captures, locale classification, diagnostics, cancellation, resource limits, and leftmost-longest behavior;
+  - [ ] define how byte-preserving input, decoded text, match and capture offsets, invalid input, locale profiles, and replacement output relate;
+  - [ ] retain injectable provider contracts and deterministic tests;
+  - [ ] update Shared documentation and provisional ownership classification.
+
+This gate advances LineEditor Phase LE2 before the rest of the LineEditor sequence because `Icod.Grep` is the first remaining command that requires both BRE and ERE. The capability does not depend on Sed's internal decomposition, and implementing it here prevents Grep from creating a second regular-expression engine. Later Sed and Ed phases consume and further validate the same cross-suite contract.
+
 ### Batch 26 — `Icod.Grep` search engine (1 tool)
 
 - [ ] `grep`
 
 Implement the documented GNU grep 3.12 option and pattern model. Cover multiple pattern sources, basic/extended/fixed/Perl-mode policy, recursive traversal, include/exclude rules, binary policy, context, filename and line metadata, counts, quiet/list modes, NUL behavior, and the required 0/1/2 status distinction.
 
-`Icod.Grep` consumes the current regular-expression, record, diagnostic, and read-only traversal abstractions through project references during incubation. Grep-specific matcher orchestration, binary-input policy, context grouping, and output formatting remain in the grep project or a repository-local engine if later testing justifies one. Completion Gate G will move genuine cross-suite dependencies to `Icod.CommandFramework` and extract `Icod.Grep` into its own solution and repository.
+`Icod.Grep` consumes the Gate R1 BRE/ERE provider and the current record, diagnostic, and read-only traversal abstractions through project references during incubation. Grep-specific matcher orchestration, binary-input policy, context grouping, and output formatting remain in the grep project or a repository-local engine if later testing justifies one. Completion Gate G will move genuine cross-suite dependencies to `Icod.CommandFramework` and extract `Icod.Grep` into its own solution and repository.
 
 ### Batch 27 — Splitting and reversing (2 tools)
 
@@ -724,32 +745,96 @@ This milestone does not alter command-batch numbering.
 
 Detailed GNU patch conformance continues under the `Icod.Patch` roadmap while the project remains co-resident. Final solution and repository extraction occurs in Completion Gate G.
 
-### In-solution suite incubation milestone — `Icod.Ed`
+### In-solution LineEditor incubation sequence — Phases LE0 through LE9
 
-This milestone does not alter command-batch numbering.
+This sequence does not alter command-batch numbering. The detailed architecture, repository assessment, security model, and test requirements remain in [`Icod.LineEditor-Informed-Architecture-Plan.md`](Icod.LineEditor-Informed-Architecture-Plan.md); this roadmap records the required schedule and completion dependencies.
 
-- [ ] Create `Icod.Ed.Shared`, `Icod.Ed.Ed`, `Icod.Ed.Red`, and their test projects in the current solution.
-- [ ] Migrate the existing editor seed implementation and relevant tests into the correct namespace family.
-- [ ] Record GNU ed 1.22.5 as the authoritative baseline.
-- [ ] Keep address parsing, command parsing, mutable line buffers, marks, substitutions, global commands, undo state, file operations, shell integration, and restricted-mode enforcement in `Icod.Ed.Shared`.
-- [ ] Establish textual compatibility tests for ed scripts emitted by GNU Diffutils and `Icod.DiffUtils`.
-- [ ] Consume common regular-expression, text, process, and transactional replacement contracts through project references during incubation.
-- [ ] Preserve lowercase assembly names `ed` and `red`.
+The sequence follows the Diffutils and Patch milestones so textual ed-script and patch-format producers already exist as independent interoperability fixtures. It begins with Sed because the present Sed project is already structurally correct but internally monolithic. It does **not** create `Icod.LineEditor.Shared` as a prerequisite: most plausible cross-editor foundations already belong to the current Shared incubation project and are future `Icod.CommandFramework` candidates.
 
-Detailed conformance follows the `Icod.Ed` roadmap while the projects remain in the same solution. Final solution and repository extraction occurs in Completion Gate G.
+#### Phase LE0 — Correct LineEditor policy and capture the baseline
 
-### In-solution suite incubation milestone — `Icod.Sed`
+- [x] Retain `Icod.LineEditor.Sed` with lowercase assembly name `sed`, root namespace `Icod.LineEditor.Sed`, and public `Icod.LineEditor.Sed.Command`.
+- [ ] Rename the stale Sed test project filename to `Icod.LineEditor.Sed.Tests.csproj` and normalize solution display names and suite folders.
+- [ ] Retain `Icod.LineEditor.Ed` and `Icod.LineEditor.Red` as the command-project identities, with public `Icod.LineEditor.Ed.Command` and `Icod.LineEditor.Red.Command` and lowercase assembly names `ed` and `red`.
+- [ ] Add or verify C# 13, `net10.0`, Debug/Staging/Release, UTF-8/LF, XML documentation, output-path, solution, local-build, and CI policy for every LineEditor project.
+- [ ] Record GNU sed 4.10 and GNU ed 1.22.5 as the authoritative baselines.
+- [ ] Capture the full-solution and current Sed test baseline before structural refactoring.
 
-This milestone preserves completed historical Batch 2 while correcting project ownership without rewriting history.
+#### Phase LE1 — Characterize and decompose `Icod.LineEditor.Sed`
 
-- [ ] Create or rename the command project as `Icod.Sed` with lowercase assembly name `sed`.
-- [ ] Migrate the completed seed implementation, tests, and namespace into the suite-correct project inside the current solution.
-- [ ] Record the pinned GNU sed release as the authoritative baseline.
-- [ ] Keep the sed parser, address model, pattern and hold spaces, substitution engine, branching, command cycle, and in-place-editing state inside `Icod.Sed` or its repository-local engine.
-- [ ] Consume common regular-expression, text-record, temporary-file, filesystem, and replacement contracts through project references during incubation.
-- [ ] Keep sed-specific execution state out of the general Shared incubation project.
+- [ ] Add characterization tests for option ordering, multiple script sources, diagnostics, script mode, record termination, sandboxing, in-place editing, and current command behavior before moving private types.
+- [ ] Keep `Icod.LineEditor.Sed.Command` as the public orchestration boundary while splitting the monolithic implementation into focused internal options, scripting, address, execution, record, regular-expression, substitution, process, and file modules.
+- [ ] Keep public behavior stable during decomposition; do not combine structural movement with regex, record, or replacement semantic changes.
+- [ ] Add substantive XML documentation for every public, protected, and internal type and member and a `README.md` in every multi-file source directory.
+- [ ] Add focused internal tests where useful without deleting the command-level conformance tests.
 
-Further GNU sed conformance follows the `Icod.Sed` roadmap. Final solution and repository extraction occurs in Completion Gate G.
+#### Phase LE2 — Shared BRE/ERE foundation, scheduled earlier as Completion Gate R1
+
+Completion Gate R1 performs this phase before Batch 26 because Grep is the first remaining BRE/ERE consumer. When the LineEditor sequence reaches this point:
+
+- [ ] verify that the Gate R1 syntax, locale, byte/text mapping, match-offset, capture, diagnostic, cancellation, and resource-limit contracts satisfy GNU Sed and GNU Ed requirements;
+- [ ] extend the shared contract only where the pinned LineEditor baselines expose a genuine cross-suite gap;
+- [ ] keep Sed empty-pattern reuse, address/substitution context, match iteration, and replacement policy in `Icod.LineEditor.Sed` rather than broadening the framework contract unnecessarily.
+
+#### Phase LE3 — Migrate Sed to the Shared regex provider
+
+- [ ] Add a Sed-specific adapter that owns BRE/ERE selection, empty-pattern reuse, address-versus-substitution context, GNU/POSIX mode, match iteration, and Sed diagnostics.
+- [ ] Route address and substitution compilation through the Shared provider.
+- [ ] Remove the private BRE/POSIX-class-to-.NET-regex translation only after equivalence and differential tests pass.
+- [ ] Add GNU sed differential cases for BRE, ERE, locale behavior, captures, repeated zero-length matches, and leftmost-longest results that differ from .NET's default engine.
+
+#### Phase LE4 — Correct Sed record and text semantics
+
+- [ ] Introduce a byte-preserving Sed input record that retains authoritative bytes, source identity, aggregate and per-file record numbers, separator kind, and whether the final record was terminated.
+- [ ] Consume the Shared segmented record foundation for LF and NUL modes; preserve CR as data unless an explicit Sed rule removes it.
+- [ ] Define C/POSIX byte-locale and UTF-8 decoding behavior, invalid-input policy, byte-to-text mapping, and replacement encoding.
+- [ ] Serialize Sed data with explicit LF or NUL separators rather than `Environment.NewLine`; reserve host-generated line endings for diagnostics and presentation only.
+- [ ] Add CRLF, lone-CR, invalid-UTF-8, NUL, empty-record, huge-record, multiline-pattern-space, hold-space-growth, and unterminated-final-record tests.
+- [ ] Document the correct memory invariant: Sed streams unrelated completed input records, while pattern and hold spaces may grow according to Sed semantics.
+
+#### Phase LE5 — Harden Sed orchestration, script sources, and capabilities
+
+- [ ] Add a `RunAsync(string[] args, CommandContext context)` core path while retaining established compatibility overloads.
+- [ ] Preserve command-line expression, script-file, and implicit script operands as distinct source objects with stable source names, locations, and ordering; do not combine them with `Environment.NewLine`.
+- [ ] Introduce injectable shell, auxiliary-file, and in-place-edit capabilities over the current Shared process, filesystem, and temporary-object mechanics.
+- [ ] Enforce GNU Sed sandbox restrictions both during compilation and through denied runtime capabilities.
+- [ ] Isolate current in-place editing behind an internal `InPlaceEditor` boundary and add failure-injection and cleanup characterization tests.
+- [ ] Keep the current implementation behind that boundary until Completion Gate E6 supplies the final shared transaction model.
+
+#### Phase LE6 — Create `Icod.LineEditor.Ed.Shared`
+
+- [ ] Create `Icod.LineEditor.Ed.Shared` and its dedicated test project inside the current solution.
+- [ ] Design and implement the complete Ed/Red mutable editor engine: scalable line storage, stable line identity where required, current and last addresses, marks, cut buffers, addresses and ranges, commands, substitutions, global commands, undo, remembered state, file operations, shell integration, diagnostics, signals, cancellation, and exit statuses.
+- [ ] Consume the current Shared regex, record, process, temporary, filesystem, and capability contracts rather than introducing parallel abstractions.
+- [ ] Define injectable Ed file and process capabilities and immutable standard and restricted security profiles.
+- [ ] Establish textual compatibility fixtures for ed scripts emitted by GNU Diffutils and `Icod.DiffUtils` without adding a runtime dependency on `Icod.DiffUtils.Shared`.
+
+#### Phase LE7 — Rebuild `Icod.LineEditor.Ed`
+
+- [ ] Retain the public `Icod.LineEditor.Ed.Command` and lowercase assembly name `ed`.
+- [ ] Replace the current seed internals with the `Icod.LineEditor.Ed.Shared` engine under the standard security profile.
+- [ ] Implement GNU ed 1.22.5 command-line, address, buffer, command, file, process, signal, diagnostic, and exit-status conformance.
+- [ ] Add command-level, script, large-buffer, long-line, cancellation, broken-pipe, and interoperability tests.
+
+#### Phase LE8 — Implement `Icod.LineEditor.Red`
+
+- [ ] Retain the public `Icod.LineEditor.Red.Command` and lowercase assembly name `red`.
+- [ ] Use the same Ed engine and make `red` and `ed --restricted` select the same immutable restricted profile.
+- [ ] Deny every shell-bearing path at both parser/dispatcher and process-capability layers, including nested global-command execution and remembered shell commands.
+- [ ] Route every filename-bearing operation through one platform-aware restricted file policy covering Unix paths, Windows drive-relative and rooted paths, UNC and device paths, alternate data streams, symlinks, hard links, reparse points, and validation/open races.
+- [ ] Capture the restricted working-directory context once and document whether the pinned compatibility profile provides pathname restriction or stronger physical confinement.
+- [ ] Add adversarial tests that verify denied operations leave buffer, address, marks, modified state, filename state, and undo state unchanged as required.
+
+#### Phase LE9 — Perform the evidence-based LineEditor sharing audit
+
+- [ ] Classify each candidate as cross-suite `Icod.CommandFramework` material, LineEditor-family-specific, Ed-family-specific, Sed-specific, or command-local.
+- [ ] Move cross-suite regular-expression, record, diagnostic, process, temporary, filesystem, and text contracts toward the current Shared incubation project rather than wrapping them in another suite library.
+- [ ] Keep the mutable editor engine and Red policy in `Icod.LineEditor.Ed.Shared`.
+- [ ] Keep Sed script, address/range state, pattern and hold spaces, branching, command cycle, sandbox policy, and in-place-editing policy in `Icod.LineEditor.Sed`.
+- [ ] Create `Icod.LineEditor.Shared` only if a cohesive residual library remains after those classifications and both completed engines provide real consumers.
+- [ ] Record consumer evidence and dependency direction for every moved API.
+
+Completion of Phases LE0 through LE9 leaves Sed decomposed and re-audited, Ed and Red implemented over one engine, and the family boundary justified by actual consumers. Final solution and repository extraction remains deferred until Completion Gate G.
 
 ### Completion Gate E2 — before Batch 35
 
@@ -887,7 +972,7 @@ Use the shared traversal engine. Implement interactive modes, recursive director
   * [ ] explicit diagnostics where atomic replacement is unavailable;
   * [ ] integration with the recursive traversal and metadata-preservation contracts established by Completion Gate E5.
 
-This gate is placed immediately before `cp` and `mv`, the first remaining Coreutils/Fileutils commands that require the complete replacement, backup, and rollback model. During incubation, the co-resident `Icod.Patch`, `Icod.Ed`, `Icod.Sed`, and `Icod.Tar` projects may consume these contracts through project references; their genuinely cross-suite portions are candidates for `Icod.CommandFramework`.
+This gate is placed immediately before `cp` and `mv`, the first remaining Coreutils/Fileutils commands that require the complete replacement, backup, and rollback model. During incubation, the co-resident `Icod.Patch`, `Icod.LineEditor.Ed.Shared`, `Icod.LineEditor.Sed`, and `Icod.Tar` projects may consume these contracts through project references; their genuinely cross-suite portions are candidates for `Icod.CommandFramework`.
 
 ### Batch 44 — Copy and move engine (2 tools)
 
@@ -901,6 +986,16 @@ Implement source/destination classification, recursive copy, symlink and hard-li
 - [ ] `install`
 
 Build on `mkdir`, `cp`, `chmod`, and `chown` primitives rather than invoking external utilities. Implement directory creation, modes, owners/groups, stripping policy, backups, compare mode, timestamps, SELinux-context policy, and atomic destination replacement.
+
+### In-solution LineEditor transactional-replacement integration — Phase LE10
+
+This follow-up does not alter command-batch numbering. It occurs after Completion Gate E6 and Batches 44 and 45 so the shared transaction model has first been validated by `cp`, `mv`, and `install` before the LineEditor commands replace their temporary command-local mechanisms.
+
+- [ ] Migrate Sed in-place editing to the shared secure sibling-temporary, backup, rollback, metadata, symlink/reparse-point, atomic-replacement, and cleanup contracts.
+- [ ] Migrate Ed write and replacement operations where the command semantics require transactional replacement.
+- [ ] Preserve command-specific backup, append, force, write, modified-buffer, and symlink policies above the shared mechanism.
+- [ ] Add atomicity, rollback, metadata, link, cancellation, failure-injection, and cleanup tests for both engines.
+- [ ] Remove temporary command-local replacement implementations after all three required CI platforms pass.
 
 ### Completion Gate F1 — before Batch 46
 
@@ -1017,7 +1112,7 @@ Add the missing project as a dedicated platform batch. Implement reading and cha
 
 These contracts are provisionally classified as `Icod.CommandFramework` candidates even though they are implemented physically in the current `Icod.CoreUtils.Shared` project during incubation.
 
-This gate supports `env` and `nohup`, allows Coreutils `kill` to validate signal parsing, targets, and delivery in Batch 53, allows `nice` and `timeout` to validate priority, waiting, process groups, clocks, termination, and status propagation in Batch 54, and supplies the common mechanics consumed immediately by the ProcPs block and later by `Icod.Tar`, `Icod.Ed`, and other suites.
+This gate supports `env` and `nohup`, allows Coreutils `kill` to validate signal parsing, targets, and delivery in Batch 53, allows `nice` and `timeout` to validate priority, waiting, process groups, clocks, termination, and status propagation in Batch 54, and supplies the common mechanics consumed immediately by the ProcPs block and later by `Icod.Tar`, `Icod.LineEditor.Ed.Shared`, and other suites.
 
 ### Batch 52 — Environment and hangup-independent execution (2 tools)
 
@@ -1245,7 +1340,7 @@ The project remains co-resident until Completion Gate G, when it is moved into i
 This gate is deliberately last. By this point the Coreutils, Diffutils, Grep, Patch, Ed, Sed, Tar, and ProcPs projects have been developed together in one solution, providing the consumer evidence needed to choose stable API and repository boundaries.
 
 - [ ] Inventory every public, protected, and internal API in the current Shared incubation project and record its actual consumers by project and suite.
-- [ ] Inventory every API in `Icod.DiffUtils.Shared`, `Icod.Ed.Shared`, `Icod.ProcPs.Shared`, and any other suite engine to detect duplication or misplaced cross-suite contracts.
+- [ ] Inventory every API in `Icod.DiffUtils.Shared`, `Icod.LineEditor.Ed.Shared`, `Icod.ProcPs.Shared`, any evidence-based `Icod.LineEditor.Shared`, and any other suite engine to detect duplication or misplaced cross-suite contracts.
 - [ ] Classify each API as:
   - [ ] cross-suite and suitable for `Icod.CommandFramework`;
   - [ ] shared only by Coreutils/Fileutils/Textutils and suitable for `Icod.CoreUtils.Shared`;
@@ -1262,13 +1357,13 @@ This gate is deliberately last. By this point the Coreutils, Diffutils, Grep, Pa
   - [ ] `Icod.DiffUtils`;
   - [ ] `Icod.Grep`;
   - [ ] `Icod.Patch`;
-  - [ ] `Icod.Ed`;
-  - [ ] `Icod.Sed`;
+  - [ ] `Icod.LineEditor`, containing `Icod.LineEditor.Ed.Shared`, `Icod.LineEditor.Ed`, `Icod.LineEditor.Red`, `Icod.LineEditor.Sed`, and `Icod.LineEditor.Shared` only if Phase LE9 justified it;
   - [ ] `Icod.Tar`;
   - [ ] `Icod.ProcPs`.
 - [ ] Preserve relevant history, project identities, test corpora, documentation, and CI policy during each extraction.
 - [ ] Convert every extracted suite to versioned `PackageReference` dependencies on `Icod.CommandFramework`.
 - [ ] Retain project references within each extracted suite for its own Shared or engine projects unless a separate package boundary is independently justified.
+- [ ] Treat `Icod.LineEditor.Ed.Shared` as a definite LineEditor suite engine; retain or publish a general `Icod.LineEditor.Shared` only if Phase LE9 produced a cohesive family-specific library with actual Ed and Sed consumers.
 - [ ] Resolve duplicate executable names and define suite packages, umbrella distributions, aliases, and installation-path policy.
 - [ ] Remove stale project, solution-folder, output-path, packaging, CI, and inventory references from the original repository.
 - [ ] Eliminate circular dependencies and ensure `Icod.CommandFramework` has no production dependency on any command suite.
@@ -1297,11 +1392,19 @@ Completion of this gate establishes `Icod.CommandFramework` as the neutral cross
 
 - Batches 30 through 34 are consecutive because the complete GNU Diffutils family should be developed as one cohesive suite. `Icod.DiffUtils.Shared` is established first; `cmp` validates byte comparison and status contracts; `diff` establishes the two-way engine and textual formats; `diff3` adds three-way comparison and merging; and `sdiff` adds side-by-side and interactive behavior.
 
-- `Icod.DiffUtils` remains independent of `Icod.Patch` and `Icod.Ed` at runtime. Unified, context, normal, and ed-script text are the compatibility contracts, ensuring the implementations can interoperate with GNU and third-party tools rather than only with each other.
+- `Icod.DiffUtils` remains independent of `Icod.Patch` and `Icod.LineEditor.Ed` at runtime. Unified, context, normal, and ed-script text are the compatibility contracts, ensuring the implementations can interoperate with GNU and third-party tools rather than only with each other.
 
-- `Icod.Patch`, `Icod.Ed`, and `Icod.Sed` are created in their final namespace families inside the current solution, but their detailed conformance work continues under their own roadmaps. Transactional file replacement, process execution, and other cross-suite dependencies are consumed through project references as those capabilities mature.
+- The LineEditor sequence begins by decomposing the already suite-correct `Icod.LineEditor.Sed` implementation. Structural decomposition is separated from semantic migration so current behavior can be characterized before the monolithic parser, execution, regex, record, process, and in-place-editing concerns are moved into focused internal modules.
 
-- Completion Gates E2 through E6 remain focused on Coreutils/Fileutils path resolution, metadata, modes, mutation, recursive traversal, and transactional replacement. The co-resident sibling suites provide additional consumers, helping distinguish framework contracts from Coreutils-specific policy.
+- Completion Gate R1 advances LineEditor Phase LE2 before Batch 26 so Grep, the first remaining BRE/ERE consumer, cannot introduce a parallel engine. Sed later migrates away from .NET-regex translation and Ed, Expr, and Csplit further validate the same cross-suite regular-expression contract.
+
+- Sed then adopts byte-preserving LF/NUL records, explicit final-record termination, exact CR and invalid-input policy, distinct script-source locations, and sandbox defense in depth. Sed-specific pattern space, hold space, ranges, branches, cycle behavior, and in-place-editing policy remain inside `Icod.LineEditor.Sed`.
+
+- `Icod.LineEditor.Ed.Shared` is a definite suite engine because Ed and Red are the same mutable line editor under standard and restricted profiles. `Icod.LineEditor.Ed` and `Icod.LineEditor.Red` remain thin command projects with exact public `Command` classes; Red restrictions are enforced through both command parsing and denied file/process capabilities.
+
+- A general `Icod.LineEditor.Shared` is intentionally deferred until Phase LE9. Similar command vocabulary is not sufficient evidence for sharing: Ed addresses and mutable-buffer state differ fundamentally from Sed addresses, pattern/hold spaces, and streaming cycle state. The library is created only if completed engines leave a cohesive family-specific remainder after cross-suite APIs have been classified toward `Icod.CommandFramework`.
+
+- Completion Gates E2 through E6 remain focused on Coreutils/Fileutils path resolution, metadata, modes, mutation, recursive traversal, and transactional replacement. LineEditor isolates temporary replacement mechanisms early, then Phase LE10 migrates Sed and Ed after the E6 transaction model has been validated by `cp`, `mv`, and `install`.
 
 - Completion Gates F1 through F4 establish cross-suite terminal presentation and control, host and processor-resource facts, process identity and targets, argument-safe launch, child and arbitrary-process waiting contracts, signals, process groups, priorities, monotonic timing, status translation, and timeout behavior before the most platform-intensive suite begins. These APIs live physically in the current Shared incubation project but are provisionally classified as `Icod.CommandFramework` candidates.
 
@@ -1348,8 +1451,9 @@ Completion of this gate establishes `Icod.CommandFramework` as the neutral cross
 13. Verify UTF-8 encoding and LF line endings, lowercase assembly names, required project configuration, and absence of generated artifacts.
 14. Update this roadmap’s living status and record any deliberately deferred behavior.
 15. For a co-resident suite milestone, verify the final namespace, solution folder, output path, test coverage, suite-specific Shared boundary, transitional project references, and public-format compatibility.
-16. For a ProcPs milestone, verify that common processor, process, signal, priority, waiting, timing, status, and terminal mechanics are consumed from the current Shared incubation project rather than duplicated in `Icod.ProcPs.Shared`.
-17. For Completion Gate G, verify every extracted repository against the published `Icod.CommandFramework` and other applicable NuGet packages before declaring the architecture stable.
+16. For a LineEditor milestone, verify the exact public command classes, preserve Sed and Ed execution-model boundaries, consume the current Shared regex/record/process/filesystem contracts rather than wrapping them, enforce Red and Sed security policies at both parse and capability layers, and keep `Icod.LineEditor.Shared` optional until the Phase LE9 consumer audit.
+17. For a ProcPs milestone, verify that common processor, process, signal, priority, waiting, timing, status, and terminal mechanics are consumed from the current Shared incubation project rather than duplicated in `Icod.ProcPs.Shared`.
+18. For Completion Gate G, verify every extracted repository against the published `Icod.CommandFramework` and other applicable NuGet packages before declaring the architecture stable.
 
 ## Batch completion checklist
 
@@ -1371,5 +1475,7 @@ A batch is complete only when:
 - the target framework and project configuration satisfy the current completion gate;
 - roadmap status and documentation are updated;
 - co-resident suite batches preserve suite-correct namespaces, isolated output paths, tests, and dependency direction; Completion Gate G leaves no stale solution, packaging, CI, or inventory references after extraction;
+- LineEditor milestones preserve the exact public command classes `Icod.LineEditor.Ed.Command`, `Icod.LineEditor.Red.Command`, and `Icod.LineEditor.Sed.Command`; keep Ed/Red state in `Icod.LineEditor.Ed.Shared`; keep Sed cycle state in `Icod.LineEditor.Sed`; and create `Icod.LineEditor.Shared` only after the evidence-based sharing audit;
+- LineEditor tests cover GNU BRE/ERE, byte-preserving LF/NUL and final-record semantics, script-source diagnostics, Sed sandbox denial, Red shell and path denial, in-place/write atomicity, rollback, links, races, cancellation, and cleanup as applicable;
 - ProcPs batches consume the shared processor and process foundation without duplicating its identities, targets, launch, wait, signal, priority, timing, status, or terminal contracts;
 - Completion Gate G leaves `Icod.CommandFramework` free of suite dependencies, preserves `Icod.CoreUtils.Shared` only where Coreutils/Fileutils/Textutils-specific reuse remains, and verifies all consumers against published packages.
