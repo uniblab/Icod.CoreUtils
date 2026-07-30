@@ -550,7 +550,7 @@ Use the shared display-column and tab-stop model. Cover tab lists, repeated tab 
 ### Batch 18 — Paragraph and line-number formatting (2 tools)
 
 - [ ] `fmt`
-- [ ] `nl`
+- [x] `nl`
 
 Implement paragraph recognition, sentence spacing, crown/tagged modes, logical-page delimiters, numbering styles, header/body separation, and standard-stream ownership. Share line-layout and display-width components without forcing one combined execution engine.
 

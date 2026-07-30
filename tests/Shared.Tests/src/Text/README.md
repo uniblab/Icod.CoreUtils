@@ -5,3 +5,4 @@
 - `TextLocaleEnvironmentTests.cs` verifies `LC_ALL`, `LC_CTYPE`, and `LANG` precedence and deterministic C/POSIX versus UTF-8 profile selection.
 - `TabStopParserTests.cs` verifies GNU tab-list grammar, repeated specifications, `/N`, `+N`, legacy parser edge cases, structured diagnostics, and overflow handling.
 - `TabStopAndColumnTests.cs` verifies recurring and finite tab-stop lookup, maximum configured distances, checked columns, backspace, carriage return, and cursor recalculation.
+- `TextLineReaderTests.cs` verifies terminated, empty, unterminated, Unicode, malformed-byte, cancellation, and stream-ownership behavior for logical lines.
