@@ -1,10 +1,14 @@
-// Port of the standard UNIX `tsort` utility to .NET
-namespace Icod.CoreUtils.Tsort;
+namespace Icod.CoreUtils.TSort;
 
-using System;
+using Icod.CoreUtils.Shared.Diagnostics;
 
-internal static class Program {
-	public static int Main( string[] args ) {
-		return Command.Run( args, Console.In, Console.Out, Console.Error );
-	}
+/// <summary>Provides the <c>tsort [OPTION] [FILE]</c> process entry point.</summary>
+public static class Program {
+	/// <summary>Runs the topological-sort command.</summary>
+	/// <param name="args">The command-line arguments.</param>
+	/// <returns>A task whose result is the process exit status.</returns>
+	public static Task<int> Main( string[] args ) => Command.RunAsync(
+		args,
+		CommandContext.CreateConsole( "tsort" )
+	);
 }
