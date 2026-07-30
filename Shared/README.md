@@ -99,3 +99,11 @@ Shared I/O and record helpers never own injected standard streams. `InputSource`
 ## Regular expressions
 
 Completion Gate C1 adds a reusable GNU BRE engine under `src/RegularExpressions`. It owns GNU/POSIX syntax, leftmost-longest selection, captures, back-references, locale-provider boundaries, cancellation, and controlled diagnostics. See [`src/RegularExpressions/README.md`](src/RegularExpressions/README.md) for the conformance profile and explicit differences from `System.Text.RegularExpressions`.
+
+## External ordering
+
+The `Icod.CoreUtils.Shared.Ordering` namespace supplies the Completion Gate D execution model without creating dependencies between individual tools. Locale selection follows `LC_ALL`, `LC_COLLATE`, and `LANG` precedence; C/POSIX profiles compare bytes, while named supported locales use injectable managed collation. Reusable collation keys, GNU sort-key syntax parsing, composite key rules, and original-input ordinals separate comparison policy from command front ends.
+
+`ExternalRunBuilder<T>` creates stable sorted runs under a caller-provided memory estimate. `StableExternalMerger<T>` validates and merges run streams, and `ExternalOrderingEngine<T>` performs bounded-fan-in intermediate passes when necessary. `IExternalRunCodec<T>` keeps temporary serialization independent of record type; `ByteRecordRunCodec` supplies the byte-preserving Coreutils format.
+
+`TemporaryWorkspace` owns the secure directory and run files. Cleanup ignores the operation cancellation token and is attempted after success, failure, and cancellation. Combined operation and cleanup failures preserve both exceptions. This ordering and workspace layer is shared incubation infrastructure and a provisional `Icod.CommandFramework` candidate; no command project is referenced by it.
