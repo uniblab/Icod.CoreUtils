@@ -24,7 +24,13 @@ internal static class PtxContextReader {
 		if ( settings.HasSentencePattern ) {
 			return string.IsNullOrEmpty( settings.SentencePattern )
 				? ReadWholeSourceAsync( source, statistics, cancellationToken )
-				: ReadCustomAsync( source, patterns, statistics, cancellationToken );
+				: ReadCustomAsync(
+					source,
+					patterns,
+					settings.InputReference,
+					statistics,
+					cancellationToken
+				);
 		}
 		if ( !settings.GnuExtensions || settings.InputReference ) {
 			return ReadLinesAsync( source, statistics, cancellationToken );
@@ -73,6 +79,7 @@ internal static class PtxContextReader {
 	private static async IAsyncEnumerable<PtxContextSegment> ReadCustomAsync(
 		Stream source,
 		PtxPatterns patterns,
+		bool inputReference,
 		PtxFileStatistics statistics,
 		[EnumeratorCancellation] CancellationToken cancellationToken
 	) {
@@ -80,6 +87,7 @@ internal static class PtxContextReader {
 		statistics.LineCount = checked( CountLineFeeds( bytes ) + 1 );
 		var text = PtxPatterns.DecodeForRegularExpression( bytes );
 		var cursor = 0;
+		var currentLineStart = 0;
 		long line = 1;
 		var atLineStart = true;
 		while ( cursor < bytes.Length ) {
@@ -90,13 +98,23 @@ internal static class PtxContextReader {
 				: checked( separator.Value.Start + separator.Value.Length );
 			var end = TrimTrailingWhitespaceIndex( bytes.AsSpan(), cursor, next );
 			if ( cursor < end ) {
+				var inheritedInputReference = inputReference && !atLineStart
+					? ReadInputReference( bytes, currentLineStart )
+					: Array.Empty<byte>();
 				yield return new PtxContextSegment(
 					bytes.AsSpan( cursor, end - cursor ).ToArray(),
 					line,
-					atLineStart
+					atLineStart,
+					inheritedInputReference
 				);
 			}
-			UpdatePosition( bytes.AsSpan( cursor, next - cursor ), ref line, ref atLineStart );
+			UpdatePosition(
+				bytes.AsSpan( cursor, next - cursor ),
+				cursor,
+				ref line,
+				ref atLineStart,
+				ref currentLineStart
+			);
 			cursor = next;
 			if ( null == separator ) {
 				break;
@@ -278,6 +296,18 @@ internal static class PtxContextReader {
 		return end;
 	}
 
+	private static byte[] ReadInputReference( ReadOnlySpan<byte> source, int lineStart ) {
+		var end = lineStart;
+		while (
+			end < source.Length
+			&& (byte)'\n' != source[ end ]
+			&& !PtxText.IsWhiteSpace( source[ end ] )
+		) {
+			end++;
+		}
+		return source[ lineStart..end ].ToArray();
+	}
+
 	private static void CompactPending( List<byte> pending, ref int pendingStart ) {
 		if ( 0 == pendingStart || ( pendingStart < BufferSize && pendingStart < pending.Count ) ) {
 			return;
@@ -305,13 +335,16 @@ internal static class PtxContextReader {
 
 	private static void UpdatePosition(
 		ReadOnlySpan<byte> consumed,
+		int absoluteStart,
 		ref long line,
-		ref bool atLineStart
+		ref bool atLineStart,
+		ref int currentLineStart
 	) {
-		foreach ( var value in consumed ) {
-			if ( (byte)'\n' == value ) {
+		for ( var index = 0; index < consumed.Length; index++ ) {
+			if ( (byte)'\n' == consumed[ index ] ) {
 				line++;
 				atLineStart = true;
+				currentLineStart = checked( absoluteStart + index + 1 );
 			} else {
 				atLineStart = false;
 			}

@@ -58,14 +58,17 @@ internal sealed class PtxContextSegment {
 	/// <param name="content">The context bytes, excluding trailing separator whitespace.</param>
 	/// <param name="startingLineNumber">The one-based line containing the first context byte.</param>
 	/// <param name="startsAtLineStart">Whether the context begins at the start of a physical line.</param>
+	/// <param name="inheritedInputReference">The input reference inherited when the context begins mid-line.</param>
 	internal PtxContextSegment(
 		byte[] content,
 		long startingLineNumber,
-		bool startsAtLineStart
+		bool startsAtLineStart,
+		byte[]? inheritedInputReference = null
 	) {
 		this.Content = content;
 		this.StartingLineNumber = startingLineNumber;
 		this.StartsAtLineStart = startsAtLineStart;
+		this.InheritedInputReference = inheritedInputReference ?? Array.Empty<byte>();
 	}
 	/// <summary>Gets the context bytes, excluding trailing separator whitespace.</summary>
 	internal byte[] Content { get; }
@@ -73,6 +76,8 @@ internal sealed class PtxContextSegment {
 	internal long StartingLineNumber { get; }
 	/// <summary>Gets whether the context begins at the start of a physical line.</summary>
 	internal bool StartsAtLineStart { get; }
+	/// <summary>Gets the input reference inherited when the context begins mid-line.</summary>
+	internal byte[] InheritedInputReference { get; }
 }
 
 /// <summary>Describes one word span inside a context.</summary>

@@ -191,10 +191,13 @@ internal static class PtxEngine {
 					line.LineNumber.ToString( CultureInfo.InvariantCulture )
 				) );
 			} else if ( settings.InputReference ) {
-				reference = source.AsSpan(
-					line.LineStart,
-					line.ReferenceEnd - line.LineStart
-				).ToArray();
+				reference = !segment.StartsAtLineStart
+					&& line.LineNumber == segment.StartingLineNumber
+					? segment.InheritedInputReference
+					: source.AsSpan(
+						line.LineStart,
+						line.ReferenceEnd - line.LineStart
+					).ToArray();
 				state.InputReferenceMaximumWidth = Math.Max(
 					state.InputReferenceMaximumWidth,
 					reference.Length
