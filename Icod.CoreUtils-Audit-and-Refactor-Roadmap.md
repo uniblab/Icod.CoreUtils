@@ -4,9 +4,9 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `22` |
-| Current engineering gate | Batch 22 complete |
-| Next infrastructure dependency | Batch 23 — Character transformation (`tr`) |
+| Completed command batches | `0` through `24` |
+| Current engineering gate | Batch 24 complete |
+| Next implementation batch | Batch 25 — Permuted indexing (`ptx`) |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -628,9 +628,9 @@ Implement the full `tr` set-expression grammar, including ranges, escapes, repet
 
 ### Batch 24 — Graph ordering (1 tool)
 
-- [ ] `tsort`
+- [x] `tsort`
 
-Implement `tsort` tokenization, deterministic ordering, stable diagnostics, and cycle reporting.
+The completed implementation uses a reusable asynchronous byte-token reader in `Icod.CoreUtils.Shared.IO`, preserves GNU Coreutils 9.11 space/tab/line-feed tokenization, and keeps all graph state command-local. It reproduces GNU's bytewise seed ordering, FIFO release order, reverse relation traversal, equal-pair node declarations, duplicate relations, stable loop-member diagnostics, one-edge loop breaking, continued output, and final failure status for cyclic input. The command uses `CommandContext`, cancellation-aware TAP I/O, normalized Debug/Staging/Release project settings, and a dedicated test project based on the GNU 9.11 fixtures. No individual command project references another command project.
 
 ### Batch 25 — Permuted indexing (1 tool)
 
