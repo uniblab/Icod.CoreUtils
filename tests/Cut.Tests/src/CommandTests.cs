@@ -67,9 +67,9 @@ public sealed class CommandTests {
 		var missing = await RunAsync( [], [] );
 		var duplicate = await RunAsync( [ "-b", "1", "-c", "1" ], [] );
 		Assert.Equal( CommandExitCodes.Success, help.Status );
-		Assert.Contains( "Usage: cut", Encoding.UTF8.GetString( help.Output ) );
+		Assert.Contains( "Usage: cut", help.TextOutput );
 		Assert.Equal( CommandExitCodes.Success, version.Status );
-		Assert.Contains( "cut (Icod.CoreUtils)", Encoding.UTF8.GetString( version.Output ) );
+		Assert.Contains( "cut (Icod.CoreUtils)", version.TextOutput );
 		Assert.Equal( CommandExitCodes.Failure, missing.Status );
 		Assert.Contains( "must specify", missing.Error );
 		Assert.Equal( CommandExitCodes.Failure, duplicate.Status );
@@ -95,12 +95,13 @@ public sealed class CommandTests {
 		Assert.Contains( "Try 'cut --help'", result.Error );
 	}
 
-	private static async Task<(int Status, byte[] Output, string Error)> RunAsync( string[] args, byte[] input ) {
+	private static async Task<(int Status, byte[] Output, string TextOutput, string Error)> RunAsync( string[] args, byte[] input ) {
 		using var inputStream = new MemoryStream( input, writable: false );
 		using var outputStream = new MemoryStream();
+		var textOutput = new StringWriter();
 		var error = new StringWriter();
-		var context = new CommandContext( "cut", new StringReader( string.Empty ), new StringWriter(), error, inputStream, outputStream );
+		var context = new CommandContext( "cut", new StringReader( string.Empty ), textOutput, error, inputStream, outputStream );
 		var status = await Command.RunAsync( args, context );
-		return (status, outputStream.ToArray(), error.ToString());
+		return ( status, outputStream.ToArray(), textOutput.ToString(), error.ToString() );
 	}
 }

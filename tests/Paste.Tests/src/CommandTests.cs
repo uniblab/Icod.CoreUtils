@@ -94,21 +94,22 @@ public sealed class CommandTests {
 		var version = await RunAsync( [ "--version" ], [] );
 		var invalid = await RunAsync( [ "-d", "\\" ], [] );
 		Assert.Equal( CommandExitCodes.Success, help.Status );
-		Assert.Contains( "Usage: paste", Encoding.UTF8.GetString( help.Output ) );
+		Assert.Contains( "Usage: paste", help.TextOutput );
 		Assert.Equal( CommandExitCodes.Success, version.Status );
-		Assert.Contains( "paste (Icod.CoreUtils)", Encoding.UTF8.GetString( version.Output ) );
+		Assert.Contains( "paste (Icod.CoreUtils)", version.TextOutput );
 		Assert.Equal( CommandExitCodes.Failure, invalid.Status );
 		Assert.Contains( "backslash", invalid.Error.ToLowerInvariant() );
 	}
 
 	private static byte[] Generated( params string[] lines ) => Encoding.UTF8.GetBytes( string.Concat( string.Join( Environment.NewLine, lines ), Environment.NewLine ) );
 
-	private static async Task<(int Status, byte[] Output, string Error)> RunAsync( string[] args, byte[] input ) {
+	private static async Task<(int Status, byte[] Output, string TextOutput, string Error)> RunAsync( string[] args, byte[] input ) {
 		using var inputStream = new MemoryStream( input, writable: false );
 		using var outputStream = new MemoryStream();
+		var textOutput = new StringWriter();
 		var error = new StringWriter();
-		var context = new CommandContext( "paste", new StringReader( string.Empty ), new StringWriter(), error, inputStream, outputStream );
+		var context = new CommandContext( "paste", new StringReader( string.Empty ), textOutput, error, inputStream, outputStream );
 		var status = await Command.RunAsync( args, context );
-		return (status, outputStream.ToArray(), error.ToString());
+		return ( status, outputStream.ToArray(), textOutput.ToString(), error.ToString() );
 	}
 }
