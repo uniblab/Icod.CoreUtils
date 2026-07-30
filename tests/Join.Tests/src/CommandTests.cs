@@ -139,12 +139,12 @@ public sealed class CommandTests {
 	}
 
 	private sealed class TemporaryFile : IDisposable {
-		private TemporaryFile( byte[] contents ) {
+		public TemporaryFile( byte[] contents ) {
 			this.Path = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "icod-join-test-", Guid.NewGuid().ToString( "N" ) ) );
 			File.WriteAllBytes( this.Path, contents );
 		}
 
-		private string Path { get; }
+		public string Path { get; }
 
 		void IDisposable.Dispose() {
 			try {

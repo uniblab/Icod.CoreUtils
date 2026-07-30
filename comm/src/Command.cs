@@ -322,14 +322,14 @@ Compare sorted files FILE1 and FILE2 record by record.
 	);
 
 	private sealed class InputState {
-		private InputState( string displayName ) {
+		public InputState( string displayName ) {
 			this.DisplayName = displayName;
 		}
 
-		private string DisplayName { get; }
-		private bool IsDisordered { get; set; }
-		private long LineNumber { get; set; }
-		private ByteRecord? Previous { get; set; }
+		public string DisplayName { get; }
+		public bool IsDisordered { get; set; }
+		public long LineNumber { get; set; }
+		public ByteRecord? Previous { get; set; }
 	}
 
 	private enum OrderCheckMode {

@@ -701,22 +701,22 @@ Filter adjacent matching records from INPUT, writing to OUTPUT.
 	}
 
 	private sealed class UniqOptions {
-		private string InputPath { get; init; } = string.Empty;
-		private string? OutputPath { get; init; }
-		private bool Count { get; init; }
-		private bool OutputUnique { get; init; }
-		private bool OutputFirstRepeated { get; init; }
-		private bool OutputLaterRepeated { get; init; }
-		private DelimiterMethod RepeatedMethod { get; init; }
-		private bool Group { get; init; }
-		private DelimiterMethod GroupMethod { get; init; }
-		private bool IgnoreCase { get; init; }
-		private bool BytewiseCharacters { get; set; }
-		private CultureInfo? CharacterCulture { get; set; }
-		private long SkipFields { get; init; }
-		private long SkipChars { get; init; }
-		private long? CheckChars { get; init; }
-		private RecordSeparator RecordSeparator { get; init; }
+		public string InputPath { get; init; } = string.Empty;
+		public string? OutputPath { get; init; }
+		public bool Count { get; init; }
+		public bool OutputUnique { get; init; }
+		public bool OutputFirstRepeated { get; init; }
+		public bool OutputLaterRepeated { get; init; }
+		public DelimiterMethod RepeatedMethod { get; init; }
+		public bool Group { get; init; }
+		public DelimiterMethod GroupMethod { get; init; }
+		public bool IgnoreCase { get; init; }
+		public bool BytewiseCharacters { get; set; }
+		public CultureInfo? CharacterCulture { get; set; }
+		public long SkipFields { get; init; }
+		public long SkipChars { get; init; }
+		public long? CheckChars { get; init; }
+		public RecordSeparator RecordSeparator { get; init; }
 	}
 
 	private enum DelimiterMethod {
