@@ -24,11 +24,11 @@ The primary supported CI targets are `windows-latest`, `ubuntu-latest`, and `mac
 The repository and solution will also serve as the **temporary development home** for projects that ultimately belong to other upstream suites:
 
 - `Icod.DiffUtils.Shared`, `Icod.DiffUtils.Cmp`, `Icod.DiffUtils.Diff`, `Icod.DiffUtils.Diff3`, and `Icod.DiffUtils.SDiff`;
-- `Icod.Grep`;
-- `Icod.Patch`;
-- `Icod.Ed.Shared`, `Icod.Ed.Ed`, and `Icod.Ed.Red`;
-- `Icod.Sed`;
-- `Icod.Tar`;
+- `Icod.Grep.Grep`;
+- `Icod.Patch.Patch`;
+- `Icod.LineEditor.Shared`, `Icod.LineEditor.Ed`, and `Icod.LineEditor.Red`;
+- `Icod.LineEditor.Sed`;
+- `Icod.Tar.Tar`;
 - `Icod.ProcPs.Shared` and the complete procps-ng command family.
 
 These projects will use their **final suite-correct project names and namespaces from the beginning**, but they will remain in `Icod.CoreUtils.sln` and this repository until the final architectural extraction. Developing the suites together provides real consumers for the current `Shared` APIs, makes cross-suite duplication visible, and supplies the evidence needed to decide which APIs belong in `Icod.CommandFramework`, which remain in `Icod.CoreUtils.Shared`, and which belong in a suite-specific Shared library.
@@ -68,11 +68,12 @@ The suite-specific projects must use their final namespace families now:
 ```text
 Icod.CoreUtils.*
 Icod.DiffUtils.*
-Icod.Grep
-Icod.Patch
-Icod.Ed.*
-Icod.Sed
-Icod.Tar
+Icod.Grep.Grep
+Icod.Patch.Patch
+Icod.LineEditor.Ed
+Icod.LineEditor.Red
+Icod.LineEditor.Sed
+Icod.Tar.Tar
 Icod.ProcPs.*
 ```
 
@@ -159,11 +160,11 @@ Icod.CommandFramework
 ### Suite-specific projects
 
 - `Icod.DiffUtils.Shared` owns comparison, differencing, hunk construction, two-way and three-way merge, and difference-output behavior reused by `cmp`, `diff`, `diff3`, and `sdiff`.
-- `Icod.Grep` owns grep-specific pattern sources, matcher orchestration, recursive selection, binary-input policy, context grouping, and output formatting.
-- `Icod.Patch` owns patch parsing, hunk application, fuzz and offset matching, reversal detection, rejects, backups, and transactional application.
-- `Icod.Ed.Shared` owns address parsing, editor commands, mutable line buffers, substitutions, global commands, undo, file operations, shell integration, and restricted-mode enforcement for `ed` and `red`.
-- `Icod.Sed` owns its parser, addresses, pattern and hold spaces, substitutions, branching, command cycle, and in-place-editing semantics.
-- `Icod.Tar` owns archive formats, entry models, sparse-file archive behavior, selection and exclusion rules, compression integration, and extraction security.
+- `Icod.Grep.Grep` owns grep-specific pattern sources, matcher orchestration, recursive selection, binary-input policy, context grouping, and output formatting.
+- `Icod.Patch.Patch` owns patch parsing, hunk application, fuzz and offset matching, reversal detection, rejects, backups, and transactional application.
+- `Icod.LineEditor.Shared` owns address parsing, editor commands, mutable line buffers, substitutions, global commands, undo, file operations, shell integration, and restricted-mode enforcement for `ed` and `red`.
+- `Icod.LineEditor.Sed` owns its parser, addresses, pattern and hold spaces, substitutions, branching, command cycle, and in-place-editing semantics.
+- `Icod.Tar.Tar` owns archive formats, entry models, sparse-file archive behavior, selection and exclusion rules, compression integration, and extraction security.
 - `Icod.ProcPs.Shared` owns procps-ng-specific process enumeration, Linux `/proc` parsing and equivalent observation providers, selection grammar, detailed snapshots, field definitions, sorting, personalities, terminal association, CPU and memory metric interpretation, kernel-data models, and full-screen process-tool support. It consumes rather than duplicates the general processor-resource, process-identity, target, launch, wait, signal, priority, clock, and terminal contracts incubated in the current Shared project.
 
 ### Co-resident suite incubation policy
@@ -193,13 +194,13 @@ For the co-resident sibling-suite projects, use the corresponding upstream proje
 | Program family or command | Project family | Primary authority |
 |---|---|---|
 | GNU Coreutils, including historical GNU Fileutils and GNU Textutils families | `Icod.CoreUtils` | GNU Coreutils manual and source |
-| `sed` | `Icod.Sed` | GNU sed |
-| `grep` | `Icod.Grep` | GNU grep 3.12 |
+| `sed` | `Icod.LineEditor.Sed` | GNU sed |
+| `grep` | `Icod.Grep.Grep` | GNU grep 3.12 |
 | `cmp`, `diff`, `diff3`, `sdiff` | `Icod.DiffUtils` | GNU Diffutils 3.12 |
-| `patch` | `Icod.Patch` | GNU patch 2.8 |
-| `ed`, `red` | `Icod.Ed` | GNU ed 1.22.5 |
+| `patch` | `Icod.Patch.Patch` | GNU patch 2.8 |
+| `ed`, `red` | `Icod.LineEditor.Ed` | GNU ed 1.22.5 |
 | procps-ng command family | `Icod.ProcPs` | procps-ng 4.0.6, with an explicitly documented portability profile |
-| `tar` | `Icod.Tar` | GNU tar |
+| `tar` | `Icod.Tar.Tar` | GNU tar |
 
 Man7 pages are useful synopses and secondary references, but they must not replace the authoritative upstream manual.
 
@@ -332,7 +333,7 @@ These conventions apply to every existing project that is altered and every proj
 12. `--help` and `--version` behavior, write failures, broken pipes, cancellation, and disposal are tested consistently.
 13. Native structures and calls are defined per supported operating-system ABI; a Linux structure declaration must not be assumed valid on macOS or Windows.
 14. The exact upstream package and version used as the conformance baseline is recorded for every batch.
-15. `Icod.CoreUtils` command projects do not take production dependencies on `Icod.DiffUtils`, `Icod.Grep`, `Icod.Patch`, `Icod.Ed`, `Icod.ProcPs`, `Icod.Sed`, or `Icod.Tar`.
+15. `Icod.CoreUtils` command projects do not take production dependencies on `Icod.DiffUtils`, `Icod.Grep.Grep`, `Icod.Patch.Patch`, `Icod.LineEditor.Ed`, `Icod.LineEditor.Red`, `Icod.ProcPs`, `Icod.LineEditor.Sed`, or `Icod.Tar.Tar`.
 16. Co-resident suite projects remain isolated by namespace, solution folder, tests, and output paths; Completion Gate G performs the final solution, repository, packaging, and CI extraction.
 17. Until the final framework audit, every substantial Shared API records a provisional classification: cross-suite `Icod.CommandFramework` candidate, Coreutils-only `Icod.CoreUtils.Shared` candidate, suite-specific Shared candidate, or command-local implementation. The classification may change when real consumers provide better evidence.
 18. A type's current assembly is not proof of final ownership. Cross-suite process and processor mechanics may reside temporarily in the current `Icod.CoreUtils.Shared` project, while ProcPs-specific enumeration, `/proc` parsing, field catalogs, selection grammar, metrics, and screen state remain in `Icod.ProcPs.Shared`.
