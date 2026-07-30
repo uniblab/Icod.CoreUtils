@@ -570,8 +570,8 @@ This gate directly supports `cut` and `paste`, then remains available to `tr`, `
 
 ### Batch 19 — Field and record extraction (2 tools)
 
-- [ ] `cut`
-- [ ] `paste`
+- [x] `cut`
+- [x] `paste`
 
 Implement complete byte/character/field list grammar, complement and output delimiters, NUL records, delimiter suppression, serial paste, delimiter escape cycles, multiple input streams, and correct behavior on multibyte input.
 

@@ -58,7 +58,7 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 | 16 | Implementation prepared; CI validation pending | Expression language: `expr` | `COREUTILS-9.11` |
 | 17 | Implementation prepared; CI validation pending | Tabs and display columns | `COREUTILS-9.11` |
 | 18 | Implementation prepared; CI validation pending | Paragraph and line-number formatting | `COREUTILS-9.11` |
-| 19 | Planned | Field and record extraction | `COREUTILS-9.11` |
+| 19 | Implementation prepared; CI validation pending | Field and record extraction | `COREUTILS-9.11` |
 | 20 | Planned | External ordering and randomization | `COREUTILS-9.11` |
 | 21 | Planned | Sorted-stream consumers | `COREUTILS-9.11` |
 | 22 | Planned | Character transformation, graph ordering, and permuted indexing | `COREUTILS-9.11` |
@@ -290,6 +290,25 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 - **Documentation and tests:** both commands have command-level and source-directory READMEs, class-level XML usage documentation, dedicated usage/help/version writers, XML documentation for every public, protected, or internal declaration, and dedicated xUnit projects covering documented options, modes, exact bytes, prefix and delimiter edge cases, numeric grammar, regular expressions, operand continuity, cancellation, ownership, overflows, and controlled read/write failures. Shared logical-line tests cover byte, UTF-8, malformed-input, carriage-return, empty-line, synchronous, asynchronous, and cancellation behavior.
 - **Managed-runtime boundaries:** the implementation deliberately does not invoke host C locale or regex libraries. `fmt` preserves GNU's byte-width rules; `nl` uses the existing fully managed Gate C1 GNU BRE engine and Gate C2 C/POSIX or deterministic UTF-8 profile. GNU's arbitrary `MAXWORDS` and `MAXCHARS` emergency paragraph split limits are not reproduced as fixed unsafe buffers; managed collections retain the same ordinary paragraph optimizer without those implementation-size constants.
 - **Validation status:** source structure, project and solution wiring, XML documentation presence, README placement, UTF-8/LF policy, and conformance-oriented cases were checked; representative behavior was compared with the available GNU 9.7 tools and the pinned 9.11 source. A .NET SDK was unavailable in the implementation container, so the dedicated projects and complete solution still require build/test validation on `windows-latest`, `ubuntu-latest`, and `macos-latest` before this record is changed to fully validated.
+
+
+## Batch 19 implementation record
+
+- **Batch and commands:** Batch 19, `cut` and `paste`.
+- **Authority reconfirmed:** 30 July 2026.
+- **Authoritative package:** GNU Coreutils 9.11.
+- **Immutable identity:** tag `v9.11`; commit `c01fd163a47468a8296fb369f5233853bb551bb6`.
+- **Primary manuals:** [GNU Coreutils 9.11 `cut`](https://www.gnu.org/software/coreutils/manual/html_node/cut-invocation.html) and [`paste`](https://www.gnu.org/software/coreutils/manual/html_node/paste-invocation.html) invocation documentation.
+- **Primary sources:** [`src/cut.c`](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/cut.c), [`src/paste.c`](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/paste.c), and the shared [`src/set-fields.c`](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/set-fields.c) positional-range implementation.
+- **Differential oracle:** GNU `cut` and `paste` 9.7 available in the implementation environment for unchanged behaviors. The pinned 9.11 source remains authoritative for newer `cut` options such as `-F`, `-w`, and character-aware `-n`; CI must record runtime `--version` output whenever optional differential tests run.
+- **Shared foundations:** both commands consume Completion Gate C3. `cut` uses normalized one-based ranges whose adjacent boundaries remain observable, and `paste` uses bounded segmented records plus the shared GNU delimiter-cycle parser. Character and whitespace decisions reuse Completion Gate C2's deterministic C/POSIX and UTF-8 profiles.
+- **`cut` model:** byte and character modes stream bounded input and preserve exact selected bytes, including malformed UTF-8. `--no-partial` follows GNU's selected-suffix rule for multibyte characters. Field mode supports explicit one-character delimiters, empty/NUL delimiters, locale-blank runs, `trimmed` whitespace, `-F`, undelimited-record passthrough or suppression, complements, output delimiters, and the special field-delimiter-equals-record-separator case.
+- **`paste` model:** parallel mode opens all ordinary operands before producing output, shares one buffered reader for repeated standard-input operands, preserves leading and interior exhausted columns, and suppresses unused trailing delimiters. Serial mode resets the delimiter cycle per operand, continues after an operand-open failure, and emits one output terminator for an empty operand.
+- **Memory and streaming policy:** byte, character, and ordinary paste records are processed in bounded segments. GNU field passthrough can require deferring an arbitrarily long first field until a delimiter is known; the implementation documents and limits materialization to that semantic ambiguity. The record-separator-as-field-delimiter edge case uses one-record lookahead.
+- **TAP/TPL policy:** file opening, reads, writes, usage, help, version, and diagnostics are cancellation-aware and awaited. Ordered record and operand semantics prohibit parallel output processing; CPU work is not hidden in `Task.Run`.
+- **Generated record terminators:** existing LF or NUL record separators are preserved by `cut`. Unterminated textual `cut` records and all newly generated default `paste` rows use `Environment.NewLine` under repository policy; `-z` uses NUL.
+- **Documentation and tests:** both commands include command and source READMEs, dedicated usage/help/version writers, XML documentation for every public, protected, and internal declaration, and dedicated xUnit projects covering ranges, fields, Unicode and malformed bytes, NUL records, delimiter cycles, uneven and repeated inputs, large records, cancellation, ownership, and controlled read/write failures.
+- **Validation status:** source structure, project and solution wiring, XML documentation presence, README placement, UTF-8/LF policy, and conformance-oriented state cases were checked. A .NET SDK was unavailable in the implementation container, so the dedicated projects and complete solution require build/test validation on `windows-latest`, `ubuntu-latest`, and `macos-latest` before this record is changed to fully validated.
 
 ## Required batch-start record
 
