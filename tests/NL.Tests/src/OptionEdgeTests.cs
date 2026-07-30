@@ -11,7 +11,7 @@ public sealed class OptionEdgeTests {
 	[Fact]
 	public async Task NumericOperandsAcceptLeadingWhiteSpaceAndPlus() {
 		var result = await RunAsync(
-			[ "-v", " +2", "-i", " +3", "-l", " +2", "-w", " +2", "-s:" ],
+			[ "-ba", "-v", " +2", "-i", " +3", "-l", " +2", "-w", " +2", "-s:" ],
 			"x\n\n\n"u8.ToArray()
 		);
 		Assert.Equal( CommandExitCodes.Success, result.Status );

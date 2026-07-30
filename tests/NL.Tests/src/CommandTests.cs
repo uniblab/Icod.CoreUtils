@@ -73,7 +73,7 @@ public sealed class CommandTests {
 		Assert.Contains( "Usage: nl", help.TextOutput );
 		Assert.Contains( "GNU Coreutils 9.11", version.TextOutput );
 		Assert.Equal( CommandExitCodes.Failure, badStyle.Status );
-		Assert.Contains( "invalid line numbering style", badStyle.Error );
+		Assert.Contains( "invalid body numbering style", badStyle.Error );
 		Assert.Equal( CommandExitCodes.Failure, badPattern.Status );
 		Assert.Contains( "invalid regular expression", badPattern.Error );
 		Assert.Equal( CommandExitCodes.Canceled, canceled.Status );
