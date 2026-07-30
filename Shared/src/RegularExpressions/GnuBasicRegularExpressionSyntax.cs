@@ -76,7 +76,12 @@ internal sealed class DotRegexNode : RegexNode {
 			yield break;
 		}
 		var value = context.Input[ state.Position ];
-		if ( 0 == value.Value || ( context.Options.NewLineSensitive && '\n' == value.Value ) ) {
+		if (
+			( GnuRegularExpressionSyntax.Basic == context.Options.Syntax && 0 == value.Value )
+			|| ( '\n' == value.Value
+				&& ( GnuRegularExpressionSyntax.Emacs == context.Options.Syntax
+					|| context.Options.NewLineSensitive ) )
+		) {
 			yield break;
 		}
 		context.RegisterState();

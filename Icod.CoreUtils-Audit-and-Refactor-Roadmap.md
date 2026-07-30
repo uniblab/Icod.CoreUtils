@@ -4,9 +4,9 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `24` |
-| Current engineering gate | Batch 24 complete |
-| Next implementation batch | Batch 25 — Permuted indexing (`ptx`) |
+| Completed command batches | `0` through `25` |
+| Current engineering gate | Batch 25 complete |
+| Next implementation gate | Completion Gate E1 — before Batch 26 |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -634,9 +634,11 @@ The completed implementation uses a reusable asynchronous byte-token reader in `
 
 ### Batch 25 — Permuted indexing (1 tool)
 
-- [ ] `ptx`
+- [x] `ptx`
 
 Reuse the established text, locale, tokenization, ordering, and spill-storage primitives without coupling `ptx` to the execution engines of earlier commands.
+
+The completed implementation pins GNU Coreutils 9.11 and replaces the former simplified tabular indexer with the GNU and traditional invocation forms. It supports break, ignore, and only files; automatic and input references; right-side references; ASCII case folding; width, gap, macro, truncation, sentence-regexp, and word-regexp controls; and dumb, roff, and TeX output. Input processing and output use cancellation-aware TAP APIs and `CommandContext`. Context bytes are stored once in a secure Shared temporary workspace, while lightweight occurrences are stably ordered through `Icod.CoreUtils.Shared.Ordering.ExternalOrderingEngine<T>` with bounded run memory and merge fan-in. All command-specific state remains inside `ptx`, and no command project references another command project. A dedicated test project covers the GNU 9.11 command surface, structured formats, parameter files, references, cancellation, ownership, and build identity.
 
 ### Completion Gate E1 — before Batch 26
 
