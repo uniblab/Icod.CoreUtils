@@ -4,9 +4,9 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `20` |
-| Current engineering gate | Batch 20 complete |
-| Next infrastructure dependency | Batch 21 — External randomization (`shuf`) |
+| Completed command batches | `0` through `21` |
+| Current engineering gate | Batch 21 complete |
+| Next infrastructure dependency | Batch 22 — Sorted-stream consumers (`comm`, `join`, `uniq`) |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -599,9 +599,9 @@ The completed implementation consumes the locale, key-syntax, external-run, stab
 
 ### Batch 21 — External randomization (1 tool)
 
-- [ ] `shuf`
+- [x] `shuf`
 
-`shuf` reuses the temporary-storage and record infrastructure established by earlier batches while retaining its own randomized execution engine.
+The completed implementation reuses Shared command-line, diagnostic, byte-record, segmented-record, byte-output, and temporary-spool infrastructure. GNU `shuf`-specific random-source handling, unbiased bounded selection, partial Fisher-Yates permutation, range sampling, repeat policy, and its private external index remain command-local. No individual command project references another tool. The behavior was audited against GNU Coreutils 9.11.
 
 ### Batch 22 — Sorted-stream consumers (3 tools)
 
