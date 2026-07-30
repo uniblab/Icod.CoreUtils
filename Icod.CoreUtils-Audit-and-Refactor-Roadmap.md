@@ -4,9 +4,9 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `19` |
-| Current engineering gate | Completion Gate D complete |
-| Next infrastructure dependency | Batch 20 — External ordering (`sort`) |
+| Completed command batches | `0` through `20` |
+| Current engineering gate | Batch 20 complete |
+| Next infrastructure dependency | Batch 21 — External randomization (`shuf`) |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -591,9 +591,11 @@ This gate is intentionally not split because its components jointly form the exe
 
 ### Batch 20 — External ordering (1 tool)
 
-- [ ] `sort`
+- [x] `sort`
 
 For `sort`, implement key specifications, locale collation, stable and unique modes, numeric families, month/version/human-numeric comparison, checking and merging, secure temporary runs, bounded-memory external merge, zero-terminated records, and exact exit statuses.
+
+The completed implementation consumes the locale, key-syntax, external-run, stable-merge, and secure-workspace contracts in `Icod.CoreUtils.Shared`. GNU `sort`-specific key extraction and comparison policy remain command-local, and no individual command project references another tool. The behavior was audited against GNU Coreutils 9.11.
 
 ### Batch 21 — External randomization (1 tool)
 
