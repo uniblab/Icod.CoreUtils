@@ -16,7 +16,9 @@
 
 ## Text processing
 
-The `Icod.CoreUtils.Shared.Text` namespace supplies the reusable Pre-16 Gate C2 foundation for byte-sensitive text-layout commands. `TextUnitReader` can iterate opaque bytes or decode UTF-8 scalars while retaining the exact source bytes for every unit. Invalid UTF-8 is handled explicitly by preserving each invalid byte, returning replacement scalars that still retain the replaced bytes, or throwing at a stable source-byte offset. Byte-order marks are ordinary data and are never removed.
+The `Icod.CoreUtils.Shared.Text` namespace supplies the reusable Completion Gate C2 foundation for byte-sensitive text-layout commands. `TextUnitReader` can iterate opaque bytes or decode UTF-8 scalars while retaining the exact source bytes for every unit. Invalid UTF-8 is handled explicitly by preserving each invalid byte, returning replacement scalars that still retain the replaced bytes, or throwing at a stable source-byte offset. Byte-order marks are ordinary data and are never removed.
+
+`TextLineReader` and `TextLine` add byte-preserving logical-line iteration for later formatting commands. A line feed is retained as explicit line metadata, while carriage returns and every other byte remain ordinary units. Consumers can reproduce the original bytes exactly or create a managed decision string for regular-expression and layout work without turning that string into the authoritative serialization.
 
 `ITextLocaleProvider` supplies injectable blank classification and the associated byte or UTF-8 decoding profile. `TextLocaleEnvironment` resolves the active profile in `LC_ALL`, `LC_CTYPE`, then `LANG` precedence, selecting exact C/POSIX byte behavior or the deterministic UTF-8 profile. `IDisplayWidthProvider` supplies injectable scalar widths; the default managed provider is deterministic across operating systems, uses Unicode 16.0.0 East Asian Width data, treats ambiguous-width scalars as one column, and measures scalars rather than grapheme clusters. `DisplayColumnState` provides checked advancement, bounded backspace movement, carriage-return reset, and tab-stop advancement without imposing command-specific buffering policy.
 

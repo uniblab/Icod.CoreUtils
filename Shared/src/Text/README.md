@@ -1,6 +1,6 @@
 # Icod.CoreUtils.Shared.Text
 
-This namespace contains the shared Pre-16 Gate C2 text-unit and display-column foundation for `expand`, `unexpand`, and `fold`.
+This namespace contains the shared Gate C2 text-unit and display-column foundation for `expand`, `unexpand`, and `fold`, together with the byte-preserving logical-line model reused by later formatting commands such as `fmt` and `nl`.
 
 ## Design rules
 
@@ -11,7 +11,8 @@ This namespace contains the shared Pre-16 Gate C2 text-unit and display-column f
 - Resolve the process profile through `LC_ALL`, `LC_CTYPE`, then `LANG`, treating only `C` and `POSIX` as raw-byte locales.
 - Use checked `ulong` display columns and recurring tab-stop arithmetic.
 - Expose the maximum configured tab-stop distance so consumers can bound pending storage.
-- Share mechanisms, not command semantics. Command projects retain ownership of option precedence, pending-blank buffers, fold buffers, file-boundary behavior, and output diagnostics.
+- Share mechanisms, not command semantics. Command projects retain ownership of option precedence, paragraph optimization, numbering state, pending-blank buffers, fold buffers, file-boundary behavior, and output diagnostics.
+- Use `TextLineReader` when a consumer needs logical lines without surrendering exact bytes or treating a byte-order mark as metadata.
 
 ## Portability profile
 
@@ -28,3 +29,7 @@ The initial implementation supports exact raw-byte iteration for the POSIX C loc
 - An explicit list without continuation is exhausted after its final stop.
 
 The parser returns structured errors rather than command-formatted diagnostics.
+
+## Logical lines
+
+`TextLineReader` groups text units at an exact line-feed byte. The line feed is represented by `TextLine.HasLineFeed`; it is not included in `TextLine.Units`. A carriage return therefore remains part of the content. `TextLine.ToByteArray` and `TextLine.WriteAsync` reproduce retained bytes, while `ToDecodedString` supplies a non-authoritative matching surface for managed consumers such as `nl` pattern styles.
