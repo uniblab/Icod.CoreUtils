@@ -6,7 +6,6 @@ using Xunit;
 
 /// <summary>Tests bounded line-feed and NUL byte-record segmentation.</summary>
 public sealed class SegmentedRecordTests {
-
 	/// <summary>Verifies empty, terminated, and final unterminated records.</summary>
 	[Fact]
 	public async Task ReaderDistinguishesTerminationAndEmptyRecords() {
@@ -28,7 +27,6 @@ public sealed class SegmentedRecordTests {
 		Assert.Equal( "omega", Encoding.ASCII.GetString( records[2].Content.Span ) );
 		Assert.False( records[2].IsTerminated );
 	}
-
 	/// <summary>Verifies NUL-delimited records without treating embedded line feeds specially.</summary>
 	[Fact]
 	public async Task ReaderSupportsNullRecords() {
@@ -47,11 +45,10 @@ public sealed class SegmentedRecordTests {
 		Assert.Equal( new byte[] { (byte)'b' }, records[1].Content.ToArray() );
 		Assert.All( records, value => Assert.True( value.IsTerminated ) );
 	}
-
 	/// <summary>Verifies that every nonfinal segment respects the configured read bound.</summary>
 	[Fact]
 	public async Task LargeRecordsRemainSegmentedAndBounded() {
-		var source = Enumerable.Range( 0, 41 ).Select( value => (byte)value ).Concat( new byte[] { 0 } ).ToArray();
+		var source = Enumerable.Range( 1, 41 ).Select( value => (byte)value ).Concat( new byte[] { 0 } ).ToArray();
 		using var input = new MemoryStream( source, writable: false );
 		using var reader = new DelimitedByteRecordSegmentReader(
 			input,
@@ -71,7 +68,6 @@ public sealed class SegmentedRecordTests {
 			segments.SelectMany( value => value.Data.ToArray() ).ToArray()
 		);
 	}
-
 	/// <summary>Verifies that a separator immediately after a full buffer terminates the preceding segment directly.</summary>
 	[Fact]
 	public async Task BufferBoundarySeparatorDoesNotCreateSyntheticEmptySegment() {
@@ -86,7 +82,6 @@ public sealed class SegmentedRecordTests {
 		Assert.True( second.IsTerminated );
 		Assert.Null( await reader.ReadAsync() );
 	}
-
 	/// <summary>Verifies that cancellation is honored before asynchronous input is consumed.</summary>
 	[Fact]
 	public async Task ReaderHonorsCancellation() {
@@ -100,7 +95,6 @@ public sealed class SegmentedRecordTests {
 			}
 		);
 	}
-
 	/// <summary>Verifies that disposing the reader does not dispose its caller-owned stream.</summary>
 	[Fact]
 	public void ReaderDoesNotOwnSourceStream() {
@@ -109,7 +103,6 @@ public sealed class SegmentedRecordTests {
 		reader.Dispose();
 		Assert.True( input.CanRead );
 	}
-
 	/// <summary>Verifies construction validation and disposed-reader behavior.</summary>
 	[Fact]
 	public async Task ReaderValidatesConstructionAndDisposal() {
@@ -125,7 +118,6 @@ public sealed class SegmentedRecordTests {
 			}
 		);
 	}
-
 	private static async Task<List<ByteRecord>> ReadRecordsAsync( DelimitedByteRecordSegmentReader reader ) {
 		var records = new List<ByteRecord>();
 		using var content = new MemoryStream();
