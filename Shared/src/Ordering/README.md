@@ -6,6 +6,7 @@
 
 - `CollationEnvironment` resolves `LC_ALL`, `LC_COLLATE`, and `LANG` in POSIX precedence. `C`, `POSIX`, and their encoded variants select exact bytewise ordering; named locales are normalized for the managed culture provider and unsupported names return a controlled result.
 - `ICollationProvider` makes collation injectable. `SystemCollationProvider` supports direct comparison and immutable reusable `CollationKey` values.
+- `ByteCollationComparer` applies a resolved profile directly to byte-preserving records. C/POSIX profiles remain bytewise, linguistic profiles decode strict UTF-8, and invalid UTF-8 falls back to deterministic raw-byte ordering. Sorted-stream consumers can request case-insensitive key comparison without depending on `sort`.
 - `SortKeyParser` parses the shared `F[.C][OPTS][,F[.C][OPTS]]` grammar into structured endpoints and deterministic errors. It does not decide how fields are extracted from a command's record model.
 - `SortKeyRule<T>` and `CompositeSortKeyComparer<T>` compose extracted keys without coupling the shared layer to `sort` options or diagnostics.
 - `StableItem<T>` records the original input ordinal, and `StableComparer<T>` uses that ordinal only after primary comparison equality.

@@ -4,9 +4,9 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `21` |
-| Current engineering gate | Batch 21 complete |
-| Next infrastructure dependency | Batch 22 — Sorted-stream consumers (`comm`, `join`, `uniq`) |
+| Completed command batches | `0` through `22` |
+| Current engineering gate | Batch 22 complete |
+| Next infrastructure dependency | Batch 23 — Character transformation (`tr`) |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -605,11 +605,11 @@ The completed implementation reuses Shared command-line, diagnostic, byte-record
 
 ### Batch 22 — Sorted-stream consumers (3 tools)
 
-- [ ] `comm`
-- [ ] `join`
-- [ ] `uniq`
+- [x] `comm`
+- [x] `join`
+- [x] `uniq`
 
-Reuse the collation and record model established by `sort`. Preserve duplicate-key Cartesian behavior in `join`, order checking, header and output formatting, field selection, skip/check options, counting, zero records, and streaming without loading complete inputs.
+The completed implementation adds a reusable byte-record collation adapter to `Icod.CoreUtils.Shared.Ordering`. `comm` performs a constant-memory two-way merge, and `join` buffers only one equal-key group from each input to preserve duplicate-key Cartesian products. `uniq` remains an adjacent-record streaming state machine with exact selected-byte comparison, locale-aware case folding, counting, grouping, skip/check character handling, NUL records, and safe input/output aliasing. Each command references only `Icod.CoreUtils.Shared`; no individual tool depends on another tool. The behavior was audited against GNU Coreutils 9.11.
 
 ### Batch 23 — Character transformation (1 tool)
 
@@ -677,36 +677,37 @@ For `pr`, implement columns, page geometry, headers and footers, form feeds, dat
 - [ ] `Icod.DiffUtils.Shared`
 
 Create the suite-specific Shared project inside the current solution and add its dedicated test project. Record GNU Diffutils 3.12 as the authoritative baseline. Establish comparison inputs, byte and line normalization, edit scripts, ranges, hunks, output-format models, temporary-workspace use, directory-comparison coordination, three-way merge models, and side-by-side layout primitives only where they are genuinely shared by two or more Diffutils commands.
+This library is intended to store that code wich is shared between `cmp`, `diff`, `diff3`, and `sdiff` which would not go in `Icod.CoreUtils.Shared` because no other programs or tools use it; i.e., code specific to GNU Diffutils only.
 
 `Icod.DiffUtils.Shared` uses a project reference to the current Shared incubation project. It must not absorb general command, filesystem, text, locale, process, or platform behavior merely because those APIs have not yet been extracted into `Icod.CommandFramework`.
 
 ### Batch 31 — `Icod.DiffUtils.Cmp` byte comparison (1 tool)
 
-- [ ] `Icod.DiffUtils.Cmp`
+- [ ] `cmp`
 
-Create the suite-correct project and test project with lowercase assembly name `cmp`. Implement byte-oriented comparison, silent mode, all-differences reporting, byte and line numbering, skip and limit operands, EOF diagnostics, binary-safe standard input, cancellation, and exact statuses for equality, difference, and error.
+Implement byte-oriented comparison, silent mode, all-differences reporting, byte and line numbering, skip and limit operands, EOF diagnostics, binary-safe standard input, cancellation, and exact statuses for equality, difference, and error.
 
 This batch validates the byte-comparison and result-status contracts without requiring the line-difference engine.
 
 ### Batch 32 — `Icod.DiffUtils.Diff` difference engine (1 tool)
 
-- [ ] `Icod.DiffUtils.Diff`
+- [ ] `diff`
 
-Create the suite-correct project, migrate the existing `diff` seed code and tests into the new namespace, and replace the simplified implementation with a real sequence-difference engine. Implement normal, context, unified, ed, and other in-scope formats; whitespace and case policies; labels; function context; binary handling; incomplete-line behavior; recursive directory comparison; absent-file policy; and statuses 0 for no differences, 1 for differences, and greater than 1 for errors.
+Implement normal, context, unified, ed, and other in-scope formats; whitespace and case policies; labels; function context; binary handling; incomplete-line behavior; recursive directory comparison; absent-file policy; and statuses 0 for no differences, 1 for differences, and greater than 1 for errors.
 
-The existing `Icod.CoreUtils.Diff` project is retired only after the new project and tests pass throughout the solution. Textual fixtures must be independently consumable by GNU patch, `Icod.Patch`, GNU ed, and `Icod.Ed`.
+Textual fixtures must be independently consumable by our implementations of GNU `patch` and GNU `ed`.
 
 ### Batch 33 — `Icod.DiffUtils.Diff3` three-way comparison (1 tool)
 
-- [ ] `Icod.DiffUtils.Diff3`
+- [ ] `diff3`
 
-Create the suite-correct project and test project with lowercase assembly name `diff3`. Implement three-file comparison, common-ancestor modes, overlap classification, merge output, conflict markers, ed scripts, labels, input validation, and exact statuses. Reuse the proven two-way data model without forcing `diff3` semantics into the `diff` front end.
+Implement three-file comparison, common-ancestor modes, overlap classification, merge output, conflict markers, `ed` scripts, labels, input validation, and exact statuses. Reuse the proven two-way data model without forcing `diff3` semantics into the `diff` front end.
 
 ### Batch 34 — `Icod.DiffUtils.SDiff` side-by-side comparison (1 tool)
 
-- [ ] `Icod.DiffUtils.SDiff`
+- [ ] `sdiff`
 
-Create the suite-correct project and test project with lowercase assembly name `sdiff`. Implement side-by-side layout, width and display-column handling, common-line suppression, left-column behavior, tab expansion, interactive merge commands, editor invocation without unsafe shell interpolation, transactional output, nonterminal behavior, and exact status propagation.
+Implement side-by-side layout, width and display-column handling, common-line suppression, left-column behavior, tab expansion, interactive merge commands, editor invocation without unsafe shell interpolation, transactional output, nonterminal behavior, and exact status propagation.
 
 Completion of Batches 30 through 34 leaves the complete GNU Diffutils family implemented and tested inside the current solution. Repository extraction remains deferred until Completion Gate G.
 
@@ -714,11 +715,9 @@ Completion of Batches 30 through 34 leaves the complete GNU Diffutils family imp
 
 This milestone does not alter command-batch numbering.
 
-- [ ] Create `Icod.Patch` and `Icod.Patch.Tests` in the current solution.
-- [ ] Migrate the existing patch seed implementation and relevant tests into the correct namespace.
 - [ ] Record GNU patch 2.8 as the authoritative baseline.
 - [ ] Establish independent normal, context, and unified patch corpora, including output from GNU Diffutils and `Icod.DiffUtils`.
-- [ ] Keep the production boundary textual: `Icod.Patch` must not reference `Icod.DiffUtils.Shared` merely to consume patch files.
+- [ ] Keep the production boundary textual: `patch` must not reference `Icod.DiffUtils.Shared` merely to consume patch files.
 - [ ] Keep patch parsing, hunk application, fuzz and offset matching, reversal detection, rejects, backups, and application state inside `Icod.Patch` or a repository-local engine.
 - [ ] Consume transactional replacement capabilities after Completion Gate E6 rather than duplicating them.
 - [ ] Preserve the lowercase assembly name `patch` and use a suite-specific solution folder.
