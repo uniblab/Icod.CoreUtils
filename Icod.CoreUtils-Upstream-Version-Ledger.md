@@ -20,8 +20,8 @@ The version recorded here is the authority for synopsis, options, operands, envi
 | Key | Upstream authority | Pinned version | Immutable release identity | Primary specification |
 |---|---|---:|---|---|
 | `COREUTILS-9.11` | GNU Coreutils | 9.11 | tag `v9.11`; commit `c01fd163a47468a8296fb369f5233853bb551bb6` | [GNU Coreutils 9.11 manual](https://www.gnu.org/software/coreutils/manual/coreutils.html) |
-| `GNULIB-COREUTILS-9.11` | GNU Gnulib regular-expression implementation used by Coreutils 9.11 | pinned revision | commit `fb7312fa8d3df29f0ca0678f669b9a5b88a078ec` | [GNU Gnulib regular expressions](https://www.gnu.org/software/gnulib/manual/html_node/Regular-expressions.html) |
-| `POSIX-2024` | The Open Group Base Specifications Issue 8 / IEEE Std 1003.1-2024 | Issue 8 | document number `9799919799` | [POSIX.1-2024 regular-expression definitions and rationale](https://pubs.opengroup.org/onlinepubs/9799919799/) |
+| `GNULIB-COREUTILS-9.11` | GNU Gnulib revision used by Coreutils 9.11 | pinned revision | commit `fb7312fa8d3df29f0ca0678f669b9a5b88a078ec` | [GNU Gnulib manual](https://www.gnu.org/software/gnulib/manual/gnulib.html) |
+| `POSIX-2024` | The Open Group Base Specifications Issue 8 / IEEE Std 1003.1-2024 | Issue 8 | document number `9799919799` | [POSIX.1-2024 online specification](https://pubs.opengroup.org/onlinepubs/9799919799/) |
 | `SED-4.10` | GNU sed | 4.10 | tag `v4.10`; commit `89b7a2224d4faa9d8baf76094b1232ad1477ef3e` | [GNU sed 4.10 release](https://lists.gnu.org/archive/html/info-gnu/2026-04/msg00009.html) |
 | `NETTOOLS-2.10` | net-tools `hostname` | 2.10 | tag `v2.10` | [net-tools project and release files](https://sourceforge.net/projects/net-tools/) |
 | `PROCPS-4.0.6` | procps-ng `ps` | 4.0.6 | tag `v4.0.6`; release commit `4dafddf4` | [procps-ng 4.0.6 tag](https://gitlab.com/procps-ng/procps/-/tags) |
@@ -55,53 +55,89 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 | 13 | Completed | Binary formatting: `od` | `COREUTILS-9.11` |
 | 14 | Completed | Formatted and human-readable numeric output: `printf`, `numfmt` | `COREUTILS-9.11` |
 | 15 | Completed | Secure temporary objects: `mktemp` | `COREUTILS-9.11` |
-| 16 | Implementation prepared; CI validation pending | Expression language: `expr` | `COREUTILS-9.11` |
-| 17 | Implementation prepared; CI validation pending | Tabs and display columns | `COREUTILS-9.11` |
-| 18 | Implementation prepared; CI validation pending | Paragraph and line-number formatting | `COREUTILS-9.11` |
-| 19 | Implementation prepared; CI validation pending | Field and record extraction | `COREUTILS-9.11` |
-| 20 | Completed | External ordering: `sort` | `COREUTILS-9.11` |
-| 21 | Completed | External randomization: `shuf` | `COREUTILS-9.11` |
+| 16 | Completed | Expression language: `expr` | `COREUTILS-9.11` |
+| 17 | Completed | Tabs and display columns: `expand`, `unexpand`, `fold` | `COREUTILS-9.11` |
+| 18 | Completed | Paragraph and line-number formatting: `fmt`, `nl` | `COREUTILS-9.11` |
+| 19 | Completed | Field and record extraction: `cut`, `paste` | `COREUTILS-9.11` |
+| 20 | Completed | External ordering: `sort` | `COREUTILS-9.11`; `GNULIB-COREUTILS-9.11` where Coreutils delegates common collation or temporary-file mechanics |
+| 21 | Completed | External randomization: `shuf` | `COREUTILS-9.11`; `GNULIB-COREUTILS-9.11` where Coreutils delegates random-source or temporary-file mechanics |
 | 22 | Completed | Sorted-stream consumers: `comm`, `join`, `uniq` | `COREUTILS-9.11` |
-| 23 | Completed | Character transformation: `tr` | `COREUTILS-9.11` |
-| 24 | Completed | Graph ordering: `tsort` | `COREUTILS-9.11` |
-| 25 | Implementation prepared; CI validation pending | Permuted indexing: `ptx` | `COREUTILS-9.11`; `GNULIB-COREUTILS-9.11` for GNU Emacs regular expressions |
-| 26 | Planned | Difference engine: `diff` | `DIFFUTILS-3.12` |
-| 27 | Planned | Patch application engine: `patch` | `PATCH-2.8` |
-| 28 | Planned | Line editor: `ed` | `ED-1.22.5` |
-| 29 | Planned | Symbolic-link and canonical-path resolution | `COREUTILS-9.11` |
-| 30 | Planned | File metadata and timestamps | `COREUTILS-9.11` |
-| 31 | Planned | Condition evaluator: `test` | `COREUTILS-9.11` |
-| 32 | Planned | Basic directory and name removal | `COREUTILS-9.11` |
-| 33 | Planned | Hard and symbolic links | `COREUTILS-9.11` |
-| 34 | Planned | Special file creation | `COREUTILS-9.11` |
-| 35 | Planned | Permission modes: `chmod` | `COREUTILS-9.11` |
-| 36 | Planned | Ownership and group mutation | `COREUTILS-9.11` |
-| 37 | Planned | Recursive removal: `rm` | `COREUTILS-9.11` |
-| 38 | Planned | Copy and move engine | `COREUTILS-9.11` |
-| 39 | Planned | Installation engine: `install` | `COREUTILS-9.11` |
-| 40 | Planned | Color database: `dircolors` | `COREUTILS-9.11` |
-| 41 | Planned | Directory listing family | `COREUTILS-9.11` |
-| 42 | Planned | Filesystem usage reporting | `COREUTILS-9.11` |
-| 43 | Planned | Data destruction: `shred` | `COREUTILS-9.11` |
-| 44 | Planned | Archive engine: `tar` | `TAR-1.35` |
-| 45 | Planned | Host and processor context | `COREUTILS-9.11` |
-| 46 | Planned | Terminal identification: `tty` | `COREUTILS-9.11` |
-| 47 | Planned | Terminal characteristics: `stty` | `COREUTILS-9.11` |
-| 48 | Planned | Environment and hangup-independent execution | `COREUTILS-9.11` |
-| 49 | Planned | Priority and time-bounded execution | `COREUTILS-9.11` |
-| 50 | Planned | Signal control: `kill` | `COREUTILS-9.11` |
-| 51 | Planned | Root-directory execution: `chroot` | `COREUTILS-9.11` |
-| 52 | Planned | SELinux context operations | `COREUTILS-9.11` |
-| 53 | Planned | Standard-stream buffering control: `stdbuf` | `COREUTILS-9.11` |
+| 23 | Completed | Character transformation: `tr` | `COREUTILS-9.11`; `POSIX-2024` for character classes and utility semantics |
+| 24 | Completed | Graph ordering: `tsort` | `COREUTILS-9.11`; `POSIX-2024` for the standardized utility contract |
+| 25 | Completed | Permuted indexing: `ptx` | `COREUTILS-9.11`; `GNULIB-COREUTILS-9.11` for GNU Emacs regular-expression syntax |
+| 26 | Planned after E1 and R1 | `Icod.Grep.Grep` search engine | `GREP-3.12`; `GNULIB-COREUTILS-9.11`; `POSIX-2024` |
+| 27 | Planned | Splitting and reversing: `split`, `tac` | `COREUTILS-9.11` |
+| 28 | Planned | Pattern-directed splitting: `csplit` | `COREUTILS-9.11`; Gate R1 authorities for regular expressions |
+| 29 | Planned | Page presentation: `pr` | `COREUTILS-9.11` |
+| 30 | Planned | `Icod.DiffUtils.Shared` foundation | `DIFFUTILS-3.12`; Gate E1 authorities for recursive directory comparison |
+| 31 | Planned | `Icod.DiffUtils.Cmp` | `DIFFUTILS-3.12` |
+| 32 | Planned | `Icod.DiffUtils.Diff` | `DIFFUTILS-3.12`; Gate E1 authorities for recursive traversal |
+| 33 | Planned | `Icod.DiffUtils.Diff3` | `DIFFUTILS-3.12` |
+| 34 | Planned | `Icod.DiffUtils.SDiff` | `DIFFUTILS-3.12` |
+| 35 | Planned | Symbolic-link and canonical-path resolution: `readlink`, `realpath` | `COREUTILS-9.11` |
+| 36 | Planned | File metadata and timestamps: `stat`, `touch` | `COREUTILS-9.11` |
+| 37 | Planned | Condition evaluator: `test` | `COREUTILS-9.11`; `POSIX-2024` |
+| 38 | Planned | Basic directory and name removal: `mkdir`, `rmdir`, `unlink` | `COREUTILS-9.11` |
+| 39 | Planned | Hard and symbolic links: `link`, `ln` | `COREUTILS-9.11` |
+| 40 | Planned | Special file creation: `mkfifo`, `mknod` | `COREUTILS-9.11`; `POSIX-2024` where standardized |
+| 41 | Planned | Permission modes: `chmod` | `COREUTILS-9.11`; `POSIX-2024` |
+| 42 | Planned | Ownership and group mutation: `chown`, `chgrp` | `COREUTILS-9.11`; `POSIX-2024` |
+| 43 | Planned | Recursive removal: `rm` | `COREUTILS-9.11` |
+| 44 | Planned | Copy and move engine: `cp`, `mv` | `COREUTILS-9.11` |
+| 45 | Planned | Installation engine: `install` | `COREUTILS-9.11` |
+| 46 | Planned | Color database and directory listing: `dircolors`, `ls`, `dir`, `vdir` | `COREUTILS-9.11` |
+| 47 | Planned | Filesystem usage reporting: `df`, `du` | `COREUTILS-9.11` |
+| 48 | Planned | Data destruction: `shred` | `COREUTILS-9.11` |
+| 49 | Planned | Host and processor context: `hostid`, `nproc` | `COREUTILS-9.11`; `PROCPS-4.0.6` as a secondary consumer authority for shared processor-resource contracts |
+| 50 | Planned | Terminal identification: `tty` | `COREUTILS-9.11`; `POSIX-2024` |
+| 51 | Planned | Terminal characteristics: `stty` | `COREUTILS-9.11`; `POSIX-2024` |
+| 52 | Planned | Environment and hangup-independent execution: `env`, `nohup` | `COREUTILS-9.11`; `POSIX-2024` |
+| 53 | Planned | Signal control: Coreutils `kill` | `COREUTILS-9.11`; `POSIX-2024` |
+| 54 | Planned | Priority and time-bounded execution: `nice`, `timeout` | `COREUTILS-9.11`; `POSIX-2024` where standardized |
+| 55 | Planned | `Icod.ProcPs.Shared` provider foundation | `PROCPS-4.0.6` |
+| 56 | Planned | ProcPs basic system summaries: `uptime`, `free` | `PROCPS-4.0.6` |
+| 57 | Planned | ProcPs sampled system statistics: `vmstat` | `PROCPS-4.0.6` |
+| 58 | Planned | ProcPs process selection, signaling, and waiting: `pgrep`, `pkill`, `pidwait`, `pwait` | `PROCPS-4.0.6` |
+| 59 | Planned | ProcPs process lookup and working directories: `pidof`, `pwdx` | `PROCPS-4.0.6` |
+| 60 | Planned | ProcPs direct and legacy process control: `kill`, `skill`, `snice` | `PROCPS-4.0.6` |
+| 61 | Planned | ProcPs process memory maps: `pmap` | `PROCPS-4.0.6` |
+| 62 | Planned | ProcPs process reporting: `ps` | `PROCPS-4.0.6` |
+| 63 | Planned | ProcPs user and session reporting: `w` | `PROCPS-4.0.6` |
+| 64 | Planned | ProcPs kernel parameter control: `sysctl` | `PROCPS-4.0.6` |
+| 65 | Planned | ProcPs load display: `tload` | `PROCPS-4.0.6` |
+| 66 | Planned | ProcPs periodic command display: `watch` | `PROCPS-4.0.6` |
+| 67 | Planned | ProcPs specialized kernel-memory displays: `hugetop`, `slabtop` | `PROCPS-4.0.6` |
+| 68 | Planned | ProcPs interactive process monitor: `top` | `PROCPS-4.0.6` |
+| 69 | Planned | Root-directory execution: `chroot` | `COREUTILS-9.11` |
+| 70 | Planned | SELinux context operations: `chcon`, `runcon` | `COREUTILS-9.11` |
+| 71 | Planned | Standard-stream buffering control: `stdbuf` | `COREUTILS-9.11` |
+| 72 | Planned | `Icod.Tar.Tar` archive engine | `TAR-1.35`; Gate E1 authorities for traversal |
 
 
 ## Engineering-gate-to-authority mapping
 
 | Gate | State | Shared subject | Authoritative pin |
 |---|---|---|---|
+| A | Completed | Repository build, test, target-framework, configuration, encoding, and CI baseline | Repository engineering policy; Microsoft .NET 10 and C# 13 specifications |
+| B | Completed | File flushing, sparse extension, and allocation capabilities | `COREUTILS-9.11`; supported-platform filesystem API documentation |
 | C1 | Completed | GNU basic regular expressions | `COREUTILS-9.11`; `GNULIB-COREUTILS-9.11`; `POSIX-2024` |
-| C2 | Completed | Byte-preserving text units, locale blanks, display columns, and tab stops | `COREUTILS-9.11` |
-| C3 | Implementation prepared; CI validation pending | Byte records, positional ranges, delimiters, and escape profiles | `COREUTILS-9.11` |
+| C2 | Completed | Byte-preserving text units, locale blanks, display columns, and tab stops | `COREUTILS-9.11`; `POSIX-2024` where locale semantics apply |
+| C3 | Completed | Byte records, positional ranges, delimiters, and escape profiles | `COREUTILS-9.11`; `POSIX-2024` where standardized |
+| D | Completed | Stable external ordering and secure temporary workspaces | `COREUTILS-9.11`; `GNULIB-COREUTILS-9.11` |
+| E1 | Next; required before Batch 26 | Read-only pathname expansion and recursive traversal | `GREP-3.12`; `COREUTILS-9.11`; `DIFFUTILS-3.12`; `TAR-1.35`; `GNULIB-COREUTILS-9.11`; `POSIX-2024` |
+| R1 | Next; required before Batch 26 | Shared GNU/POSIX BRE and ERE foundation | `GREP-3.12`; `COREUTILS-9.11`; `SED-4.10`; `ED-1.22.5`; `GNULIB-COREUTILS-9.11`; `POSIX-2024` |
+| E2 | Planned | Canonical and physical pathname resolution | `COREUTILS-9.11`; `POSIX-2024`; supported-platform filesystem API documentation |
+| E3 | Planned | Filesystem metadata and timestamp mutation | `COREUTILS-9.11`; `POSIX-2024`; supported-platform filesystem API documentation |
+| E4 | Planned | Modes and basic pathname mutation | `COREUTILS-9.11`; `POSIX-2024` |
+| E5 | Planned | Mutation-safe recursive traversal, identity, preservation, and copy policy | `COREUTILS-9.11`; `TAR-1.35`; `POSIX-2024` |
+| E6 | Planned | Transactional file replacement, backup, rollback, and cleanup | `COREUTILS-9.11`; `PATCH-2.8`; `SED-4.10`; `ED-1.22.5`; `TAR-1.35` |
+| F1 | Planned | Terminal-aware presentation and color policy | `COREUTILS-9.11`; `POSIX-2024` where standardized |
+| F2 | Planned | Host identity and processor-resource capabilities | `COREUTILS-9.11`; `PROCPS-4.0.6`; supported-platform processor API documentation |
+| F3 | Planned | Terminal identification and terminal modes | `COREUTILS-9.11`; `PROCPS-4.0.6`; `POSIX-2024` |
+| F4 | Planned | Process execution, waiting, signals, priorities, clocks, and termination | `COREUTILS-9.11`; `PROCPS-4.0.6`; `POSIX-2024` |
+| P1 | Planned | ProcPs classification and provider foundation | `PROCPS-4.0.6` |
+| G | Planned | Final API classification, package extraction, and repository split | All pinned suite authorities plus repository architecture policy |
+
 
 ## Batch 11 implementation record
 
@@ -222,7 +258,7 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 - **TAP/TPL policy:** synchronous compatibility remains available; command execution and Gate C1 calls are cancellation-aware; naturally asynchronous output is awaited; CPU work is not wrapped in `Task.Run`.
 - **Controlled statuses:** 0 denotes a non-null/nonzero result, 1 a null or zero result, 2 an invalid expression, 3 an internal/provider/output failure, and the repository cancellation status is returned for requested cancellation. Excessive expression nesting is diagnosed with status 2 rather than risking an uncatchable stack overflow.
 - **Platform scope:** the implementation is fully managed and intended to behave identically on `windows-latest`, `ubuntu-latest`, and `macos-latest`. BSD-family systems are best effort under a compatible .NET runtime. TempleOS is best effort and would require a compatible managed runtime and an appropriate injected locale provider.
-- **Validation status:** source structure and repository conventions were checked, and representative semantics were differentially compared with GNU `expr` 9.7. A .NET SDK was unavailable in the implementation container, so the dedicated test project and complete solution still require build/test validation on all three required CI platforms before Batch 16 is marked complete.
+- **Validation completed:** Batch 16 was accepted and merged into `main`. Its dedicated tests and the complete-solution `windows-latest`, `ubuntu-latest`, and `macos-latest` contract remain permanent regression requirements.
 
 
 ## Completion Gate C2 implementation record
@@ -289,7 +325,7 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 - **TAP/TPL policy:** file opening, byte reads, writes, help, version, usage, regular-expression compilation and matching, and diagnostics are cancellation-aware and awaited. Synchronous wrappers block only at the public boundary. Ordered operand state prevents parallel execution, so CPU work is not wrapped in `Task.Run`.
 - **Documentation and tests:** both commands have command-level and source-directory READMEs, class-level XML usage documentation, dedicated usage/help/version writers, XML documentation for every public, protected, or internal declaration, and dedicated xUnit projects covering documented options, modes, exact bytes, prefix and delimiter edge cases, numeric grammar, regular expressions, operand continuity, cancellation, ownership, overflows, and controlled read/write failures. Shared logical-line tests cover byte, UTF-8, malformed-input, carriage-return, empty-line, synchronous, asynchronous, and cancellation behavior.
 - **Managed-runtime boundaries:** the implementation deliberately does not invoke host C locale or regex libraries. `fmt` preserves GNU's byte-width rules; `nl` uses the existing fully managed Gate C1 GNU BRE engine and Gate C2 C/POSIX or deterministic UTF-8 profile. GNU's arbitrary `MAXWORDS` and `MAXCHARS` emergency paragraph split limits are not reproduced as fixed unsafe buffers; managed collections retain the same ordinary paragraph optimizer without those implementation-size constants.
-- **Validation status:** source structure, project and solution wiring, XML documentation presence, README placement, UTF-8/LF policy, and conformance-oriented cases were checked; representative behavior was compared with the available GNU 9.7 tools and the pinned 9.11 source. A .NET SDK was unavailable in the implementation container, so the dedicated projects and complete solution still require build/test validation on `windows-latest`, `ubuntu-latest`, and `macos-latest` before this record is changed to fully validated.
+- **Validation completed:** Batch 18 was accepted and merged into `main`. Its dedicated tests, Shared tests, and the complete-solution three-runner contract remain permanent regression requirements.
 
 
 ## Batch 19 implementation record
@@ -308,7 +344,106 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 - **TAP/TPL policy:** file opening, reads, writes, usage, help, version, and diagnostics are cancellation-aware and awaited. Ordered record and operand semantics prohibit parallel output processing; CPU work is not hidden in `Task.Run`.
 - **Generated record terminators:** existing LF or NUL record separators are preserved by `cut`. Unterminated textual `cut` records and all newly generated default `paste` rows use `Environment.NewLine` under repository policy; `-z` uses NUL.
 - **Documentation and tests:** both commands include command and source READMEs, dedicated usage/help/version writers, XML documentation for every public, protected, and internal declaration, and dedicated xUnit projects covering ranges, fields, Unicode and malformed bytes, NUL records, delimiter cycles, uneven and repeated inputs, large records, cancellation, ownership, and controlled read/write failures.
-- **Validation status:** source structure, project and solution wiring, XML documentation presence, README placement, UTF-8/LF policy, and conformance-oriented state cases were checked. A .NET SDK was unavailable in the implementation container, so the dedicated projects and complete solution require build/test validation on `windows-latest`, `ubuntu-latest`, and `macos-latest` before this record is changed to fully validated.
+- **Validation completed:** Batch 19 was accepted and merged into `main`. Its dedicated tests, Shared tests, and the complete-solution three-runner contract remain permanent regression requirements.
+
+## Batch 20 implementation record
+
+- **Batch and command:** Batch 20, `sort`.
+- **Authority reconfirmed:** 30 July 2026.
+- **Authoritative package:** GNU Coreutils 9.11.
+- **Immutable identity:** tag `v9.11`; commit `c01fd163a47468a8296fb369f5233853bb551bb6`.
+- **Primary manual:** [GNU Coreutils 9.11 `sort` invocation](https://www.gnu.org/software/coreutils/manual/html_node/sort-invocation.html).
+- **Primary source:** [`src/sort.c` at the pinned commit](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/sort.c), together with the Gnulib revision pinned for Coreutils 9.11 where common locale, comparison, temporary-file, or merge mechanics are delegated.
+- **Differential oracle:** the installed GNU `sort` on a CI or development host may be used only after recording its runtime `sort --version`; the 9.11 manual and source remain authoritative.
+- **Reusable infrastructure:** Completion Gate D established locale-aware collation, reusable key parsing and comparison, stable original-order tracking, bounded sorted runs, external merge, and secure temporary-workspace cleanup in Shared.
+- **Validation completed:** Batch 20 was accepted and merged into `main`. Dedicated command and Shared tests plus the complete-solution three-runner contract remain permanent regression requirements.
+
+## Batch 21 implementation record
+
+- **Batch and command:** Batch 21, `shuf`.
+- **Authority reconfirmed:** 30 July 2026.
+- **Authoritative package:** GNU Coreutils 9.11.
+- **Immutable identity:** tag `v9.11`; commit `c01fd163a47468a8296fb369f5233853bb551bb6`.
+- **Primary manual:** [GNU Coreutils 9.11 `shuf` invocation](https://www.gnu.org/software/coreutils/manual/html_node/shuf-invocation.html).
+- **Primary source:** [`src/shuf.c` at the pinned commit](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/shuf.c), together with the pinned Gnulib revision where Coreutils delegates random-source or temporary-file mechanics.
+- **Differential oracle:** the installed GNU `shuf` may be used only with its runtime version captured; the 9.11 source remains authoritative.
+- **Reusable infrastructure:** the command consumes Shared byte-record, segmented-record, output, diagnostic, and secure temporary-spool contracts. Random-source interpretation, unbiased bounded selection, partial Fisher-Yates permutation, range sampling, repeat policy, and external occurrence indexing remain command-local.
+- **Validation completed:** Batch 21 was accepted and merged into `main`. Dedicated command and Shared tests plus the complete-solution three-runner contract remain permanent regression requirements.
+
+## Batch 22 implementation record
+
+- **Batch and commands:** Batch 22, `comm`, `join`, and `uniq`.
+- **Authority reconfirmed:** 30 July 2026.
+- **Authoritative package:** GNU Coreutils 9.11.
+- **Immutable identity:** tag `v9.11`; commit `c01fd163a47468a8296fb369f5233853bb551bb6`.
+- **Primary manuals:** [GNU Coreutils 9.11 `comm`](https://www.gnu.org/software/coreutils/manual/html_node/comm-invocation.html), [`join`](https://www.gnu.org/software/coreutils/manual/html_node/join-invocation.html), and [`uniq`](https://www.gnu.org/software/coreutils/manual/html_node/uniq-invocation.html) invocation documentation.
+- **Primary sources:** [`src/comm.c`](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/comm.c), [`src/join.c`](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/join.c), and [`src/uniq.c`](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/uniq.c) at the pinned commit.
+- **Differential oracle:** installed GNU executables may be used only after recording each runtime version.
+- **Reusable infrastructure:** Shared supplies byte-record collation. `comm` remains a constant-memory two-way merge, `join` buffers one equal-key group from each input to preserve duplicate-key Cartesian products, and `uniq` remains an adjacent-record streaming state machine.
+- **Validation completed:** Batch 22 was accepted and merged into `main`. All three dedicated test projects, Shared tests, and the complete-solution three-runner contract remain permanent regression requirements.
+
+## Batch 23 implementation record
+
+- **Batch and command:** Batch 23, `tr`.
+- **Authority reconfirmed:** 30 July 2026.
+- **Authoritative package:** GNU Coreutils 9.11, with POSIX.1-2024 as a secondary standard for character classes and utility semantics.
+- **Immutable identity:** tag `v9.11`; commit `c01fd163a47468a8296fb369f5233853bb551bb6`; POSIX document `9799919799`.
+- **Primary manual:** [GNU Coreutils 9.11 `tr` invocation](https://www.gnu.org/software/coreutils/manual/html_node/tr-invocation.html).
+- **Primary source:** [`src/tr.c` at the pinned commit](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/tr.c).
+- **Differential oracle:** installed GNU `tr` may be used only after recording its runtime version.
+- **Reusable infrastructure:** the command consumes Shared byte-stream, locale, character-class, delimiter, and escape foundations. Set-expression parsing, repetition, equivalence, complement, deletion, translation, and squeezing remain command-local.
+- **Validation completed:** Batch 23 was accepted and merged into `main`. Dedicated command and Shared tests plus the complete-solution three-runner contract remain permanent regression requirements.
+
+## Batch 24 implementation record
+
+- **Batch and command:** Batch 24, `tsort`.
+- **Authority reconfirmed:** 30 July 2026.
+- **Authoritative package:** GNU Coreutils 9.11, with POSIX.1-2024 as the secondary standardized utility contract.
+- **Immutable identity:** tag `v9.11`; commit `c01fd163a47468a8296fb369f5233853bb551bb6`; POSIX document `9799919799`.
+- **Primary manual:** [GNU Coreutils 9.11 `tsort` invocation](https://www.gnu.org/software/coreutils/manual/html_node/tsort-invocation.html).
+- **Primary source and fixtures:** [`src/tsort.c`](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/tsort.c) and [`tests/misc/tsort.pl`](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/tests/misc/tsort.pl) at the pinned commit.
+- **Differential oracle:** installed GNU `tsort` may be used only after recording its runtime version and controlling the locale.
+- **Reusable infrastructure:** Shared supplies the cancellation-aware asynchronous byte-token reader. The deterministic graph, FIFO release ordering, relation ordering, loop reporting, one-edge loop breaking, and continued output remain command-local.
+- **Validation completed:** Batch 24 was accepted and merged into `main` after the cancellation assertion was corrected to accept the valid `TaskCanceledException` subtype of `OperationCanceledException`. Dedicated command and Shared tests plus the complete-solution three-runner contract remain permanent regression requirements.
+
+## Batch 25 implementation record
+
+- **Batch and command:** Batch 25, `ptx`.
+- **Authority reconfirmed:** 30 July 2026.
+- **Authoritative package:** GNU Coreutils 9.11.
+- **Immutable identity:** tag `v9.11`; commit `c01fd163a47468a8296fb369f5233853bb551bb6`.
+- **Primary manual:** [GNU Coreutils 9.11 `ptx` invocation](https://www.gnu.org/software/coreutils/manual/html_node/ptx-invocation.html).
+- **Primary source:** [`src/ptx.c` at the pinned commit](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/ptx.c).
+- **Regular-expression authority:** Gnulib revision `fb7312fa8d3df29f0ca0678f669b9a5b88a078ec`, especially `RE_SYNTAX_EMACS`, exposed through the Shared GNU Emacs profile.
+- **Differential oracle:** GNU `ptx` 9.7 was available in the implementation environment and used under `LC_ALL=C`; future differential runs must record the runtime version.
+- **Reusable infrastructure:** parameter and source I/O use Shared byte streams and record readers; keyword occurrences use the Shared external-ordering engine and secure temporary workspaces; regular-expression options use the Shared managed GNU engine. No command project references another command project.
+- **Memory model:** source contexts are written once to a temporary context spool and occurrences carry lightweight offsets; ordering spills through Shared when the memory budget is exceeded. Default sentence and traditional line contexts stream incrementally. An explicitly supplied sentence regular expression may require a complete source matching surface, while occurrence storage and ordering remain externally bounded.
+- **TAP/TPL policy:** command I/O, parameter-file reads, source processing, spooling, merge ordering, output, cancellation, and cleanup are asynchronous. CPU-bound matching, field planning, and comparison remain synchronous and cancellation-aware rather than being wrapped in `Task.Run`.
+- **Validation completed:** Batch 25 was accepted and merged into `main` after correcting the ambiguous span overload and preserving an input reference across custom-regexp contexts that begin mid-line. The dedicated `Ptx.Tests`, Shared tests, and complete-solution three-runner contract remain permanent regression requirements.
+
+## Completion Gate E1 planning record
+
+- **Gate and subject:** Completion Gate E1, shared read-only pathname expansion and recursive traversal.
+- **Authority reconfirmed:** 30 July 2026.
+- **First consuming command:** Batch 26, GNU Grep 3.12 `grep`.
+- **Primary command authority:** `GREP-3.12`, especially recursive traversal, dereference modes, device and directory policy, include/exclude selection, filename presentation, diagnostics, and statuses.
+- **Cross-suite consumer authorities:** `COREUTILS-9.11` for later listing and filesystem-accounting commands; `DIFFUTILS-3.12` for recursive directory comparison; `TAR-1.35` for archive traversal and exclusions.
+- **Shared implementation references:** `GNULIB-COREUTILS-9.11` for the pinned GNU traversal, cycle-checking, filename-matching, and filesystem helper behavior; `POSIX-2024` for standardized pathname, globbing, directory, symbolic-link, and filesystem semantics.
+- **Platform authorities:** official Windows, Linux, and macOS filesystem and reparse/symbolic-link API documentation determine ABI and capability behavior. They do not override the pinned command semantics.
+- **Required boundary:** the gate produces caller-independent result, identity, policy, error, and injectable-provider contracts. Grep-specific pattern selection, binary policy, context grouping, and output formatting remain in `Icod.Grep.Grep`.
+- **State:** not started; must be completed and validated before Batch 26.
+
+## Completion Gate R1 planning record
+
+- **Gate and subject:** Completion Gate R1, shared GNU/POSIX BRE and ERE foundation.
+- **Authority reconfirmed:** 30 July 2026.
+- **First full search consumer:** Batch 26, GNU Grep 3.12 `grep`.
+- **Primary language authorities:** `POSIX-2024` for BRE, ERE, leftmost-longest matching, captures, bracket expressions, intervals, and diagnostics; `GNULIB-COREUTILS-9.11` for GNU syntax profiles and managed compatibility targets.
+- **Consumer authorities:** `GREP-3.12` for Basic, Extended, fixed-string orchestration, matching and offset expectations, and diagnostics; `COREUTILS-9.11` for existing `expr`, `nl`, `ptx`, and future `csplit` consumers; `SED-4.10` and `ED-1.22.5` for later LineEditor validation.
+- **Required compatibility:** preserve the current Basic provider as the source-compatible default and retain the GNU `expr` and GNU Emacs profiles already consumed by completed batches.
+- **Required boundary:** define original bytes, decoded scalars, UTF-16 positions, match and capture offsets, invalid-input behavior, locale profiles, cancellation, and resource limits without introducing a dependency on `System.Text.RegularExpressions` for BRE or ERE semantics.
+- **Perl mode:** GNU Grep `-P` is a separate PCRE capability decision and is not part of the BRE/ERE language provider.
+- **State:** not started; must be completed and validated before Batch 26.
 
 ## Required batch-start record
 
@@ -322,18 +457,3 @@ Before implementation begins, the batch notes or conformance matrix must copy th
 - any secondary POSIX or platform specification used;
 - differential oracle executable and runtime version, when applicable;
 - any intentional deviation from or deferral of the pinned specification.
-
-## Batch 25 implementation record
-- **Batch and command:** Batch 25, `ptx`.
-- **Authority reconfirmed:** 30 July 2026.
-- **Authoritative package:** GNU Coreutils 9.11.
-- **Immutable identity:** tag `v9.11`; commit `c01fd163a47468a8296fb369f5233853bb551bb6`.
-- **Primary manual:** [GNU Coreutils 9.11 `ptx` invocation](https://www.gnu.org/software/coreutils/manual/html_node/ptx-invocation.html).
-- **Primary source:** [`src/ptx.c` at the pinned commit](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/ptx.c).
-- **Regular-expression authority:** Gnulib revision `fb7312fa8d3df29f0ca0678f669b9a5b88a078ec`, especially `RE_SYNTAX_EMACS`, which is now exposed by `GnuEmacsRegularExpressionProvider` in Shared.
-- **Differential oracle:** GNU `ptx` 9.7 available in the implementation environment, run under `LC_ALL=C`; CI must record the runtime version whenever optional differential tests run.
-- **Reusable infrastructure:** parameter and source I/O use Shared byte streams and record readers; keyword occurrences use `ExternalOrderingEngine<T>` and `TemporaryWorkspace`; regular-expression options use the Shared managed GNU engine. No command project references another command project.
-- **Memory model:** source contexts are written once to a temporary context spool and occurrences carry lightweight offsets; ordering spills through Shared when the memory budget is exceeded. Default sentence and traditional line contexts stream incrementally. An explicitly supplied sentence regular expression requires a complete source string for the managed search engine, while occurrence storage and ordering remain externally bounded.
-- **TAP/TPL policy:** command I/O, parameter-file reads, source processing, spooling, merge ordering, output, cancellation, and cleanup are asynchronous. CPU-bound matching, field planning, and comparison remain synchronous and cancellation-aware rather than being wrapped in `Task.Run`.
-- **Platform scope:** the implementation is fully managed and intended for identical behavior on `windows-latest`, `ubuntu-latest`, and `macos-latest`; BSD-family and TempleOS-compatible managed runtimes remain best effort.
-- **Validation status:** source structure, project/solution mappings, XML documentation, UTF-8/LF policy, Shared API usage, and representative GNU 9.7 differential fixtures were checked. A .NET SDK was unavailable in the implementation container, so dedicated Shared and `Ptx.Tests` execution plus complete-solution three-runner validation remain pending.

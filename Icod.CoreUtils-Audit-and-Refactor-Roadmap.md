@@ -5,8 +5,9 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `25` |
-| Current engineering gate | Batch 25 complete |
-| Next implementation gate | Completion Gate E1 — before Batch 26 |
+| Current engineering milestone | Batch 25 complete |
+| Next infrastructure dependencies | Completion Gate E1 — shared read-only pathname traversal; Completion Gate R1 — shared BRE/ERE foundation |
+| Next command batch | Batch 26 — `Icod.Grep.Grep`, only after E1 and R1 are complete |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -212,8 +213,8 @@ Man7 pages are useful synopses and secondary references, but they must not repla
 ### What is working well
 
 - The completed batches established shared command-line, diagnostics, streaming, numeric, platform, identity, process, date/time, and block-I/O abstractions.
-- Batches 1 through 16 have command-specific tests.
-- The complete test suite has been exercised on Windows, Ubuntu, and macOS during Batch 10 stabilization.
+- Batches 1 through 25 have dedicated command-specific tests, together with focused Shared tests for the infrastructure introduced by their completion gates.
+- The complete applicable solution remains subject to the required `windows-latest`, `ubuntu-latest`, and `macos-latest` build-and-test contract; completed batches must remain green on all three runners.
 - Source projects consistently reference `Shared` where common behavior is appropriate; that project currently incubates both future `Icod.CommandFramework` APIs and Coreutils-specific `Icod.CoreUtils.Shared` APIs while co-resident sibling suites supply additional real consumers.
 - `Icod.LineEditor.Sed` has already completed its project and namespace migration: it uses assembly name `sed`, root namespace and public command class `Icod.LineEditor.Sed.Command`, an asynchronous entry point, a dedicated test identity, and a project reference to the current Shared incubation project.
 - Recent projects use asynchronous entry points, injected streams, cancellation, and provider abstractions more consistently than the original implementations.
@@ -228,7 +229,7 @@ Man7 pages are useful synopses and secondary references, but they must not repla
    The existing `chown`, `chgrp`, `runcon`, and `chroot` implementations are examples. Unsupported operations must produce a controlled diagnostic and documented nonzero status.
 
 3. **Some commands delegate their defining operation to an installed native utility.**  
-   Examples include portions of `link`, `chcon`, `install`, `sync`, and `stdbuf`. Production implementations must not obtain apparent compatibility by invoking the same host utility. Native utilities may be used only by optional differential tests.
+   Examples include portions of `link`, `chcon`, `install`, and `stdbuf`. Production implementations must not obtain apparent compatibility by invoking the same host utility. Native utilities may be used only by optional differential tests.
 
 4. **Some implementations are not yet the command they claim to be.**
    - The existing `diff` implementation is not a complete difference algorithm and does not yet implement the required result-status model; it will be migrated into `Icod.DiffUtils.Diff` and corrected during the consecutive Diffutils batches.
