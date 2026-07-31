@@ -228,7 +228,7 @@ public sealed class PathnameExpanderTests {
 			new[] { Path.Combine( "root", "link", "*.txt" ) },
 			options
 		) );
-		Assert.Single( explicitEvents.Where( static item => item.Root is not null ) );
+		Assert.Single( explicitEvents, static item => item.Root is not null );
 
 		var wildcardEvents = await CollectAsync( expander.ExpandAsync(
 			new[] { Path.Combine( "root", "*", "*.txt" ) },
@@ -302,7 +302,8 @@ public sealed class PathnameExpanderTests {
 			}
 		) );
 
-		var root = Assert.Single( events.Where( static item => item.Root is not null ) ).Root!;
+		var rootEvent = Assert.Single( events, static item => item.Root is not null );
+		var root = Assert.IsType<PathTraversalRoot>( rootEvent.Root );
 		Assert.Equal( "visible.txt", Path.GetFileName( root.AccessPath ) );
 	}
 

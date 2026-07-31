@@ -130,9 +130,14 @@ internal sealed class SyntheticReadOnlyFileSystemProvider : IReadOnlyFileSystemP
 	) {
 		cancellationToken.ThrowIfCancellationRequested();
 		var normalized = Normalize( path );
-		var exact = _nodes.TryGetValue( normalized, out var source );
-		if ( !exact ) {
+		SyntheticNode source;
+		bool exact;
+		if ( _nodes.TryGetValue( normalized, out var exactSource ) && exactSource is not null ) {
+			source = exactSource;
+			exact = true;
+		} else {
 			source = ResolveAliasedNode( normalized, new HashSet<string>( GetPathComparer() ) );
+			exact = false;
 		}
 		if ( source.ObservationException is not null ) {
 			throw source.ObservationException;

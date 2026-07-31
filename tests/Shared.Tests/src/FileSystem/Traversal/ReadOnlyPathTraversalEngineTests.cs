@@ -143,7 +143,7 @@ public sealed class ReadOnlyPathTraversalEngineTests {
 			}
 		) );
 
-		var cycle = Assert.Single( events.Where( static item => item.Kind == PathTraversalEventKind.Cycle ) );
+		var cycle = Assert.Single( events, static item => item.Kind == PathTraversalEventKind.Cycle );
 		Assert.Equal( paths.Root, cycle.RelatedPath );
 		Assert.Contains( events, item => item.Kind == PathTraversalEventKind.EnterDirectory && item.Entry?.Name == "first" );
 		Assert.Contains( events, item => item.Kind == PathTraversalEventKind.EnterDirectory && item.Entry?.Name == "second" );
@@ -170,7 +170,7 @@ public sealed class ReadOnlyPathTraversalEngineTests {
 			}
 		) );
 
-		var boundary = Assert.Single( events.Where( static item => item.Kind == PathTraversalEventKind.FileSystemBoundary ) );
+		var boundary = Assert.Single( events, static item => item.Kind == PathTraversalEventKind.FileSystemBoundary );
 		Assert.Equal( "mounted", boundary.Entry!.Name );
 		Assert.DoesNotContain( events, item => item.Entry?.Name == "inside.txt" );
 	}
@@ -195,7 +195,7 @@ public sealed class ReadOnlyPathTraversalEngineTests {
 			new PathTraversalOptions { ChildOrder = PathTraversalChildOrder.Ordinal }
 		) );
 
-		var error = Assert.Single( events.Where( static item => item.Kind == PathTraversalEventKind.Error ) );
+		var error = Assert.Single( events, static item => item.Kind == PathTraversalEventKind.Error );
 		Assert.Equal( PathTraversalErrorCode.EnumerationFailed, error.Error!.Code );
 		Assert.Equal( PathTraversalErrorScope.Subtree, error.Error.Scope );
 		Assert.Contains( events, item => item.Entry?.Name == "good.txt" );
@@ -274,7 +274,7 @@ public sealed class ReadOnlyPathTraversalEngineTests {
 			new PathTraversalOptions { ChildOrder = PathTraversalChildOrder.Ordinal }
 		) );
 
-		var error = Assert.Single( events.Where( static item => item.Kind == PathTraversalEventKind.Error ) );
+		var error = Assert.Single( events, static item => item.Kind == PathTraversalEventKind.Error );
 		Assert.Equal( PathTraversalErrorCode.ObservationFailed, error.Error!.Code );
 		Assert.Equal( PathTraversalErrorScope.Entry, error.Error.Scope );
 		Assert.Contains( events, item => item.Entry?.Name == "present.txt" );
@@ -298,7 +298,7 @@ public sealed class ReadOnlyPathTraversalEngineTests {
 			new PathTraversalOptions { MaximumEntriesPerDirectory = 1 }
 		) );
 
-		var error = Assert.Single( events.Where( static item => item.Kind == PathTraversalEventKind.Error ) );
+		var error = Assert.Single( events, static item => item.Kind == PathTraversalEventKind.Error );
 		Assert.Equal( PathTraversalErrorCode.DirectoryEntryLimitExceeded, error.Error!.Code );
 		Assert.Equal( PathTraversalErrorScope.Subtree, error.Error.Scope );
 		Assert.Contains( events, item => item.Kind == PathTraversalEventKind.LeaveDirectory && item.Entry!.IsRoot );
@@ -322,7 +322,7 @@ public sealed class ReadOnlyPathTraversalEngineTests {
 			}
 		) );
 
-		var error = Assert.Single( events.Where( static item => item.Kind == PathTraversalEventKind.Error ) );
+		var error = Assert.Single( events, static item => item.Kind == PathTraversalEventKind.Error );
 		Assert.Equal( PathTraversalErrorCode.IdentityUnavailable, error.Error!.Code );
 		Assert.Equal( PathTraversalErrorScope.Root, error.Error.Scope );
 	}
@@ -344,7 +344,7 @@ public sealed class ReadOnlyPathTraversalEngineTests {
 			new PathTraversalOptions()
 		) );
 
-		var error = Assert.Single( events.Where( static item => item.Kind == PathTraversalEventKind.Error ) );
+		var error = Assert.Single( events, static item => item.Kind == PathTraversalEventKind.Error );
 		Assert.Equal( PathTraversalErrorCode.IdentityUnavailable, error.Error!.Code );
 		Assert.Equal( PathTraversalErrorScope.Root, error.Error.Scope );
 	}

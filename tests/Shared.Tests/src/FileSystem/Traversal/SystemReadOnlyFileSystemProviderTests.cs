@@ -158,14 +158,7 @@ public sealed class SystemReadOnlyFileSystemProviderTests {
 			var original = Path.Combine( path, "original.txt" );
 			var link = Path.Combine( path, "hard-link.txt" );
 			await File.WriteAllTextAsync( original, "data" );
-			try {
-				_ = File.CreateHardLink( link, original );
-			} catch ( Exception exception ) when (
-				exception is UnauthorizedAccessException
-					or IOException
-					or PlatformNotSupportedException
-					or NotSupportedException
-			) {
+			if ( !await TryCreateHardLinkAsync( link, original ) ) {
 				return;
 			}
 
@@ -301,6 +294,52 @@ public sealed class SystemReadOnlyFileSystemProviderTests {
 				Directory.Delete( junction );
 			}
 			Directory.Delete( path, true );
+		}
+	}
+
+	/// <summary>
+	/// Attempts to create a hard link by using the host platform's standard command.
+	/// </summary>
+	/// <param name="linkPath">The new hard-link pathname.</param>
+	/// <param name="targetPath">The existing file pathname.</param>
+	/// <returns><see langword="true"/> when the hard link was created; otherwise, <see langword="false"/>.</returns>
+	private static async Task<bool> TryCreateHardLinkAsync( string linkPath, string targetPath ) {
+		System.Diagnostics.ProcessStartInfo startInfo;
+		if ( OperatingSystem.IsWindows() ) {
+			startInfo = new System.Diagnostics.ProcessStartInfo {
+				FileName = Environment.GetEnvironmentVariable( "ComSpec" ) ?? "cmd.exe",
+				UseShellExecute = false,
+				CreateNoWindow = true,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				ArgumentList = { "/d", "/c", "mklink", "/H", linkPath, targetPath }
+			};
+		} else {
+			startInfo = new System.Diagnostics.ProcessStartInfo {
+				FileName = "/bin/ln",
+				UseShellExecute = false,
+				CreateNoWindow = true,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				ArgumentList = { targetPath, linkPath }
+			};
+		}
+
+		try {
+			using var process = System.Diagnostics.Process.Start( startInfo );
+			if ( process is null ) {
+				return false;
+			}
+			await process.WaitForExitAsync();
+			return process.ExitCode == 0 && File.Exists( linkPath );
+		} catch ( Exception exception ) when (
+			exception is System.ComponentModel.Win32Exception
+				or UnauthorizedAccessException
+				or IOException
+				or PlatformNotSupportedException
+				or NotSupportedException
+		) {
+			return false;
 		}
 	}
 
