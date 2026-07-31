@@ -26,6 +26,8 @@ public enum RegularExpressionDiagnosticCode {
 	NestingDepthExceeded,
 	/// <summary>The requested UTF-16 start index is invalid or splits a surrogate pair.</summary>
 	InvalidStartIndex,
+	/// <summary>The requested source-byte start offset is invalid or splits a decoded UTF-8 unit.</summary>
+	InvalidStartByteOffset,
 	/// <summary>The configured match-state limit was exceeded.</summary>
 	MatchResourceLimitExceeded
 }

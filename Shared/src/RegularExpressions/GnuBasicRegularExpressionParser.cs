@@ -5,7 +5,7 @@ using System.Text;
 namespace Icod.CoreUtils.Shared.RegularExpressions;
 
 /// <summary>
-/// Provides the shared GNU basic and Emacs regular-expression parser implementation.
+/// Provides the shared GNU basic, extended, and Emacs regular-expression parser implementation.
 /// </summary>
 internal sealed class GnuBasicRegularExpressionParser {
 	/// <summary>Gets the greatest interval bound accepted by the GNU regular-expression grammar.</summary>
@@ -42,7 +42,7 @@ internal sealed class GnuBasicRegularExpressionParser {
 		cancellationToken.ThrowIfCancellationRequested();
 		var expression = ParseAlternation( false, 0 );
 		if ( diagnostic is null && pattern.Length != index ) {
-			if ( IsEscapedOperator( index, ')' ) ) {
+			if ( IsClosingSubexpressionOperator( index ) ) {
 				Fail(
 					RegularExpressionDiagnosticCode.UnmatchedClosingSubexpression,
 					"unmatched closing subexpression operator",
@@ -61,10 +61,10 @@ internal sealed class GnuBasicRegularExpressionParser {
 		var alternatives = new List<RegexNode>();
 		while ( true ) {
 			alternatives.Add( ParseSequence( insideSubexpression, nestingDepth ) );
-			if ( diagnostic is not null || !IsEscapedOperator( index, '|' ) ) {
+			if ( diagnostic is not null || !IsAlternationOperator( index ) ) {
 				break;
 			}
-			index += 2;
+			index += AlternationOperatorLength;
 			cancellationToken.ThrowIfCancellationRequested();
 		}
 		return 1 == alternatives.Count
@@ -78,8 +78,8 @@ internal sealed class GnuBasicRegularExpressionParser {
 		while (
 			diagnostic is null
 			&& pattern.Length > index
-			&& !IsEscapedOperator( index, '|' )
-			&& !( insideSubexpression && IsEscapedOperator( index, ')' ) )
+			&& !IsAlternationOperator( index )
+			&& !( insideSubexpression && IsClosingSubexpressionOperator( index ) )
 		) {
 			cancellationToken.ThrowIfCancellationRequested();
 			ParsedAtom atom;
@@ -106,7 +106,26 @@ internal sealed class GnuBasicRegularExpressionParser {
 
 	private ParsedAtom ParseAtom( int nestingDepth ) {
 		var sourceIndex = index;
+		if ( IsOpeningSubexpressionOperator( index ) ) {
+			return ParseSubexpression( nestingDepth, sourceIndex );
+		}
 		var current = pattern[ index ];
+		if ( IsLeadingRepetitionOperator( index ) ) {
+			if ( !options.AllowInvalidRepetitionOperators ) {
+				Fail(
+					RegularExpressionDiagnosticCode.InvalidRepetitionOperator,
+					"repetition operator has no preceding expression",
+					sourceIndex
+				);
+				return new( EmptyRegexNode.Instance, false );
+			}
+			if ( GnuRegularExpressionSyntax.Extended == options.Syntax ) {
+				SkipLeadingExtendedRepetitionOperator();
+				return new( EmptyRegexNode.Instance, false );
+			}
+			var literal = ReadLeadingRepetitionLiteral();
+			return new( new LiteralRegexNode( literal ), true );
+		}
 		if ( '.' == current ) {
 			index++;
 			return new( new DotRegexNode(), true );
@@ -129,49 +148,28 @@ internal sealed class GnuBasicRegularExpressionParser {
 		var escaped = pattern[ index + 1 ];
 		switch ( escaped ) {
 			case '(':
-				if ( options.MaximumNestingDepth <= nestingDepth ) {
+			case ')':
+			case '|':
+			case '+':
+			case '?':
+			case '{':
+			case '}':
+				if ( GnuRegularExpressionSyntax.Extended == options.Syntax ) {
+					index += 2;
+					return new( new LiteralRegexNode( new Rune( escaped ) ), true );
+				}
+				if ( '(' == escaped ) {
+					return ParseSubexpression( nestingDepth, sourceIndex );
+				}
+				if ( ')' == escaped ) {
 					Fail(
-						RegularExpressionDiagnosticCode.NestingDepthExceeded,
-						string.Concat(
-							"subexpression nesting exceeds the configured limit of ",
-							options.MaximumNestingDepth.ToString( CultureInfo.InvariantCulture )
-						),
+						RegularExpressionDiagnosticCode.UnmatchedClosingSubexpression,
+						"unmatched closing subexpression operator",
 						sourceIndex
 					);
 					return new( EmptyRegexNode.Instance, false );
 				}
-				index += 2;
-				var captureNumber = ++captureCount;
-				var expression = ParseAlternation( true, nestingDepth + 1 );
-				if ( diagnostic is null ) {
-					if ( !IsEscapedOperator( index, ')' ) ) {
-						Fail(
-							RegularExpressionDiagnosticCode.UnterminatedSubexpression,
-							"unterminated subexpression",
-							sourceIndex
-						);
-					} else {
-						index += 2;
-						closedCaptures.Add( captureNumber );
-					}
-				}
-				return new( new GroupRegexNode( captureNumber, expression ), true );
-			case ')':
-				Fail(
-					RegularExpressionDiagnosticCode.UnmatchedClosingSubexpression,
-					"unmatched closing subexpression operator",
-					sourceIndex
-				);
-				return new( EmptyRegexNode.Instance, false );
-			case '|':
-				index += 2;
-				return new( new LiteralRegexNode( new Rune( escaped ) ), true );
-			case '+':
-			case '?':
-				index += 2;
-				return new( new LiteralRegexNode( new Rune( escaped ) ), true );
-			case '{':
-				if ( !options.AllowInvalidRepetitionOperators ) {
+				if ( '{' == escaped && !options.AllowInvalidRepetitionOperators ) {
 					Fail(
 						RegularExpressionDiagnosticCode.InvalidRepetitionOperator,
 						"interval operator has no preceding expression",
@@ -228,6 +226,7 @@ internal sealed class GnuBasicRegularExpressionParser {
 				var literal = ReadPatternRune();
 				return new( new LiteralRegexNode( literal ), true );
 		}
+
 	}
 
 	private RegexNode ParseRepetition( ParsedAtom atom ) {
@@ -254,14 +253,30 @@ internal sealed class GnuBasicRegularExpressionParser {
 				maximum = null;
 				index++;
 			} else if ( IsPlusOrQuestionOperator( index, '+' ) ) {
+				if ( hasRepetition && !options.AllowInvalidRepetitionOperators ) {
+					Fail(
+						RegularExpressionDiagnosticCode.InvalidRepetitionOperator,
+						"invalid adjacent repetition operator",
+						index
+					);
+					break;
+				}
 				minimum = 1;
 				maximum = null;
 				index += RepetitionOperatorLength;
 			} else if ( IsPlusOrQuestionOperator( index, '?' ) ) {
+				if ( hasRepetition && !options.AllowInvalidRepetitionOperators ) {
+					Fail(
+						RegularExpressionDiagnosticCode.InvalidRepetitionOperator,
+						"invalid adjacent repetition operator",
+						index
+					);
+					break;
+				}
 				minimum = 0;
 				maximum = 1;
 				index += RepetitionOperatorLength;
-			} else if ( IsEscapedOperator( index, '{' ) ) {
+			} else if ( IsIntervalOperator( index ) ) {
 				if ( hasRepetition && !options.AllowInvalidRepetitionOperators ) {
 					Fail(
 						RegularExpressionDiagnosticCode.InvalidRepetitionOperator,
@@ -296,7 +311,7 @@ internal sealed class GnuBasicRegularExpressionParser {
 
 	private bool TryParseInterval( out int minimum, out int? maximum ) {
 		var sourceIndex = index;
-		index += 2;
+		index += IntervalOperatorLength;
 		minimum = 0;
 		maximum = null;
 		var minimumStart = index;
@@ -333,11 +348,11 @@ internal sealed class GnuBasicRegularExpressionParser {
 			Fail( RegularExpressionDiagnosticCode.InvalidInterval, "invalid interval expression", sourceIndex );
 			return false;
 		}
-		if ( !IsEscapedOperator( index, '}' ) ) {
+		if ( !IsClosingIntervalOperator( index ) ) {
 			Fail( RegularExpressionDiagnosticCode.InvalidInterval, "unterminated interval expression", sourceIndex );
 			return false;
 		}
-		index += 2;
+		index += IntervalOperatorLength;
 		if (
 			MaximumInterval < minimum
 			|| ( maximum is int maximumValue
@@ -503,20 +518,129 @@ internal sealed class GnuBasicRegularExpressionParser {
 		);
 	}
 
+	private ParsedAtom ParseSubexpression( int nestingDepth, int sourceIndex ) {
+		if ( options.MaximumNestingDepth <= nestingDepth ) {
+			Fail(
+				RegularExpressionDiagnosticCode.NestingDepthExceeded,
+				string.Concat(
+					"subexpression nesting exceeds the configured limit of ",
+					options.MaximumNestingDepth.ToString( CultureInfo.InvariantCulture )
+				),
+				sourceIndex
+			);
+			return new( EmptyRegexNode.Instance, false );
+		}
+		index += SubexpressionOperatorLength;
+		var captureNumber = ++captureCount;
+		var expression = ParseAlternation( true, nestingDepth + 1 );
+		if ( diagnostic is null ) {
+			if ( !IsClosingSubexpressionOperator( index ) ) {
+				Fail(
+					RegularExpressionDiagnosticCode.UnterminatedSubexpression,
+					"unterminated subexpression",
+					sourceIndex
+				);
+			} else {
+				index += SubexpressionOperatorLength;
+				closedCaptures.Add( captureNumber );
+			}
+		}
+		return new( new GroupRegexNode( captureNumber, expression ), true );
+	}
+
 	private bool IsEndAnchor( bool insideSubexpression ) {
 		var next = index + 1;
 		return pattern.Length == next
-			|| IsEscapedOperator( next, '|' )
-			|| ( insideSubexpression && IsEscapedOperator( next, ')' ) );
+			|| IsAlternationOperator( next )
+			|| ( insideSubexpression && IsClosingSubexpressionOperator( next ) );
 	}
 
+	private int AlternationOperatorLength =>
+		GnuRegularExpressionSyntax.Extended == options.Syntax ? 1 : 2;
 
-	private int RepetitionOperatorLength => GnuRegularExpressionSyntax.Emacs == this.options.Syntax ? 1 : 2;
+	private int SubexpressionOperatorLength =>
+		GnuRegularExpressionSyntax.Extended == options.Syntax ? 1 : 2;
+
+	private int IntervalOperatorLength =>
+		GnuRegularExpressionSyntax.Extended == options.Syntax ? 1 : 2;
+
+	private int RepetitionOperatorLength =>
+		GnuRegularExpressionSyntax.Basic == options.Syntax ? 2 : 1;
+
+	private bool IsAlternationOperator( int sourceIndex ) =>
+		GnuRegularExpressionSyntax.Extended == options.Syntax
+			? IsUnescapedOperator( sourceIndex, '|' )
+			: IsEscapedOperator( sourceIndex, '|' );
+
+	private bool IsOpeningSubexpressionOperator( int sourceIndex ) =>
+		GnuRegularExpressionSyntax.Extended == options.Syntax
+			? IsUnescapedOperator( sourceIndex, '(' )
+			: IsEscapedOperator( sourceIndex, '(' );
+
+	private bool IsClosingSubexpressionOperator( int sourceIndex ) =>
+		GnuRegularExpressionSyntax.Extended == options.Syntax
+			? IsUnescapedOperator( sourceIndex, ')' )
+			: IsEscapedOperator( sourceIndex, ')' );
 
 	private bool IsPlusOrQuestionOperator( int sourceIndex, char value ) =>
-		GnuRegularExpressionSyntax.Emacs == this.options.Syntax
-			? pattern.Length > sourceIndex && value == pattern[ sourceIndex ]
-			: IsEscapedOperator( sourceIndex, value );
+		GnuRegularExpressionSyntax.Basic == options.Syntax
+			? IsEscapedOperator( sourceIndex, value )
+			: IsUnescapedOperator( sourceIndex, value );
+
+	private bool IsIntervalOperator( int sourceIndex ) {
+		if ( GnuRegularExpressionSyntax.Extended != options.Syntax ) {
+			return IsEscapedOperator( sourceIndex, '{' );
+		}
+		if ( !IsUnescapedOperator( sourceIndex, '{' ) ) {
+			return false;
+		}
+		var contentStart = sourceIndex + 1;
+		var close = pattern.IndexOf( '}', contentStart );
+		if ( 0 > close ) {
+			return false;
+		}
+		for ( var candidateIndex = contentStart; close > candidateIndex; candidateIndex++ ) {
+			if ( !char.IsAsciiDigit( pattern[ candidateIndex ] ) && ',' != pattern[ candidateIndex ] ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private bool IsClosingIntervalOperator( int sourceIndex ) =>
+		GnuRegularExpressionSyntax.Extended == options.Syntax
+			? IsUnescapedOperator( sourceIndex, '}' )
+			: IsEscapedOperator( sourceIndex, '}' );
+
+	private bool IsLeadingRepetitionOperator( int sourceIndex ) =>
+		GnuRegularExpressionSyntax.Extended == options.Syntax
+			? '*' == pattern[ sourceIndex ]
+				|| IsPlusOrQuestionOperator( sourceIndex, '+' )
+				|| IsPlusOrQuestionOperator( sourceIndex, '?' )
+				|| IsIntervalOperator( sourceIndex )
+			: IsIntervalOperator( sourceIndex );
+
+	private void SkipLeadingExtendedRepetitionOperator() => index++;
+
+	private Rune ReadLeadingRepetitionLiteral() {
+		if ( IsPlusOrQuestionOperator( index, '+' ) || IsPlusOrQuestionOperator( index, '?' ) ) {
+			var value = new Rune( GnuRegularExpressionSyntax.Basic == options.Syntax
+				? pattern[ index + 1 ]
+				: pattern[ index ] );
+			index += RepetitionOperatorLength;
+			return value;
+		}
+		if ( IsIntervalOperator( index ) ) {
+			var value = new Rune( '{' );
+			index += IntervalOperatorLength;
+			return value;
+		}
+		index++;
+		return new Rune( '*' );
+	}
+
+	private bool IsUnescapedOperator( int sourceIndex, char value ) =>
+		pattern.Length > sourceIndex && value == pattern[ sourceIndex ];
 
 	private bool IsEscapedOperator( int sourceIndex, char value ) =>
 		pattern.Length > sourceIndex + 1

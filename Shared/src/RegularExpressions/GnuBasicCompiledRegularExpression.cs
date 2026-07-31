@@ -1,11 +1,12 @@
 using System.Buffers;
 using System.Globalization;
 using System.Text;
+using Icod.CoreUtils.Shared.Text;
 
 namespace Icod.CoreUtils.Shared.RegularExpressions;
 
 /// <summary>
-/// Provides the gnu basic compiled regular expression implementation.
+/// Provides the shared managed GNU compiled regular-expression implementation.
 /// </summary>
 internal sealed class GnuBasicCompiledRegularExpression : ICompiledRegularExpression {
 	private readonly RegexNode expression;
@@ -13,7 +14,7 @@ internal sealed class GnuBasicCompiledRegularExpression : ICompiledRegularExpres
 	private readonly IRegularExpressionCharacterClassProvider characterClassProvider;
 
 	/// <summary>
-	/// Initializes a new instance of the GnuBasicCompiledRegularExpression class.
+	/// Initializes a new instance of the <see cref="GnuBasicCompiledRegularExpression"/> class.
 	/// </summary>
 	internal GnuBasicCompiledRegularExpression(
 		string pattern,
@@ -45,7 +46,7 @@ internal sealed class GnuBasicCompiledRegularExpression : ICompiledRegularExpres
 		options ??= new RegularExpressionMatchOptions();
 		cancellationToken.ThrowIfCancellationRequested();
 		var decodedInput = RegexInput.Decode( input, cancellationToken );
-		if ( !decodedInput.TryGetRuneIndex( options.StartIndex, out var firstStart ) ) {
+		if ( !decodedInput.TryGetUnitIndex( options.StartIndex, out var firstStart ) ) {
 			return RegularExpressionMatchResult.Failed(
 				new(
 					RegularExpressionDiagnosticCode.InvalidStartIndex,
@@ -53,14 +54,106 @@ internal sealed class GnuBasicCompiledRegularExpression : ICompiledRegularExpres
 				)
 			);
 		}
+		var search = Search(
+			decodedInput,
+			firstStart,
+			options.RequireMatchAtStart,
+			cancellationToken
+		);
+		if ( search.Diagnostic is RegularExpressionDiagnostic diagnostic ) {
+			return RegularExpressionMatchResult.Failed( diagnostic );
+		}
+		return RegularExpressionMatchResult.Succeeded(
+			search.State is null
+				? null
+				: CreatePublicTextMatch(
+					decodedInput,
+					search.Start,
+					search.State,
+					cancellationToken
+				)
+		);
+	}
+
+	/// <inheritdoc/>
+	public ValueTask<RegularExpressionMatchResult> MatchAsync(
+		string input,
+		RegularExpressionMatchOptions? options = null,
+		CancellationToken cancellationToken = default
+	) => ValueTask.FromResult( Match( input, options, cancellationToken ) );
+
+	/// <inheritdoc/>
+	public RegularExpressionByteMatchResult Match(
+		ReadOnlyMemory<byte> input,
+		RegularExpressionInputOptions? inputOptions = null,
+		RegularExpressionByteMatchOptions? matchOptions = null,
+		CancellationToken cancellationToken = default
+	) {
+		inputOptions ??= new RegularExpressionInputOptions();
+		matchOptions ??= new RegularExpressionByteMatchOptions();
+		if ( !Enum.IsDefined( inputOptions.DecodingMode ) ) {
+			throw new ArgumentOutOfRangeException( nameof( inputOptions ) );
+		}
+		if ( !Enum.IsDefined( inputOptions.InvalidEncodingPolicy ) ) {
+			throw new ArgumentOutOfRangeException( nameof( inputOptions ) );
+		}
+		cancellationToken.ThrowIfCancellationRequested();
+		var decodedInput = RegexInput.Decode(
+			input,
+			inputOptions,
+			cancellationToken
+		);
+		if ( !decodedInput.TryGetUnitIndex( matchOptions.StartByteOffset, out var firstStart ) ) {
+			return RegularExpressionByteMatchResult.Failed(
+				new(
+					RegularExpressionDiagnosticCode.InvalidStartByteOffset,
+					"start byte offset is outside the input or splits a decoded UTF-8 unit"
+				)
+			);
+		}
+		var search = Search(
+			decodedInput,
+			firstStart,
+			matchOptions.RequireMatchAtStart,
+			cancellationToken
+		);
+		if ( search.Diagnostic is RegularExpressionDiagnostic diagnostic ) {
+			return RegularExpressionByteMatchResult.Failed( diagnostic );
+		}
+		return RegularExpressionByteMatchResult.Succeeded(
+			search.State is null
+				? null
+				: CreatePublicByteMatch(
+					decodedInput,
+					search.Start,
+					search.State,
+					cancellationToken
+				)
+		);
+	}
+
+	/// <inheritdoc/>
+	public ValueTask<RegularExpressionByteMatchResult> MatchAsync(
+		ReadOnlyMemory<byte> input,
+		RegularExpressionInputOptions? inputOptions = null,
+		RegularExpressionByteMatchOptions? matchOptions = null,
+		CancellationToken cancellationToken = default
+	) => ValueTask.FromResult( Match( input, inputOptions, matchOptions, cancellationToken ) );
+
+	private RegexSearchResult Search(
+		RegexInput input,
+		int firstStart,
+		bool requireMatchAtStart,
+		CancellationToken cancellationToken
+	) {
 		try {
 			var context = new RegexMatchContext(
-				decodedInput,
+				input,
 				this.options,
 				characterClassProvider,
 				cancellationToken
 			);
-			var finalStart = options.RequireMatchAtStart ? firstStart : decodedInput.Length;
+			var finalStart = requireMatchAtStart ? firstStart : input.Length;
 			for ( var start = firstStart; finalStart >= start; start++ ) {
 				cancellationToken.ThrowIfCancellationRequested();
 				RegexMatchState? best = null;
@@ -71,14 +164,14 @@ internal sealed class GnuBasicCompiledRegularExpression : ICompiledRegularExpres
 					}
 				}
 				if ( best is RegexMatchState selected ) {
-					return RegularExpressionMatchResult.Succeeded(
-						CreatePublicMatch( decodedInput, start, selected, cancellationToken )
-					);
+					return new( start, selected, null );
 				}
 			}
-			return RegularExpressionMatchResult.Succeeded( null );
+			return new( -1, null, null );
 		} catch ( RegexMatchResourceLimitException ) {
-			return RegularExpressionMatchResult.Failed(
+			return new(
+				-1,
+				null,
 				new(
 					RegularExpressionDiagnosticCode.MatchResourceLimitExceeded,
 					string.Concat(
@@ -91,19 +184,13 @@ internal sealed class GnuBasicCompiledRegularExpression : ICompiledRegularExpres
 		}
 	}
 
-	/// <inheritdoc/>
-	public ValueTask<RegularExpressionMatchResult> MatchAsync(
-		string input,
-		RegularExpressionMatchOptions? options = null,
-		CancellationToken cancellationToken = default
-	) => ValueTask.FromResult( Match( input, options, cancellationToken ) );
-
-	private RegularExpressionMatch CreatePublicMatch(
+	private RegularExpressionMatch CreatePublicTextMatch(
 		RegexInput input,
 		int start,
 		RegexMatchState state,
 		CancellationToken cancellationToken
 	) {
+		var source = input.TextSource!;
 		var captures = new RegularExpressionCapture[ CaptureCount ];
 		for ( var captureIndex = 0; CaptureCount > captureIndex; captureIndex++ ) {
 			cancellationToken.ThrowIfCancellationRequested();
@@ -112,25 +199,64 @@ internal sealed class GnuBasicCompiledRegularExpression : ICompiledRegularExpres
 				captures[ captureIndex ] = new( false, -1, 0, null );
 				continue;
 			}
-			var utf16Start = input.GetUtf16Index( captureSpan.Start );
-			var utf16End = input.GetUtf16Index( captureSpan.End );
+			var captureStart = input.GetSourceIndex( captureSpan.Start );
+			var captureEnd = input.GetSourceIndex( captureSpan.End );
 			captures[ captureIndex ] = new(
 				true,
-				utf16Start,
-				utf16End - utf16Start,
-				input.Source[ utf16Start..utf16End ]
+				captureStart,
+				captureEnd - captureStart,
+				source[ captureStart..captureEnd ]
 			);
 		}
-		var matchStart = input.GetUtf16Index( start );
-		var matchEnd = input.GetUtf16Index( state.Position );
+		var matchStart = input.GetSourceIndex( start );
+		var matchEnd = input.GetSourceIndex( state.Position );
 		return new(
 			matchStart,
 			matchEnd - matchStart,
-			input.Source[ matchStart..matchEnd ],
+			source[ matchStart..matchEnd ],
 			captures
 		);
 	}
 
+	private RegularExpressionByteMatch CreatePublicByteMatch(
+		RegexInput input,
+		int start,
+		RegexMatchState state,
+		CancellationToken cancellationToken
+	) {
+		var source = input.ByteSource;
+		var captures = new RegularExpressionByteCapture[ CaptureCount ];
+		for ( var captureIndex = 0; CaptureCount > captureIndex; captureIndex++ ) {
+			cancellationToken.ThrowIfCancellationRequested();
+			var capture = state.Captures[ captureIndex ];
+			if ( capture is not RegexCaptureSpan captureSpan ) {
+				captures[ captureIndex ] = new( false, -1, 0, ReadOnlyMemory<byte>.Empty );
+				continue;
+			}
+			var captureStart = input.GetSourceIndex( captureSpan.Start );
+			var captureEnd = input.GetSourceIndex( captureSpan.End );
+			captures[ captureIndex ] = new(
+				true,
+				captureStart,
+				captureEnd - captureStart,
+				source.Slice( captureStart, captureEnd - captureStart )
+			);
+		}
+		var matchStart = input.GetSourceIndex( start );
+		var matchEnd = input.GetSourceIndex( state.Position );
+		return new(
+			matchStart,
+			matchEnd - matchStart,
+			source.Slice( matchStart, matchEnd - matchStart ),
+			captures
+		);
+	}
+
+	private readonly record struct RegexSearchResult(
+		int Start,
+		RegexMatchState? State,
+		RegularExpressionDiagnostic? Diagnostic
+	);
 }
 
 /// <summary>
@@ -281,55 +407,62 @@ internal sealed class RegexMatchContext {
 }
 
 /// <summary>
-/// Provides the regex input implementation.
+/// Provides decoded matching units and an exact mapping back to the authoritative source representation.
 /// </summary>
 internal sealed class RegexInput {
+	private const int PreservedInvalidByteRuneBase = 0xF0000;
 	private readonly Rune[] runes;
-	private readonly int[] utf16Indices;
+	private readonly bool[] opaqueUnits;
+	private readonly int[] sourceIndices;
 
-	private RegexInput( string source, Rune[] runes, int[] utf16Indices ) {
-		Source = source;
+	private RegexInput(
+		string? textSource,
+		ReadOnlyMemory<byte> byteSource,
+		Rune[] runes,
+		bool[] opaqueUnits,
+		int[] sourceIndices
+	) {
+		TextSource = textSource;
+		ByteSource = byteSource;
 		this.runes = runes;
-		this.utf16Indices = utf16Indices;
+		this.opaqueUnits = opaqueUnits;
+		this.sourceIndices = sourceIndices;
 	}
 
-	/// <summary>
-	/// Gets the source value.
-	/// </summary>
-	internal string Source { get; }
+	/// <summary>Gets the authoritative string source for string matching.</summary>
+	internal string? TextSource { get; }
 
-	/// <summary>
-	/// Gets the length value.
-	/// </summary>
+	/// <summary>Gets the authoritative byte source for byte-preserving matching.</summary>
+	internal ReadOnlyMemory<byte> ByteSource { get; }
+
+	/// <summary>Gets the decoded matching-unit count.</summary>
 	internal int Length => runes.Length;
 
+	/// <summary>Gets one decoded matching unit.</summary>
 	internal Rune this[ int index ] => runes[ index ];
 
-	/// <summary>
-	/// Gets utf16 index.
-	/// </summary>
-	internal int GetUtf16Index( int runeIndex ) => utf16Indices[ runeIndex ];
+	/// <summary>Gets whether one unit represents an opaque malformed source byte.</summary>
+	internal bool IsOpaque( int index ) => opaqueUnits[ index ];
 
-	/// <summary>
-	/// Attempts to get rune index.
-	/// </summary>
-	internal bool TryGetRuneIndex( int utf16Index, out int runeIndex ) {
-		if ( 0 > utf16Index || Source.Length < utf16Index ) {
-			runeIndex = -1;
+	/// <summary>Gets the source UTF-16 index or byte offset for a matching-unit boundary.</summary>
+	internal int GetSourceIndex( int unitIndex ) => sourceIndices[ unitIndex ];
+
+	/// <summary>Attempts to map an exact source boundary to a matching-unit index.</summary>
+	internal bool TryGetUnitIndex( int sourceIndex, out int unitIndex ) {
+		if ( 0 > sourceIndex || sourceIndices[ ^1 ] < sourceIndex ) {
+			unitIndex = -1;
 			return false;
 		}
-		var result = Array.BinarySearch( utf16Indices, utf16Index );
+		var result = Array.BinarySearch( sourceIndices, sourceIndex );
 		if ( 0 > result ) {
-			runeIndex = -1;
+			unitIndex = -1;
 			return false;
 		}
-		runeIndex = result;
+		unitIndex = result;
 		return true;
 	}
 
-	/// <summary>
-	/// Performs the decode operation.
-	/// </summary>
+	/// <summary>Decodes a string into Unicode-scalar matching units while retaining UTF-16 boundaries.</summary>
 	internal static RegexInput Decode( string source, CancellationToken cancellationToken ) {
 		var runes = new List<Rune>( source.Length );
 		var indices = new List<int>( source.Length + 1 );
@@ -350,7 +483,72 @@ internal sealed class RegexInput {
 			utf16Index += consumed;
 		}
 		indices.Add( source.Length );
-		return new( source, [ .. runes ], [ .. indices ] );
+		return new(
+			source,
+			ReadOnlyMemory<byte>.Empty,
+			[ .. runes ],
+			new bool[ runes.Count ],
+			[ .. indices ]
+		);
+	}
+
+	/// <summary>Decodes authoritative bytes according to the explicit byte/text policy.</summary>
+	internal static RegexInput Decode(
+		ReadOnlyMemory<byte> source,
+		RegularExpressionInputOptions options,
+		CancellationToken cancellationToken
+	) {
+		var span = source.Span;
+		var runes = new List<Rune>( span.Length );
+		var opaqueUnits = new List<bool>( span.Length );
+		var indices = new List<int>( span.Length + 1 );
+		var byteIndex = 0;
+		while ( span.Length > byteIndex ) {
+			cancellationToken.ThrowIfCancellationRequested();
+			indices.Add( byteIndex );
+			if ( TextDecodingMode.Bytes == options.DecodingMode ) {
+				runes.Add( new Rune( span[ byteIndex ] ) );
+				opaqueUnits.Add( false );
+				byteIndex++;
+				continue;
+			}
+			var status = Rune.DecodeFromUtf8(
+				span[ byteIndex.. ],
+				out var value,
+				out var consumed
+			);
+			if ( OperationStatus.Done == status ) {
+				runes.Add( value );
+				opaqueUnits.Add( false );
+				byteIndex += consumed;
+				continue;
+			}
+			var invalidByte = span[ byteIndex ];
+			switch ( options.InvalidEncodingPolicy ) {
+				case InvalidEncodingPolicy.PreserveBytes:
+					runes.Add( new Rune( PreservedInvalidByteRuneBase + invalidByte ) );
+					opaqueUnits.Add( true );
+					byteIndex++;
+					break;
+				case InvalidEncodingPolicy.Replace:
+					runes.Add( Rune.ReplacementChar );
+					opaqueUnits.Add( false );
+					byteIndex++;
+					break;
+				case InvalidEncodingPolicy.Throw:
+					throw new DecoderFallbackException(
+						string.Concat(
+							"Invalid UTF-8 input at byte offset ",
+							byteIndex.ToString( CultureInfo.InvariantCulture ),
+							"."
+						)
+					);
+				default:
+					throw new InvalidOperationException( "Unknown invalid-encoding policy." );
+			}
+		}
+		indices.Add( span.Length );
+		return new( null, source, [ .. runes ], [ .. opaqueUnits ], [ .. indices ] );
 	}
 }
 

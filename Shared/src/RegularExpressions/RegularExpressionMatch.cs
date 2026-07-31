@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Shared.RegularExpressions;
 
-/// <summary>Represents the leftmost-longest match selected by the GNU basic regular-expression engine.</summary>
+/// <summary>Represents the leftmost-longest match selected by the managed GNU regular-expression engine.</summary>
 public sealed class RegularExpressionMatch {
 	/// <summary>Initializes a selected regular-expression match.</summary>
 	/// <param name="index">The zero-based UTF-16 input index.</param>
