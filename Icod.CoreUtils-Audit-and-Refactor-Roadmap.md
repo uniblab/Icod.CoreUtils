@@ -4,10 +4,10 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `25` |
-| Current engineering milestone |  |
-| Next infrastructure dependencies |  |
-| Next command batch | Batch 26 — `Icod.Grep` |
+| Completed command batches | `0` through `26` |
+| Current engineering milestone | Batch 26 complete |
+| Next infrastructure dependencies | None before Batch 27 |
+| Next command batch | Batch 27 — splitting and reversing |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -736,11 +736,13 @@ This gate advances LineEditor Phase LE2 before the rest of the LineEditor sequen
 
 ### Batch 26 — `Icod.Grep` search engine (1 tool)
 
-- [ ] `grep`
+- [x] `grep`
 
 Implement the documented GNU grep 3.12 option and pattern model. Cover multiple pattern sources, basic/extended/fixed/Perl-mode policy, recursive traversal, include/exclude rules, binary policy, context, filename and line metadata, counts, quiet/list modes, NUL behavior, and the required 0/1/2 status distinction.
 
 `Icod.Grep` consumes the Gate R1 BRE/ERE provider and the current record, diagnostic, and read-only traversal abstractions through project references during incubation. Grep-specific matcher orchestration, binary-input policy, context grouping, and output formatting remain in the grep project or a repository-local engine if later testing justifies one. Completion Gate G will move genuine cross-suite dependencies to `Icod.CommandFramework` and extract `Icod.Grep` into its own solution and repository.
+
+Batch 26 replaced the legacy synchronous `System.Text.RegularExpressions` prototype with an asynchronous, byte-preserving command implementation. The completed command uses Shared option parsing and diagnostics, Gate R1 BRE/ERE compilation and byte offsets, Gate E1 recursive traversal and pruning, fixed-string matching, multiple expression and pattern-file sources, NUL-delimited records, binary policies, context groups, filename/line/byte metadata, counts, quiet and file-list modes, forced color output, cancellation, and GNU grep's distinct 0/1/2 statuses. Perl-compatible mode receives an explicit controlled status-two diagnostic because no managed PCRE provider is present. A dedicated `Icod.Grep.Tests` project adds 35 focused command tests covering the implemented policy and cross-platform control paths.
 
 ### Batch 27 — Splitting and reversing (2 tools)
 
