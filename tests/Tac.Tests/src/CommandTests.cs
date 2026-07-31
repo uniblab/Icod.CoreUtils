@@ -3,6 +3,7 @@ namespace Icod.CoreUtils.Tac.Tests;
 using System.Text;
 using Icod.CoreUtils.Shared.Diagnostics;
 using TacCommand = Icod.CoreUtils.Tac.Command;
+using Xunit;
 
 /// <summary>Exercises GNU-compatible tac command behavior.</summary>
 public sealed class CommandTests {

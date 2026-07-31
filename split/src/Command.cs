@@ -273,12 +273,28 @@ public static class Command {
 				RedirectStandardError = true,
 				CreateNoWindow = true
 			};
+			string? commandFilePath = null;
 			if ( OperatingSystem.IsWindows() ) {
+				commandFilePath = Path.Combine(
+					Path.GetTempPath(),
+					$"icod-split-filter-{Guid.NewGuid():N}.cmd"
+				);
+				try {
+					await File.WriteAllTextAsync(
+						commandFilePath,
+						string.Concat( this.options.Filter!, Environment.NewLine ),
+						new UTF8Encoding( encoderShouldEmitUTF8Identifier: false ),
+						this.context.CancellationToken
+					).ConfigureAwait( false );
+				} catch {
+					DeleteTemporaryCommandFile( commandFilePath );
+					throw;
+				}
 				startInfo.FileName = Environment.GetEnvironmentVariable( "ComSpec" ) ?? "cmd.exe";
 				startInfo.ArgumentList.Add( "/d" );
-				startInfo.ArgumentList.Add( "/s" );
+				startInfo.ArgumentList.Add( "/q" );
 				startInfo.ArgumentList.Add( "/c" );
-				startInfo.ArgumentList.Add( this.options.Filter! );
+				startInfo.ArgumentList.Add( commandFilePath );
 			} else {
 				startInfo.FileName = "/bin/sh";
 				startInfo.ArgumentList.Add( "-c" );
@@ -292,6 +308,7 @@ public static class Command {
 				}
 			} catch {
 				process.Dispose();
+				DeleteTemporaryCommandFile( commandFilePath );
 				throw;
 			}
 			var outputTask = process.StandardOutput.BaseStream.CopyToAsync(
@@ -317,9 +334,21 @@ public static class Command {
 						}
 					} finally {
 						process.Dispose();
+						DeleteTemporaryCommandFile( commandFilePath );
 					}
 				}
 			);
+		}
+
+		private static void DeleteTemporaryCommandFile( string? commandFilePath ) {
+			if ( null == commandFilePath ) {
+				return;
+			}
+			try {
+				File.Delete( commandFilePath );
+			} catch {
+				// Temporary command-file cleanup must not replace the filter result.
+			}
 		}
 	}
 
@@ -391,9 +420,9 @@ public static class Command {
 				return CommandExitCodes.Success;
 			}
 			if ( parsed.HasOption( "version" ) ) {
-				await context.StandardOutput.WriteLineAsync(
-					VersionText.AsMemory(),
-					context.CancellationToken
+				await WriteStandardOutputTextAsync(
+					context,
+					string.Concat( VersionText, Environment.NewLine )
 				).ConfigureAwait( false );
 				return CommandExitCodes.Success;
 			}
@@ -1302,9 +1331,27 @@ Output pieces of FILE to PREFIXaa, PREFIXab, ...; default size is 1000 records.
       --help                  display this help and exit
       --version               output version information and exit
 """;
-		await context.StandardOutput.WriteLineAsync(
-			help.ReplaceLineEndings( Environment.NewLine ).AsMemory(),
+		await WriteStandardOutputTextAsync(
+			context,
+			string.Concat(
+				help.ReplaceLineEndings( Environment.NewLine ),
+				Environment.NewLine
+			)
+		).ConfigureAwait( false );
+	}
+
+	private static async Task WriteStandardOutputTextAsync(
+		CommandContext context,
+		string value
+	) {
+		await using var output = new ByteOutputStream(
+			context.StandardOutput,
+			context.StandardOutputStream
+		);
+		await output.WriteTextAsync(
+			value,
 			context.CancellationToken
 		).ConfigureAwait( false );
+		await output.CompleteAsync( context.CancellationToken ).ConfigureAwait( false );
 	}
 }

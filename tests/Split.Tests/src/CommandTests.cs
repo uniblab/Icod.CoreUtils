@@ -3,6 +3,7 @@ namespace Icod.CoreUtils.Split.Tests;
 using System.Text;
 using Icod.CoreUtils.Shared.Diagnostics;
 using SplitCommand = Icod.CoreUtils.Split.Command;
+using Xunit;
 
 /// <summary>Exercises GNU-compatible split command behavior.</summary>
 public sealed class CommandTests {

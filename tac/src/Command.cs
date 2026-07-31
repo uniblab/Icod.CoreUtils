@@ -95,9 +95,9 @@ public static class Command {
 				return CommandExitCodes.Success;
 			}
 			if ( parsed.HasOption( "version" ) ) {
-				await context.StandardOutput.WriteLineAsync(
-					VersionText.AsMemory(),
-					context.CancellationToken
+				await WriteStandardOutputTextAsync(
+					context,
+					string.Concat( VersionText, Environment.NewLine )
 				).ConfigureAwait( false );
 				return CommandExitCodes.Success;
 			}
@@ -641,9 +641,27 @@ Write each FILE to standard output, last record first.
       --help             display this help and exit
       --version          output version information and exit
 """;
-		await context.StandardOutput.WriteLineAsync(
-			help.ReplaceLineEndings( Environment.NewLine ).AsMemory(),
+		await WriteStandardOutputTextAsync(
+			context,
+			string.Concat(
+				help.ReplaceLineEndings( Environment.NewLine ),
+				Environment.NewLine
+			)
+		).ConfigureAwait( false );
+	}
+
+	private static async Task WriteStandardOutputTextAsync(
+		CommandContext context,
+		string value
+	) {
+		await using var output = new ByteOutputStream(
+			context.StandardOutput,
+			context.StandardOutputStream
+		);
+		await output.WriteTextAsync(
+			value,
 			context.CancellationToken
 		).ConfigureAwait( false );
+		await output.CompleteAsync( context.CancellationToken ).ConfigureAwait( false );
 	}
 }
