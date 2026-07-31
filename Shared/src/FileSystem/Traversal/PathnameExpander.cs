@@ -903,7 +903,6 @@ public sealed class PathnameExpander {
 		"\0",
 		state.DisplayPath,
 		"\0",
-		state.IsKnownDirectory ? "1" : "0",
 		state.AllowTerminalLinkFollow ? "1" : "0"
 	);
 

@@ -1,4 +1,5 @@
 using System.Buffers.Binary;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Win32.SafeHandles;
@@ -290,32 +291,50 @@ public sealed partial class SystemReadOnlyFileSystemProviderTests {
 	}
 
 	/// <summary>
-	/// Attempts to create a hard link through the host platform's native filesystem API.
+	/// Attempts to create a hard link through the host platform's command-line utility.
 	/// </summary>
 	/// <param name="linkPath">The new hard-link pathname.</param>
 	/// <param name="targetPath">The existing file pathname.</param>
 	/// <returns><see langword="true"/> when the hard link was created; otherwise, <see langword="false"/>.</returns>
 	private static bool TryCreateHardLink( string linkPath, string targetPath ) {
 		try {
+			ProcessStartInfo startInfo;
 			if ( OperatingSystem.IsWindows() ) {
-				return NativeMethods.CreateHardLinkWindows( linkPath, targetPath, IntPtr.Zero )
-					&& File.Exists( linkPath );
+				startInfo = new ProcessStartInfo( "cmd.exe" );
+				startInfo.ArgumentList.Add( "/d" );
+				startInfo.ArgumentList.Add( "/c" );
+				startInfo.ArgumentList.Add( "mklink" );
+				startInfo.ArgumentList.Add( "/H" );
+				startInfo.ArgumentList.Add( linkPath );
+				startInfo.ArgumentList.Add( targetPath );
+			} else if ( OperatingSystem.IsLinux() || OperatingSystem.IsMacOS() ) {
+				startInfo = new ProcessStartInfo( "/bin/ln" );
+				startInfo.ArgumentList.Add( targetPath );
+				startInfo.ArgumentList.Add( linkPath );
+			} else {
+				return false;
 			}
-			if ( OperatingSystem.IsLinux() || OperatingSystem.IsMacOS() || OperatingSystem.IsFreeBSD() ) {
-				return NativeMethods.CreateHardLinkUnix( targetPath, linkPath ) == 0
-					&& File.Exists( linkPath );
+
+			startInfo.UseShellExecute = false;
+			startInfo.CreateNoWindow = true;
+			startInfo.RedirectStandardOutput = true;
+			startInfo.RedirectStandardError = true;
+			using var process = Process.Start( startInfo );
+			if ( process is null ) {
+				return false;
 			}
-			return false;
+			process.WaitForExit();
+			return process.ExitCode == 0 && File.Exists( linkPath );
 		} catch ( Exception exception ) when (
-			exception is DllNotFoundException
-				or EntryPointNotFoundException
+			exception is InvalidOperationException
+				or System.ComponentModel.Win32Exception
 				or PlatformNotSupportedException
 				or NotSupportedException
+				or IOException
 		) {
 			return false;
 		}
 	}
-
 	/// <summary>
 	/// Attempts to create a Windows directory junction through the reparse-point control API.
 	/// </summary>
@@ -420,26 +439,6 @@ public sealed partial class SystemReadOnlyFileSystemProviderTests {
 	}
 
 	private static partial class NativeMethods {
-		[LibraryImport(
-			"kernel32.dll",
-			EntryPoint = "CreateHardLinkW",
-			SetLastError = true,
-			StringMarshalling = StringMarshalling.Utf16
-		)]
-		[return: MarshalAs( UnmanagedType.Bool )]
-		public static partial bool CreateHardLinkWindows(
-			string fileName,
-			string existingFileName,
-			IntPtr securityAttributes
-		);
-
-		[LibraryImport(
-			"libc",
-			EntryPoint = "link",
-			SetLastError = true,
-			StringMarshalling = StringMarshalling.Utf8
-		)]
-		public static partial int CreateHardLinkUnix( string existingPath, string newPath );
 
 		[LibraryImport(
 			"kernel32.dll",
