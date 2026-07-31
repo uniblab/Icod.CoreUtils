@@ -64,8 +64,16 @@ public sealed class SystemReadOnlyFileSystemProvider : IReadOnlyFileSystemProvid
 		if (
 			isLink
 			&& followSymbolicLink
-			&& !Directory.Exists( path )
-			&& !File.Exists( path )
+			&& (
+				(
+					physicalNative.Kind != FileSystemEntryKind.Unknown
+					&& native.Kind == FileSystemEntryKind.Unknown
+				)
+				|| (
+					!Directory.Exists( path )
+					&& !File.Exists( path )
+				)
+			)
 		) {
 			throw new FileNotFoundException( "The symbolic-link or reparse-point target does not exist.", path );
 		}
