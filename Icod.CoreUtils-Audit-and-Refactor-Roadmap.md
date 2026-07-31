@@ -4,10 +4,10 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `26` |
-| Current engineering milestone | Batch 26 complete |
-| Next infrastructure dependencies | None before Batch 27 |
-| Next command batch | Batch 27 — splitting and reversing |
+| Completed command batches | `0` through `27` |
+| Current engineering milestone | Batch 27 complete |
+| Next infrastructure dependencies | None before Batch 28 |
+| Next command batch | Batch 28 — pattern-directed splitting |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -213,7 +213,7 @@ Man7 pages are useful synopses and secondary references, but they must not repla
 ### What is working well
 
 - The completed batches established shared command-line, diagnostics, streaming, numeric, platform, identity, process, date/time, and block-I/O abstractions.
-- Batches 1 through 25 have dedicated command-specific tests, together with focused Shared tests for the infrastructure introduced by their completion gates.
+- Batches 1 through 27 have dedicated command-specific tests, together with focused Shared tests for the infrastructure introduced by their completion gates.
 - The complete applicable solution remains subject to the required `windows-latest`, `ubuntu-latest`, and `macos-latest` build-and-test contract; completed batches must remain green on all three runners.
 - Source projects consistently reference `Shared` where common behavior is appropriate; that project currently incubates both future `Icod.CommandFramework` APIs and Coreutils-specific `Icod.CoreUtils.Shared` APIs while co-resident sibling suites supply additional real consumers.
 - `Icod.LineEditor.Sed` has already completed its project and namespace migration: it uses assembly name `sed`, root namespace and public command class `Icod.LineEditor.Sed.Command`, an asynchronous entry point, a dedicated test identity, and a project reference to the current Shared incubation project.
@@ -746,17 +746,19 @@ Batch 26 replaced the legacy synchronous `System.Text.RegularExpressions` protot
 
 ### Batch 27 — Splitting and reversing (2 tools)
 
-- [ ] `split`
-- [ ] `tac`
+- [x] `split`
+- [x] `tac`
 
 Repair split-output rotation and support nonseekable input, line/byte/chunk modes, suffix alphabets, filters, additional suffixes, numeric suffixes, and exact file-creation cleanup.
 Implement `tac` with backward file scanning or secure temporary spooling rather than whole-input memory loading.
+
+Batch 27 replaced both legacy synchronous prototypes with asynchronous, byte-preserving implementations. `split` now supports streaming line, byte, line-byte, balanced-byte, byte-balanced whole-record, selected-chunk, and round-robin modes; alphabetic, decimal, and hexadecimal suffixes with fixed or GNU-style automatic width growth; additional suffixes; custom byte record separators; filters with `$FILE`, output forwarding, and exit-status propagation; verbose and unbuffered policy; nonseekable input spooling where random access is required; input-overwrite prevention through Gate E1 identity; cancellation; and GNU preserve-on-failure file-creation semantics. `tac` now preserves arbitrary bytes, processes each operand independently, supports literal and Gate R1 GNU Emacs regular-expression separators plus before-separator mode, indexes record extents in secure temporary storage, scans seekable inputs without whole-file loading, and securely spools nonseekable input. Dedicated `Icod.CoreUtils.Split.Tests` and `Icod.CoreUtils.Tac.Tests` projects cover rotation, chunk allocation, suffix growth and exhaustion, filters, input protection, binary data, separator policy, nonseekable input, diagnostics, continuation, and cancellation.
 
 ### Batch 28 — Pattern-directed splitting (1 tool)
 
 - [ ] `csplit`
 
-Reuse the regular-expression policy established by Completion Gate C1 for `csplit`, including numeric and regex addresses, offsets, repetition, suppression, prefix/suffix grammar, keep-files behavior, exact byte counts, and cleanup after failure or cancellation. Do not introduce a runtime dependency on `Icod.Grep`.
+Reuse the regular-expression policy established by Completion Gate R1 for `csplit`, including numeric and regex addresses, offsets, repetition, suppression, prefix/suffix grammar, keep-files behavior, exact byte counts, and cleanup after failure or cancellation. Do not introduce a runtime dependency on `Icod.Grep`.
 
 ### Batch 29 — Page presentation (1 tool)
 
