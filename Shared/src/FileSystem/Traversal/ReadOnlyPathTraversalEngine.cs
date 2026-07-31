@@ -70,7 +70,8 @@ public sealed class ReadOnlyPathTraversalEngine {
 			cancellationToken.ThrowIfCancellationRequested();
 			yield return PathTraversalEvent.CreateRoot( root );
 
-			ReadOnlyFileSystemEntry rootObservation;
+			ReadOnlyFileSystemEntry? rootObservation = null;
+			PathTraversalError? rootObservationError = null;
 			try {
 				var followRoot = options.SymbolicLinkMode is SymbolicLinkTraversalMode.RootsOnly
 					or SymbolicLinkTraversalMode.Always;
@@ -82,7 +83,7 @@ public sealed class ReadOnlyPathTraversalEngine {
 			} catch ( OperationCanceledException ) when ( cancellationToken.IsCancellationRequested ) {
 				throw;
 			} catch ( Exception exception ) {
-				var error = CreateError(
+				rootObservationError = CreateError(
 					PathTraversalErrorCode.ObservationFailed,
 					root,
 					root.AccessPath,
@@ -91,15 +92,17 @@ public sealed class ReadOnlyPathTraversalEngine {
 					"The traversal root could not be observed.",
 					exception
 				);
+			}
+			if ( rootObservationError is not null ) {
 				cancellationToken.ThrowIfCancellationRequested();
-				yield return PathTraversalEvent.CreateError( error );
+				yield return PathTraversalEvent.CreateError( rootObservationError );
 				if ( options.ErrorMode == PathTraversalErrorMode.Stop ) {
 					yield break;
 				}
 				continue;
 			}
 
-			var rootEntry = CreateRootEntry( root, rootObservation );
+			var rootEntry = CreateRootEntry( root, rootObservation! );
 			var rootSelection = options.Selector.Select( rootEntry );
 			if ( rootEntry.Kind != FileSystemEntryKind.Directory ) {
 				if ( rootSelection.Yield ) {
@@ -177,6 +180,7 @@ public sealed class ReadOnlyPathTraversalEngine {
 				cancellationToken.ThrowIfCancellationRequested();
 				var frame = frames.Peek();
 				if ( !frame.IsLoaded ) {
+					PathTraversalError? loadError = null;
 					try {
 						await frame.LoadChildrenAsync(
 							_provider,
@@ -186,7 +190,7 @@ public sealed class ReadOnlyPathTraversalEngine {
 					} catch ( OperationCanceledException ) when ( cancellationToken.IsCancellationRequested ) {
 						throw;
 					} catch ( DirectoryEntryLimitException exception ) {
-						var error = CreateError(
+						loadError = CreateError(
 							PathTraversalErrorCode.DirectoryEntryLimitExceeded,
 							root,
 							frame.Entry.AccessPath,
@@ -195,19 +199,8 @@ public sealed class ReadOnlyPathTraversalEngine {
 							"The configured directory-entry limit was exceeded.",
 							exception
 						);
-						cancellationToken.ThrowIfCancellationRequested();
-						yield return PathTraversalEvent.CreateError( error );
-						if ( options.ErrorMode == PathTraversalErrorMode.Stop ) {
-							yield break;
-						}
-						PopFrame( frames, ancestry );
-						if ( frame.WasYielded ) {
-							cancellationToken.ThrowIfCancellationRequested();
-							yield return PathTraversalEvent.CreateEntry( PathTraversalEventKind.LeaveDirectory, frame.Entry );
-						}
-						continue;
 					} catch ( Exception exception ) {
-						var error = CreateError(
+						loadError = CreateError(
 							PathTraversalErrorCode.EnumerationFailed,
 							root,
 							frame.Entry.AccessPath,
@@ -216,8 +209,10 @@ public sealed class ReadOnlyPathTraversalEngine {
 							"The directory could not be enumerated.",
 							exception
 						);
+					}
+					if ( loadError is not null ) {
 						cancellationToken.ThrowIfCancellationRequested();
-						yield return PathTraversalEvent.CreateError( error );
+						yield return PathTraversalEvent.CreateError( loadError );
 						if ( options.ErrorMode == PathTraversalErrorMode.Stop ) {
 							yield break;
 						}
@@ -239,7 +234,8 @@ public sealed class ReadOnlyPathTraversalEngine {
 					continue;
 				}
 
-				ReadOnlyFileSystemEntry observation;
+				ReadOnlyFileSystemEntry? observation = null;
+				PathTraversalError? observationError = null;
 				try {
 					var followChild = options.SymbolicLinkMode == SymbolicLinkTraversalMode.Always;
 					observation = await _provider.ObserveAsync(
@@ -250,7 +246,7 @@ public sealed class ReadOnlyPathTraversalEngine {
 				} catch ( OperationCanceledException ) when ( cancellationToken.IsCancellationRequested ) {
 					throw;
 				} catch ( Exception exception ) {
-					var error = CreateError(
+					observationError = CreateError(
 						PathTraversalErrorCode.ObservationFailed,
 						root,
 						child.AccessPath,
@@ -259,23 +255,26 @@ public sealed class ReadOnlyPathTraversalEngine {
 						"The directory entry could not be observed.",
 						exception
 					);
+				}
+				if ( observationError is not null ) {
 					cancellationToken.ThrowIfCancellationRequested();
-					yield return PathTraversalEvent.CreateError( error );
+					yield return PathTraversalEvent.CreateError( observationError );
 					if ( options.ErrorMode == PathTraversalErrorMode.Stop ) {
 						yield break;
 					}
 					continue;
 				}
 
-				PathTraversalEntry childEntry;
+				PathTraversalEntry? childEntry = null;
+				PathTraversalError? childEntryError = null;
 				try {
-					childEntry = CreateChildEntry( frame.Entry, child, observation );
+					childEntry = CreateChildEntry( frame.Entry, child, observation! );
 				} catch ( Exception exception ) when (
 					exception is ArgumentException
 					or NotSupportedException
 					or PathTooLongException
 				) {
-					var error = CreateError(
+					childEntryError = CreateError(
 						PathTraversalErrorCode.InvalidPath,
 						root,
 						child.AccessPath,
@@ -284,43 +283,46 @@ public sealed class ReadOnlyPathTraversalEngine {
 						"The entry pathname could not be represented.",
 						exception
 					);
+				}
+				if ( childEntryError is not null ) {
 					cancellationToken.ThrowIfCancellationRequested();
-					yield return PathTraversalEvent.CreateError( error );
+					yield return PathTraversalEvent.CreateError( childEntryError );
 					if ( options.ErrorMode == PathTraversalErrorMode.Stop ) {
 						yield break;
 					}
 					continue;
 				}
 
-				var selection = options.Selector.Select( childEntry );
-				if ( childEntry.Kind != FileSystemEntryKind.Directory ) {
+				var selectedEntry = childEntry!;
+				var selection = options.Selector.Select( selectedEntry );
+				if ( selectedEntry.Kind != FileSystemEntryKind.Directory ) {
 					if ( selection.Yield ) {
 						cancellationToken.ThrowIfCancellationRequested();
-						yield return PathTraversalEvent.CreateEntry( PathTraversalEventKind.Entry, childEntry );
+						yield return PathTraversalEvent.CreateEntry( PathTraversalEventKind.Entry, selectedEntry );
 					}
 					continue;
 				}
 
 				var depthLimitReached = options.MaximumDepth is int maximumDepth
-					&& childEntry.Depth >= maximumDepth;
+					&& selectedEntry.Depth >= maximumDepth;
 				if ( !selection.Descend || depthLimitReached ) {
 					if ( selection.Yield ) {
 						cancellationToken.ThrowIfCancellationRequested();
-						yield return PathTraversalEvent.CreateEntry( PathTraversalEventKind.EnterDirectory, childEntry );
-						yield return PathTraversalEvent.CreateEntry( PathTraversalEventKind.LeaveDirectory, childEntry );
+						yield return PathTraversalEvent.CreateEntry( PathTraversalEventKind.EnterDirectory, selectedEntry );
+						yield return PathTraversalEvent.CreateEntry( PathTraversalEventKind.LeaveDirectory, selectedEntry );
 					}
 					continue;
 				}
 
 				if (
 					options.FileSystemBoundaryMode == FileSystemBoundaryMode.StayOnRootFileSystem
-					&& !CanRemainOnRootFileSystem( rootEntry.FileSystemIdentity, childEntry.FileSystemIdentity )
+					&& !CanRemainOnRootFileSystem( rootEntry.FileSystemIdentity, selectedEntry.FileSystemIdentity )
 				) {
-					if ( !childEntry.FileSystemIdentity.IsAvailable ) {
+					if ( !selectedEntry.FileSystemIdentity.IsAvailable ) {
 						var error = CreateError(
 							PathTraversalErrorCode.IdentityUnavailable,
 							root,
-							childEntry.AccessPath,
+							selectedEntry.AccessPath,
 							PathTraversalOperationStage.ReadIdentity,
 							PathTraversalErrorScope.Subtree,
 							"A filesystem identity is required to enforce the root boundary."
@@ -332,25 +334,25 @@ public sealed class ReadOnlyPathTraversalEngine {
 						}
 					} else {
 						cancellationToken.ThrowIfCancellationRequested();
-						yield return PathTraversalEvent.CreateEntry( PathTraversalEventKind.FileSystemBoundary, childEntry );
+						yield return PathTraversalEvent.CreateEntry( PathTraversalEventKind.FileSystemBoundary, selectedEntry );
 					}
 					continue;
 				}
 
 				if (
-					childEntry.EntryIdentity.IsAvailable
-					&& ancestry.TryGetValue( childEntry.EntryIdentity, out var ancestorPath )
+					selectedEntry.EntryIdentity.IsAvailable
+					&& ancestry.TryGetValue( selectedEntry.EntryIdentity, out var ancestorPath )
 				) {
 					cancellationToken.ThrowIfCancellationRequested();
-					yield return PathTraversalEvent.CreateCycle( childEntry, ancestorPath );
+					yield return PathTraversalEvent.CreateCycle( selectedEntry, ancestorPath );
 					continue;
 				}
 
-				if ( !childEntry.EntryIdentity.IsAvailable ) {
+				if ( !selectedEntry.EntryIdentity.IsAvailable ) {
 					var error = CreateError(
 						PathTraversalErrorCode.IdentityUnavailable,
 						root,
-						childEntry.AccessPath,
+						selectedEntry.AccessPath,
 						PathTraversalOperationStage.ReadIdentity,
 						PathTraversalErrorScope.Subtree,
 						"A stable directory identity is required for cycle-safe descent."
@@ -365,12 +367,12 @@ public sealed class ReadOnlyPathTraversalEngine {
 
 				if ( selection.Yield ) {
 					cancellationToken.ThrowIfCancellationRequested();
-					yield return PathTraversalEvent.CreateEntry( PathTraversalEventKind.EnterDirectory, childEntry );
+					yield return PathTraversalEvent.CreateEntry( PathTraversalEventKind.EnterDirectory, selectedEntry );
 				}
-				if ( childEntry.EntryIdentity.IsAvailable ) {
-					ancestry.Add( childEntry.EntryIdentity, childEntry.AccessPath );
+				if ( selectedEntry.EntryIdentity.IsAvailable ) {
+					ancestry.Add( selectedEntry.EntryIdentity, selectedEntry.AccessPath );
 				}
-				frames.Push( new DirectoryTraversalFrame( childEntry, selection.Yield ) );
+				frames.Push( new DirectoryTraversalFrame( selectedEntry, selection.Yield ) );
 			}
 		}
 	}

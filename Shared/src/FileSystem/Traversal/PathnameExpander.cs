@@ -39,7 +39,8 @@ public sealed class PathnameExpander {
 			ArgumentNullException.ThrowIfNull( operand );
 			cancellationToken.ThrowIfCancellationRequested();
 
-			PathnamePattern pattern;
+			PathnamePattern? pattern = null;
+			PathTraversalError? patternError = null;
 			try {
 				pattern = PathnamePattern.Parse( operand, options.PatternOptions );
 			} catch ( Exception exception ) when (
@@ -47,14 +48,16 @@ public sealed class PathnameExpander {
 					or NotSupportedException
 					or PathTooLongException
 			) {
-				var error = CreateError(
+				patternError = CreateError(
 					PathTraversalErrorCode.InvalidPattern,
 					operand,
 					PathTraversalErrorScope.Root,
 					"The pathname pattern is invalid on the current platform.",
 					exception
 				);
-				yield return PathnameExpansionEvent.CreateError( operand, operandIndex, error );
+			}
+			if ( patternError is not null ) {
+				yield return PathnameExpansionEvent.CreateError( operand, operandIndex, patternError );
 				if ( options.ErrorMode == PathTraversalErrorMode.Stop ) {
 					yield break;
 				}
@@ -62,29 +65,34 @@ public sealed class PathnameExpander {
 				continue;
 			}
 
-			if ( !pattern.HasMetacharacters ) {
-				PathTraversalRoot literalRoot;
+			var parsedPattern = pattern!;
+
+			if ( !parsedPattern.HasMetacharacters ) {
+				PathTraversalRoot? literalRoot = null;
+				PathTraversalError? literalRootError = null;
 				try {
 					literalRoot = CreateLiteralRoot(
 						operand,
 						operandIndex,
 						rootOrdinal,
 						options.BaseDirectory,
-						pattern.GetLiteralPath()
+						parsedPattern.GetLiteralPath()
 					);
 				} catch ( Exception exception ) when (
 					exception is ArgumentException
 						or NotSupportedException
 						or PathTooLongException
 				) {
-					var error = CreateError(
+					literalRootError = CreateError(
 						PathTraversalErrorCode.InvalidPath,
 						operand,
 						PathTraversalErrorScope.Root,
 						"The literal operand cannot be represented on the current platform.",
 						exception
 					);
-					yield return PathnameExpansionEvent.CreateError( operand, operandIndex, error );
+				}
+				if ( literalRootError is not null ) {
+					yield return PathnameExpansionEvent.CreateError( operand, operandIndex, literalRootError );
 					if ( options.ErrorMode == PathTraversalErrorMode.Stop ) {
 						yield break;
 					}
@@ -93,15 +101,16 @@ public sealed class PathnameExpander {
 				}
 
 				rootOrdinal++;
-				yield return PathnameExpansionEvent.CreateRoot( literalRoot );
+				yield return PathnameExpansionEvent.CreateRoot( literalRoot! );
 				operandIndex++;
 				continue;
 			}
 
-			ExpansionInitialization initialization;
+			ExpansionInitialization? initialization = null;
+			PathTraversalError? initializationError = null;
 			try {
 				initialization = await InitializeAsync(
-					pattern,
+					parsedPattern,
 					options,
 					cancellationToken
 				).ConfigureAwait( false );
@@ -112,36 +121,33 @@ public sealed class PathnameExpander {
 					or NotSupportedException
 					or PathTooLongException
 			) {
-				var error = CreateError(
+				initializationError = CreateError(
 					PathTraversalErrorCode.InvalidPath,
 					operand,
 					PathTraversalErrorScope.Root,
 					"The pathname expansion starting directory cannot be represented on the current platform.",
 					exception
 				);
-				yield return PathnameExpansionEvent.CreateError( operand, operandIndex, error );
-				if ( options.ErrorMode == PathTraversalErrorMode.Stop ) {
-					yield break;
-				}
-				operandIndex++;
-				continue;
 			} catch ( Exception exception ) {
-				var error = CreateError(
+				initializationError = CreateError(
 					PathTraversalErrorCode.ObservationFailed,
 					operand,
 					PathTraversalErrorScope.Root,
 					"The pathname expansion starting directory could not be observed.",
 					exception
 				);
-				yield return PathnameExpansionEvent.CreateError( operand, operandIndex, error );
+			}
+			if ( initializationError is not null ) {
+				yield return PathnameExpansionEvent.CreateError( operand, operandIndex, initializationError );
 				if ( options.ErrorMode == PathTraversalErrorMode.Stop ) {
 					yield break;
 				}
 				operandIndex++;
 				continue;
 			}
+			var expansionInitialization = initialization!;
 
-			if ( initialization.StartObservation.Kind != FileSystemEntryKind.Directory ) {
+			if ( expansionInitialization.StartObservation.Kind != FileSystemEntryKind.Directory ) {
 				var noMatch = HandleNoMatch(
 					operand,
 					operandIndex,
@@ -165,11 +171,11 @@ public sealed class PathnameExpander {
 
 			if (
 				options.FileSystemBoundaryMode == FileSystemBoundaryMode.StayOnRootFileSystem
-				&& !initialization.StartObservation.FileSystemIdentity.IsAvailable
+				&& !expansionInitialization.StartObservation.FileSystemIdentity.IsAvailable
 			) {
 				var error = CreateError(
 					PathTraversalErrorCode.IdentityUnavailable,
-					initialization.StartPath,
+					expansionInitialization.StartPath,
 					PathTraversalErrorScope.Root,
 					"A filesystem identity is required to enforce pathname-expansion boundaries."
 				);
@@ -181,16 +187,16 @@ public sealed class PathnameExpander {
 				continue;
 			}
 
-			var requiresStableDirectoryIdentity = pattern.Segments.Any(
+			var requiresStableDirectoryIdentity = parsedPattern.Segments.Any(
 				static segment => segment.IsDoubleStar
 			);
 			if (
 				requiresStableDirectoryIdentity
-				&& !initialization.StartObservation.EntryIdentity.IsAvailable
+				&& !expansionInitialization.StartObservation.EntryIdentity.IsAvailable
 			) {
 				var error = CreateError(
 					PathTraversalErrorCode.IdentityUnavailable,
-					initialization.StartPath,
+					expansionInitialization.StartPath,
 					PathTraversalErrorScope.Root,
 					"A stable directory identity is required for cycle-safe pathname expansion."
 				);
@@ -209,15 +215,15 @@ public sealed class PathnameExpander {
 				OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal
 			);
 			var initialAncestry = new List<ExpansionAncestryEntry>();
-			if ( initialization.StartObservation.EntryIdentity.IsAvailable ) {
+			if ( expansionInitialization.StartObservation.EntryIdentity.IsAvailable ) {
 				initialAncestry.Add( new ExpansionAncestryEntry(
-					initialization.StartObservation.EntryIdentity,
-					initialization.StartPath
+					expansionInitialization.StartObservation.EntryIdentity,
+					expansionInitialization.StartPath
 				) );
 			}
 			states.Push( new ExpansionState(
-				initialization.StartPath,
-				initialization.DisplayPrefix,
+				expansionInitialization.StartPath,
+				expansionInitialization.DisplayPrefix,
 				0,
 				0,
 				initialAncestry,
@@ -231,9 +237,10 @@ public sealed class PathnameExpander {
 				if ( !processedStates.Add( CreateStateKey( state ) ) ) {
 					continue;
 				}
-				if ( state.SegmentIndex >= pattern.Segments.Count ) {
-					if ( pattern.RequiresDirectory && !state.IsKnownDirectory ) {
-						ReadOnlyFileSystemEntry finalObservation;
+				if ( state.SegmentIndex >= parsedPattern.Segments.Count ) {
+					if ( parsedPattern.RequiresDirectory && !state.IsKnownDirectory ) {
+						ReadOnlyFileSystemEntry? finalObservation = null;
+						PathTraversalError? finalObservationError = null;
 						try {
 							finalObservation = await _provider.ObserveAsync(
 								state.AccessPath,
@@ -243,21 +250,23 @@ public sealed class PathnameExpander {
 						} catch ( OperationCanceledException ) when ( cancellationToken.IsCancellationRequested ) {
 							throw;
 						} catch ( Exception exception ) {
-							var error = CreateError(
+							finalObservationError = CreateError(
 								PathTraversalErrorCode.ObservationFailed,
 								state.AccessPath,
 								PathTraversalErrorScope.Entry,
 								"A terminal directory candidate could not be observed.",
 								exception
 							);
+						}
+						if ( finalObservationError is not null ) {
 							hadExpansionIssue = true;
-							yield return PathnameExpansionEvent.CreateError( operand, operandIndex, error );
+							yield return PathnameExpansionEvent.CreateError( operand, operandIndex, finalObservationError );
 							if ( options.ErrorMode == PathTraversalErrorMode.Stop ) {
 								yield break;
 							}
 							continue;
 						}
-						if ( finalObservation.Kind != FileSystemEntryKind.Directory ) {
+						if ( finalObservation!.Kind != FileSystemEntryKind.Directory ) {
 							continue;
 						}
 					}
@@ -277,7 +286,7 @@ public sealed class PathnameExpander {
 					continue;
 				}
 
-				var segment = pattern.Segments[state.SegmentIndex];
+				var segment = parsedPattern.Segments[state.SegmentIndex];
 				if ( segment.LiteralValue == "." ) {
 					states.Push( state with {
 						DisplayPath = CombineDisplayPath( state.DisplayPath, "." ),
@@ -290,7 +299,7 @@ public sealed class PathnameExpander {
 						operand,
 						operandIndex,
 						state,
-						initialization.StartObservation.FileSystemIdentity,
+						expansionInitialization.StartObservation.FileSystemIdentity,
 						requiresStableDirectoryIdentity,
 						options,
 						cancellationToken
@@ -311,7 +320,8 @@ public sealed class PathnameExpander {
 					continue;
 				}
 
-				List<ReadOnlyDirectoryEntry> children;
+				List<ReadOnlyDirectoryEntry>? children = null;
+				PathTraversalError? childrenError = null;
 				try {
 					children = await LoadChildrenAsync(
 						state.AccessPath,
@@ -321,42 +331,38 @@ public sealed class PathnameExpander {
 				} catch ( OperationCanceledException ) when ( cancellationToken.IsCancellationRequested ) {
 					throw;
 				} catch ( ExpansionDirectoryLimitException exception ) {
-					var error = CreateError(
+					childrenError = CreateError(
 						PathTraversalErrorCode.DirectoryEntryLimitExceeded,
 						state.AccessPath,
 						PathTraversalErrorScope.Subtree,
 						"The configured directory-entry limit was exceeded during pathname expansion.",
 						exception
 					);
-					hadExpansionIssue = true;
-					yield return PathnameExpansionEvent.CreateError( operand, operandIndex, error );
-					if ( options.ErrorMode == PathTraversalErrorMode.Stop ) {
-						yield break;
-					}
-					continue;
 				} catch ( Exception exception ) {
-					var error = CreateError(
+					childrenError = CreateError(
 						PathTraversalErrorCode.EnumerationFailed,
 						state.AccessPath,
 						PathTraversalErrorScope.Subtree,
 						"A directory could not be enumerated during pathname expansion.",
 						exception
 					);
+				}
+				if ( childrenError is not null ) {
 					hadExpansionIssue = true;
-					yield return PathnameExpansionEvent.CreateError( operand, operandIndex, error );
+					yield return PathnameExpansionEvent.CreateError( operand, operandIndex, childrenError );
 					if ( options.ErrorMode == PathTraversalErrorMode.Stop ) {
 						yield break;
 					}
 					continue;
 				}
-
+				var loadedChildren = children!;
 				if ( segment.IsDoubleStar ) {
 					var continuations = new List<ExpansionState>();
-					var isFinalDoubleStar = state.SegmentIndex + 1 == pattern.Segments.Count;
+					var isFinalDoubleStar = state.SegmentIndex + 1 == parsedPattern.Segments.Count;
 					if ( options.MaximumDepth is not int maximumDepth || state.Depth < maximumDepth ) {
-						foreach ( var child in children ) {
+						foreach ( var child in loadedChildren ) {
 							cancellationToken.ThrowIfCancellationRequested();
-							if ( !PathnamePattern.CanDoubleStarMatchName( child.Name, pattern.Options ) ) {
+							if ( !PathnamePattern.CanDoubleStarMatchName( child.Name, parsedPattern.Options ) ) {
 								continue;
 							}
 							if ( isFinalDoubleStar ) {
@@ -378,7 +384,7 @@ public sealed class PathnameExpander {
 								child,
 								state.SegmentIndex,
 								false,
-								initialization.StartObservation.FileSystemIdentity,
+								expansionInitialization.StartObservation.FileSystemIdentity,
 								requiresStableDirectoryIdentity,
 								options,
 								cancellationToken
@@ -406,9 +412,9 @@ public sealed class PathnameExpander {
 					continue;
 				}
 
-				var isLastSegment = state.SegmentIndex + 1 == pattern.Segments.Count;
-				var matchingChildren = children.Where(
-					child => PathnamePattern.IsSegmentMatch( segment, child.Name, pattern.Options )
+				var isLastSegment = state.SegmentIndex + 1 == parsedPattern.Segments.Count;
+				var matchingChildren = loadedChildren.Where(
+					child => PathnamePattern.IsSegmentMatch( segment, child.Name, parsedPattern.Options )
 				).ToList();
 				if ( isLastSegment ) {
 					if ( options.MaximumDepth is int finalMaximumDepth && state.Depth >= finalMaximumDepth ) {
@@ -442,7 +448,7 @@ public sealed class PathnameExpander {
 						child,
 						state.SegmentIndex + 1,
 						explicitlyNamed,
-						initialization.StartObservation.FileSystemIdentity,
+						expansionInitialization.StartObservation.FileSystemIdentity,
 						requiresStableDirectoryIdentity,
 						options,
 						cancellationToken
