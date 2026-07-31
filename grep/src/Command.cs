@@ -1431,7 +1431,8 @@ public static class Command {
 		CancellationToken cancellationToken
 	) {
 		if (
-			lastWrittenLine > 0
+			options.ContextRequested
+			&& lastWrittenLine > 0
 			&& record.LineNumber > lastWrittenLine + 1
 			&& options.GroupSeparator is not null
 		) {
@@ -1813,7 +1814,7 @@ public static class Command {
 		}
 	}
 
-	private static ValueTask ReportErrorAsync(
+	private static Task ReportErrorAsync(
 		GrepOptions options,
 		CommandContext context,
 		string message
@@ -1822,12 +1823,12 @@ public static class Command {
 		return context.Diagnostics.ErrorAsync( message, context.CancellationToken );
 	}
 
-	private static ValueTask ReportInputErrorAsync(
+	private static Task ReportInputErrorAsync(
 		GrepOptions options,
 		CommandContext context,
 		string message
 	) => options.NoMessages
-		? ValueTask.CompletedTask
+		? Task.CompletedTask
 		: context.Diagnostics.ErrorAsync( message, context.CancellationToken );
 
 	private static async Task WriteHelpAsync( CommandContext context ) {
