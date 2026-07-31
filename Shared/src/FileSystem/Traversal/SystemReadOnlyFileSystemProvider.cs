@@ -64,7 +64,6 @@ public sealed class SystemReadOnlyFileSystemProvider : IReadOnlyFileSystemProvid
 		if (
 			isLink
 			&& followSymbolicLink
-			&& native.Kind == FileSystemEntryKind.Unknown
 			&& !Directory.Exists( path )
 			&& !File.Exists( path )
 		) {
