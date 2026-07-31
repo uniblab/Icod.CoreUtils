@@ -427,7 +427,7 @@ public sealed partial class SystemReadOnlyFileSystemProviderTests {
 			StringMarshalling = StringMarshalling.Utf16
 		)]
 		[return: MarshalAs( UnmanagedType.Bool )]
-		private static partial bool CreateHardLinkWindows(
+		public static partial bool CreateHardLinkWindows(
 			string fileName,
 			string existingFileName,
 			IntPtr securityAttributes
@@ -439,7 +439,7 @@ public sealed partial class SystemReadOnlyFileSystemProviderTests {
 			SetLastError = true,
 			StringMarshalling = StringMarshalling.Utf8
 		)]
-		private static partial int CreateHardLinkUnix( string existingPath, string newPath );
+		public static partial int CreateHardLinkUnix( string existingPath, string newPath );
 
 		[LibraryImport(
 			"kernel32.dll",
@@ -447,7 +447,7 @@ public sealed partial class SystemReadOnlyFileSystemProviderTests {
 			SetLastError = true,
 			StringMarshalling = StringMarshalling.Utf16
 		)]
-		private static partial SafeFileHandle OpenDirectoryReparsePointWindows(
+		public static partial SafeFileHandle OpenDirectoryReparsePointWindows(
 			string fileName,
 			uint desiredAccess,
 			FileShare shareMode,
@@ -459,7 +459,7 @@ public sealed partial class SystemReadOnlyFileSystemProviderTests {
 
 		[LibraryImport( "kernel32.dll", EntryPoint = "DeviceIoControl", SetLastError = true )]
 		[return: MarshalAs( UnmanagedType.Bool )]
-		private static partial bool SetReparsePointWindows(
+		public static partial bool SetReparsePointWindows(
 			SafeFileHandle device,
 			uint ioControlCode,
 			IntPtr inputBuffer,
@@ -471,7 +471,7 @@ public sealed partial class SystemReadOnlyFileSystemProviderTests {
 		);
 	}
 
-	private static string CreateTemporaryDirectory() {
+	public static string CreateTemporaryDirectory() {
 		var path = Path.Combine(
 			Path.GetTempPath(),
 			string.Concat( "icod-e1-system-", Guid.NewGuid().ToString( "N" ) )
