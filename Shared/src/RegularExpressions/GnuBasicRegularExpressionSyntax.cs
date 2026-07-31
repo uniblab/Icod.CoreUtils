@@ -53,6 +53,7 @@ internal sealed class LiteralRegexNode( Rune value ) : RegexNode {
 		context.CancellationToken.ThrowIfCancellationRequested();
 		if (
 			context.Input.Length > state.Position
+			&& !context.Input.IsOpaque( state.Position )
 			&& context.CharacterClassProvider.AreCharactersEqual(
 				value,
 				context.Input[ state.Position ],
@@ -77,7 +78,7 @@ internal sealed class DotRegexNode : RegexNode {
 		}
 		var value = context.Input[ state.Position ];
 		if (
-			( GnuRegularExpressionSyntax.Basic == context.Options.Syntax && 0 == value.Value )
+			( GnuRegularExpressionSyntax.Emacs != context.Options.Syntax && 0 == value.Value )
 			|| ( '\n' == value.Value
 				&& ( GnuRegularExpressionSyntax.Emacs == context.Options.Syntax
 					|| context.Options.NewLineSensitive ) )
@@ -136,8 +137,10 @@ internal sealed class AssertionRegexNode( RegexAssertionKind kind ) : RegexNode 
 	internal override IEnumerable<RegexMatchState> Match( RegexMatchContext context, RegexMatchState state ) {
 		context.CancellationToken.ThrowIfCancellationRequested();
 		var previousIsWord = 0 < state.Position
+			&& !context.Input.IsOpaque( state.Position - 1 )
 			&& context.CharacterClassProvider.IsWordCharacter( context.Input[ state.Position - 1 ] );
 		var currentIsWord = context.Input.Length > state.Position
+			&& !context.Input.IsOpaque( state.Position )
 			&& context.CharacterClassProvider.IsWordCharacter( context.Input[ state.Position ] );
 		var matches = kind switch {
 			RegexAssertionKind.BeginLine => 0 == state.Position
@@ -252,13 +255,14 @@ internal sealed class CharacterClassRegexNode(
 			yield break;
 		}
 		var value = context.Input[ state.Position ];
-		var matches = "word" == className
-			? context.CharacterClassProvider.IsWordCharacter( value )
-			: context.CharacterClassProvider.IsCharacterClass(
-				value,
-				className,
-				context.Options.IgnoreCase
-			);
+		var matches = !context.Input.IsOpaque( state.Position )
+			&& ( "word" == className
+				? context.CharacterClassProvider.IsWordCharacter( value )
+				: context.CharacterClassProvider.IsCharacterClass(
+					value,
+					className,
+					context.Options.IgnoreCase
+				) );
 		if ( isNegated ) {
 			matches = !matches;
 		}
@@ -286,11 +290,13 @@ internal sealed class BracketRegexNode(
 		}
 		var value = context.Input[ state.Position ];
 		var any = false;
-		foreach ( var term in terms ) {
-			context.CancellationToken.ThrowIfCancellationRequested();
-			if ( term.Matches( context, value ) ) {
-				any = true;
-				break;
+		if ( !context.Input.IsOpaque( state.Position ) ) {
+			foreach ( var term in terms ) {
+				context.CancellationToken.ThrowIfCancellationRequested();
+				if ( term.Matches( context, value ) ) {
+					any = true;
+					break;
+				}
 			}
 		}
 		var matches = isNegated ? !any : any;
@@ -408,12 +414,19 @@ internal sealed class BackReferenceRegexNode( int captureNumber ) : RegexNode {
 		}
 		for ( var offset = 0; length > offset; offset++ ) {
 			context.CancellationToken.ThrowIfCancellationRequested();
+			var capturePosition = captureSpan.Start + offset;
+			var inputPosition = state.Position + offset;
+			var captureIsOpaque = context.Input.IsOpaque( capturePosition );
+			var inputIsOpaque = context.Input.IsOpaque( inputPosition );
 			if (
-				!context.CharacterClassProvider.AreCharactersEqual(
-					context.Input[ captureSpan.Start + offset ],
-					context.Input[ state.Position + offset ],
-					context.Options.IgnoreCase
-				)
+				captureIsOpaque != inputIsOpaque
+				|| ( captureIsOpaque
+					? context.Input[ capturePosition ].Value != context.Input[ inputPosition ].Value
+					: !context.CharacterClassProvider.AreCharactersEqual(
+						context.Input[ capturePosition ],
+						context.Input[ inputPosition ],
+						context.Options.IgnoreCase
+					) )
 			) {
 				yield break;
 			}

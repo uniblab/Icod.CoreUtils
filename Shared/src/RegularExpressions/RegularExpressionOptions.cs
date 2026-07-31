@@ -12,6 +12,15 @@ public sealed record RegularExpressionOptions {
 	};
 
 	/// <summary>
+	/// Gets the permissive GNU extended-expression profile used by search consumers such as GNU <c>grep -E</c>.
+	/// It retains GNU invalid-duplicate compatibility while selecting unescaped ERE operators.
+	/// </summary>
+	public static RegularExpressionOptions GnuExtendedCompatibility => new() {
+		Syntax = GnuRegularExpressionSyntax.Extended,
+		AllowInvalidRepetitionOperators = true
+	};
+
+	/// <summary>
 	/// Gets the GNU Emacs compilation profile used by GNU <c>ptx</c>.
 	/// It uses unescaped plus and question-mark repetition operators and the permissive Gnulib repetition contexts of <c>RE_SYNTAX_EMACS</c>.
 	/// </summary>
@@ -28,7 +37,7 @@ public sealed record RegularExpressionOptions {
 
 	/// <summary>
 	/// Gets or initializes whether line-feed characters delimit logical lines for anchors and are excluded by negated bracket expressions.
-	/// The selected syntax profile may impose additional dot exclusions; GNU Emacs syntax always excludes line feed from dot.
+	/// The selected syntax profile may impose additional dot exclusions; GNU Basic and Extended syntax exclude NUL, and GNU Emacs syntax always excludes line feed from dot.
 	/// </summary>
 	public bool NewLineSensitive { get; init; }
 
