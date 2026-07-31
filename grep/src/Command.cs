@@ -1822,7 +1822,7 @@ public static class Command {
 		return context.Diagnostics.ErrorAsync( message, context.CancellationToken );
 	}
 
-	private static ValueTask ReportInputErrorAsync(
+	private static Task ReportInputErrorAsync(
 		GrepOptions options,
 		CommandContext context,
 		string message
