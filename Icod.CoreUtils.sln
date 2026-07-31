@@ -586,6 +586,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Split.Tests"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Tac.Tests", "tests\Tac.Tests\Icod.CoreUtils.Tac.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0076}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.CSplit.Tests", "tests\CSplit.Tests\Icod.CoreUtils.CSplit.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0077}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -1655,6 +1657,12 @@ Global
 		{F05B4136-23C6-4CF5-8A6A-920F20DC0076}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F05B4136-23C6-4CF5-8A6A-920F20DC0076}.Staging|Any CPU.ActiveCfg = Staging|Any CPU
 		{F05B4136-23C6-4CF5-8A6A-920F20DC0076}.Staging|Any CPU.Build.0 = Staging|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0077}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0077}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0077}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0077}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0077}.Staging|Any CPU.ActiveCfg = Staging|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0077}.Staging|Any CPU.Build.0 = Staging|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1838,6 +1846,7 @@ Global
 		{F05B4136-23C6-4CF5-8A6A-920F20DC0074} = {F05B4136-23C6-4CF5-8A6A-920F20DC0001}
 		{F05B4136-23C6-4CF5-8A6A-920F20DC0075} = {F05B4136-23C6-4CF5-8A6A-920F20DC0001}
 		{F05B4136-23C6-4CF5-8A6A-920F20DC0076} = {F05B4136-23C6-4CF5-8A6A-920F20DC0001}
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0077} = {F05B4136-23C6-4CF5-8A6A-920F20DC0001}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {30D28C3D-CE6B-4262-8EF1-1D4A49129A6C}
