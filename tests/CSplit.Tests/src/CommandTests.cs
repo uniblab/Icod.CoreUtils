@@ -3,6 +3,7 @@ namespace Icod.CoreUtils.CSplit.Tests;
 using System.Text;
 using Icod.CoreUtils.Shared.Diagnostics;
 using CSplitCommand = Icod.CoreUtils.CSplit.Command;
+using Xunit;
 
 /// <summary>Exercises GNU-compatible csplit command behavior.</summary>
 public sealed class CommandTests {
