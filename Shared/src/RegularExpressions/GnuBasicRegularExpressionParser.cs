@@ -253,7 +253,11 @@ internal sealed class GnuBasicRegularExpressionParser {
 				maximum = null;
 				index++;
 			} else if ( IsPlusOrQuestionOperator( index, '+' ) ) {
-				if ( hasRepetition && !options.AllowInvalidRepetitionOperators ) {
+				if (
+					hasRepetition
+					&& GnuRegularExpressionSyntax.Extended == options.Syntax
+					&& !options.AllowInvalidRepetitionOperators
+				) {
 					Fail(
 						RegularExpressionDiagnosticCode.InvalidRepetitionOperator,
 						"invalid adjacent repetition operator",
@@ -265,7 +269,11 @@ internal sealed class GnuBasicRegularExpressionParser {
 				maximum = null;
 				index += RepetitionOperatorLength;
 			} else if ( IsPlusOrQuestionOperator( index, '?' ) ) {
-				if ( hasRepetition && !options.AllowInvalidRepetitionOperators ) {
+				if (
+					hasRepetition
+					&& GnuRegularExpressionSyntax.Extended == options.Syntax
+					&& !options.AllowInvalidRepetitionOperators
+				) {
 					Fail(
 						RegularExpressionDiagnosticCode.InvalidRepetitionOperator,
 						"invalid adjacent repetition operator",
