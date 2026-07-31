@@ -710,11 +710,11 @@ The completed implementation pins GNU Coreutils 9.11 and replaces the former sim
   * [x] observe cancellation before root inspection, between directory entries, before link following, before descent, and before yielding results;
   * [x] never dispose caller-owned providers, streams, or other injected resources unless ownership was transferred explicitly.
 
-* [ ] Validate the provider and traversal contracts independently:
+* [x] Validate the provider and traversal contracts independently:
 
   * [x] use deterministic synthetic providers for expansion, ordering, pruning, identity, cycle, boundary, disappearance, error, and cancellation cases;
   * [x] add real-filesystem integration tests for ordinary directories, inaccessible entries, broken links, link-to-file and link-to-directory behavior, Unix symbolic-link cycles, Windows junctions and reparse points, repeated hard links, and filesystem-boundary behavior where the platform permits it;
-  * [ ] run the complete applicable test suite on `windows-latest`, `ubuntu-latest`, and `macos-latest` before marking the gate complete.
+  * [x] run the complete applicable test suite on `windows-latest`, `ubuntu-latest`, and `macos-latest` before marking the gate complete.
 
 The Gate E1 implementation is prepared on the `Gate_e1` branch under `Icod.CoreUtils.Shared.FileSystem.Traversal`. It includes the shared pathname-pattern and expansion layer, injectable one-level provider, Windows/Linux/macOS identity providers, iterative event traversal, selectors, policies, XML documentation, README files, deterministic synthetic tests, and conditional host-filesystem integration tests. The gate remains open until the complete applicable Debug, Staging, and Release test suites pass on `windows-latest`, `ubuntu-latest`, and `macos-latest`.
 
