@@ -1,6 +1,6 @@
-# Shared GNU Basic Regular Expressions
+# Shared GNU Regular Expressions
 
-`Icod.CoreUtils.Shared.RegularExpressions` is the common regular-expression foundation introduced by Completion Gate C1. It is intentionally independent of any one command. Batch 16 (`expr`) consumes it first; later batches can extend the same provider boundary for `grep`, `csplit`, and `ed` rather than introducing separate engines.
+`Icod.CoreUtils.Shared.RegularExpressions` is the common GNU regular-expression foundation introduced by Completion Gate C1 and extended in Batch 25 with the GNU Emacs profile required by `ptx`. It is intentionally independent of any one command. Batch 16 (`expr`) consumes it first; later batches can extend the same provider boundary for `grep`, `csplit`, and `ed` rather than introducing separate engines.
 
 ## Authoritative behavior
 
@@ -19,7 +19,9 @@ The exact immutable identities and source links are recorded in `Icod.CoreUtils-
 - `RegularExpressionCompileResult` and `RegularExpressionMatchResult` distinguish successful no-match results from controlled errors.
 - `RegularExpressionDiagnostic` exposes a stable code, message, and UTF-16 pattern index where applicable.
 - `IRegularExpressionCharacterClassProvider` isolates character classification, scalar comparison, collation, and case-equivalence policy.
-- `RegularExpressionOptions` controls case, line-sensitive matching, strict-versus-`expr` repetition and empty-range compatibility, nesting limits, and match-state limits; it is an immutable record so a named profile can be refined with a `with` expression.
+- `GnuBasicRegularExpressionProvider` supplies GNU/POSIX basic syntax.
+- `GnuEmacsRegularExpressionProvider` supplies the GNU Emacs profile used by Coreutils `ptx`.
+- `RegularExpressionOptions` controls syntax, case, line-sensitive matching, repetition and empty-range compatibility, nesting limits, and match-state limits; it is an immutable record so a named profile can be refined with a `with` expression.
 - `RegularExpressionMatchOptions` controls the UTF-16 start index and anchored-at-start matching.
 
 Example:
@@ -46,16 +48,16 @@ var result = await compiled.Expression!.MatchAsync(
 
 The CPU-bound asynchronous members do not call `Task.Run`. They preserve a consistent TAP-facing command API, honor cancellation throughout parsing and matching, and normally return an already-completed `ValueTask`.
 
-## Implemented GNU BRE grammar
+## Implemented GNU grammar
 
 The parser and matcher support:
 
 | Area | Supported behavior |
 |---|---|
 | Ordinary atoms | Unicode scalars and literal escaped characters |
-| Any-character operator | `.` matches every scalar except NUL; newline is controlled by `NewLineSensitive` |
-| Bracket expressions | matching and nonmatching lists, literal first `]`, literal first/last `-`, ranges, the 12 standard POSIX named classes, single-scalar collating symbols, and single-scalar equivalence classes |
-| Repetition | `*`, `\+`, `\?`, `\{m\}`, `\{m,\}`, `\{,n\}`, `\{,\}`, and `\{m,n\}`, with the GNU limit of 32,767 and nested adjacent operators where the selected Gnulib profile permits them |
+| Any-character operator | Basic syntax excludes NUL and optionally newline; GNU Emacs syntax includes NUL and excludes newline, matching its Gnulib syntax bits |
+| Bracket expressions | matching and nonmatching lists, literal first `]`, literal first/last `-`, ranges, the 12 standard POSIX named classes, single-scalar collating symbols, and single-scalar equivalence classes; the Emacs profile treats backslash as an ordinary list character |
+| Repetition | basic `*`, `\+`, `\?`; Emacs `*`, `+`, `?`; `\{m\}`, `\{m,\}`, `\{,n\}`, `\{,\}`, and `\{m,n\}`, with the GNU limit of 32,767 and nested adjacent operators where the selected Gnulib profile permits them |
 | Grouping | `\(` and `\)` with opening-order numbering |
 | Alternation | GNU `\|` |
 | Back-references | `\1` through `\9`; a following digit remains an ordinary character |
@@ -65,10 +67,12 @@ The parser and matcher support:
 | Selection | leftmost-longest whole match; equal-endpoint paths retain deterministic GNU/Gnulib greedy order |
 | Repeated captures | GNU `re_match` register behavior, including the last successful value retained by nested captures |
 | Case-insensitive matching | literals, ranges, named classes, equivalence classes, and back-references use the injected provider |
-| Line-sensitive matching | line-feed-aware anchors; dot and negated lists exclude line feed |
+| Line-sensitive matching | line-feed-aware anchors with option-sensitive dot and negated-list behavior; the Emacs profile's dot always excludes line feed |
 
 The default compilation profile follows strict GNU/POSIX basic syntax: `*`, `\+`, and `\?` are ordinary when no repeatable expression precedes them, while an interval opener in that context and disallowed adjacent repetition operators produce `InvalidRepetitionOperator`. `RegularExpressionOptions.GnuExprCompatibility` reproduces Coreutils `expr`, which clears Gnulib's `RE_CONTEXT_INVALID_DUP` and `RE_NO_EMPTY_RANGES` bits; under that profile, otherwise-invalid repetition contexts are accepted and reverse-collating ranges are empty. Malformed interval bodies still produce `InvalidInterval`.
 
+
+`GnuEmacsRegularExpressionProvider` selects `RE_SYNTAX_EMACS`-compatible operator behavior: `+` and `?` are unescaped operators, `\+` and `\?` are literals, grouping and alternation remain escaped, intervals retain escaped braces, dot excludes line feed but may match NUL, invalid adjacent repetition contexts are accepted, and reverse-collating ranges are empty. This is the profile used by GNU Coreutils `ptx` for `--word-regexp` and `--sentence-regexp`.
 ## Leftmost-longest and register policy
 
 The engine does not stop after the first viable whole match. It enumerates viable states for each possible starting scalar, selects the earliest start, and selects the greatest ending position at that start. When multiple paths reach the same greatest endpoint, ordered alternation and greedy repetition traversal preserve the deterministic register values produced by the Gnulib `re_match` interface used by Coreutils `expr`. This includes retaining an earlier successful nested capture when a later outer repetition does not participate in that nested group. This is required for GNU behavior such as:

@@ -5,9 +5,10 @@ using System.Text;
 namespace Icod.CoreUtils.Shared.RegularExpressions;
 
 /// <summary>
-/// Provides the gnu basic regular expression parser implementation.
+/// Provides the shared GNU basic and Emacs regular-expression parser implementation.
 /// </summary>
 internal sealed class GnuBasicRegularExpressionParser {
+	/// <summary>Gets the greatest interval bound accepted by the GNU regular-expression grammar.</summary>
 	internal const int MaximumInterval = 32_767;
 
 	private readonly string pattern;
@@ -252,14 +253,14 @@ internal sealed class GnuBasicRegularExpressionParser {
 				minimum = 0;
 				maximum = null;
 				index++;
-			} else if ( IsEscapedOperator( index, '+' ) ) {
+			} else if ( IsPlusOrQuestionOperator( index, '+' ) ) {
 				minimum = 1;
 				maximum = null;
-				index += 2;
-			} else if ( IsEscapedOperator( index, '?' ) ) {
+				index += RepetitionOperatorLength;
+			} else if ( IsPlusOrQuestionOperator( index, '?' ) ) {
 				minimum = 0;
 				maximum = 1;
-				index += 2;
+				index += RepetitionOperatorLength;
 			} else if ( IsEscapedOperator( index, '{' ) ) {
 				if ( hasRepetition && !options.AllowInvalidRepetitionOperators ) {
 					Fail(
@@ -474,7 +475,13 @@ internal sealed class GnuBasicRegularExpressionParser {
 				? new( new BracketEquivalenceTerm( value ), null )
 				: new( new BracketLiteralTerm( value ), value );
 		}
-		var literal = ReadPatternRune();
+		Rune literal;
+		if ( GnuRegularExpressionSyntax.Emacs == this.options.Syntax && '\\' == pattern[ index ] ) {
+			literal = new Rune( '\\' );
+			index++;
+		} else {
+			literal = ReadPatternRune();
+		}
 		return new( new BracketLiteralTerm( literal ), literal );
 	}
 
@@ -503,6 +510,13 @@ internal sealed class GnuBasicRegularExpressionParser {
 			|| ( insideSubexpression && IsEscapedOperator( next, ')' ) );
 	}
 
+
+	private int RepetitionOperatorLength => GnuRegularExpressionSyntax.Emacs == this.options.Syntax ? 1 : 2;
+
+	private bool IsPlusOrQuestionOperator( int sourceIndex, char value ) =>
+		GnuRegularExpressionSyntax.Emacs == this.options.Syntax
+			? pattern.Length > sourceIndex && value == pattern[ sourceIndex ]
+			: IsEscapedOperator( sourceIndex, value );
 
 	private bool IsEscapedOperator( int sourceIndex, char value ) =>
 		pattern.Length > sourceIndex + 1

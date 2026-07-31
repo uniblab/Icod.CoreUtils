@@ -59,12 +59,12 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 | 17 | Implementation prepared; CI validation pending | Tabs and display columns | `COREUTILS-9.11` |
 | 18 | Implementation prepared; CI validation pending | Paragraph and line-number formatting | `COREUTILS-9.11` |
 | 19 | Implementation prepared; CI validation pending | Field and record extraction | `COREUTILS-9.11` |
-| 20 | Planned | External ordering and randomization | `COREUTILS-9.11` |
-| 21 | Planned | Sorted-stream consumers | `COREUTILS-9.11` |
-| 22 | Planned | Character transformation, graph ordering, and permuted indexing | `COREUTILS-9.11` |
-| 23 | Planned | Regular-expression search: `grep` | `GREP-3.12` |
-| 24 | Planned | Splitting and reversing | `COREUTILS-9.11`; regex behavior in `csplit` remains the Coreutils contract while reusing internal regex policy established in Batch 22 |
-| 25 | Planned | Page presentation and binary inspection | `COREUTILS-9.11` |
+| 20 | Completed | External ordering: `sort` | `COREUTILS-9.11` |
+| 21 | Completed | External randomization: `shuf` | `COREUTILS-9.11` |
+| 22 | Completed | Sorted-stream consumers: `comm`, `join`, `uniq` | `COREUTILS-9.11` |
+| 23 | Completed | Character transformation: `tr` | `COREUTILS-9.11` |
+| 24 | Completed | Graph ordering: `tsort` | `COREUTILS-9.11` |
+| 25 | Implementation prepared; CI validation pending | Permuted indexing: `ptx` | `COREUTILS-9.11`; `GNULIB-COREUTILS-9.11` for GNU Emacs regular expressions |
 | 26 | Planned | Difference engine: `diff` | `DIFFUTILS-3.12` |
 | 27 | Planned | Patch application engine: `patch` | `PATCH-2.8` |
 | 28 | Planned | Line editor: `ed` | `ED-1.22.5` |
@@ -322,3 +322,18 @@ Before implementation begins, the batch notes or conformance matrix must copy th
 - any secondary POSIX or platform specification used;
 - differential oracle executable and runtime version, when applicable;
 - any intentional deviation from or deferral of the pinned specification.
+
+## Batch 25 implementation record
+- **Batch and command:** Batch 25, `ptx`.
+- **Authority reconfirmed:** 30 July 2026.
+- **Authoritative package:** GNU Coreutils 9.11.
+- **Immutable identity:** tag `v9.11`; commit `c01fd163a47468a8296fb369f5233853bb551bb6`.
+- **Primary manual:** [GNU Coreutils 9.11 `ptx` invocation](https://www.gnu.org/software/coreutils/manual/html_node/ptx-invocation.html).
+- **Primary source:** [`src/ptx.c` at the pinned commit](https://github.com/coreutils/coreutils/blob/c01fd163a47468a8296fb369f5233853bb551bb6/src/ptx.c).
+- **Regular-expression authority:** Gnulib revision `fb7312fa8d3df29f0ca0678f669b9a5b88a078ec`, especially `RE_SYNTAX_EMACS`, which is now exposed by `GnuEmacsRegularExpressionProvider` in Shared.
+- **Differential oracle:** GNU `ptx` 9.7 available in the implementation environment, run under `LC_ALL=C`; CI must record the runtime version whenever optional differential tests run.
+- **Reusable infrastructure:** parameter and source I/O use Shared byte streams and record readers; keyword occurrences use `ExternalOrderingEngine<T>` and `TemporaryWorkspace`; regular-expression options use the Shared managed GNU engine. No command project references another command project.
+- **Memory model:** source contexts are written once to a temporary context spool and occurrences carry lightweight offsets; ordering spills through Shared when the memory budget is exceeded. Default sentence and traditional line contexts stream incrementally. An explicitly supplied sentence regular expression requires a complete source string for the managed search engine, while occurrence storage and ordering remain externally bounded.
+- **TAP/TPL policy:** command I/O, parameter-file reads, source processing, spooling, merge ordering, output, cancellation, and cleanup are asynchronous. CPU-bound matching, field planning, and comparison remain synchronous and cancellation-aware rather than being wrapped in `Task.Run`.
+- **Platform scope:** the implementation is fully managed and intended for identical behavior on `windows-latest`, `ubuntu-latest`, and `macos-latest`; BSD-family and TempleOS-compatible managed runtimes remain best effort.
+- **Validation status:** source structure, project/solution mappings, XML documentation, UTF-8/LF policy, Shared API usage, and representative GNU 9.7 differential fixtures were checked. A .NET SDK was unavailable in the implementation container, so dedicated Shared and `Ptx.Tests` execution plus complete-solution three-runner validation remain pending.
