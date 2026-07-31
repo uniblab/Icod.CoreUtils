@@ -1,8 +1,8 @@
 # Shared.FileSystem
 
-`Shared.FileSystem` is the injectable capability layer used by block-oriented and flush-oriented commands.
-It distinguishes operating-system API availability from the behavior of an individual filesystem or volume.
-Every operation therefore returns `PlatformOperationResult` rather than silently claiming unsupported semantics.
+`Shared.FileSystem` contains injectable host-filesystem capabilities. The original operations layer supports flush, allocation, and sparse-file behavior. Completion Gate E1 adds a separate read-only pathname-expansion and traversal layer under [`Traversal`](Traversal/README.md).
+
+The operations layer distinguishes operating-system API availability from the behavior of an individual filesystem or volume. Every operation therefore returns `PlatformOperationResult` rather than silently claiming unsupported semantics. The traversal layer instead yields caller-independent roots, entries, event phases, identities, boundaries, cycles, and structured errors.
 
 ## Operations
 
@@ -51,3 +51,9 @@ Sparse extension is not transactional. For example, Windows can successfully mar
 - `sync` without operands uses the global flush operation.
 
 Commands should accept `IFileSystemOperations` through an overload or constructor and default to `SystemFileSystemOperations.Instance`. Tests may inject a deterministic implementation without invoking native filesystem APIs.
+
+## Read-only traversal
+
+Completion Gate E1 lives in `Icod.CoreUtils.Shared.FileSystem.Traversal`. It provides segment-aware `*`, `?`, bracket, and `**` matching; command-selectable pathname operand expansion; an injectable one-level provider; stable entry and filesystem identities; and iterative asynchronous traversal with separate yield/prune, link, cycle, boundary, ordering, resource, cancellation, and error-continuation policies.
+
+See [`Traversal/README.md`](Traversal/README.md) for the API boundaries and platform profile. `IFileSystemOperations` remains focused on flush and allocation operations and is not enlarged into a traversal interface.

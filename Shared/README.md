@@ -12,6 +12,7 @@
 - `Processes`: shell-free asynchronous child-process execution with redirected stream forwarding, capture, cancellation, and process-tree termination.
 - `RegularExpressions`: fully managed GNU basic regular-expression parsing, leftmost-longest matching, GNU/Gnulib capture-register behavior, back-references, structured diagnostics, cancellation, and injectable locale/classification providers.
 - `Temporary`: cryptographically secure base-62 name generation, exclusive temporary file/directory creation, collision retries, and deterministic cleanup support.
+- `FileSystem.Traversal`: segment-aware pathname expansion, injectable one-level filesystem observation, stable entry/filesystem identities, and iterative event-based read-only traversal.
 - `Platform`: BCL-first capability reporting and controlled unsupported results.
 
 ## Text processing
@@ -107,3 +108,9 @@ The `Icod.CoreUtils.Shared.Ordering` namespace supplies the Completion Gate D ex
 `ExternalRunBuilder<T>` creates stable sorted runs under a caller-provided memory estimate. `StableExternalMerger<T>` validates and merges run streams, and `ExternalOrderingEngine<T>` performs bounded-fan-in intermediate passes when necessary. `IExternalRunCodec<T>` keeps temporary serialization independent of record type; `ByteRecordRunCodec` supplies the byte-preserving Coreutils format.
 
 `TemporaryWorkspace` owns the secure directory and run files. Cleanup ignores the operation cancellation token and is attempted after success, failure, and cancellation. Combined operation and cleanup failures preserve both exceptions. This ordering and workspace layer is shared incubation infrastructure and a provisional `Icod.CommandFramework` candidate; no command project is referenced by it.
+
+## Read-only pathname traversal
+
+Completion Gate E1 adds `Icod.CoreUtils.Shared.FileSystem.Traversal`. Pathname patterns support segment-local `*`, `?`, and bracket expressions plus a complete `**` segment for zero or more pathname segments. `PathnameExpander` preserves operand provenance and delegates every host observation to `IReadOnlyFileSystemProvider`. `ReadOnlyPathTraversalEngine` yields preorder, entry, postorder, error, cycle, and filesystem-boundary events while keeping yielding independent from pruning.
+
+The system provider obtains stable platform identities through Windows file IDs, Linux `statx`, and macOS `stat`/`lstat`. Link following distinguishes never, command-line roots only, and all eligible links. Cycle detection is limited to active ancestry rather than global deduplication. See [`src/FileSystem/Traversal/README.md`](src/FileSystem/Traversal/README.md).
