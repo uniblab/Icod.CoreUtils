@@ -1822,12 +1822,12 @@ public static class Command {
 		return context.Diagnostics.ErrorAsync( message, context.CancellationToken );
 	}
 
-	private static Task ReportInputErrorAsync(
+	private static ValueTask ReportInputErrorAsync(
 		GrepOptions options,
 		CommandContext context,
 		string message
 	) => options.NoMessages
-		? Task.CompletedTask
+		? ValueTask.CompletedTask
 		: context.Diagnostics.ErrorAsync( message, context.CancellationToken );
 
 	private static async Task WriteHelpAsync( CommandContext context ) {
