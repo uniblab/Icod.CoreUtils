@@ -1,3 +1,7 @@
+using System.Buffers.Binary;
+using System.Runtime.InteropServices;
+using System.Text;
+using Microsoft.Win32.SafeHandles;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
 using Xunit;
 
@@ -6,7 +10,7 @@ namespace Icod.CoreUtils.Shared.Tests.FileSystem.Traversal;
 /// <summary>
 /// Exercises the system provider against temporary host filesystem objects.
 /// </summary>
-public sealed class SystemReadOnlyFileSystemProviderTests {
+public sealed partial class SystemReadOnlyFileSystemProviderTests {
 	/// <summary>
 	/// Verifies file and directory observation and one-level enumeration.
 	/// </summary>
@@ -158,7 +162,7 @@ public sealed class SystemReadOnlyFileSystemProviderTests {
 			var original = Path.Combine( path, "original.txt" );
 			var link = Path.Combine( path, "hard-link.txt" );
 			await File.WriteAllTextAsync( original, "data" );
-			if ( !await TryCreateHardLinkAsync( link, original ) ) {
+			if ( !TryCreateHardLink( link, original ) ) {
 				return;
 			}
 
@@ -264,19 +268,7 @@ public sealed class SystemReadOnlyFileSystemProviderTests {
 		try {
 			var target = Directory.CreateDirectory( Path.Combine( path, "target" ) ).FullName;
 			var junction = Path.Combine( path, "junction" );
-			using var process = System.Diagnostics.Process.Start( new System.Diagnostics.ProcessStartInfo {
-				FileName = Environment.GetEnvironmentVariable( "ComSpec" ) ?? "cmd.exe",
-				UseShellExecute = false,
-				CreateNoWindow = true,
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				ArgumentList = { "/d", "/c", "mklink", "/J", junction, target }
-			} );
-			if ( process is null ) {
-				return;
-			}
-			await process.WaitForExitAsync();
-			if ( process.ExitCode != 0 || !Directory.Exists( junction ) ) {
+			if ( !TryCreateWindowsJunction( junction, target ) ) {
 				return;
 			}
 
@@ -298,49 +290,185 @@ public sealed class SystemReadOnlyFileSystemProviderTests {
 	}
 
 	/// <summary>
-	/// Attempts to create a hard link by using the host platform's standard command.
+	/// Attempts to create a hard link through the host platform's native filesystem API.
 	/// </summary>
 	/// <param name="linkPath">The new hard-link pathname.</param>
 	/// <param name="targetPath">The existing file pathname.</param>
 	/// <returns><see langword="true"/> when the hard link was created; otherwise, <see langword="false"/>.</returns>
-	private static async Task<bool> TryCreateHardLinkAsync( string linkPath, string targetPath ) {
-		System.Diagnostics.ProcessStartInfo startInfo;
-		if ( OperatingSystem.IsWindows() ) {
-			startInfo = new System.Diagnostics.ProcessStartInfo {
-				FileName = Environment.GetEnvironmentVariable( "ComSpec" ) ?? "cmd.exe",
-				UseShellExecute = false,
-				CreateNoWindow = true,
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				ArgumentList = { "/d", "/c", "mklink", "/H", linkPath, targetPath }
-			};
-		} else {
-			startInfo = new System.Diagnostics.ProcessStartInfo {
-				FileName = "/bin/ln",
-				UseShellExecute = false,
-				CreateNoWindow = true,
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				ArgumentList = { targetPath, linkPath }
-			};
-		}
-
+	private static bool TryCreateHardLink( string linkPath, string targetPath ) {
 		try {
-			using var process = System.Diagnostics.Process.Start( startInfo );
-			if ( process is null ) {
-				return false;
+			if ( OperatingSystem.IsWindows() ) {
+				return NativeMethods.CreateHardLinkWindows( linkPath, targetPath, IntPtr.Zero )
+					&& File.Exists( linkPath );
 			}
-			await process.WaitForExitAsync();
-			return process.ExitCode == 0 && File.Exists( linkPath );
+			if ( OperatingSystem.IsLinux() || OperatingSystem.IsMacOS() || OperatingSystem.IsFreeBSD() ) {
+				return NativeMethods.CreateHardLinkUnix( targetPath, linkPath ) == 0
+					&& File.Exists( linkPath );
+			}
+			return false;
 		} catch ( Exception exception ) when (
-			exception is System.ComponentModel.Win32Exception
-				or UnauthorizedAccessException
-				or IOException
+			exception is DllNotFoundException
+				or EntryPointNotFoundException
 				or PlatformNotSupportedException
 				or NotSupportedException
 		) {
 			return false;
 		}
+	}
+
+	/// <summary>
+	/// Attempts to create a Windows directory junction through the reparse-point control API.
+	/// </summary>
+	/// <param name="junctionPath">The new junction pathname.</param>
+	/// <param name="targetPath">The existing target-directory pathname.</param>
+	/// <returns><see langword="true"/> when the junction was created; otherwise, <see langword="false"/>.</returns>
+	private static bool TryCreateWindowsJunction( string junctionPath, string targetPath ) {
+		const uint genericWrite = 0x40000000;
+		const uint fileFlagOpenReparsePoint = 0x00200000;
+		const uint fileFlagBackupSemantics = 0x02000000;
+		const uint fsctlSetReparsePoint = 0x000900A4;
+		const uint ioReparseTagMountPoint = 0xA0000003;
+
+		try {
+			var absoluteTarget = Path.TrimEndingDirectorySeparator( Path.GetFullPath( targetPath ) );
+			var substituteName = absoluteTarget.StartsWith( @"\\", StringComparison.Ordinal )
+				? string.Concat( @"\??\UNC\", absoluteTarget[2..] )
+				: string.Concat( @"\??\", absoluteTarget );
+			var substituteBytes = Encoding.Unicode.GetBytes( substituteName );
+			var printBytes = Encoding.Unicode.GetBytes( absoluteTarget );
+			var pathBufferLength = checked( substituteBytes.Length + sizeof( ushort ) + printBytes.Length + sizeof( ushort ) );
+			var reparseDataLength = checked( sizeof( ushort ) * 4 + pathBufferLength );
+			if ( substituteBytes.Length > ushort.MaxValue
+				|| printBytes.Length > ushort.MaxValue
+				|| reparseDataLength > ushort.MaxValue ) {
+				return false;
+			}
+
+			var buffer = new byte[checked( sizeof( uint ) + sizeof( ushort ) * 6 + pathBufferLength )];
+			BinaryPrimitives.WriteUInt32LittleEndian( buffer.AsSpan( 0, sizeof( uint ) ), ioReparseTagMountPoint );
+			BinaryPrimitives.WriteUInt16LittleEndian( buffer.AsSpan( 4, sizeof( ushort ) ), (ushort)reparseDataLength );
+			BinaryPrimitives.WriteUInt16LittleEndian( buffer.AsSpan( 8, sizeof( ushort ) ), 0 );
+			BinaryPrimitives.WriteUInt16LittleEndian(
+				buffer.AsSpan( 10, sizeof( ushort ) ),
+				checked( (ushort)substituteBytes.Length )
+			);
+			BinaryPrimitives.WriteUInt16LittleEndian(
+				buffer.AsSpan( 12, sizeof( ushort ) ),
+				checked( (ushort)(substituteBytes.Length + sizeof( ushort )) )
+			);
+			BinaryPrimitives.WriteUInt16LittleEndian(
+				buffer.AsSpan( 14, sizeof( ushort ) ),
+				checked( (ushort)printBytes.Length )
+			);
+			substituteBytes.CopyTo( buffer, 16 );
+			printBytes.CopyTo( buffer, 16 + substituteBytes.Length + sizeof( ushort ) );
+
+			Directory.CreateDirectory( junctionPath );
+			using var handle = NativeMethods.OpenDirectoryReparsePointWindows(
+				junctionPath,
+				genericWrite,
+				FileShare.Read | FileShare.Write | FileShare.Delete,
+				IntPtr.Zero,
+				FileMode.Open,
+				fileFlagOpenReparsePoint | fileFlagBackupSemantics,
+				IntPtr.Zero
+			);
+			if ( handle.IsInvalid ) {
+				Directory.Delete( junctionPath );
+				return false;
+			}
+
+			var pinnedBuffer = GCHandle.Alloc( buffer, GCHandleType.Pinned );
+			try {
+				if ( !NativeMethods.SetReparsePointWindows(
+					handle,
+					fsctlSetReparsePoint,
+					pinnedBuffer.AddrOfPinnedObject(),
+					checked( (uint)buffer.Length ),
+					IntPtr.Zero,
+					0,
+					out _,
+					IntPtr.Zero
+				) ) {
+					Directory.Delete( junctionPath );
+					return false;
+				}
+			} finally {
+				pinnedBuffer.Free();
+			}
+			return Directory.Exists( junctionPath );
+		} catch ( Exception exception ) when (
+			exception is DllNotFoundException
+				or EntryPointNotFoundException
+				or UnauthorizedAccessException
+				or IOException
+				or PlatformNotSupportedException
+				or NotSupportedException
+				or OverflowException
+		) {
+			if ( Directory.Exists( junctionPath ) ) {
+				try {
+					Directory.Delete( junctionPath );
+				} catch ( IOException ) {
+					// Best-effort cleanup after an unsupported or failed reparse-point operation.
+				} catch ( UnauthorizedAccessException ) {
+					// Best-effort cleanup after an unsupported or failed reparse-point operation.
+				}
+			}
+			return false;
+		}
+	}
+
+	private static partial class NativeMethods {
+		[LibraryImport(
+			"kernel32.dll",
+			EntryPoint = "CreateHardLinkW",
+			SetLastError = true,
+			StringMarshalling = StringMarshalling.Utf16
+		)]
+		[return: MarshalAs( UnmanagedType.Bool )]
+		private static partial bool CreateHardLinkWindows(
+			string fileName,
+			string existingFileName,
+			IntPtr securityAttributes
+		);
+
+		[LibraryImport(
+			"libc",
+			EntryPoint = "link",
+			SetLastError = true,
+			StringMarshalling = StringMarshalling.Utf8
+		)]
+		private static partial int CreateHardLinkUnix( string existingPath, string newPath );
+
+		[LibraryImport(
+			"kernel32.dll",
+			EntryPoint = "CreateFileW",
+			SetLastError = true,
+			StringMarshalling = StringMarshalling.Utf16
+		)]
+		private static partial SafeFileHandle OpenDirectoryReparsePointWindows(
+			string fileName,
+			uint desiredAccess,
+			FileShare shareMode,
+			IntPtr securityAttributes,
+			FileMode creationDisposition,
+			uint flagsAndAttributes,
+			IntPtr templateFile
+		);
+
+		[LibraryImport( "kernel32.dll", EntryPoint = "DeviceIoControl", SetLastError = true )]
+		[return: MarshalAs( UnmanagedType.Bool )]
+		private static partial bool SetReparsePointWindows(
+			SafeFileHandle device,
+			uint ioControlCode,
+			IntPtr inputBuffer,
+			uint inputBufferSize,
+			IntPtr outputBuffer,
+			uint outputBufferSize,
+			out uint bytesReturned,
+			IntPtr overlapped
+		);
 	}
 
 	private static string CreateTemporaryDirectory() {
