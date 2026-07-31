@@ -431,7 +431,9 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 - **Shared implementation references:** `GNULIB-COREUTILS-9.11` for the pinned GNU traversal, cycle-checking, filename-matching, and filesystem helper behavior; `POSIX-2024` for standardized pathname, globbing, directory, symbolic-link, and filesystem semantics.
 - **Platform authorities:** official Windows, Linux, and macOS filesystem and reparse/symbolic-link API documentation determine ABI and capability behavior. They do not override the pinned command semantics.
 - **Required boundary:** the gate produces caller-independent result, identity, policy, error, and injectable-provider contracts. Grep-specific pattern selection, binary policy, context grouping, and output formatting remain in `Icod.Grep.Grep`.
-- **State:** not started; must be completed and validated before Batch 26.
+- **Implementation state:** prepared on the `Gate_e1` branch in `Icod.CoreUtils.Shared.FileSystem.Traversal`; full repository and required three-runner validation remain pending before the gate can be marked complete.
+- **Implemented contract:** segment-aware `*`, `?`, bracket, and complete-segment `**` matching; command-selectable operand expansion; root provenance; injectable one-level observation; Windows file/volume identities; Linux `statx` identities; macOS `stat`/`lstat` identities; explicit unavailable capabilities; iterative preorder/postorder traversal; root-only and all-link policies; active-ancestry cycle detection; filesystem boundaries; independent yield/prune selection; structured errors; limits; cancellation; and synthetic plus conditional host integration tests.
+- **Gate boundary retained:** canonicalization and complete link-chain resolution remain E2; authoritative metadata remains E3; mutation and copy safety remain E5.
 
 ## Completion Gate R1 planning record
 

@@ -5,8 +5,8 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `25` |
-| Current engineering milestone | Batch 25 complete |
-| Next infrastructure dependencies | Completion Gate E1 — shared read-only pathname traversal; Completion Gate R1 — shared BRE/ERE foundation |
+| Current engineering milestone | Completion Gate E1 implementation prepared; repository and three-runner validation pending |
+| Next infrastructure dependencies | Complete Gate E1 validation; then Completion Gate R1 — shared BRE/ERE foundation |
 | Next command batch | Batch 26 — `Icod.Grep.Grep`, only after E1 and R1 are complete |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
@@ -641,20 +641,86 @@ Reuse the established text, locale, tokenization, ordering, and spill-storage pr
 
 The completed implementation pins GNU Coreutils 9.11 and replaces the former simplified tabular indexer with the GNU and traditional invocation forms. It supports break, ignore, and only files; automatic and input references; right-side references; ASCII case folding; width, gap, macro, truncation, sentence-regexp, and word-regexp controls; and dumb, roff, and TeX output. Input processing and output use cancellation-aware TAP APIs and `CommandContext`. Context bytes are stored once in a secure Shared temporary workspace, while lightweight occurrences are stably ordered through `Icod.CoreUtils.Shared.Ordering.ExternalOrderingEngine<T>` with bounded run memory and merge fan-in. All command-specific state remains inside `ptx`, and no command project references another command project. A dedicated test project covers the GNU 9.11 command surface, structured formats, parameter files, references, cancellation, ownership, and build identity.
 
-### Completion Gate E1 — before Batch 26
+### Completion Gate E1 — shared read-only pathname traversal before Batch 26
 
-* [ ] Add the shared read-only pathname traversal model:
+* [x] Add a shared read-only pathname-expansion and traversal foundation to the current Shared incubation project. Keep three responsibilities separable even when they share low-level types:
 
-  * [ ] centralize pathname expansion policy for eligible operands;
-  * [ ] recursive directory enumeration;
-  * [ ] symlink and reparse-point traversal policy;
-  * [ ] file identity sufficient for cycle detection;
-  * [ ] mount-boundary policy;
-  * [ ] include and exclude matching support;
-  * [ ] deterministic error-continuation behavior;
-  * [ ] injectable filesystem-enumeration providers.
+  * [x] pathname-pattern parsing, matching, and eligible-operand expansion;
+  * [x] low-level read-only filesystem observation through an injectable provider;
+  * [x] traversal-policy orchestration over the provider.
 
-This gate is completed before the co-resident `Icod.Grep` batch so recursive search consumes a stable read-only traversal contract. It also supports later Coreutils directory listing and filesystem accounting, recursive directory comparison in `Icod.DiffUtils`, and archive traversal in `Icod.Tar`. The cross-suite portions remain candidates for `Icod.CommandFramework`.
+* [x] Define centralized pathname expansion for eligible pathname operands:
+
+  * [x] support `*` and `?` within a pathname segment, bracket expressions, and explicit quoting or escaping of metacharacters;
+  * [x] define `**` as matching zero or more complete pathname segments; `**` never independently changes symbolic-link or reparse-point traversal policy;
+  * [x] define platform separator, root, drive, volume, UNC, and device-path behavior without treating Windows and Unix path forms as interchangeable;
+  * [x] define leading-period and case-sensitivity policy explicitly rather than inheriting accidental host defaults;
+  * [x] provide command-selectable unmatched-pattern behavior, including preservation as a literal operand, no-match results, and deterministic error reporting;
+  * [x] preserve original operand order, define match-order policy, and never silently deduplicate repeated explicit operands or independently reached roots.
+
+* [x] Keep operand expansion distinct from traversal filtering:
+
+  * [x] provide separate decisions for whether an entry is yielded and whether a directory is descended into;
+  * [x] support basename, root-relative path, whole-path, and matching-name-suffix scopes where a consumer requires them;
+  * [x] support ordered include and exclude rules, including last-matching-rule behavior where requested by the consumer;
+  * [x] prune excluded directories before enumerating their children;
+  * [x] keep grep-, diff-, listing-, accounting-, and archive-specific selection semantics outside the general traversal engine.
+
+* [x] Preserve root and entry provenance throughout expansion and traversal:
+
+  * [x] identify the original operand and root ordinal that produced each result;
+  * [x] distinguish literal roots, expanded roots, and descendants;
+  * [x] report traversal depth;
+  * [x] retain a user-facing display path separately from the operational access path;
+  * [x] expose the path relative to the traversal root and the entry basename without forcing consumers to reconstruct them.
+
+* [x] Implement one-directory-level observation through an injectable provider and iterative asynchronous traversal above it:
+
+  * [x] do not rely on a recursive BCL enumeration mode as the policy engine;
+  * [x] avoid managed call-stack recursion for deep directory trees;
+  * [x] expose enough traversal phases to represent roots, directory entry, ordinary entries, directory exit, errors, cycles, and filesystem-boundary decisions;
+  * [x] include a directory-exit or equivalent post-order phase so later filesystem-accounting consumers can aggregate directories without creating a second traversal engine;
+  * [x] define root ordering and configurable child ordering explicitly;
+  * [x] support maximum-depth and other bounded-resource policies;
+  * [x] tolerate entries that disappear or change type between observation steps through deterministic structured results;
+  * [x] use TAP and cancellation-aware asynchronous enumeration where naturally asynchronous; do not wrap traversal in `Task.Run` merely to expose an asynchronous signature.
+
+* [x] Define symbolic-link and Windows reparse-point traversal as an explicit policy with at least these semantic modes:
+
+  * [x] never follow directory links during traversal;
+  * [x] follow links supplied as command-line or expanded roots, but not links encountered below those roots;
+  * [x] follow all eligible links;
+  * [x] expose available link or reparse-point classification rather than silently treating every directory-like target as an ordinary directory;
+  * [x] keep link-chain canonicalization and complete target resolution in Completion Gate E2.
+
+* [x] Add the minimum identity model required for safe read-only traversal:
+
+  * [x] file or directory identity sufficient to recognize a followed directory already present in the active ancestry;
+  * [x] filesystem, device, or volume identity sufficient to enforce a root-relative mount-boundary policy;
+  * [x] explicit capability results when a stable equivalent identity is unavailable on a platform;
+  * [x] active-ancestry cycle detection rather than global identity deduplication, so repeated operands and independently reached paths remain observable;
+  * [x] structured cycle and boundary results that prevent unsafe descent without terminating unrelated roots.
+
+* [x] Define structured error and continuation behavior:
+
+  * [x] associate each error with its root, path, operation stage, and continuation scope;
+  * [x] distinguish failures that skip one entry, one subtree, one root, or the complete traversal;
+  * [x] return structured errors to the consumer rather than printing command-specific diagnostics inside Shared;
+  * [x] permit consumers to implement quiet, warning, continue, and fail-fast policies without replacing the traversal engine;
+  * [x] observe cancellation before root inspection, between directory entries, before link following, before descent, and before yielding results;
+  * [x] never dispose caller-owned providers, streams, or other injected resources unless ownership was transferred explicitly.
+
+* [ ] Validate the provider and traversal contracts independently:
+
+  * [x] use deterministic synthetic providers for expansion, ordering, pruning, identity, cycle, boundary, disappearance, error, and cancellation cases;
+  * [x] add real-filesystem integration tests for ordinary directories, inaccessible entries, broken links, link-to-file and link-to-directory behavior, Unix symbolic-link cycles, Windows junctions and reparse points, repeated hard links, and filesystem-boundary behavior where the platform permits it;
+  * [ ] run the complete applicable test suite on `windows-latest`, `ubuntu-latest`, and `macos-latest` before marking the gate complete.
+
+The Gate E1 implementation is prepared on the `Gate_e1` branch under `Icod.CoreUtils.Shared.FileSystem.Traversal`. It includes the shared pathname-pattern and expansion layer, injectable one-level provider, Windows/Linux/macOS identity providers, iterative event traversal, selectors, policies, XML documentation, README files, deterministic synthetic tests, and conditional host-filesystem integration tests. The gate remains open until the complete applicable Debug, Staging, and Release test suites pass on `windows-latest`, `ubuntu-latest`, and `macos-latest`.
+
+This gate remains read-only. Completion Gate E2 owns canonical path construction, complete symbolic-link-chain resolution, missing-component policies, and resolution-loop semantics. Completion Gate E3 enriches E1's minimal entry and filesystem identities into the authoritative metadata model. Completion Gate E5 extends E1's provenance, event, identity, cycle, boundary, and error contracts for race-aware recursive mutation and copying rather than introducing a second incompatible traversal model.
+
+E1 is completed before Batch 26 so co-resident `Icod.Grep.Grep` consumes stable root-only and full-link traversal modes, directory pruning, matching scopes, provenance, cycle handling, mount boundaries, and error continuation. The same contract later supports Coreutils directory listing and filesystem accounting, recursive directory comparison in `Icod.DiffUtils`, and archive traversal in `Icod.Tar`. Search, comparison, listing, accounting, and archive policy remain in their respective command or suite engines. The cross-suite portions are provisional `Icod.CommandFramework` candidates.
 
 ### Completion Gate R1 — shared BRE/ERE foundation before Batch 26
 
@@ -875,7 +941,7 @@ Implement lexical versus physical resolution, missing-component policies, canoni
   * [ ] timestamp mutation capabilities;
   * [ ] explicit reporting of unavailable platform metadata.
 
-This gate supports `stat`, `touch`, and the file predicates subsequently required by `test`.
+This gate enriches and reuses the minimal entry and filesystem identities established by Completion Gate E1 rather than introducing parallel identity types. It supports `stat`, `touch`, and the file predicates subsequently required by `test`.
 
 ### Batch 36 — File metadata and timestamps (2 tools)
 
@@ -928,11 +994,11 @@ Add the missing GNU projects. Implement modes, FIFO creation, block/character de
 
 ### Completion Gate E5 — before Batch 41
 
-* [ ] Extend the traversal model for recursive mutation and copying:
+* [ ] Extend Completion Gate E1's provenance, event, identity, cycle, boundary, and structured-error contracts for recursive mutation and copying:
 
-  * [ ] mutation-safe recursive traversal;
+  * [ ] mutation-safe recursive traversal without replacing the E1 read-only provider and traversal model;
   * [ ] preserve-root protection;
-  * [ ] one-filesystem boundaries;
+  * [ ] enforce one-filesystem boundaries through the filesystem identities and root-relative boundary policy established by E1;
   * [ ] race-aware no-follow operations;
   * [ ] hard-link identity tracking;
   * [ ] sparse-file detection and preservation;
@@ -941,7 +1007,7 @@ Add the missing GNU projects. Implement modes, FIFO creation, block/character de
   * [ ] partial-failure and cleanup policy;
   * [ ] integration points for the later transactional replacement and backup model.
 
-This gate supports recursive `chmod`, `chown`, `chgrp`, `rm`, `cp`, `mv`, `install`, `du`, and `tar`.
+This gate extends rather than duplicates E1. It supports recursive `chmod`, `chown`, `chgrp`, `rm`, `cp`, `mv`, `install`, `du`, and `tar` while preserving one shared traversal vocabulary for read-only and mutation-aware consumers.
 
 ### Batch 41 — Permission modes (1 tool)
 
@@ -1387,7 +1453,7 @@ Completion of this gate establishes `Icod.CommandFramework` as the neutral cross
 
 - Completion Gate D and `sort` establish locale-aware comparison, bounded-memory ordering, spill files, stable merging, and cleanup before sorted-stream consumers and before other suites can claim the same infrastructure is genuinely reusable.
 
-- Completion Gate E1 establishes read-only traversal before `Icod.Grep` and `Icod.DiffUtils.Diff` require recursive directory work. This gives both suites the same cycle, symlink, mount-boundary, include/exclude, and error-continuation foundation without placing search- or diff-specific policy in the general Shared project.
+- Completion Gate E1 establishes read-only expansion and traversal before `Icod.Grep.Grep` and `Icod.DiffUtils.Diff` require recursive directory work. It separates operand expansion, low-level filesystem observation, and traversal orchestration; preserves root provenance; exposes entry and directory-exit phases; and gives both suites the same link, active-ancestry cycle, filesystem-boundary, pruning, structured-error, cancellation, and provider foundation without placing search- or diff-specific policy in the general Shared project.
 
 - Batch 26 implements `Icod.Grep` directly in its final namespace while retaining the one-solution development model. Grep-specific pattern orchestration, binary policy, context grouping, and output semantics stay in the grep project; only proven cross-suite contracts are candidates for the final framework.
 
