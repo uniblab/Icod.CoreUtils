@@ -4,10 +4,10 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `27` |
-| Current engineering milestone | Batch 27 complete |
-| Next infrastructure dependencies | None before Batch 28 |
-| Next command batch | Batch 28 — pattern-directed splitting |
+| Completed command batches | `0` through `28` |
+| Current engineering milestone | Batch 28 complete |
+| Next infrastructure dependencies | None before Batch 29 |
+| Next command batch | Batch 29 — page presentation |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -213,7 +213,7 @@ Man7 pages are useful synopses and secondary references, but they must not repla
 ### What is working well
 
 - The completed batches established shared command-line, diagnostics, streaming, numeric, platform, identity, process, date/time, and block-I/O abstractions.
-- Batches 1 through 27 have dedicated command-specific tests, together with focused Shared tests for the infrastructure introduced by their completion gates.
+- Batches 1 through 28 have dedicated command-specific tests, together with focused Shared tests for the infrastructure introduced by their completion gates.
 - The complete applicable solution remains subject to the required `windows-latest`, `ubuntu-latest`, and `macos-latest` build-and-test contract; completed batches must remain green on all three runners.
 - Source projects consistently reference `Shared` where common behavior is appropriate; that project currently incubates both future `Icod.CommandFramework` APIs and Coreutils-specific `Icod.CoreUtils.Shared` APIs while co-resident sibling suites supply additional real consumers.
 - `Icod.LineEditor.Sed` has already completed its project and namespace migration: it uses assembly name `sed`, root namespace and public command class `Icod.LineEditor.Sed.Command`, an asynchronous entry point, a dedicated test identity, and a project reference to the current Shared incubation project.
@@ -756,9 +756,11 @@ Batch 27 replaced both legacy synchronous prototypes with asynchronous, byte-pre
 
 ### Batch 28 — Pattern-directed splitting (1 tool)
 
-- [ ] `csplit`
+- [x] `csplit`
 
 Reuse the regular-expression policy established by Completion Gate R1 for `csplit`, including numeric and regex addresses, offsets, repetition, suppression, prefix/suffix grammar, keep-files behavior, exact byte counts, and cleanup after failure or cancellation. Do not introduce a runtime dependency on `Icod.Grep`.
+
+Batch 28 replaced the legacy decoded-text and `System.Text.RegularExpressions` prototype with an asynchronous, byte-preserving implementation audited against GNU Coreutils 9.11. The completed command supports absolute numeric line addresses, Gate R1 GNU BRE addresses, signed line offsets, finite and unlimited repetition, percent-delimited suppression, `--suppress-matched`, configurable prefixes, numeric suffix widths and validated suffix formats, exact byte-count reporting, empty-file elision, keep-files behavior, nonseekable standard input, cancellation, input-overwrite protection, and GNU cleanup semantics after failure. Input bytes and line extents are held in secure temporary spools so the command does not load the entire input into managed memory. A dedicated `Icod.CoreUtils.CSplit.Tests` project covers numeric and regular-expression control flow, offsets, repetitions, suppression, binary and malformed-byte inputs, naming, counts, cleanup, diagnostics, nonseekable input, help, version, and cancellation. No runtime dependency on `Icod.Grep` was introduced.
 
 ### Batch 29 — Page presentation (1 tool)
 
