@@ -772,7 +772,7 @@ Batch 29 replaced the legacy two-option synchronous prototype with an asynchrono
 
 ### Batch 30 — `Icod.DiffUtils.Shared` foundation (1 library)
 
-- [ ] `Icod.DiffUtils.Shared`
+- [x] `Icod.DiffUtils.Shared`
 
 Create the suite-specific Shared project inside the current solution and add its dedicated test project. Record GNU Diffutils 3.12 as the authoritative baseline. Establish comparison inputs, byte and line normalization, edit scripts, ranges, hunks, output-format models, temporary-workspace use, directory-comparison coordination, three-way merge models, and side-by-side layout primitives only where they are genuinely shared by two or more Diffutils commands.
 This library is intended to store that code wich is shared between `cmp`, `diff`, `diff3`, and `sdiff` which would not go in `Icod.CoreUtils.Shared` because no other programs or tools use it; i.e., code specific to GNU Diffutils only.
