@@ -4,10 +4,10 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `28` |
-| Current engineering milestone | Batch 28 complete |
-| Next infrastructure dependencies | None before Batch 29 |
-| Next command batch | Batch 29 — page presentation |
+| Completed command batches | `0` through `29` |
+| Current engineering milestone | Batch 29 complete |
+| Next infrastructure dependencies | Batch 30 creates `Icod.DiffUtils.Shared` |
+| Next command batch | Batch 30 — `Icod.DiffUtils.Shared` foundation |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -213,7 +213,7 @@ Man7 pages are useful synopses and secondary references, but they must not repla
 ### What is working well
 
 - The completed batches established shared command-line, diagnostics, streaming, numeric, platform, identity, process, date/time, and block-I/O abstractions.
-- Batches 1 through 28 have dedicated command-specific tests, together with focused Shared tests for the infrastructure introduced by their completion gates.
+- Batches 1 through 29 have dedicated command-specific tests, together with focused Shared tests for the infrastructure introduced by their completion gates.
 - The complete applicable solution remains subject to the required `windows-latest`, `ubuntu-latest`, and `macos-latest` build-and-test contract; completed batches must remain green on all three runners.
 - Source projects consistently reference `Shared` where common behavior is appropriate; that project currently incubates both future `Icod.CommandFramework` APIs and Coreutils-specific `Icod.CoreUtils.Shared` APIs while co-resident sibling suites supply additional real consumers.
 - `Icod.LineEditor.Sed` has already completed its project and namespace migration: it uses assembly name `sed`, root namespace and public command class `Icod.LineEditor.Sed.Command`, an asynchronous entry point, a dedicated test identity, and a project reference to the current Shared incubation project.
@@ -764,9 +764,11 @@ Batch 28 replaced the legacy decoded-text and `System.Text.RegularExpressions` p
 
 ### Batch 29 — Page presentation (1 tool)
 
-- [ ] `pr`
+- [x] `pr`
 
 For `pr`, implement columns, page geometry, headers and footers, form feeds, dates, numbering, merge modes, separators, and terminal-independent output.
+
+Batch 29 replaced the legacy two-option synchronous prototype with an asynchronous implementation audited against GNU Coreutils 9.11. The completed command supports balanced down-column and across-column layouts, parallel file merging, selected page ranges, configurable page length and width, deterministic headers and trailers, date formats, form-feed and omitted-pagination policies, line numbering and explicit first numbers, margins, input and output tab policies, control and nonprinting notation, separator and separator-string modes, joined full lines, file-warning suppression, cancellation, and injected text streams. Historical `-COLUMN` and `+FIRST[:LAST]` spellings are handled through the Shared parser's eligibility-aware token-rewrite rules so required negative option values remain intact. Page processing uses bounded per-page buffers and a streaming cursor that recognizes physical form feeds without loading whole inputs. A dedicated `Icod.CoreUtils.Pr.Tests` project covers layouts, page geometry, form-feed boundaries, numbering, separators, widths, controls, diagnostics, help, version, and cancellation.
 
 ### Batch 30 — `Icod.DiffUtils.Shared` foundation (1 library)
 
