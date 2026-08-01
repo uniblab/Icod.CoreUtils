@@ -4,10 +4,10 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `29` |
-| Current engineering milestone | Batch 29 complete |
-| Next infrastructure dependencies | Batch 30 creates `Icod.DiffUtils.Shared` |
-| Next command batch | Batch 30 — `Icod.DiffUtils.Shared` foundation |
+| Completed command batches | `0` through `31` |
+| Current engineering milestone | Batch 31 complete |
+| Next infrastructure dependencies | Batch 32 extends `Icod.DiffUtils.Shared` only for proven multi-command line-difference needs |
+| Next command batch | Batch 32 — `Icod.DiffUtils.Diff` difference engine |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -775,17 +775,19 @@ Batch 29 replaced the legacy two-option synchronous prototype with an asynchrono
 - [x] `Icod.DiffUtils.Shared`
 
 Create the suite-specific Shared project inside the current solution and add its dedicated test project. Record GNU Diffutils 3.12 as the authoritative baseline. Establish comparison inputs, byte and line normalization, edit scripts, ranges, hunks, output-format models, temporary-workspace use, directory-comparison coordination, three-way merge models, and side-by-side layout primitives only where they are genuinely shared by two or more Diffutils commands.
-This library is intended to store that code wich is shared between `cmp`, `diff`, `diff3`, and `sdiff` which would not go in `Icod.CoreUtils.Shared` because no other programs or tools use it; i.e., code specific to GNU Diffutils only.
+This library is intended to store that code which is shared between `cmp`, `diff`, `diff3`, and `sdiff` which would not go in `Icod.CoreUtils.Shared` because no other programs or tools use it; i.e., code specific to GNU Diffutils only.
 
 `Icod.DiffUtils.Shared` uses a project reference to the current Shared incubation project. It must not absorb general command, filesystem, text, locale, process, or platform behavior merely because those APIs have not yet been extracted into `Icod.CommandFramework`.
 
 ### Batch 31 — `Icod.DiffUtils.Cmp` byte comparison (1 tool)
 
-- [ ] `cmp`
+- [x] `cmp`
 
 Implement byte-oriented comparison, silent mode, all-differences reporting, byte and line numbering, skip and limit operands, EOF diagnostics, binary-safe standard input, cancellation, and exact statuses for equality, difference, and error.
 
 This batch validates the byte-comparison and result-status contracts without requiring the line-difference engine.
+
+Batch 31 replaced the project-template placeholder with a bounded asynchronous byte-comparison implementation audited against GNU Diffutils 3.12. The completed command supports default first-difference reports, visible byte notation, all-differences output, quiet mode, independent and additive skips, bounded comparisons, C-style decimal/octal/hexadecimal quantities with GNU multipliers, binary standard input, EOF diagnostics, cancellation, and statuses 0 for equality, 1 for differences, and 2 for trouble. General radix-aware quantity parsing was added to `Icod.CoreUtils.Shared`; suite-specific comparison inputs and the common result-status contract reside in `Icod.DiffUtils.Shared`. Dedicated `Icod.DiffUtils.Cmp.Tests` and `Icod.DiffUtils.Shared.Tests` projects cover command behavior and the shared contracts. No tool-to-tool project dependency was introduced, and the line-difference engine remains deferred to Batch 32.
 
 ### Batch 32 — `Icod.DiffUtils.Diff` difference engine (1 tool)
 
