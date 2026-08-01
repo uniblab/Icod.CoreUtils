@@ -90,7 +90,7 @@ public static class LineDiffEngine {
 			trace.Add( (int[])frontier.Clone() );
 			for ( var diagonal = -distance; diagonal <= distance; diagonal += 2 ) {
 				var index = offset + diagonal;
-				var x = diagonal == -distance || ( diagonal != distance && frontier[index - 1] < frontier[index + 1] )
+				var x = diagonal == -distance || ( diagonal != distance && frontier[index - 1] <= frontier[index + 1] )
 					? frontier[index + 1]
 					: frontier[index - 1] + 1;
 				var y = x - diagonal;
@@ -122,7 +122,7 @@ public static class LineDiffEngine {
 			cancellationToken.ThrowIfCancellationRequested();
 			var frontier = trace[distance];
 			var diagonal = x - y;
-			var previousDiagonal = diagonal == -distance || ( diagonal != distance && frontier[offset + diagonal - 1] < frontier[offset + diagonal + 1] )
+			var previousDiagonal = diagonal == -distance || ( diagonal != distance && frontier[offset + diagonal - 1] <= frontier[offset + diagonal + 1] )
 				? diagonal + 1
 				: diagonal - 1;
 			var previousX = frontier[offset + previousDiagonal];

@@ -809,7 +809,7 @@ Batch 33 replaced the scaffold with an asynchronous three-file implementation au
 
 ### Batch 34 — `Icod.DiffUtils.SDiff` side-by-side comparison (1 tool)
 
-- [ ] `sdiff`
+- [x] `sdiff`
 
 Implement side-by-side layout, width and display-column handling, common-line suppression, left-column behavior, tab expansion, interactive merge commands, editor invocation without unsafe shell interpolation, transactional output, nonterminal behavior, and exact status propagation.
 
