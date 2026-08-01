@@ -4,10 +4,10 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `34` |
-| Current engineering milestone | Complete GNU Diffutils family implemented in the incubation solution |
-| Next infrastructure dependencies | Completion Gate E2 — canonical-path model before Batch 35 |
-| Next command batch | Batch 35 — `readlink` and `realpath` |
+| Completed command batches | `0` through `33` |
+| Current engineering milestone | Batch 33 complete |
+| Next infrastructure dependencies | Batch 34 reuses the shared line documents and side-by-side row model without introducing a dependency on the `diff` command |
+| Next command batch | Batch 34 — `Icod.DiffUtils.SDiff` side-by-side comparison |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -809,26 +809,278 @@ Batch 33 replaced the scaffold with an asynchronous three-file implementation au
 
 ### Batch 34 — `Icod.DiffUtils.SDiff` side-by-side comparison (1 tool)
 
-- [x] `sdiff`
+- [ ] `sdiff`
 
 Implement side-by-side layout, width and display-column handling, common-line suppression, left-column behavior, tab expansion, interactive merge commands, editor invocation without unsafe shell interpolation, transactional output, nonterminal behavior, and exact status propagation.
 
-Batch 34 replaces the scaffold with an asynchronous two-file side-by-side comparison and interactive merge implementation audited against GNU Diffutils 3.12. The command supports display-column-bounded output, GNU tab-stop geometry, common-line suppression, left-column mode, configurable tab expansion, comparison whitespace and case policies, ignored blank and matching lines, binary/text policy, incomplete-line slash markers, file/directory operands, one noninteractive standard-input operand with interactive rejection, cancellation, and statuses 0, 1, and 2. Interactive `-o` mode implements left/right aliases, silent and verbose common-line controls, all documented edit variants, explicit quit and nonterminal EOF behavior, editor invocation through `ProcessStartInfo.ArgumentList` with no shell interpolation, and destination-directory temporary files committed only after a complete merge. Reusable width, display-column, padding, and row-formatting primitives reside in `Icod.DiffUtils.Shared`; option parsing, grouping, interaction, editor policy, and output transactions remain in `Icod.DiffUtils.SDiff`. The command neither references nor invokes another command project for its defining comparison operation. Dedicated command and shared-layout tests cover comparison, output, editor, transaction, directory, binary, Unicode, narrow-width, and cancellation contracts.
-
 Completion of Batches 30 through 34 leaves the complete GNU Diffutils family implemented and tested inside the current solution. Repository extraction remains deferred until Completion Gate G.
 
-### In-solution suite incubation milestone — `Icod.Patch`
+### In-solution Patch and E-series partial-order workstream
 
-This milestone does not alter command-batch numbering.
-- [ ] `patch`
-  - [ ] Record GNU patch 2.8 as the authoritative baseline.
-  - [ ] Establish independent normal, context, and unified patch corpora, including output from GNU Diffutils and `Icod.DiffUtils`.
-  - [ ] Keep the production boundary textual: `patch` must not reference `Icod.DiffUtils.Shared` merely to consume patch files.
-  - [ ] Keep patch parsing, hunk application, fuzz and offset matching, reversal detection, rejects, backups, and application state inside `Icod.Patch` or a repository-local engine.
-  - [ ] Consume transactional replacement capabilities after Completion Gate E6 rather than duplicating them.
-  - [ ] Preserve the lowercase assembly name `patch` and use a suite-specific solution folder.
+This workstream does not alter command-batch numbering. The detailed Patch architecture, conformance matrix, security model, test requirements, and phase checklists remain in [`Icod.Patch-Development-Roadmap-Regenerated.md`](Icod.Patch-Development-Roadmap-Regenerated.md); this roadmap records the repository-wide ordering constraints and the points at which Patch consumes the E-series infrastructure.
 
-Detailed GNU patch conformance continues under the `Icod.Patch` roadmap while the project remains co-resident. Final solution and repository extraction occurs in Completion Gate G.
+Patch is no longer scheduled as one isolated milestone completed before the E series. Its parser and pure application engine can proceed independently, while its path, metadata, mode, symlink, backup, reject, and replacement behavior must consume the corresponding shared gates as soon as they exist. The schedule is therefore a partial order:
+
+```text
+Patch P0 → P1 → P2 → P3/P4 → P5 → P6
+                    │                    │
+                    │                    └──────────────┐
+                    │                                   │
+Completion Gate E2 ─┴──────────────→ Patch P7          │
+Completion Gates E3 and E4 ─────────→ Patch P8          │
+Completion Gate E4 ─────────────────────────────────→ Patch P9
+Patch P7 + P8 + P9 + E2/E3/E4 ─────→ Patch P10
+Completion Gate E6 + Patch P10 ─────→ Patch P11A
+Patch P11A + Batches 44 and 45 ─────→ Patch P11B → Patch P12
+```
+
+The hard ordering rules are:
+
+- Patch Phase P2 and Completion Gate E2 must both complete before Phase P7.
+- Phase P7 and Completion Gates E3 and E4 must complete before Phase P8 is closed.
+- Phase P6 and Completion Gate E4 must complete before the E6-facing filesystem work in Phase P9 can be closed.
+- Phases P7 through P9 and Completion Gates E2 through E4 must complete before the Phase P10 conformance checkpoint.
+- Completion Gate E6 and Phase P10 must complete before initial transaction integration in Phase P11A.
+- Phase P11A and the independent `cp`, `mv`, and `install` validation in Batches 44 and 45 must complete before Phase P11B and final Patch conformance in Phase P12.
+- Completion Gate E5 is not a direct Patch feature prerequisite. Patch does not need recursive-copy traversal, but E6 may consume the metadata, containment, identity, and cleanup portions of E5 that are needed by the shared transaction contract.
+
+The production boundary with Diffutils remains textual. `Icod.Patch` consumes normal, context, unified, and ed-script patch text and must not reference `Icod.DiffUtils.Shared`.
+
+#### Patch Wave A — Phases P0 through P4
+
+This wave follows Batch 34 and may proceed while Completion Gates E2 and E3 are being designed. It contains no live target-file mutation dependency.
+
+- [ ] **P0:** normalize and verify the `Icod.Patch` project, tests, C# 13 policy, GNU patch 2.8 baseline, fixtures, and seed characterization.
+- [ ] **P1:** implement command context, asynchronous invocation, option parsing, patch-source selection, diagnostics, prompts, and exit-status accumulation.
+- [ ] **P2:** implement byte-preserving patch-stream input, source mapping, multiple-patch recognition, format detection, directive validation, and parser resource limits.
+- [ ] **P3:** implement unified and context formats and immutable hunk models.
+- [ ] **P4:** implement normal and patch-compatible ed-script formats without invoking or referencing the Ed implementation.
+- [ ] Preserve independent fixtures from GNU Diffutils, `Icod.DiffUtils`, third-party producers, and hand-authored patches.
+- [ ] Keep all parser and model work independent from target filesystem mutation.
+
+Completion of Wave A establishes the patch syntax and source model required by every later Patch phase. It does not claim path, metadata, mode, backup, reject, or transaction conformance.
+
+#### Patch Wave B1 — Phases P5 and P6
+
+P5 and P6 depend on the parsed hunk models from P3 and P4, but not on canonical paths or live filesystem mutation. They should proceed while E2 is completed rather than waiting behind it.
+
+- [ ] **P5:** implement the exact, byte-preserving application engine with indexed in-memory and secure spill-backed target content, exact hunk verification, multi-hunk state, file creation/deletion in the virtual model, cancellation, and invariants.
+- [ ] **P6:** implement offsets, fuzz, whitespace-canonical matching, reversal and already-applied detection, direction policy, prerequisites, merge behavior, adversarial-search limits, and GNU differential tests.
+- [ ] Keep both phases pure: they operate on patch documents and virtual target content, not canonical paths or committed filesystem mutations.
+
+### Completion Gate E2 — before Batch 35
+
+* [ ] Complete the shared canonical-path model:
+
+  * [ ] lexical path normalization;
+  * [ ] physical path resolution;
+  * [ ] symbolic-link and reparse-point inspection;
+  * [ ] missing-component policies;
+  * [ ] loop detection;
+  * [ ] relative-path calculation;
+  * [ ] platform root, volume, and separator semantics;
+  * [ ] deterministic failure without returning unresolved input as success.
+
+This gate supplies the defining infrastructure for `readlink` and `realpath` and is a hard predecessor of Patch Phase P7. Patch Phase P2 and E2 are independent predecessors: P2 supplies the parsed filename candidates and source evidence, while E2 supplies the canonical path, root, volume, link, containment, and failure semantics used to act on them.
+
+### Batch 35 — Symbolic-link and canonical-path resolution (2 tools)
+
+- [ ] `readlink`
+- [ ] `realpath`
+
+Implement lexical versus physical resolution, missing-component policies, canonicalization modes, delimiters, quiet/verbose behavior, relative output, symlink loops, reparse points, and deterministic failures. Never return the unresolved input as a false success.
+
+#### Patch Wave B2 — Phase P7
+
+Phase P7 begins after Completion Gate E2 and Batch 35 have established and exercised the canonical-path contract. It combines the already completed Patch source and application models with E2.
+
+- [ ] **P7:** consume E2 for filename candidate resolution, `-d`, component-aware `-p`, roots and volumes, link/reparse-point observation, containment, missing-file decisions, multi-file application, version-control retrieval policy, and path-security tests.
+- [ ] Keep matching and hunk application independent from live filesystem mutation.
+- [ ] Do not introduce a Patch-private canonical-path model.
+- [ ] Do not claim metadata, mode, backup, reject, or transaction conformance yet.
+
+Phase P7 cannot be marked complete merely because the parser can spell a pathname. P2 supplies the parsed filename candidates and source evidence, P5/P6 supply the application and matching engines, and E2 supplies the canonical path, link, containment, and failure semantics.
+
+### Completion Gate E3 — before Batch 36
+
+* [ ] Add the authoritative shared filesystem-metadata model:
+
+  * [ ] file type and size;
+  * [ ] link count and link identity;
+  * [ ] mode, ownership, and group information;
+  * [ ] access, modification, inode-change, and birth timestamps;
+  * [ ] device, inode, and platform-equivalent identity;
+  * [ ] allocated-block accounting;
+  * [ ] filesystem information;
+  * [ ] timestamp mutation capabilities;
+  * [ ] explicit reporting of unavailable platform metadata.
+
+This gate enriches and reuses the minimal entry and filesystem identities established by Completion Gate E1 rather than introducing parallel identity types. It supports `stat`, `touch`, and the file predicates subsequently required by `test`. It is also a hard predecessor of Patch Phase P8, which consumes the shared timestamp, metadata, identity, and availability contracts for targets, backups, rejects, output files, and post-2038 patch timestamps.
+
+### Batch 36 — File metadata and timestamps (2 tools)
+
+- [ ] `stat`
+- [ ] `touch`
+
+Build the authoritative metadata adapter and format-string engine. Distinguish access, modification, inode-change, and birth times where available; expose controlled platform gaps; support dereference policies, filesystems, reference files, date parsing, selective timestamps, no-create, and directories.
+
+### Batch 37 — Condition evaluator (1 tool)
+
+- [ ] `test`
+
+Implement the complete GNU/POSIX operand-count grammar, file type and characteristic predicates, access checks, string and numeric comparisons, connectives, precedence, ambiguity rules, and statuses 0, 1, and 2. **Do not create a separate `[` project.**
+
+### Completion Gate E4 — before Batch 38
+
+* [ ] Add shared mode and basic pathname-mutation infrastructure:
+
+  * [ ] numeric mode parsing;
+  * [ ] symbolic mode-clause parsing;
+  * [ ] umask application;
+  * [ ] basic directory, file, link, FIFO, and device-node capability providers;
+  * [ ] no-follow and dereference policies;
+  * [ ] race-aware single-path mutation;
+  * [ ] controlled privilege and platform diagnostics.
+
+This gate supports `mkdir`, `rmdir`, `unlink`, `link`, `ln`, `mkfifo`, `mknod`, and the later permission commands. Patch consumes these contracts in Phases P8 through P10 for mode, creation/deletion, no-follow, symlink, and race-aware single-path policy. E4 is therefore a hard predecessor of closing P8 and P9.
+
+#### Patch Wave C — Phase P8 and the start of Phase P9
+
+This wave begins only after Completion Gates E3 and E4 are complete. It proceeds concurrently with Batches 38 through 43 and with the design of E6.
+
+- [ ] **P8:** implement rejects, backup policy, output-file mode, dry runs, quoting, verbosity, prompts, status aggregation, and write-failure behavior over the shared metadata, timestamp, mode, and single-path capability contracts.
+- [ ] Start **P9** by placing every target mutation behind an injected Patch filesystem/transaction boundary.
+- [ ] Use secure exclusive temporary creation and guarantee that no original is removed before a complete replacement is ready.
+- [ ] Add failure injection, cancellation cleanup, symlink and reparse-point characterization, and provisional transaction tests.
+- [ ] Keep command-specific reject, backup, partial-application, and prompt policy above the shared mechanism.
+- [ ] Treat P9's command-local replacement internals as temporary scaffolding for E6, not as a competing permanent transaction framework.
+
+P8 depends on P7, E3, and E4. P9 may help refine the E6 contract while the E4/E5 validator batches are being implemented, but it cannot claim final transaction conformance until E6 exists.
+
+### Batch 38 — Basic directory and name removal (3 tools)
+
+- [ ] `mkdir`
+- [ ] `rmdir`
+- [ ] `unlink`
+
+Implement modes, parents, verbose/context policy, ignore-fail behavior, parent removal, exact operand rules, and deterministic handling of files versus directories. These commands validate the new filesystem adapter without yet introducing recursive deletion.
+
+### Batch 39 — Hard and symbolic links (2 tools)
+
+- [ ] `link`
+- [ ] `ln`
+
+Make `link` the documented two-operand hard-link command. Build `ln` as a separate front end over shared link primitives, covering symbolic/physical/logical behavior, targets, directories, relative links, backups, force/interactive modes, and platform capability diagnostics. Do not invoke native `ln`.
+
+### Batch 40 — Special file creation (2 tools)
+
+- [ ] `mkfifo`
+- [ ] `mknod`
+
+Add the missing GNU projects. Implement modes, FIFO creation, block/character device operands, major/minor validation, umask behavior, and controlled privilege/platform failure. Never emulate success by creating an ordinary file.
+
+### Completion Gate E5 — before Batch 41
+
+* [ ] Extend Completion Gate E1's provenance, event, identity, cycle, boundary, and structured-error contracts for recursive mutation and copying:
+
+  * [ ] mutation-safe recursive traversal without replacing the E1 read-only provider and traversal model;
+  * [ ] preserve-root protection;
+  * [ ] enforce one-filesystem boundaries through the filesystem identities and root-relative boundary policy established by E1;
+  * [ ] race-aware no-follow operations;
+  * [ ] hard-link identity tracking;
+  * [ ] sparse-file detection and preservation;
+  * [ ] metadata-preservation policy;
+  * [ ] destination-inside-source detection;
+  * [ ] partial-failure and cleanup policy;
+  * [ ] integration points for the later transactional replacement and backup model.
+
+This gate extends rather than duplicates E1. It supports recursive `chmod`, `chown`, `chgrp`, `rm`, `cp`, `mv`, `install`, `du`, and `tar` while preserving one shared traversal vocabulary for read-only and mutation-aware consumers.
+
+Patch is not a recursive-copy consumer and does not wait for all of E5 merely to parse or match patches. E5 is nevertheless an upstream dependency of the complete E6 transaction model where E6 consumes its identity, containment, metadata-preservation, no-follow mutation, partial-failure, and cleanup contracts.
+
+### Batch 41 — Permission modes (1 tool)
+
+- [ ] `chmod`
+
+Implement octal parsing correctly, symbolic clauses, omitted-who/umask behavior, recursive traversal, reference mode, symlink policy, preserve-root, verbose/change reporting, and Windows capability mapping without pretending that the read-only attribute is a complete Unix mode.
+
+### Batch 42 — Ownership and group mutation (2 tools)
+
+- [ ] `chown`
+- [ ] `chgrp`
+
+Replace `NotImplementedException` with real Unix ownership operations and controlled non-Unix diagnostics. Implement names and numeric IDs, reference files, dereference policies, recursive traversal, from-filtering, preserve-root, and verbose/change reporting.
+
+### Batch 43 — Recursive removal (1 tool)
+
+- [ ] `rm`
+
+Use the shared traversal engine. Implement interactive modes, recursive directory handling, force, one-file-system, preserve-root, empty-directory removal, symlink safety, write-protected prompts, race-aware deletion, glob expansion policy, and error continuation.
+
+#### Patch Wave D — Complete Phase P9 and close Phase P10
+
+By this checkpoint, E2 through E4 have been exercised by their Coreutils validators, and the E5 command batches have supplied additional evidence about identity, no-follow mutation, metadata preservation, containment, and cleanup. Patch now closes its pre-E6 filesystem work.
+
+- [ ] Complete **P9** against the proposed E6 transaction interface, including target, backup, reject, output, rollback, cleanup, cancellation, and partial-failure cases.
+- [ ] Complete **P10** as an E2–E4 conformance closure rather than a first integration pass.
+- [ ] Verify GNU-compatible filename selection, containment, `-d`, `-p`, timestamps including post-2038 values, modes, metadata, input/output symlink behavior, and `--follow-symlinks`.
+- [ ] Run Windows, Linux, macOS, and best-effort BSD capability tests.
+- [ ] Confirm that Patch has not copied canonical-path, metadata, mode, or basic mutation machinery into command-local permanent code.
+- [ ] Freeze the Patch-facing E6 requirements before the E6 implementation gate closes.
+
+Completion of P10 is a hard predecessor of P11A.
+
+### Completion Gate E6 — before Batch 44
+
+* [ ] Add shared transactional file-replacement infrastructure:
+
+  * [ ] secure sibling temporary files;
+  * [ ] atomic replacement where supported;
+  * [ ] backup-name generation and retention policy;
+  * [ ] rollback behavior after partial failure;
+  * [ ] pathname-containment and escape checks;
+  * [ ] deterministic cleanup after success, failure, and cancellation;
+  * [ ] explicit diagnostics where atomic replacement is unavailable;
+  * [ ] integration with the recursive traversal and metadata-preservation contracts established by Completion Gate E5.
+
+This gate is placed immediately before the consumers that require the complete replacement, backup, and rollback model. Patch Phase P11A consumes it immediately and reports contract defects while the APIs are still inexpensive to revise; `cp`, `mv`, and `install` then provide independent Coreutils/Fileutils validation in Batches 44 and 45; Patch Phase P11B closes only after that validation. During incubation, the co-resident `Icod.Patch`, `Icod.LineEditor.Ed.Shared`, `Icod.LineEditor.Sed`, and `Icod.Tar` projects may consume these contracts through project references; their genuinely cross-suite portions are candidates for `Icod.CommandFramework`.
+
+#### Patch Phase P11A — Initial E6 transaction integration
+
+Patch is an immediate co-validator of Completion Gate E6 rather than a consumer that waits until every Coreutils command is finished.
+
+- [ ] Replace the provisional P9 mutation internals with secure sibling temporary files, shared containment checks, backup-name and retention contracts, rollback, metadata restoration, deterministic cleanup, and explicit non-atomic capability results.
+- [ ] Exercise target replacement, file creation and deletion, backups, rejects, output files, partial hunk failure, multi-file partial success, symlink policy, cancellation, and every commit-stage failure.
+- [ ] Verify that no failure window removes the only recoverable copy of the original.
+- [ ] Keep Patch's GNU-visible partial-application and artifact policy above the general transaction mechanism.
+- [ ] Record any E6 contract defects before Batches 44 and 45 complete their independent validation.
+
+P11A does not close Patch. The transaction foundation must also survive the different copy, move, and installation policies in Batches 44 and 45.
+
+### Batch 44 — Copy and move engine (2 tools)
+
+- [ ] `cp`
+- [ ] `mv`
+
+Implement source/destination classification, recursive copy, symlink and hard-link policy, metadata preservation, sparse files, reflink/copy-file-range opportunities, backup and overwrite modes, update rules, atomic replacement, cross-filesystem moves, destination-inside-source prevention, and partial-failure cleanup.
+
+### Batch 45 — Installation engine (1 tool)
+
+- [ ] `install`
+
+Build on `mkdir`, `cp`, `chmod`, and `chown` primitives rather than invoking external utilities. Implement directory creation, modes, owners/groups, stripping policy, backups, compare mode, timestamps, SELinux-context policy, and atomic destination replacement.
+
+#### Patch Phase P11B and Phase P12 — Transaction validation and final closure
+
+After `cp`, `mv`, and `install` have independently validated E6, Patch repeats its transaction and conformance suites against the stabilized shared contract.
+
+- [ ] **P11B:** resolve contract changes exposed by Batches 44 and 45; remove all provisional Patch-local replacement code; verify target, backup, reject, output, metadata, symlink, rollback, cleanup, and non-atomic fallback consistency.
+- [ ] **P12:** complete the GNU patch 2.8 option matrix, parser corpora, differential tests, Diffutils interoperability, security and resource tests, signal and cancellation behavior, POSIX mode, all three required CI platforms, Debug and Release builds, XML documentation, directory README files, UTF-8/LF policy, and final public-surface audit.
+- [ ] Classify every Shared dependency for Completion Gate G.
+- [ ] Document deliberate divergences, unsupported capabilities, and platform limitations.
+- [ ] Keep solution, repository, and package extraction deferred until Completion Gate G.
+
+Completion of P12 closes the co-resident Patch implementation. It does not create a runtime dependency on Diffutils or LineEditor.
 
 ### In-solution LineEditor incubation sequence — Phases LE0 through LE9
 
@@ -920,157 +1172,6 @@ Completion Gate R1 performs this phase before Batch 26 because Grep is the first
 - [ ] Record consumer evidence and dependency direction for every moved API.
 
 Completion of Phases LE0 through LE9 leaves Sed decomposed and re-audited, Ed and Red implemented over one engine, and the family boundary justified by actual consumers. Final solution and repository extraction remains deferred until Completion Gate G.
-
-### Completion Gate E2 — before Batch 35
-
-* [ ] Complete the shared canonical-path model:
-
-  * [ ] lexical path normalization;
-  * [ ] physical path resolution;
-  * [ ] symbolic-link and reparse-point inspection;
-  * [ ] missing-component policies;
-  * [ ] loop detection;
-  * [ ] relative-path calculation;
-  * [ ] platform root, volume, and separator semantics;
-  * [ ] deterministic failure without returning unresolved input as success.
-
-This gate supplies the defining infrastructure for `readlink` and `realpath`.
-
-### Batch 35 — Symbolic-link and canonical-path resolution (2 tools)
-
-- [ ] `readlink`
-- [ ] `realpath`
-
-Implement lexical versus physical resolution, missing-component policies, canonicalization modes, delimiters, quiet/verbose behavior, relative output, symlink loops, reparse points, and deterministic failures. Never return the unresolved input as a false success.
-
-### Completion Gate E3 — before Batch 36
-
-* [ ] Add the authoritative shared filesystem-metadata model:
-
-  * [ ] file type and size;
-  * [ ] link count and link identity;
-  * [ ] mode, ownership, and group information;
-  * [ ] access, modification, inode-change, and birth timestamps;
-  * [ ] device, inode, and platform-equivalent identity;
-  * [ ] allocated-block accounting;
-  * [ ] filesystem information;
-  * [ ] timestamp mutation capabilities;
-  * [ ] explicit reporting of unavailable platform metadata.
-
-This gate enriches and reuses the minimal entry and filesystem identities established by Completion Gate E1 rather than introducing parallel identity types. It supports `stat`, `touch`, and the file predicates subsequently required by `test`.
-
-### Batch 36 — File metadata and timestamps (2 tools)
-
-- [ ] `stat`
-- [ ] `touch`
-
-Build the authoritative metadata adapter and format-string engine. Distinguish access, modification, inode-change, and birth times where available; expose controlled platform gaps; support dereference policies, filesystems, reference files, date parsing, selective timestamps, no-create, and directories.
-
-### Batch 37 — Condition evaluator (1 tool)
-
-- [ ] `test`
-
-Implement the complete GNU/POSIX operand-count grammar, file type and characteristic predicates, access checks, string and numeric comparisons, connectives, precedence, ambiguity rules, and statuses 0, 1, and 2. **Do not create a separate `[` project.**
-
-### Completion Gate E4 — before Batch 38
-
-* [ ] Add shared mode and basic pathname-mutation infrastructure:
-
-  * [ ] numeric mode parsing;
-  * [ ] symbolic mode-clause parsing;
-  * [ ] umask application;
-  * [ ] basic directory, file, link, FIFO, and device-node capability providers;
-  * [ ] no-follow and dereference policies;
-  * [ ] race-aware single-path mutation;
-  * [ ] controlled privilege and platform diagnostics.
-
-This gate supports `mkdir`, `rmdir`, `unlink`, `link`, `ln`, `mkfifo`, `mknod`, and the later permission commands.
-
-### Batch 38 — Basic directory and name removal (3 tools)
-
-- [ ] `mkdir`
-- [ ] `rmdir`
-- [ ] `unlink`
-
-Implement modes, parents, verbose/context policy, ignore-fail behavior, parent removal, exact operand rules, and deterministic handling of files versus directories. These commands validate the new filesystem adapter without yet introducing recursive deletion.
-
-### Batch 39 — Hard and symbolic links (2 tools)
-
-- [ ] `link`
-- [ ] `ln`
-
-Make `link` the documented two-operand hard-link command. Build `ln` as a separate front end over shared link primitives, covering symbolic/physical/logical behavior, targets, directories, relative links, backups, force/interactive modes, and platform capability diagnostics. Do not invoke native `ln`.
-
-### Batch 40 — Special file creation (2 tools)
-
-- [ ] `mkfifo`
-- [ ] `mknod`
-
-Add the missing GNU projects. Implement modes, FIFO creation, block/character device operands, major/minor validation, umask behavior, and controlled privilege/platform failure. Never emulate success by creating an ordinary file.
-
-### Completion Gate E5 — before Batch 41
-
-* [ ] Extend Completion Gate E1's provenance, event, identity, cycle, boundary, and structured-error contracts for recursive mutation and copying:
-
-  * [ ] mutation-safe recursive traversal without replacing the E1 read-only provider and traversal model;
-  * [ ] preserve-root protection;
-  * [ ] enforce one-filesystem boundaries through the filesystem identities and root-relative boundary policy established by E1;
-  * [ ] race-aware no-follow operations;
-  * [ ] hard-link identity tracking;
-  * [ ] sparse-file detection and preservation;
-  * [ ] metadata-preservation policy;
-  * [ ] destination-inside-source detection;
-  * [ ] partial-failure and cleanup policy;
-  * [ ] integration points for the later transactional replacement and backup model.
-
-This gate extends rather than duplicates E1. It supports recursive `chmod`, `chown`, `chgrp`, `rm`, `cp`, `mv`, `install`, `du`, and `tar` while preserving one shared traversal vocabulary for read-only and mutation-aware consumers.
-
-### Batch 41 — Permission modes (1 tool)
-
-- [ ] `chmod`
-
-Implement octal parsing correctly, symbolic clauses, omitted-who/umask behavior, recursive traversal, reference mode, symlink policy, preserve-root, verbose/change reporting, and Windows capability mapping without pretending that the read-only attribute is a complete Unix mode.
-
-### Batch 42 — Ownership and group mutation (2 tools)
-
-- [ ] `chown`
-- [ ] `chgrp`
-
-Replace `NotImplementedException` with real Unix ownership operations and controlled non-Unix diagnostics. Implement names and numeric IDs, reference files, dereference policies, recursive traversal, from-filtering, preserve-root, and verbose/change reporting.
-
-### Batch 43 — Recursive removal (1 tool)
-
-- [ ] `rm`
-
-Use the shared traversal engine. Implement interactive modes, recursive directory handling, force, one-file-system, preserve-root, empty-directory removal, symlink safety, write-protected prompts, race-aware deletion, glob expansion policy, and error continuation.
-
-### Completion Gate E6 — before Batch 44
-
-* [ ] Add shared transactional file-replacement infrastructure:
-
-  * [ ] secure sibling temporary files;
-  * [ ] atomic replacement where supported;
-  * [ ] backup-name generation and retention policy;
-  * [ ] rollback behavior after partial failure;
-  * [ ] pathname-containment and escape checks;
-  * [ ] deterministic cleanup after success, failure, and cancellation;
-  * [ ] explicit diagnostics where atomic replacement is unavailable;
-  * [ ] integration with the recursive traversal and metadata-preservation contracts established by Completion Gate E5.
-
-This gate is placed immediately before `cp` and `mv`, the first remaining Coreutils/Fileutils commands that require the complete replacement, backup, and rollback model. During incubation, the co-resident `Icod.Patch`, `Icod.LineEditor.Ed.Shared`, `Icod.LineEditor.Sed`, and `Icod.Tar` projects may consume these contracts through project references; their genuinely cross-suite portions are candidates for `Icod.CommandFramework`.
-
-### Batch 44 — Copy and move engine (2 tools)
-
-- [ ] `cp`
-- [ ] `mv`
-
-Implement source/destination classification, recursive copy, symlink and hard-link policy, metadata preservation, sparse files, reflink/copy-file-range opportunities, backup and overwrite modes, update rules, atomic replacement, cross-filesystem moves, destination-inside-source prevention, and partial-failure cleanup.
-
-### Batch 45 — Installation engine (1 tool)
-
-- [ ] `install`
-
-Build on `mkdir`, `cp`, `chmod`, and `chown` primitives rather than invoking external utilities. Implement directory creation, modes, owners/groups, stripping policy, backups, compare mode, timestamps, SELinux-context policy, and atomic destination replacement.
 
 ### In-solution LineEditor transactional-replacement integration — Phase LE10
 
@@ -1479,7 +1580,11 @@ Completion of this gate establishes `Icod.CommandFramework` as the neutral cross
 
 - `Icod.DiffUtils` remains independent of `Icod.Patch` and `Icod.LineEditor.Ed` at runtime. Unified, context, normal, and ed-script text are the compatibility contracts, ensuring the implementations can interoperate with GNU and third-party tools rather than only with each other.
 
-- The LineEditor sequence begins by decomposing the already suite-correct `Icod.LineEditor.Sed` implementation. Structural decomposition is separated from semantic migration so current behavior can be characterized before the monolithic parser, execution, regex, record, process, and in-place-editing concerns are moved into focused internal modules.
+- Patch and the E-series gates are scheduled as one dependency-aligned workstream rather than as an isolated Patch milestone followed by an unrelated filesystem block. P0 through P4 establish syntax and immutable models; P5 and P6 proceed concurrently with E2 because they need no live path semantics; P2, P5, P6, and E2 are all required before P7; P7 together with E3 and E4 precedes P8; P9 co-develops the E6-facing mutation boundary; P10 closes E2–E4 conformance before E6; and P11 is split around the independent `cp`, `mv`, and `install` validation before P12 closes Patch.
+
+- E5 is not treated as a direct Patch feature prerequisite because Patch does not recursively copy directory trees. Only the E5 identity, containment, metadata-preservation, no-follow mutation, failure, and cleanup contracts needed by E6 lie on Patch's transaction dependency path.
+
+- The LineEditor sequence now follows the Patch/E-series workstream and Batches 44 and 45. This keeps the Patch suite work cohesive despite its explicit E-gate interruptions and lets LineEditor Phases LE0 through LE10 proceed as one contiguous family sequence over the already validated regex, record, filesystem, and transaction foundations. It begins by decomposing the already suite-correct `Icod.LineEditor.Sed` implementation. Structural decomposition is separated from semantic migration so current behavior can be characterized before the monolithic parser, execution, regex, record, process, and in-place-editing concerns are moved into focused internal modules.
 
 - Completion Gate R1 advances LineEditor Phase LE2 before Batch 26 so Grep, the first remaining BRE/ERE consumer, cannot introduce a parallel engine. Sed later migrates away from .NET-regex translation and Ed, Expr, and Csplit further validate the same cross-suite regular-expression contract.
 
@@ -1489,7 +1594,7 @@ Completion of this gate establishes `Icod.CommandFramework` as the neutral cross
 
 - A general `Icod.LineEditor.Shared` is intentionally deferred until Phase LE9. Similar command vocabulary is not sufficient evidence for sharing: Ed addresses and mutable-buffer state differ fundamentally from Sed addresses, pattern/hold spaces, and streaming cycle state. The library is created only if completed engines leave a cohesive family-specific remainder after cross-suite APIs have been classified toward `Icod.CommandFramework`.
 
-- Completion Gates E2 through E6 remain focused on Coreutils/Fileutils path resolution, metadata, modes, mutation, recursive traversal, and transactional replacement. LineEditor isolates temporary replacement mechanisms early, then Phase LE10 migrates Sed and Ed after the E6 transaction model has been validated by `cp`, `mv`, and `install`.
+- Completion Gates E2 through E6 remain general filesystem foundations even though Patch is an early consumer. Patch helps shape and test their cross-suite contracts but keeps filename selection, hunk application, rejects, backups, partial-application decisions, and GNU diagnostics in `Icod.Patch`. E6 is not considered stable from Patch alone: Patch Phase P11A, `cp`/`mv`, and `install` exercise different policies before P11B and P12 close Patch. LineEditor Phase LE10 follows those validations.
 
 - Completion Gates F1 through F4 establish cross-suite terminal presentation and control, host and processor-resource facts, process identity and targets, argument-safe launch, child and arbitrary-process waiting contracts, signals, process groups, priorities, monotonic timing, status translation, and timeout behavior before the most platform-intensive suite begins. These APIs live physically in the current Shared incubation project but are provisionally classified as `Icod.CommandFramework` candidates.
 
