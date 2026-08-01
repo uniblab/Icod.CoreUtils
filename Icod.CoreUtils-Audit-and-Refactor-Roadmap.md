@@ -4,10 +4,10 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `32` |
-| Current engineering milestone | Batch 32 complete |
-| Next infrastructure dependencies | Batch 33 reuses the proven two-way line model without introducing a dependency on the `diff` command |
-| Next command batch | Batch 33 — `Icod.DiffUtils.Diff3` three-way comparison |
+| Completed command batches | `0` through `34` |
+| Current engineering milestone | Complete GNU Diffutils family implemented in the incubation solution |
+| Next infrastructure dependencies | Completion Gate E2 — canonical-path model before Batch 35 |
+| Next command batch | Batch 35 — `readlink` and `realpath` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -801,15 +801,19 @@ Batch 32 replaced the legacy front end with an asynchronous line-oriented implem
 
 ### Batch 33 — `Icod.DiffUtils.Diff3` three-way comparison (1 tool)
 
-- [ ] `diff3`
+- [x] `diff3`
 
 Implement three-file comparison, common-ancestor modes, overlap classification, merge output, conflict markers, `ed` scripts, labels, input validation, and exact statuses. Reuse the proven two-way data model without forcing `diff3` semantics into the `diff` front end.
 
+Batch 33 replaced the scaffold with an asynchronous three-file implementation audited against GNU Diffutils 3.12 and differentially exercised against the available GNU `diff3`. The command supports the historical normal report, second- or third-input common-file mapping, ancestor-relative region classification, direct merge output, two- and three-way conflict markers, `-e`, `-3`, `-x`, `-E`, `-X`, and `-A` edit policies, reverse-order `ed` scripts, labels, leading-period protection, System V `w`/`q`, incomplete final lines, binary/text policy, trailing-carriage-return normalization, one standard-input operand, cancellation, controlled input diagnostics, and statuses 0, 1, and 2. GNU-style boundary shifting, connected three-way regions, common-input selection, and overlap classification reside in `Icod.DiffUtils.Shared`; parsing, merge policy, reports, markers, and `ed` serialization remain in `Icod.DiffUtils.Diff3`. The command neither references nor invokes the `diff` project for its defining operation. Dedicated command and shared-engine tests cover the contracts required by Batch 34 without forcing `diff3` semantics into the two-way front end.
+
 ### Batch 34 — `Icod.DiffUtils.SDiff` side-by-side comparison (1 tool)
 
-- [ ] `sdiff`
+- [x] `sdiff`
 
 Implement side-by-side layout, width and display-column handling, common-line suppression, left-column behavior, tab expansion, interactive merge commands, editor invocation without unsafe shell interpolation, transactional output, nonterminal behavior, and exact status propagation.
+
+Batch 34 replaces the scaffold with an asynchronous two-file side-by-side comparison and interactive merge implementation audited against GNU Diffutils 3.12. The command supports display-column-bounded output, GNU tab-stop geometry, common-line suppression, left-column mode, configurable tab expansion, comparison whitespace and case policies, ignored blank and matching lines, binary/text policy, incomplete-line slash markers, file/directory operands, one noninteractive standard-input operand with interactive rejection, cancellation, and statuses 0, 1, and 2. Interactive `-o` mode implements left/right aliases, silent and verbose common-line controls, all documented edit variants, explicit quit and nonterminal EOF behavior, editor invocation through `ProcessStartInfo.ArgumentList` with no shell interpolation, and destination-directory temporary files committed only after a complete merge. Reusable width, display-column, padding, and row-formatting primitives reside in `Icod.DiffUtils.Shared`; option parsing, grouping, interaction, editor policy, and output transactions remain in `Icod.DiffUtils.SDiff`. The command neither references nor invokes another command project for its defining comparison operation. Dedicated command and shared-layout tests cover comparison, output, editor, transaction, directory, binary, Unicode, narrow-width, and cancellation contracts.
 
 Completion of Batches 30 through 34 leaves the complete GNU Diffutils family implemented and tested inside the current solution. Repository extraction remains deferred until Completion Gate G.
 
