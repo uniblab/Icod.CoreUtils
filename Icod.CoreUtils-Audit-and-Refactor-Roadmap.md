@@ -5,9 +5,9 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `34` |
-| Current engineering milestone | Batch 34 complete |
-| Next infrastructure dependencies | Icod.Path work |
-| Next command batch | Batch 34 — `Icod.DiffUtils.SDiff` side-by-side comparison |
+| Current engineering milestone | Completion Gate E2 — shared canonical-path model |
+| Next infrastructure dependencies | Completion Gate E2 canonical-path work in `Icod.Path` |
+| Next command batch | Batch 35 — `readlink` and `realpath` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 

@@ -427,7 +427,7 @@ public sealed class CommandTests {
 		/// <summary>Initializes a temporary filesystem fixture.</summary>
 		public FileFixture() {
 			this.Root = Path.Combine( Path.GetTempPath(), $"Icod.DiffUtils.SDiff.Tests-{Guid.NewGuid():N}" );
-			Directory.CreateDirectory( this.Root );
+			System.IO.Directory.CreateDirectory( this.Root );
 		}
 
 		/// <summary>Gets the fixture root.</summary>
