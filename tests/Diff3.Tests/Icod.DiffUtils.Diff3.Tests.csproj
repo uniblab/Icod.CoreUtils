@@ -2,21 +2,26 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<LangVersion>13.0</LangVersion>
-		<OutputType>Exe</OutputType>
 		<TargetFramework>net10.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<OutputPath>..\bin\$(Configuration)\</OutputPath>
-		<AssemblyName>diff3</AssemblyName>
-		<RootNamespace>Icod.DiffUtils.Diff3</RootNamespace>
-	</PropertyGroup>
-	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
-		<PlatformTarget>AnyCPU</PlatformTarget>
+		<IsPackable>false</IsPackable>
+		<IsTestProject>true</IsTestProject>
+		<AssemblyName>Icod.DiffUtils.Diff3.Tests</AssemblyName>
+		<RootNamespace>Icod.DiffUtils.Diff3.Tests</RootNamespace>
 	</PropertyGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\Shared\Icod.CoreUtils.Shared.csproj" />
-		<ProjectReference Include="..\Icod.DiffUtils.Shared\Icod.DiffUtils.Shared.csproj" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+		<PackageReference Include="xunit" Version="2.9.2" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\diff3\Icod.DiffUtils.Diff3.csproj" />
+		<ProjectReference Include="..\..\Icod.DiffUtils.Shared\Icod.DiffUtils.Shared.csproj" />
+		<ProjectReference Include="..\..\Shared\Icod.CoreUtils.Shared.csproj" />
 	</ItemGroup>
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
 		<ErrorReport>prompt</ErrorReport>
