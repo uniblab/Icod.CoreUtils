@@ -32,8 +32,8 @@ This roadmap is subordinate to the repository-wide conventions and engineering g
 | Public command class | `Icod.Patch.Command` |
 | Executable assembly name | `patch` |
 | Current repository project | `patch/Icod.Patch.csproj` |
-| Current implementation state | Historical seed; not GNU patch compatible |
-| Current dedicated test project | None |
+| Current implementation state | Phases P0-P2 implemented: normalized async front end and byte-preserving format detector; no target mutation |
+| Current dedicated test project | `tests/Patch.Tests/Icod.Patch.Tests.csproj` |
 | Required target framework | `net10.0` |
 | Required language version | C# 13 |
 | Authoritative upstream baseline | GNU patch 2.8 |
@@ -41,29 +41,37 @@ This roadmap is subordinate to the repository-wide conventions and engineering g
 | Additional platform goal | Best-effort BSD support |
 | Repository status | Co-resident in `Icod.CoreUtils.sln` until Completion Gate G |
 | Scheduling model | Dependency-aligned partial order with Completion Gates E2–E6 |
-| First scheduled wave | P0–P4 after Diffutils; E2/E3 design may proceed concurrently |
+| First scheduled wave | P0–P2 complete; P3 and P4 next while E2/E3 design proceeds concurrently |
 | Detailed ordering status | Provisional until the GNU 2.8 option and conformance matrices are complete |
+
+---
+
+## P0-P2 implementation status
+
+Phases P0, P1, and P2 were implemented on August 1, 2026; full-checkout build and CI validation remain pending. The historical private `+`/`-` mutation format was removed rather than retained as a compatibility mode. The replacement front end uses the shared asynchronous `CommandContext` and `OptionParser`, accepts standard input, `-i`, and GNU-style operands, and feeds a bounded spill-backed source model. The scanner preserves byte offsets and LF, CRLF, CR, and incomplete-final-record state while detecting unified, context, normal, and patch-compatible ed-script candidates, multiple sections, and surrounding text.
+
+The P0-P2 executable deliberately refuses to mutate targets. It returns a controlled trouble status after recognizing valid patch syntax until P3-P5 provide parsed hunks and the pure application engine. This protects the repository from presenting source detection as completed patch application.
+
+The GNU patch 2.8 release archive metadata, official SHA-256, signing fingerprint, and `v2.8` source ref are recorded in `patch/upstream/GNU-patch-2.8.md`. Debug/Release and three-runner execution remain an integration validation item after these files are applied to a complete checkout.
 
 ---
 
 ## Executive summary
 
-The current Patch implementation is not an incomplete version of GNU patch in the ordinary sense. It implements a private, simplified line-command format intended to consume the repository's former simplified Diff output.
+The historical Patch seed was not an incomplete GNU patch implementation in the ordinary sense. It consumed a private `+`/`-` line-command format associated with the repository's former simplified Diff output, decoded complete files as UTF-8 text, created a `.orig` backup, and rewrote the target directly.
 
-The current command:
+P0 through P2 have now replaced that seed with a GNU-oriented command boundary and source model. The current command:
 
-- accepts exactly two operands, a target file and patch file;
-- reads both files completely into memory as UTF-8 text;
-- treats lines beginning with `-` as unconditional deletion of the next target line;
-- treats lines beginning with `+` as insertion;
-- creates a `.orig` backup;
-- rewrites the entire target file;
-- has no normal, context, unified, or ed patch parser;
-- has no hunk matching, fuzz, offsets, reversal detection, rejects, multi-file handling, filename inference, dry run, standard-input patch stream, or GNU exit-status model;
-- performs direct nontransactional filesystem mutation;
-- has no dedicated Patch test project.
+- uses asynchronous orchestration and the shared `CommandContext` and `OptionParser`;
+- accepts patch input from standard input, `-i`, or the GNU-style patch-file operand position;
+- retains the optional original-file operand without mutating it;
+- preserves patch bytes, byte offsets, line numbers, LF, CRLF, CR, and incomplete final records in a bounded spill-backed source;
+- detects unified, context, normal, and patch-compatible ed-script candidates, multiple sections, and surrounding non-patch text;
+- rejects NUL-bearing directive lines and newline-bearing quoted filename evidence;
+- has a dedicated Patch test project and separated fixture provenance;
+- deliberately returns controlled trouble after recognition because complete format parsing and target application begin in P3 through P5.
 
-It must therefore be treated as seed code and historical evidence only. The implementation should be redesigned around GNU patch 2.8 rather than incrementally extending the private format.
+The former private syntax remains only as characterized historical evidence and is not exposed as a compatibility mode.
 
 The intended co-resident architecture is:
 
@@ -288,54 +296,32 @@ TargetFramework: net10.0
 
 It references the current Shared incubation project and contains the established Debug, Staging, and Release configuration groups.
 
-Required normalization:
+P0 normalization completed:
 
-- rename the project file to `Icod.Patch.csproj`;
-- add `<LangVersion>13.0</LangVersion>` to the first property group;
-- keep `<AssemblyName>patch</AssemblyName>`;
-- keep `<RootNamespace>Icod.Patch</RootNamespace>`;
-- retain all established configuration groups;
-- keep nullable references, implicit usings, and XML documentation enabled;
-- add the renamed project to the `Icod.Patch` suite solution folder;
-- update every solution, build, test, and CI reference.
+- retained the already suite-correct `Icod.Patch.csproj` filename;
+- added `<LangVersion>13.0</LangVersion>` to the first property group;
+- retained `<AssemblyName>patch</AssemblyName>` and `<RootNamespace>Icod.Patch</RootNamespace>`;
+- retained all established configuration groups, nullable references, implicit usings, and XML documentation;
+- placed the executable in the `Icod.Patch` suite solution folder;
+- added the dedicated test project beneath the top-level `tests` solution folder and all solution configurations.
 
-The project filename identifies the suite and command. The root namespace remains concise so the public class is:
+Repository-wide Debug/Release and three-runner validation remains pending after integration into a complete checkout.
 
-```text
-Icod.Patch.Command
-```
-
-rather than:
-
-```text
-Icod.Patch.Command
-```
-
-or:
-
-```text
-Icod.Patch
-```
+The project filename identifies the suite and command. The root namespace remains concise so the public facade is `Icod.Patch.Command`, without duplicating the suite name in an additional namespace segment or class name.
 
 ---
 
 ## Current entry point
 
-The current `Program.cs` is synchronous and calls:
-
-```text
-Command.Run(args)
-```
-
-Required target:
+P1 replaced the synchronous seed entry point with:
 
 - asynchronous `Main`;
-- `CommandContext`;
-- injected standard input, output, and error;
-- cancellation propagation;
-- deterministic mapping of cancellation and controlled exceptions;
-- a dedicated usage-writing function;
-- substantive XML documentation.
+- a `CommandContext` core path;
+- injected standard input, output, error, and byte-oriented standard input;
+- cancellation propagation and repository-standard cancellation status;
+- deterministic controlled operational diagnostics;
+- dedicated help output and substantive XML documentation;
+- a synchronous compatibility wrapper for direct callers.
 
 A suitable orchestration path is:
 
@@ -355,59 +341,27 @@ The public command class should expose the repository's established synchronous 
 
 ## Current command implementation
 
-The current command is 87 lines and describes itself as a naive consumer of simplified Diff output.
+The P0-P2 command is a GNU-oriented front end and source detector rather than a target applicator. It:
 
-It:
+- accepts `[ORIGFILE [PATCHFILE]]`, `-i/--input`, standard-input patch streams, `--binary`, `--help`, and `-v/--version`;
+- reserves GNU `-b` for its later `--backup` implementation rather than aliasing it to `--binary`;
+- validates duplicate source selection, missing option values, extra operands, and cancellation;
+- uses raw streams when available and a streaming text-reader adapter only for compatibility calls;
+- indexes input into a uniquely named private temporary spool and removes that exact spool on disposal;
+- recognizes source-level patch candidates without parsing complete hunks or mutating the original-file operand;
+- returns status 2 after successful recognition until P3-P5 provide the immutable syntax and application engines.
 
-- requires exactly two operands;
-- does not consume patch text from standard input;
-- uses `File.ReadAllLines` for both files;
-- forces UTF-8 decoding;
-- loses original byte and record-termination information;
-- treats every `-` instruction as removal of the next source line without verifying the removed content;
-- treats every `+` instruction as insertion;
-- copies the original to `<target>.orig`;
-- writes the result directly over the target;
-- catches broad exceptions and emits ad hoc diagnostics.
-
-The implementation has no reusable GNU patch component worth preserving as an architectural constraint.
-
-Potentially reusable historical elements are limited to:
-
-- the public namespace `Icod.Patch`;
-- the lowercase assembly name;
-- the idea of a public `Command` facade;
-- any user-visible compatibility tests that may be written before replacement.
-
-The private simplified format should be removed after characterization unless the user explicitly chooses to preserve it under a clearly separate non-GNU mode.
+The implementation preserves the public namespace `Icod.Patch`, lowercase assembly name `patch`, and public `Command` facade. The private simplified format has been removed and remains covered only by a retirement characterization test.
 
 ---
 
 ## Current tests
 
-The solution presently has no dedicated Patch test project.
+P0 created `tests/Patch.Tests/Icod.Patch.Tests.csproj` with root namespace `Icod.Patch.Tests`, `InternalsVisibleTo` access to the internal detector, and Debug, Staging, and Release solution mappings beneath the top-level `tests` solution folder.
 
-Create:
+The P0-P2 suite covers direct command invocation, process-host help and diagnostics, source selection, operand conflicts, retirement of the private syntax, non-mutation, cancellation, status accumulation, every detected format, separated fixture roots, source offsets and terminators, multiple sections, surrounding text, malformed directives and filenames, binary records, resource limits, deterministic fuzz input, and exact temporary-spool cleanup.
 
-```text
-tests/Patch.Tests/Icod.Patch.Tests.csproj
-```
-
-with root namespace:
-
-```text
-Icod.Patch.Tests
-```
-
-A separate parser or engine test project is not initially required. Internal engine types may be exposed to the dedicated test assembly with `InternalsVisibleTo`.
-
-The Patch test project must be included in:
-
-- `Icod.CoreUtils.sln`;
-- Debug, Staging, and Release solution mappings;
-- local build and test scripts;
-- Windows, Ubuntu, and macOS CI;
-- any repository-wide test inventory or validation scripts.
+A separate parser or engine test project is not currently justified. Full solution builds and Windows, Ubuntu, and macOS CI execution remain integration validation items.
 
 ---
 
@@ -1436,50 +1390,18 @@ Do not derive the status only from whether an exception was thrown.
 
 ## Option and behavior matrix
 
-Before implementation, generate a complete GNU patch 2.8 matrix from the pinned source and tests.
+The complete source-defined GNU patch 2.8 option inventory is pinned in [`patch/upstream/GNU-patch-2.8-option-matrix.md`](patch/upstream/GNU-patch-2.8-option-matrix.md).
 
-The matrix should include, at minimum, all applicable forms of:
+The matrix records:
 
-```text
-backup control
-backup-if-mismatch
-backup prefixes and suffixes
-binary mode
-context format
-working directory
-ifdef output
-dry run
-ed format
-remove-empty-files
-force
-fuzz
-version-control retrieval
-help
-input patch file
-canonicalized whitespace
-merge
-normal format
-forward mode
-output file
-path-prefix stripping
-POSIX mode
-quoting style
-reject file
-reverse
-silent and quiet
-follow symlinks
-batch mode
-timestamp options
-unified format
-version
-backup version-control style
-verbose mode
-debug flags where public
-```
+- every short and long spelling declared by the 2.8 source;
+- aliases, argument arity, accepted value domains, and conditional entries;
+- the obsolete narrow `-b SUFFIX` compatibility case;
+- source-defined but normally hidden options such as `--follow-symlinks` and debug flags;
+- the owning Patch phase and current implementation state;
+- the upstream 2.8 test areas that supply later conformance evidence.
 
-This is a research checklist, not a claim that every option listed in later upstream documentation belongs unchanged to 2.8.
-
-Only the pinned 2.8 source and tests settle exact availability and spelling.
+The inventory is complete at P0. Exact conflicts, repetition, prompts, environment-variable interactions, diagnostics, platform effects, and differential behavior are completed by each owning phase and closed in P12. Only the pinned 2.8 source and tests settle availability and spelling; later upstream documentation is not silently substituted.
 
 ---
 
@@ -1510,52 +1432,53 @@ P11B and P12
 
 ## Phase P0 — Normalize project identity and capture the seed
 
-- [ ] Record GNU patch 2.8 in the authoritative-version ledger.
-- [ ] Download and verify the pinned release archive.
-- [ ] Record the source commit or release tag.
-- [ ] Retain and verify the suite-correct `Icod.Patch.csproj` project identity.
-- [ ] Add `<LangVersion>13.0</LangVersion>`.
-- [ ] Preserve assembly name `patch`.
-- [ ] Preserve root namespace `Icod.Patch`.
-- [ ] Preserve public class `Icod.Patch.Command`.
-- [ ] Move the project into the suite-correct solution folder.
-- [ ] Create `Icod.Patch.Tests`.
-- [ ] Add it to every build and CI entry point.
-- [ ] Add project and source `README.md` files.
-- [ ] Capture characterization tests for the private seed behavior before replacement.
-- [ ] Decide whether the private format is deleted or retained under an explicitly non-GNU compatibility mode.
-- [ ] Establish GNU and Icod textual fixture directories.
-- [ ] Verify Debug and Release builds and all three CI platforms.
+- [x] Record GNU patch 2.8 in the authoritative-version ledger.
+- [x] Pin the release archive and verify its SHA-256 and signing identity against the official GNU release announcement.
+- [x] Record the source commit or release tag.
+- [x] Generate and pin the complete GNU patch 2.8 source-defined option inventory and upstream test map.
+- [x] Retain and verify the suite-correct `Icod.Patch.csproj` project identity.
+- [x] Add `<LangVersion>13.0</LangVersion>`.
+- [x] Preserve assembly name `patch`.
+- [x] Preserve root namespace `Icod.Patch`.
+- [x] Preserve public class `Icod.Patch.Command`.
+- [x] Move the project into the suite-correct solution folder.
+- [x] Create `Icod.Patch.Tests`.
+- [x] Add it to the solution-wide build and CI entry point.
+- [x] Add project and source `README.md` files.
+- [x] Capture characterization coverage for the private seed syntax and its retirement.
+- [x] Delete the private format; do not expose a non-GNU compatibility mode.
+- [x] Establish GNU, Icod Diffutils, independent, malformed, and binary fixture directories.
+- [ ] Verify Debug and Release builds and all three CI platforms after integration into a complete checkout.
 
 ## Phase P1 — Invocation, options, and command context
 
-- [ ] Replace synchronous `Main` with asynchronous orchestration.
-- [ ] Add a `CommandContext` core path.
-- [ ] Retain synchronous compatibility wrappers.
-- [ ] Build a declarative Shared `OptionParser` definition.
-- [ ] Implement standard input and `-i` patch-source selection.
-- [ ] Implement original-file operand rules.
-- [ ] Implement `--help` and `--version`.
-- [ ] Implement option conflicts and missing-value diagnostics.
-- [ ] Define prompt-input ownership.
-- [ ] Define program-name and diagnostic quoting.
-- [ ] Define the exit-status accumulator.
-- [ ] Add command-line and process-host integration tests.
+- [x] Replace synchronous `Main` with asynchronous orchestration.
+- [x] Add a `CommandContext` core path.
+- [x] Retain synchronous compatibility wrappers.
+- [x] Build a declarative Shared `OptionParser` definition covering the complete GNU patch 2.8 source-defined option-name inventory.
+- [x] Implement standard input and `-i` patch-source selection.
+- [x] Implement original-file operand rules.
+- [x] Implement `--help` and `--version`.
+- [x] Implement option conflicts and missing-value diagnostics.
+- [x] Define prompt-input ownership.
+- [x] Define program-name and diagnostic quoting.
+- [x] Define the exit-status accumulator.
+- [x] Add command-line and process-host integration tests.
 
 ## Phase P2 — Patch stream, source mapping, and format detection
 
-- [ ] Build a byte-preserving patch-source reader.
-- [ ] Preserve source byte offsets and line locations.
-- [ ] Recognize permitted leading and trailing text.
-- [ ] Recognize multiple file patches in one stream.
-- [ ] Implement format detection.
-- [ ] Accept required spacing around directive line numbers.
-- [ ] Reject NUL bytes in directive lines.
-- [ ] Prevent output filenames containing newlines.
-- [ ] Handle CRLF and binary mode according to GNU 2.8.
-- [ ] Preserve incomplete-line markers.
-- [ ] Distinguish malformed input from valid text containing no patch.
-- [ ] Add parser fuzz tests and resource limits.
+- [x] Build a byte-preserving patch-source reader.
+- [x] Preserve source byte offsets and line locations.
+- [x] Recognize permitted leading and trailing text.
+- [x] Recognize multiple file patches in one stream.
+- [x] Implement format detection.
+- [x] Accept required spacing around directive line numbers.
+- [x] Reject NUL bytes in directive lines.
+- [x] Prevent output filenames containing newlines.
+- [x] Handle CRLF, CR, LF, and byte-oriented input according to the P2 GNU 2.8 source contract.
+- [x] Preserve incomplete records and recognize incomplete-line markers.
+- [x] Distinguish malformed input from valid text containing no patch.
+- [x] Add deterministic parser fuzz tests and resource limits.
 
 ## Phase P3 — Unified and context formats
 
@@ -1723,7 +1646,7 @@ After `cp`, `mv`, and `install` have independently exercised E6:
 
 **Hard prerequisite:** P11B.
 
-- [ ] Complete the GNU 2.8 option matrix.
+- [ ] Finalize the GNU 2.8 behavior/conformance matrix against every implemented option; retain the P0 source-defined inventory as the spelling and arity baseline.
 - [ ] Complete parser corpora.
 - [ ] Complete GNU differential tests on Linux.
 - [ ] Complete independent Icod Diffutils interoperability tests.
@@ -1750,17 +1673,15 @@ After `cp`, `mv`, and `install` have independently exercised E6:
 Maintain distinct fixture roots:
 
 ```text
-tests/Patch.Tests/Fixtures/
-├── GnuPatch-2.8/
-├── GnuDiffutils/
-├── IcodDiffUtils/
-├── Independent/
-├── HandWritten/
-├── Malformed/
-├── Security/
-├── Binary/
-├── LineEndings/
-└── Large/
+tests/Patch.Tests/fixtures/
+├── gnu/
+├── icod-diffutils/
+├── independent/
+├── malformed/
+├── binary/
+├── security/       # expanded in P7-P12
+├── line-endings/   # expanded with parser/application cases in P3-P6
+└── large/          # expanded with later parser/application stress cases
 ```
 
 Do not regenerate all expected output with the implementation under test.
@@ -2090,7 +2011,7 @@ Do not move Patch-specific models into the general Shared project.
 The Patch milestone is complete only when:
 
 - GNU patch 2.8 is pinned and recorded;
-- the current private format is no longer the default implementation;
+- the historical private format has been removed and is covered only by retirement characterization tests;
 - the project is `Icod.Patch`;
 - the public class is `Icod.Patch.Command`;
 - the assembly name is `patch`;
