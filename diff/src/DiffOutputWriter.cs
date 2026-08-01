@@ -269,7 +269,7 @@ internal sealed class DiffOutputWriter {
 				await this.WriteLineAsync( $"d{difference.OldStart + 1} {difference.OldLength}" ).ConfigureAwait( false );
 			}
 			if ( 0 < difference.NewLength ) {
-				await this.WriteLineAsync( $"a{difference.OldStart} {difference.NewLength}" ).ConfigureAwait( false );
+				await this.WriteLineAsync( $"a{difference.OldStart + difference.OldLength} {difference.NewLength}" ).ConfigureAwait( false );
 				foreach ( var operation in difference.Operations.Where( operation => EditOperationKind.Insert == operation.Kind ) ) {
 					await this.WriteRawLineAsync( operation.Line, markIncomplete: false ).ConfigureAwait( false );
 				}

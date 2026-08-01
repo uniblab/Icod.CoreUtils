@@ -125,11 +125,21 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task ComparisonPoliciesCanMakeInputsEquivalent() {
 		using var fixture = new FileFixture();
-		var first = fixture.Write( "first", "Alpha beta\n" );
-		var second = fixture.Write( "second", " alpha    BETA \n" );
+		var first = fixture.Write( "first", "Alpha   beta \n" );
+		var second = fixture.Write( "second", "alpha BETA\t\n" );
 		var result = await RunAsync( "-i", "-b", first, second );
 		Assert.Equal( 0, result.Status );
 		Assert.Equal( string.Empty, result.Output );
+	}
+
+	/// <summary>Ignore-space-change preserves a leading-space difference when the other line has none.</summary>
+	[Fact]
+	public async Task IgnoreSpaceChangeDoesNotEraseLeadingWhitespace() {
+		using var fixture = new FileFixture();
+		var first = fixture.Write( "first", "Alpha beta\n" );
+		var second = fixture.Write( "second", " Alpha beta\n" );
+		var result = await RunAsync( "-b", first, second );
+		Assert.Equal( 1, result.Status );
 	}
 
 	/// <summary>An incomplete changed line receives the standard marker.</summary>
