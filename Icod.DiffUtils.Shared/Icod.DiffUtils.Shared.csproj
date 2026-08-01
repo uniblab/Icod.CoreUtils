@@ -50,7 +50,7 @@
 		<PackageVersion>1.0.0-WIP1</PackageVersion>
 		<PackageReleaseNotes>Initial release of Icod.DiffUtils.Shared</PackageReleaseNotes>
 		<Authors>Timothy J. Bruce</Authors>
-		<!--<PackageReadmeFile>README.md</PackageReadmeFile>-->
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageIcon>icon.png</PackageIcon>
 		<PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
 		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
