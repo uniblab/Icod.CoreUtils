@@ -8,6 +8,7 @@ using Icod.CoreUtils.Shared.Records;
 /// <summary>Stores arbitrarily large byte records and a fixed-width random-access location index in owned temporary files.</summary>
 internal sealed class SpoolRecordStore : IAsyncDisposable {
 	private const int LocationSize = sizeof( long ) * 2;
+	private const string TemporarySpoolPrefix = "icod-coreutils-shuf-";
 	private readonly TemporarySpool myData;
 	private readonly TemporarySpool myIndex;
 	private readonly byte[] myLocationBuffer = new byte[ LocationSize ];
@@ -24,9 +25,12 @@ internal sealed class SpoolRecordStore : IAsyncDisposable {
 	/// <summary>Creates an empty externally backed record store.</summary>
 	/// <returns>The created record store.</returns>
 	internal static SpoolRecordStore Create() {
-		var data = TemporarySpool.Create();
+		var data = TemporarySpool.Create( fileNamePrefix: TemporarySpoolPrefix );
 		try {
-			return new SpoolRecordStore( data, TemporarySpool.Create() );
+			return new SpoolRecordStore(
+				data,
+				TemporarySpool.Create( fileNamePrefix: TemporarySpoolPrefix )
+			);
 		} catch {
 			data.Dispose();
 			throw;

@@ -4,7 +4,7 @@
 
 This document is the regenerated development roadmap for `Icod.Patch`.
 
-It is based on the state of the `main` branch reviewed on July 30, 2026:
+It is based on the state of the `main` branch reviewed on August 1, 2026:
 
 - [Icod.CoreUtils repository](https://github.com/uniblab/Icod.CoreUtils)
 - [Main audit and refactor roadmap](https://github.com/uniblab/Icod.CoreUtils/blob/main/Icod.CoreUtils-Audit-and-Refactor-Roadmap.md)
@@ -40,6 +40,8 @@ This roadmap is subordinate to the repository-wide conventions and engineering g
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 | Additional platform goal | Best-effort BSD support |
 | Repository status | Co-resident in `Icod.CoreUtils.sln` until Completion Gate G |
+| Scheduling model | Dependency-aligned partial order with Completion Gates E2–E6 |
+| First scheduled wave | P0–P4 after Diffutils; E2/E3 design may proceed concurrently |
 | Detailed ordering status | Provisional until the GNU 2.8 option and conformance matrices are complete |
 
 ---
@@ -80,9 +82,7 @@ A separate engine or Shared assembly is created only if a concrete second consum
 
 ## Relationship to the main roadmap
 
-The main roadmap places the Patch milestone immediately after the consecutive Diffutils block.
-
-That ordering is appropriate because it provides independent textual fixtures from:
+The main roadmap begins the Patch workstream immediately after the consecutive Diffutils block so Patch has independent textual fixtures from:
 
 ```text
 Icod.DiffUtils.Diff
@@ -90,9 +90,7 @@ GNU diff
 other compatible diff producers
 ```
 
-Patch then develops as an independent consumer of public text formats.
-
-The production dependency boundary must remain:
+The production dependency boundary remains textual:
 
 ```text
 Icod.DiffUtils
@@ -110,24 +108,55 @@ Icod.Patch
 Icod.DiffUtils.Shared
 ```
 
-Patch must be capable of consuming patch text produced by GNU Diffutils, BSD tools, Git-compatible producers where the syntax overlaps, hand-authored patches, archived mailing-list patches, and future `Icod.DiffUtils` releases.
+Patch must consume patch text produced by GNU Diffutils, BSD tools, Git-compatible producers where the syntax overlaps, hand-authored patches, archived mailing-list patches, and future `Icod.DiffUtils` releases.
 
-The main roadmap also deliberately schedules important filesystem infrastructure after the initial Patch milestone:
+The E-series gates and Patch phases are scheduled as a partial order rather than two serial blocks. Parser and pure application work should not wait for filesystem gates, but Patch must consume each general filesystem contract before closing the phase that depends on it.
 
-- Completion Gate E2 — canonical paths;
-- Completion Gate E3 — filesystem metadata and timestamps;
-- Completion Gate E4 — modes and basic pathname mutation;
-- Completion Gate E5 — mutation-safe traversal and copying;
-- Completion Gate E6 — secure transactional replacement.
+The dependency graph is:
 
-Patch work should therefore be divided into:
+```text
+P0 → P1 → P2 → P3/P4 → P5 → P6
+              │                   │
+              │                   └──────────────┐
+              │                                  │
+E2 ───────────┴────────────────→ P7              │
+E3 + E4 ───────────────────────→ P8              │
+E4 ───────────────────────────────────────────→ P9
+P7 + P8 + P9 + E2 + E3 + E4 ─→ P10
+E6 + P10 ─────────────────────→ P11A
+P11A + Batch 44 + Batch 45 ───→ P11B → P12
+```
 
-1. parser, pure application, matching, diagnostics, and virtual-filesystem behavior that can be implemented immediately after Diffutils; and
-2. final filesystem mutation, metadata, backup, symlink, and atomic-replacement integration after the applicable E-series gates.
+The hard ordering constraints are:
 
-Patch must not create private permanent substitutes for shared infrastructure that the main roadmap already schedules.
+1. P2 and E2 must both complete before P7.
+2. P7, E3, and E4 must complete before P8 is closed.
+3. P6 and E4 must complete before P9's E6-facing filesystem boundary is closed.
+4. P7 through P9 and E2 through E4 must complete before P10.
+5. E6 and P10 must complete before P11A.
+6. P11A and the independent E6 validation supplied by `cp`, `mv`, and `install` in Batches 44 and 45 must complete before P11B.
+7. P11B must complete before final conformance and extraction readiness in P12.
 
----
+Completion Gate E5 is not a direct Patch feature prerequisite. Patch does not need recursive-copy traversal. E5 remains upstream of E6 only to the extent that E6 consumes its identity, containment, metadata-preservation, no-follow mutation, failure, and cleanup contracts.
+
+The resulting repository-wide waves are:
+
+| Wave | Patch work | E-series and command validation |
+|---|---|---|
+| A | P0–P4: project, invocation, source model, and all patch parsers | E2/E3 design may proceed concurrently |
+| B1 | P5–P6: exact application and matching over virtual target content | E2 may complete concurrently |
+| B2 | P7: filenames, paths, and multi-file state | E2 and Batch 35 must complete before P7 |
+| C | P8 and P9 start: artifacts, prompts, statuses, and provisional safe mutation | E3, Batch 36, E4, and Batches 38–43 proceed |
+| D | P9 and P10 closure | E2–E4 are complete; E5 supplies E6 prerequisites |
+| E | P11A initial transaction integration | E6 completes |
+| F | P11B and P12 final closure | Batches 44 and 45 independently validate E6 |
+
+This schedule avoids two opposite failures:
+
+- delaying parser and matcher work until every filesystem gate is complete; and
+- building permanent Patch-private path, metadata, mode, symlink, or transaction frameworks that later have to be discarded.
+
+Patch remains co-resident until Completion Gate G and consumes general infrastructure through project references during incubation.
 
 ## Scope
 
@@ -1092,27 +1121,15 @@ A resource-limit failure must leave original files intact.
 
 ---
 
-## Filesystem transaction model
+## Filesystem integration and transaction model
 
-## Before Completion Gate E6
+Patch parsing, immutable models, exact application, offsets, fuzz, reversal, and most diagnostics are deliberately independent from live filesystem mutation.
 
-Patch parsing, matching, and pure application may be completed before E6.
+The E-series contracts are adopted at the first phase that semantically needs them, not postponed to one late retrofit.
 
-Any temporary command-local filesystem implementation must be:
+## Completion Gate E2 and Phase P7
 
-- isolated behind an internal interface;
-- clearly marked provisional;
-- tested with an in-memory or controlled test provider;
-- prohibited from deleting the original before a replacement is ready;
-- replaceable without changing parser or matcher contracts.
-
-Do not claim full filesystem conformance before E2–E6 integration.
-
----
-
-## After Completion Gate E2
-
-Consume shared:
+P7 consumes E2 directly for:
 
 - lexical path normalization;
 - physical path resolution;
@@ -1120,17 +1137,18 @@ Consume shared:
 - missing-component policy;
 - loop detection;
 - platform roots and volumes;
-- containment and relative paths.
+- containment and relative paths;
+- stable structured path failures.
 
-Patch-specific `-d`, `-p`, filename selection, and candidate policy remain above these mechanisms.
+Patch-specific `-d`, `-p`, filename selection, candidate ranking, `/dev/null` interpretation, missing-file decisions, and version-control retrieval policy remain above these mechanisms.
 
----
+P2 and E2 are independent hard predecessors of P7: P2 supplies parsed filename evidence and E2 supplies the path semantics used to act on it.
 
-## After Completion Gate E3
+Do not create a complete provisional canonical-path subsystem inside Patch.
 
-Consume shared metadata and timestamp capabilities.
+## Completion Gates E3 and E4 and Phase P8
 
-Implement:
+P8 consumes E3 metadata and timestamp capabilities for:
 
 - patch header timestamps;
 - timestamp-setting options;
@@ -1141,41 +1159,85 @@ Implement:
 - output-file metadata;
 - backup and reject metadata policy.
 
-Do not use creation time as a substitute for inode-change time.
-
----
-
-## After Completion Gate E4
-
-Consume shared:
+P8 consumes E4 mode and basic mutation capabilities for:
 
 - mode parsing and representation;
-- file and directory creation;
+- file creation and deletion;
 - symlink and no-follow behavior;
+- race-aware single-path operations;
+- controlled privilege and platform diagnostics.
+
+Patch owns the GNU decision policy for target, backup, reject, and output artifacts. It does not own a second metadata, mode, or low-level mutation framework.
+
+P7, E3, and E4 must complete before P8 is closed.
+
+## Completion Gate E5 and the E6 dependency path
+
+Patch is not a recursive-copy command and does not directly require all of E5.
+
+E5 matters only where E6 consumes its general:
+
+- identity and provenance;
+- containment;
+- metadata-preservation;
+- no-follow mutation;
+- partial-failure;
+- cleanup;
+- destination safety
+
+contracts.
+
+Patch should not wait for unrelated recursive-copy behavior to parse, match, or apply hunks in a virtual model.
+
+## Phase P9 and concurrent E6 contract development
+
+P9 places all target mutation behind an internal injected boundary before E6 is finalized.
+
+The provisional implementation must:
+
+- use secure exclusive temporary creation;
+- never remove the only recoverable original before a replacement is ready;
+- support deterministic cleanup;
+- expose cancellation and staged failure injection;
+- characterize symlink and reparse-point behavior;
+- keep parser and matcher contracts independent from filesystem commits;
+- remain explicitly replaceable.
+
+P9 is permitted to help shape the E6 API. It must not become a competing permanent Patch transaction framework.
+
+## Phase P10 — E2–E4 conformance closure
+
+P10 is no longer the first integration pass.
+
+By P10, P7 through P9 have already consumed E2 through E4. P10 closes the conformance matrix:
+
+- canonical path and containment behavior;
+- roots, volumes, separators, and unusual names;
+- timestamps, including post-2038 values;
+- modes and metadata;
 - race-aware single-path mutation;
-- controlled privilege diagnostics.
+- input and output symlink behavior;
+- `--follow-symlinks`;
+- Windows, Linux, macOS, and best-effort BSD capabilities.
 
-Patch owns the decision of which patch metadata changes should be applied.
+P10 must complete before P11A.
 
----
+## Completion Gate E6 and Phase P11A
 
-## After Completion Gate E6
-
-Migrate to the shared transactional replacement infrastructure:
+After E6 is implemented, P11A immediately replaces the provisional P9 internals with:
 
 - secure sibling temporary files;
 - exclusive creation;
 - output flushing;
 - atomic replacement where supported;
-- backup-name generation;
-- backup retention;
+- backup-name generation and retention;
 - rollback;
-- path containment;
-- metadata preservation;
+- containment;
+- metadata restoration;
 - deterministic cleanup;
-- explicit non-atomic capability diagnostics.
+- explicit non-atomic capability results.
 
-Patch's final application flow should resemble:
+Patch's proposed file flow is:
 
 ```text
 parse and validate patch
@@ -1201,11 +1263,22 @@ commit reject/output artifacts
 cleanup
 ```
 
-Multi-file application requires an explicit transaction policy.
+P11A tests Patch-specific combinations such as partial hunk failure, backup and reject coexistence, multi-file partial success, and cancellation between commit stages.
 
-GNU patch does not necessarily promise one all-or-nothing transaction for an entire patch stream. The implementation must preserve GNU-visible partial-application behavior while ensuring that each individual file transition is recoverable and accurately reported.
+## Batches 44 and 45 and Phase P11B
 
----
+E6 is not considered stable solely because Patch uses it.
+
+`cp`, `mv`, and `install` exercise different replacement, copying, cross-filesystem, ownership, mode, and installation policies. Their validation may reveal contract changes.
+
+P11B occurs after Batches 44 and 45:
+
+- adopt any stabilized E6 changes;
+- remove all provisional Patch-local replacement code;
+- rerun target, backup, reject, output, metadata, link, rollback, cleanup, cancellation, and non-atomic fallback tests;
+- verify that no data-loss window remains.
+
+Multi-file application requires an explicit transaction policy. GNU patch does not necessarily promise one all-or-nothing transaction for the entire stream. The implementation must preserve GNU-visible partial-application behavior while ensuring that each individual file transition is recoverable and accurately reported.
 
 ## Backups
 
@@ -1414,14 +1487,33 @@ Only the pinned 2.8 source and tests settle exact availability and spelling.
 
 The phase labels do not alter the numbered CoreUtils batches.
 
-They refine the unnumbered in-solution Patch milestone in the main roadmap.
+They refine the in-solution Patch/E-series workstream in the main roadmap. The phases are listed numerically for ownership and checklist clarity, but the repository executes them according to the dependency graph above rather than treating all P phases as one isolated serial block followed by all E gates.
+
+The scheduling checkpoints are:
+
+```text
+Wave A: P0–P4
+Wave B1: P5–P6 while E2 completes
+E2 + Batch 35
+Wave B2: P7
+E3 + Batch 36 + Batch 37
+E4
+Wave C: P8 and P9 start
+Batches 38–40
+E5 + Batches 41–43
+Wave D: P9 and P10 close
+E6
+P11A
+Batches 44–45
+P11B and P12
+```
 
 ## Phase P0 — Normalize project identity and capture the seed
 
 - [ ] Record GNU patch 2.8 in the authoritative-version ledger.
 - [ ] Download and verify the pinned release archive.
 - [ ] Record the source commit or release tag.
-- [ ] Rename `Icod.Patch.csproj` to `Icod.Patch.csproj`.
+- [ ] Retain and verify the suite-correct `Icod.Patch.csproj` project identity.
 - [ ] Add `<LangVersion>13.0</LangVersion>`.
 - [ ] Preserve assembly name `patch`.
 - [ ] Preserve root namespace `Icod.Patch`.
@@ -1521,61 +1613,88 @@ They refine the unnumbered in-solution Patch milestone in the main roadmap.
 
 ## Phase P7 — Files, paths, and multi-file application
 
+**Hard prerequisites:** P2, P5, P6, Completion Gate E2, and the E2 validation supplied by Batch 35.
+
+- [ ] Consume the shared canonical-path provider; do not create a Patch-private replacement.
 - [ ] Implement filename candidates.
 - [ ] Implement explicit original-file operand behavior.
 - [ ] Implement `-d`.
 - [ ] Implement component-aware `-p`.
 - [ ] Implement quoted and unusual filenames.
+- [ ] Implement roots, volumes, alternate separators, links, reparse points, and containment through E2.
 - [ ] Implement multiple file patches.
 - [ ] Implement missing-file decisions.
-- [ ] Implement creation and deletion.
+- [ ] Implement creation and deletion in the application plan without committing transactions yet.
 - [ ] Implement version-control retrieval policy.
 - [ ] Implement multi-file status aggregation.
-- [ ] Introduce a provisional filesystem adapter.
 - [ ] Add path-security tests.
-- [ ] Do not claim final canonical, metadata, or transaction conformance yet.
+- [ ] Keep the pure matcher and hunk applicator independent from live filesystem mutation.
+- [ ] Do not claim metadata, mode, backup, reject, or transaction conformance yet.
 
 ## Phase P8 — Rejects, backups, output, and user interaction
+
+**Hard prerequisites:** P7, Completion Gate E3, and Completion Gate E4.
 
 - [ ] Implement reject generation.
 - [ ] Implement reject naming and explicit reject destinations.
 - [ ] Implement backup policy.
 - [ ] Implement backup names and version-control styles.
+- [ ] Consume E3 timestamp, metadata, identity, and availability contracts.
+- [ ] Consume E4 mode, creation/deletion, no-follow, and race-aware single-path contracts.
 - [ ] Implement output-file mode.
 - [ ] Implement dry run.
 - [ ] Implement verbosity and silence.
 - [ ] Implement deterministic prompts and noninteractive behavior.
 - [ ] Implement filename quoting.
 - [ ] Implement complete exit statuses.
-- [ ] Add write-failure and broken-pipe tests.
+- [ ] Add metadata, mode, write-failure, and broken-pipe tests.
+- [ ] Keep GNU Patch artifact and prompt policy above the shared mechanisms.
 
-## Phase P9 — Pre-E6 filesystem isolation and safety
+## Phase P9 — E6-facing filesystem isolation and safety
 
-- [ ] Put all target mutation behind `IPatchFileSystem` or equivalent.
+**Start prerequisites:** P6 and Completion Gate E4.  
+**Closure prerequisites:** P8 and the agreed E6-facing contract.
+
+This phase starts during the E4/E5 validator batches and proceeds concurrently with E6 contract design.
+
+- [ ] Put all target mutation behind `IPatchFileSystem`, `IPatchTransaction`, or equivalent injected boundaries.
 - [ ] Use exclusive secure temporary creation.
-- [ ] Ensure no original is removed before a replacement is ready.
+- [ ] Ensure no original is removed before a complete replacement is ready.
 - [ ] Add failure injection at every stage.
 - [ ] Add cancellation cleanup.
 - [ ] Add symlink and reparse-point characterization.
-- [ ] Document remaining dependence on E2–E6.
-- [ ] Mark command-local replacement code provisional.
+- [ ] Model target, backup, reject, and output artifacts explicitly.
+- [ ] Model GNU-visible multi-file partial success separately from per-file recoverability.
 - [ ] Keep parser and matcher independent from filesystem mutation.
+- [ ] Mark command-local replacement code provisional.
+- [ ] Supply Patch requirements and adversarial cases to Completion Gate E6.
+- [ ] Do not claim final transaction conformance.
 
-## Phase P10 — Integrate Completion Gates E2, E3, and E4
+## Phase P10 — Close Completion Gates E2, E3, and E4 conformance
 
-- [ ] Replace path logic with the shared canonical-path model.
-- [ ] Integrate link and reparse-point inspection.
-- [ ] Integrate platform roots, volumes, and separators.
-- [ ] Implement GNU-compatible containment decisions.
-- [ ] Integrate timestamps, including post-2038 values.
-- [ ] Integrate modes and metadata.
-- [ ] Integrate race-aware single-path mutation.
-- [ ] Implement `--follow-symlinks` for input and output.
+**Hard prerequisites:** P7, P8, P9, E2, E3, and E4.
+
+This is a closure checkpoint, not the first integration pass.
+
+- [ ] Verify all path logic uses the shared canonical-path model.
+- [ ] Verify link and reparse-point inspection.
+- [ ] Verify roots, volumes, separators, and relative/contained paths.
+- [ ] Verify GNU-compatible containment decisions.
+- [ ] Verify timestamps, including post-2038 values.
+- [ ] Verify modes and metadata.
+- [ ] Verify race-aware single-path mutation.
+- [ ] Verify `--follow-symlinks` for input and output.
+- [ ] Verify target, backup, reject, and output artifact policy over the shared providers.
 - [ ] Add Windows, Linux, macOS, and best-effort BSD capability tests.
+- [ ] Remove any permanent Patch-local duplicate of E2–E4 facilities.
+- [ ] Freeze Patch's E6 requirements and failure matrix.
 
-## Phase P11 — Integrate Completion Gate E6
+## Phase P11 — Integrate and validate Completion Gate E6
 
-This phase occurs after E6 and after `cp`, `mv`, and `install` have validated the shared transaction foundation.
+**Hard prerequisites for P11A:** P10 and Completion Gate E6.  
+**Hard prerequisites for P11B:** P11A and Batches 44 and 45.
+
+### Phase P11A — Initial Patch integration
 
 - [ ] Migrate to secure sibling temporary files.
 - [ ] Migrate to shared backup naming and retention.
@@ -1585,12 +1704,24 @@ This phase occurs after E6 and after `cp`, `mv`, and `install` have validated th
 - [ ] Integrate metadata preservation.
 - [ ] Integrate containment checks.
 - [ ] Integrate deterministic cleanup.
-- [ ] Remove provisional command-local replacement code.
-- [ ] Add transaction failure-injection tests.
+- [ ] Test target, backup, reject, output, partial hunk failure, multi-file partial success, links, cancellation, and every commit-stage failure.
 - [ ] Verify no data-loss window.
+- [ ] Report contract defects before Batches 44 and 45 close.
+
+### Phase P11B — Post-validator closure
+
+After `cp`, `mv`, and `install` have independently exercised E6:
+
+- [ ] Adopt stabilized E6 contract changes.
+- [ ] Remove provisional command-local replacement code.
+- [ ] Rerun transaction failure-injection tests.
 - [ ] Verify target, backup, reject, and output artifact consistency.
+- [ ] Verify metadata, symlink/reparse-point, rollback, cancellation, cleanup, and non-atomic fallback behavior.
+- [ ] Confirm that GNU-visible partial-application behavior remains command-specific and correct.
 
 ## Phase P12 — Conformance, hardening, and extraction readiness
+
+**Hard prerequisite:** P11B.
 
 - [ ] Complete the GNU 2.8 option matrix.
 - [ ] Complete parser corpora.
@@ -1996,7 +2127,7 @@ The Patch milestone is complete only when:
 
 1. Pin and download GNU patch 2.8.
 2. Generate the complete option and behavior matrix from its source and tests.
-3. Rename the project to `Icod.Patch.csproj`.
+3. Verify the suite-correct `Icod.Patch.csproj` project identity and solution placement.
 4. Add C# 13 explicitly.
 5. Create `Icod.Patch.Tests`.
 6. Add characterization tests for the current seed.
@@ -2004,8 +2135,10 @@ The Patch milestone is complete only when:
 8. Build independent normal, context, unified, ed-script, malformed, and security corpora.
 9. Design the immutable patch document and source-location model.
 10. Implement format detection and the unified/context parsers before touching target files.
-11. Keep all filesystem mutation behind a replaceable internal adapter.
-12. Update the main roadmap milestone to link to this document.
+11. Advance Completion Gate E2 in parallel so its canonical-path contract is available before P7.
+12. Keep all filesystem mutation behind a replaceable internal adapter and feed its requirements into E6.
+13. Do not close P8 before E3 and E4, or P11B before Batches 44 and 45.
+14. Keep the main roadmap and this document synchronized at every Patch/E-series checkpoint.
 
 ---
 
@@ -2016,7 +2149,7 @@ The main roadmap's Patch milestone should retain its concise schedule and add:
 ```markdown
 The detailed architecture, repository assessment, security model, format
 matrix, development phases, and completion criteria are maintained in
-[`Icod.Patch-Audit-and-Refactor-Roadmap.md`](Icod.Patch-Audit-and-Refactor-Roadmap.md).
+[`Icod.Patch-Development-Roadmap-Regenerated.md`](Icod.Patch-Development-Roadmap-Regenerated.md).
 ```
 
 The main roadmap should not duplicate the complete Patch roadmap. It should retain:
@@ -2025,7 +2158,7 @@ The main roadmap should not duplicate the complete Patch roadmap. It should reta
 - textual interoperability;
 - the prohibition on `Icod.DiffUtils.Shared` dependencies;
 - the project identity;
-- the relationship to Gates E2–E6;
+- the Patch/E2–E6 partial-order graph and hard dependency edges;
 - the requirement to complete this dedicated roadmap;
 - final extraction at Completion Gate G.
 
@@ -2035,32 +2168,30 @@ The main roadmap should not duplicate the complete Patch roadmap. It should reta
 
 Rebuild Patch as an independent textual-format consumer with a pure parser and application engine before final filesystem integration.
 
-The preferred progression is:
+The preferred progression is a dependency-aligned weave:
 
 ```text
-project normalization
+P0–P4 syntax and models
         ↓
-invocation and source model
+P5–P6 pure application and matching ─── concurrent E2
+        ↓                                      ↓
+        └────────────── E2 + Batch 35 ─────────┘
+                               ↓
+P7 paths and multi-file state
         ↓
-unified and context parsing
+E3 + Batch 36 + E4
         ↓
-normal and ed-script parsing
+P8 and P9 start while Batches 38–43 validate mutation foundations
         ↓
-pure exact application
+P9/P10 closure
         ↓
-offset, fuzz, and reversal
+E6
         ↓
-file selection and multi-file state
+P11A initial Patch transaction integration
         ↓
-rejects, backups, output, and prompts
+Batches 44–45 independent E6 validation
         ↓
-provisional safe filesystem adapter
-        ↓
-E2–E4 path and metadata integration
-        ↓
-E6 transactional replacement
-        ↓
-GNU 2.8 conformance and extraction readiness
+P11B and P12 final Patch closure
 ```
 
-This sequence gives Patch a testable domain engine early, preserves independence from Diffutils and LineEditor, and delays irreversible filesystem commitments until the repository's shared path, metadata, and transaction contracts are ready.
+This schedule gives Patch a testable domain engine early, avoids throwaway Patch-specific path and transaction frameworks, preserves independence from Diffutils and LineEditor, and gives the E gates a demanding cross-suite consumer while their contracts are still inexpensive to revise.

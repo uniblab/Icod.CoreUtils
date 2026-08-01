@@ -28,13 +28,25 @@ public sealed class TemporarySpool : IDisposable, IAsyncDisposable {
 	/// <summary>
 	/// Creates a temporary spool.
 	/// </summary>
+	/// <param name="directory">The directory in which to create the spool, or <see langword="null"/> for the process temporary directory.</param>
+	/// <param name="bufferSize">The stream buffer size.</param>
+	/// <param name="fileNamePrefix">The leaf-name prefix used to identify the owned spool.</param>
+	/// <returns>The created temporary spool.</returns>
 	public static TemporarySpool Create(
 		string? directory = null,
-		int bufferSize = StreamOperations.DefaultBufferSize
+		int bufferSize = StreamOperations.DefaultBufferSize,
+		string fileNamePrefix = "icod-coreutils-"
 	) {
 		if ( bufferSize <= 0 ) {
 			throw new ArgumentOutOfRangeException(
 				nameof( bufferSize )
+			);
+		}
+		ArgumentException.ThrowIfNullOrEmpty( fileNamePrefix );
+		if ( 0 <= fileNamePrefix.IndexOfAny( System.IO.Path.GetInvalidFileNameChars() ) ) {
+			throw new ArgumentException(
+				"The temporary spool prefix must be a valid file-name prefix.",
+				nameof( fileNamePrefix )
 			);
 		}
 		directory ??= System.IO.Path.GetTempPath();
@@ -44,7 +56,7 @@ public sealed class TemporarySpool : IDisposable, IAsyncDisposable {
 		var path = System.IO.Path.Combine(
 			directory,
 			string.Concat(
-				"icod-coreutils-",
+				fileNamePrefix,
 				System.IO.Path.GetRandomFileName(),
 				".tmp"
 			)

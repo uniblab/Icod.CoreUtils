@@ -388,7 +388,7 @@ public sealed class CommandTests {
 	private static HashSet<string> FindTemporarySpools() {
 		return Directory.EnumerateFiles(
 			System.IO.Path.GetTempPath(),
-			"icod-coreutils-*.tmp",
+			"icod-coreutils-shuf-*.tmp",
 			SearchOption.TopDirectoryOnly
 		).ToHashSet( StringComparer.Ordinal );
 	}

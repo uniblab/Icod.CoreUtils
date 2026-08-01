@@ -12,7 +12,10 @@ comparison documents, incomplete-line state, line normalization policies,
 Myers edit scripts, contiguous changed blocks, context-expanded hunks, and
 logical side-by-side rows. Batch 33 adds GNU-compatible three-way alignment,
 connected ancestor-relative regions, and overlap classification for `diff3` and
-future merge-oriented Diffutils consumers.
+future merge-oriented Diffutils consumers. Batch 34 completes the shared
+side-by-side foundation with GNU-compatible output geometry, display-column
+measurement, Unicode-aware truncation, tab-stop padding, and logical row
+formatting for `diff --side-by-side` and `sdiff`.
 
 Output syntax, directory traversal, labels, binary reporting, command-line
 policy, editor invocation, and interactive behavior remain private to the
