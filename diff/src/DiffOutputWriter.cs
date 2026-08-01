@@ -73,7 +73,7 @@ internal sealed class DiffOutputWriter {
 
 	/// <summary>Writes the standard binary-files-differ report.</summary>
 	public Task WriteBinaryDifferenceAsync( DiffInput oldInput, DiffInput newInput ) {
-		return this.WriteLineAsync( $"Binary files {oldInput.HeaderName} and {newInput.HeaderName} differ" ).AsTask();
+		return this.WriteLineAsync( $"Binary files {oldInput.HeaderName} and {newInput.HeaderName} differ" );
 	}
 
 	/// <summary>Writes incomplete-input diagnostics required by the ed-oriented formats.</summary>
