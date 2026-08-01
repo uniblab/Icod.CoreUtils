@@ -4,9 +4,9 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `33` |
-| Current engineering milestone | Batch 33 complete |
-| Next infrastructure dependencies | Batch 34 reuses the shared line documents and side-by-side row model without introducing a dependency on the `diff` command |
+| Completed command batches | `0` through `34` |
+| Current engineering milestone | Batch 34 complete |
+| Next infrastructure dependencies | Icod.Path work |
 | Next command batch | Batch 34 — `Icod.DiffUtils.SDiff` side-by-side comparison |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
