@@ -4,10 +4,10 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `31` |
-| Current engineering milestone | Batch 31 complete |
-| Next infrastructure dependencies | Batch 32 extends `Icod.DiffUtils.Shared` only for proven multi-command line-difference needs |
-| Next command batch | Batch 32 — `Icod.DiffUtils.Diff` difference engine |
+| Completed command batches | `0` through `32` |
+| Current engineering milestone | Batch 32 complete |
+| Next infrastructure dependencies | Batch 33 reuses the proven two-way line model without introducing a dependency on the `diff` command |
+| Next command batch | Batch 33 — `Icod.DiffUtils.Diff3` three-way comparison |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -791,11 +791,13 @@ Batch 31 replaced the project-template placeholder with a bounded asynchronous b
 
 ### Batch 32 — `Icod.DiffUtils.Diff` difference engine (1 tool)
 
-- [ ] `diff`
+- [x] `diff`
 
 Implement normal, context, unified, ed, and other in-scope formats; whitespace and case policies; labels; function context; binary handling; incomplete-line behavior; recursive directory comparison; absent-file policy; and statuses 0 for no differences, 1 for differences, and greater than 1 for errors.
 
 Textual fixtures must be independently consumable by our implementations of GNU `patch` and GNU `ed`.
+
+Batch 32 replaced the legacy front end with an asynchronous line-oriented implementation audited against GNU Diffutils 3.12. The command now supports normal, context, unified, reverse and forward `ed`, RCS, side-by-side, brief, and conditional-merge output; labels and function context; whitespace, case, blank-line, matching-line, tab, and carriage-return policies; binary classification and forced-text comparison; incomplete final lines; standard input; recursive directory comparison; exclusions, start points, filename-case policy, symlink policy, absent-file modes, fixed `--from-file`/`--to-file` comparisons, cancellation, and statuses 0, 1, and 2. Reusable UTF-8 comparison documents, line normalization, Myers edit scripts, changed blocks, context hunks, and logical side-by-side rows reside in `Icod.DiffUtils.Shared`; command parsing, directory coordination, and all output syntax remain in `Icod.DiffUtils.Diff`. Dedicated command and shared-engine tests define patch/ed-consumable fixtures and the contracts required by Batches 33 and 34. No tool-to-tool project dependency was introduced.
 
 ### Batch 33 — `Icod.DiffUtils.Diff3` three-way comparison (1 tool)
 
