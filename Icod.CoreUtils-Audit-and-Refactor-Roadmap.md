@@ -812,13 +812,13 @@ Completion of Batches 30 through 34 leaves the complete GNU Diffutils family imp
 ### In-solution suite incubation milestone — `Icod.Patch`
 
 This milestone does not alter command-batch numbering.
-
-- [ ] Record GNU patch 2.8 as the authoritative baseline.
-- [ ] Establish independent normal, context, and unified patch corpora, including output from GNU Diffutils and `Icod.DiffUtils`.
-- [ ] Keep the production boundary textual: `patch` must not reference `Icod.DiffUtils.Shared` merely to consume patch files.
-- [ ] Keep patch parsing, hunk application, fuzz and offset matching, reversal detection, rejects, backups, and application state inside `Icod.Patch` or a repository-local engine.
-- [ ] Consume transactional replacement capabilities after Completion Gate E6 rather than duplicating them.
-- [ ] Preserve the lowercase assembly name `patch` and use a suite-specific solution folder.
+- [ ] `patch`
+  - [ ] Record GNU patch 2.8 as the authoritative baseline.
+  - [ ] Establish independent normal, context, and unified patch corpora, including output from GNU Diffutils and `Icod.DiffUtils`.
+  - [ ] Keep the production boundary textual: `patch` must not reference `Icod.DiffUtils.Shared` merely to consume patch files.
+  - [ ] Keep patch parsing, hunk application, fuzz and offset matching, reversal detection, rejects, backups, and application state inside `Icod.Patch` or a repository-local engine.
+  - [ ] Consume transactional replacement capabilities after Completion Gate E6 rather than duplicating them.
+  - [ ] Preserve the lowercase assembly name `patch` and use a suite-specific solution folder.
 
 Detailed GNU patch conformance continues under the `Icod.Patch` roadmap while the project remains co-resident. Final solution and repository extraction occurs in Completion Gate G.
 
