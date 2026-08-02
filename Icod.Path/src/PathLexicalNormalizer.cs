@@ -256,7 +256,7 @@ public static class PathLexicalNormalizer {
 					semantics,
 					basePath
 				)
-				?? Array.Empty<string>()
+				?? components
 			);
 		}
 		var inputComponents = SplitPhysicalComponents(
