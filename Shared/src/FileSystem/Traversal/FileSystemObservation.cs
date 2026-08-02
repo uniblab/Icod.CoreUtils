@@ -1,4 +1,4 @@
-using Icod.Path;
+using System.IO;
 
 namespace Icod.CoreUtils.Shared.FileSystem.Traversal;
 
@@ -12,7 +12,7 @@ public enum FileSystemEntryKind {
 	File = 1,
 	/// <summary>A directory.</summary>
 	Directory = 2,
-	/// <summary>A POSIX or Windows symbolic link that was not dereferenced.</summary>
+	/// <summary>A symbolic link or reparse-point link that was not dereferenced.</summary>
 	SymbolicLink = 3,
 	/// <summary>Another filesystem object that the provider cannot classify more precisely.</summary>
 	Other = 4,
@@ -23,19 +23,7 @@ public enum FileSystemEntryKind {
 	/// <summary>A named pipe or FIFO.</summary>
 	Fifo = 7,
 	/// <summary>A local-domain socket.</summary>
-	Socket = 8,
-	/// <summary>A Windows name-surrogate reparse point, such as a junction, that was not dereferenced.</summary>
-	NameSurrogate = 9,
-	/// <summary>An uncharacterized Windows reparse point whose underlying kind cannot be used safely.</summary>
-	ReparsePoint = 10
-}
-
-/// <summary>Controls terminal pathname-indirection dereferencing for one provider observation.</summary>
-public enum PathDereferenceMode {
-	/// <summary>Observe the physical pathname object without following it.</summary>
-	NoFollow = 0,
-	/// <summary>Follow only a characterized indirection whose target can be safely resolved as a pathname.</summary>
-	FollowEligiblePathIndirection = 1
+	Socket = 8
 }
 
 /// <summary>
@@ -88,12 +76,11 @@ public sealed class ReadOnlyFileSystemEntry {
 	/// <param name="accessPath">The operational pathname.</param>
 	/// <param name="name">The entry basename.</param>
 	/// <param name="kind">The effective entry kind.</param>
-	/// <param name="isSymbolicLink">Whether the source pathname names a symbolic link.</param>
-	/// <param name="wasDereferenced">Whether the provider dereferenced a supported pathname indirection.</param>
-	/// <param name="linkTarget">The immediate provider-reported target, when available.</param>
+	/// <param name="isSymbolicLink">Whether the source pathname names a symbolic link or reparse-point link.</param>
+	/// <param name="wasDereferenced">Whether the provider dereferenced the link for this observation.</param>
+	/// <param name="linkTarget">The immediate provider-reported link target, when available.</param>
 	/// <param name="entryIdentity">The effective entry identity.</param>
 	/// <param name="fileSystemIdentity">The effective filesystem identity.</param>
-	/// <param name="indirection">The physical indirection and reparse-point characterization.</param>
 	public ReadOnlyFileSystemEntry(
 		string accessPath,
 		string name,
@@ -102,8 +89,7 @@ public sealed class ReadOnlyFileSystemEntry {
 		bool wasDereferenced,
 		string? linkTarget,
 		FileSystemEntryIdentity entryIdentity,
-		FileSystemIdentity fileSystemIdentity,
-		PathIndirectionInfo? indirection = null
+		FileSystemIdentity fileSystemIdentity
 	) {
 		ArgumentException.ThrowIfNullOrEmpty( accessPath );
 		ArgumentException.ThrowIfNullOrEmpty( name );
@@ -113,12 +99,9 @@ public sealed class ReadOnlyFileSystemEntry {
 		AccessPath = accessPath;
 		Name = name;
 		Kind = kind;
-		Indirection = indirection ?? (isSymbolicLink
-			? PathIndirectionInfo.PosixSymbolicLink( linkTarget )
-			: PathIndirectionInfo.None);
-		IsSymbolicLink = indirection is null ? isSymbolicLink : Indirection.IsSymbolicLink;
+		IsSymbolicLink = isSymbolicLink;
 		WasDereferenced = wasDereferenced;
-		LinkTarget = Indirection.Target ?? linkTarget;
+		LinkTarget = linkTarget;
 		EntryIdentity = entryIdentity;
 		FileSystemIdentity = fileSystemIdentity;
 	}
@@ -132,34 +115,13 @@ public sealed class ReadOnlyFileSystemEntry {
 	/// <summary>Gets the effective entry kind.</summary>
 	public FileSystemEntryKind Kind { get; }
 
-	/// <summary>Gets the complete physical indirection and reparse-point characterization.</summary>
-	public PathIndirectionInfo Indirection { get; }
-
-	/// <summary>Gets whether the source pathname is specifically a symbolic link.</summary>
+	/// <summary>Gets whether the source pathname names a symbolic link or reparse-point link.</summary>
 	public bool IsSymbolicLink { get; }
 
-	/// <summary>Gets whether the source pathname participates in pathname indirection.</summary>
-	public bool IsPathIndirection => Indirection.IsPathIndirection || IsSymbolicLink;
-
-	/// <summary>Gets whether the source pathname is a Windows name surrogate.</summary>
-	public bool IsNameSurrogate => Indirection.IsNameSurrogate;
-
-	/// <summary>Gets whether the source pathname is a Windows directory junction.</summary>
-	public bool IsJunction => Indirection.IsJunction;
-
-	/// <summary>Gets whether the source pathname is a mounted Windows volume.</summary>
-	public bool IsVolumeMountPoint => Indirection.IsVolumeMountPoint;
-
-	/// <summary>Gets whether the source pathname is a recognized Cloud Files placeholder.</summary>
-	public bool IsCloudPlaceholder => Indirection.IsCloudPlaceholder;
-
-	/// <summary>Gets whether the source pathname carries the Windows reparse-point attribute.</summary>
-	public bool IsReparsePoint => Indirection.IsReparsePoint;
-
-	/// <summary>Gets whether the provider dereferenced a supported pathname indirection.</summary>
+	/// <summary>Gets whether the provider dereferenced the link.</summary>
 	public bool WasDereferenced { get; }
 
-	/// <summary>Gets the immediate provider-reported target, when available.</summary>
+	/// <summary>Gets the immediate provider-reported link target, when available.</summary>
 	public string? LinkTarget { get; }
 
 	/// <summary>Gets the effective entry identity.</summary>
