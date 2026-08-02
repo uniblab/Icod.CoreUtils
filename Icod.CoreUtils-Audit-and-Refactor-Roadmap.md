@@ -5,10 +5,10 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `37` |
-| Current engineering milestone | Batch 37 — `test` is implemented; Completion Gate E4 is next |
-| Completed infrastructure milestone | Completion Gates E2, E3, and E3R — canonical paths, authoritative metadata, and shared reparse-point characterization |
-| Next infrastructure dependency | Completion Gate E4 — shared mode and basic pathname mutation before Batch 38 and Patch P8 |
-| Next command batch | Completion Gate E4, then Batch 38 — `mkdir`, `rmdir`, and `unlink` |
+| Current engineering milestone | Batch 38 — basic directory and name removal |
+| Completed infrastructure milestone | Completion Gates E2, E3, E3R, and E4 — canonical paths, authoritative metadata, pathname-indirection characterization, mode expressions, and basic single-path mutation |
+| Next infrastructure dependency | Completion Gate E5 — recursive mutation and copying before Batch 41 |
+| Next command batch | Batch 38 — `mkdir`, `rmdir`, and `unlink` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -980,15 +980,19 @@ File predicates consume the E3/E3R metadata and identity contracts for regular f
 
 ### Completion Gate E4 — before Batch 38
 
-* [ ] Add shared mode and basic pathname-mutation infrastructure:
+* [x] Add shared mode and basic pathname-mutation infrastructure:
 
-  * [ ] numeric mode parsing;
-  * [ ] symbolic mode-clause parsing;
-  * [ ] umask application;
-  * [ ] basic directory, file, link, FIFO, and device-node capability providers;
-  * [ ] no-follow and dereference policies built on the E3R pathname-indirection contract;
-  * [ ] race-aware single-path mutation;
-  * [ ] controlled privilege and platform diagnostics.
+  * [x] numeric mode parsing;
+  * [x] symbolic mode-clause parsing;
+  * [x] umask application;
+  * [x] basic directory, file, link, FIFO, and device-node capability providers;
+  * [x] no-follow and dereference policies built on the E3R pathname-indirection contract;
+  * [x] race-aware single-path mutation;
+  * [x] controlled privilege and platform diagnostics.
+
+Completion Gate E4 is implemented in `Icod.CoreUtils.Shared.FileSystem.Modes` and `Icod.CoreUtils.Shared.FileSystem.Mutation`. The immutable mode layer parses GNU absolute numeric, operator-numeric, and symbolic expressions; applies clauses sequentially; supports class copying, conditional `X`, and special bits; filters omitted subjects through an explicit caller-supplied umask; and preserves directory set-ID bits unless a numeric expression explicitly clears them. It does not change process-global umask state.
+
+The injectable mutation layer creates one directory or ordinary file, creates hard and symbolic links, creates real FIFOs and block or character device nodes where supported, removes one physical name or empty directory, and changes one POSIX mode. It consumes E3/E3R kinds, stable identities, reparse-point characterization, and explicit no-follow/dereference policy; uses exclusive creation primitives; revalidates identity-bearing preconditions before destructive or metadata-changing operations; verifies created hard-link identity when the provider exposes stable identities; cleans up partially created objects after controlled failure or cancellation; and returns structured unsupported, privilege, access, existence, kind, identity, cross-device, nonempty-directory, and I/O results. Special files are never emulated with ordinary files. Dedicated Shared tests cover GNU mode semantics, platform capabilities, real creation/removal/link/FIFO operations, explicit mode policy, and stale-identity rejection. Full-checkout Debug, Staging, Release, and Windows/Ubuntu/macOS CI validation remain to be executed after integration.
 
 This gate supports `mkdir`, `rmdir`, `unlink`, `link`, `ln`, `mkfifo`, `mknod`, and the later permission commands. Patch consumes these contracts in Phases P8 through P10 for mode, creation/deletion, no-follow, symlink, and race-aware single-path policy. E4 is therefore a hard predecessor of closing P8 and P9.
 
