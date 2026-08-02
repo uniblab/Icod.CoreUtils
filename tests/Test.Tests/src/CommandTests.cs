@@ -247,7 +247,9 @@ public sealed class CommandTests {
 
 	private static async Task<int> RunAsync( string[] arguments, ITestEvaluationHost? host = null ) {
 		var context = new CommandContext( "test", TextReader.Null, new StringWriter(), new StringWriter() );
-		return await Command.RunAsync( arguments, context, host ?? new FakeHost() );
+		return null == host
+			? await Command.RunAsync( arguments, context )
+			: await Command.RunAsync( arguments, context, host );
 	}
 
 	private static async Task<(int ExitCode, string StandardError)> RunWithErrorAsync( string[] arguments ) {
