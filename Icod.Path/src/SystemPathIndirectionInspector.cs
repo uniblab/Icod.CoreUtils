@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Win32.SafeHandles;
@@ -32,8 +33,9 @@ public sealed class SystemPathIndirectionInspector : IPathIndirectionInspector {
 		ArgumentException.ThrowIfNullOrEmpty( path );
 		cancellationToken.ThrowIfCancellationRequested();
 		var attributes = File.GetAttributes( path );
+		string? managedTarget;
 		if ( !OperatingSystem.IsWindows() ) {
-			var managedTarget = TryGetManagedLinkTarget( path, attributes );
+			managedTarget = TryGetManagedLinkTarget( path, attributes );
 			if ( managedTarget is not null ) {
 				return ValueTask.FromResult(
 					PathIndirectionInfo.PosixSymbolicLink(
@@ -68,19 +70,17 @@ public sealed class SystemPathIndirectionInspector : IPathIndirectionInspector {
 				new Win32Exception( Marshal.GetLastPInvokeError() )
 			);
 		}
-		if (
-			!GetFileInformationByHandleEx(
-				handle,
-				FileAttributeTagInformationClass,
-				out var attributeTag,
-				(uint)Marshal.SizeOf<FileAttributeTagInfo>()
-			)
-		) {
+		if ( !GetFileInformationByHandleEx(
+			handle,
+			FileAttributeTagInformationClass,
+			out var attributeTag,
+			(uint)Marshal.SizeOf<FileAttributeTagInfo>()
+		) ) {
 			return ValueTask.FromResult( PathIndirectionInfo.Unknown( null, attributes ) );
 		}
 
 		var tag = attributeTag.ReparseTag;
-		var managedTarget = tag is WindowsReparseTags.SymbolicLink or WindowsReparseTags.MountPoint
+		managedTarget = tag is WindowsReparseTags.SymbolicLink or WindowsReparseTags.MountPoint
 			? TryGetManagedLinkTarget( path, attributes )
 			: null;
 		string? rawTarget = null;
@@ -246,15 +246,15 @@ public sealed class SystemPathIndirectionInspector : IPathIndirectionInspector {
 				closingBrace == path.Length - 1
 				|| (
 					closingBrace == path.Length - 2
-					&& Path.DirectorySeparatorChar == path[^1]
+					&& System.IO.Path.DirectorySeparatorChar == path[^1]
 				)
 			);
 	}
 
 	private static string? TryGetMountedVolumeGuidPath( string path ) {
-		var mountPath = Path.EndsInDirectorySeparator( path )
+		var mountPath = System.IO.Path.EndsInDirectorySeparator( path )
 			? path
-			: string.Concat( path, Path.DirectorySeparatorChar );
+			: string.Concat( path, System.IO.Path.DirectorySeparatorChar );
 		var buffer = new StringBuilder( 64 );
 		return GetVolumeNameForVolumeMountPointW( mountPath, buffer, (uint)buffer.Capacity )
 			? buffer.ToString()
