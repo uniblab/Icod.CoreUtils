@@ -166,6 +166,51 @@ public sealed class FileSystemMutationTests {
 		}
 	}
 
+	/// <summary>Verifies Windows junction creation, classification, traversal, and physical removal.</summary>
+	/// <returns>A task representing the test.</returns>
+	[Fact]
+	public async Task CreatesAndRemovesWindowsDirectoryJunctions() {
+		var root = CreateTemporaryDirectory();
+		try {
+			var provider = SystemFileSystemMutationProvider.Instance;
+			var target = Path.Combine( root, "junction-target" );
+			var junction = Path.Combine( root, "junction" );
+			Directory.CreateDirectory( target );
+
+			var result = await provider.CreateJunctionAsync( junction, target );
+			if ( !OperatingSystem.IsWindows() ) {
+				Assert.False( result.Supported );
+				Assert.Equal( FileSystemMutationErrorCode.Unsupported, result.ErrorCode );
+				return;
+			}
+
+			Assert.True( result.Supported, result.Message );
+			Assert.True( result.Succeeded, result.Message );
+			Assert.Equal( FileSystemMutationOperation.CreateJunction, result.Outcome!.Operation );
+			var metadata = await SystemFileSystemMetadataProvider.Instance.GetMetadataAsync(
+				junction,
+				PathDereferenceMode.NoFollow
+			);
+			Assert.True( metadata.IsJunction );
+			Assert.False( metadata.WasDereferenced );
+
+			var child = Path.Combine( junction, "child.txt" );
+			await File.WriteAllTextAsync( child, "through-junction" );
+			Assert.Equal(
+				"through-junction",
+				await File.ReadAllTextAsync( Path.Combine( target, "child.txt" ) )
+			);
+
+			var removal = await provider.RemoveFileAsync( junction );
+			Assert.True( removal.Succeeded, removal.Message );
+			Assert.False( Directory.Exists( junction ) );
+			Assert.True( Directory.Exists( target ) );
+			Assert.True( File.Exists( Path.Combine( target, "child.txt" ) ) );
+		} finally {
+			DeleteTree( root );
+		}
+	}
+
 	/// <summary>Verifies FIFO creation is real on Unix and explicitly unsupported elsewhere.</summary>
 	/// <returns>A task representing the test.</returns>
 	[Fact]
@@ -310,6 +355,7 @@ public sealed class FileSystemMutationTests {
 		Assert.True( capabilities.CanCreateFiles );
 		Assert.True( capabilities.CanCreateHardLinks );
 		Assert.True( capabilities.CanCreateSymbolicLinks );
+		Assert.Equal( OperatingSystem.IsWindows(), capabilities.CanCreateJunctions );
 		Assert.True( capabilities.CanRemoveFiles );
 		Assert.True( capabilities.CanRemoveDirectories );
 		if ( OperatingSystem.IsWindows() ) {

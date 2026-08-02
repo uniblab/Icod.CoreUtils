@@ -47,6 +47,15 @@ public interface IFileSystemMutationProvider {
 		CancellationToken cancellationToken = default
 	);
 
+	/// <summary>Creates one Windows directory junction backed by an NTFS or ReFS mount-point reparse point.</summary>
+	ValueTask<FileSystemMutationResult> CreateJunctionAsync(
+		string path,
+		string target,
+		FileSystemMutationPrecondition? destinationPrecondition = null,
+		FileSystemMutationPrecondition? targetPrecondition = null,
+		CancellationToken cancellationToken = default
+	);
+
 	/// <summary>Creates one FIFO without substituting an ordinary file.</summary>
 	ValueTask<FileSystemMutationResult> CreateFifoAsync(
 		string path,

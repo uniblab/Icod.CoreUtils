@@ -25,7 +25,9 @@ public enum FileSystemMutationOperation {
 	/// <summary>Remove one empty physical directory.</summary>
 	RemoveDirectory = 7,
 	/// <summary>Set the mode of one existing entry.</summary>
-	SetMode = 8
+	SetMode = 8,
+	/// <summary>Create one Windows directory junction.</summary>
+	CreateJunction = 9
 }
 
 /// <summary>
@@ -95,7 +97,8 @@ public sealed class FileSystemMutationCapabilities {
 		bool canRemoveFiles,
 		bool canRemoveDirectories,
 		bool canSetModes,
-		bool canSetModeWithoutFollowingPathIndirection
+		bool canSetModeWithoutFollowingPathIndirection,
+		bool canCreateJunctions = false
 	) {
 		CanCreateDirectories = canCreateDirectories;
 		CanCreateFiles = canCreateFiles;
@@ -107,6 +110,7 @@ public sealed class FileSystemMutationCapabilities {
 		CanRemoveDirectories = canRemoveDirectories;
 		CanSetModes = canSetModes;
 		CanSetModeWithoutFollowingPathIndirection = canSetModeWithoutFollowingPathIndirection;
+		CanCreateJunctions = canCreateJunctions;
 	}
 
 	/// <summary>Gets whether one directory can be created.</summary>
@@ -117,6 +121,8 @@ public sealed class FileSystemMutationCapabilities {
 	public bool CanCreateHardLinks { get; }
 	/// <summary>Gets whether symbolic links can be created.</summary>
 	public bool CanCreateSymbolicLinks { get; }
+	/// <summary>Gets whether Windows directory junctions can be created.</summary>
+	public bool CanCreateJunctions { get; }
 	/// <summary>Gets whether FIFOs can be created.</summary>
 	public bool CanCreateFifos { get; }
 	/// <summary>Gets whether block and character device nodes can be created.</summary>

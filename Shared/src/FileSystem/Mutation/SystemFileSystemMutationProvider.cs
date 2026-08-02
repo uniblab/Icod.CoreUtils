@@ -1,8 +1,11 @@
+using System.Buffers.Binary;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using System.Text;
 using Icod.CoreUtils.Shared.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Modes;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
+using Microsoft.Win32.SafeHandles;
 
 namespace Icod.CoreUtils.Shared.FileSystem.Mutation;
 
@@ -21,8 +24,20 @@ public sealed class SystemFileSystemMutationProvider : IFileSystemMutationProvid
 	private const uint PrivateDirectoryCreationMode = 0x01c0;
 	private const int LinuxAtCurrentWorkingDirectory = -100;
 	private const int DarwinAtCurrentWorkingDirectory = -2;
+	private const int FreeBsdAtCurrentWorkingDirectory = -100;
 	private const int LinuxAtSymbolicLinkFollow = 0x0400;
 	private const int DarwinAtSymbolicLinkFollow = 0x0040;
+	private const int FreeBsdAtSymbolicLinkFollow = 0x0400;
+	private const uint WindowsGenericWrite = 0x40000000;
+	private const uint WindowsFileShareRead = 0x00000001;
+	private const uint WindowsFileShareWrite = 0x00000002;
+	private const uint WindowsFileShareDelete = 0x00000004;
+	private const uint WindowsOpenExisting = 3;
+	private const uint WindowsFileFlagOpenReparsePoint = 0x00200000;
+	private const uint WindowsFileFlagBackupSemantics = 0x02000000;
+	private const uint WindowsFsctlSetReparsePoint = 0x000900a4;
+	private const uint WindowsMountPointReparseTag = 0xa0000003;
+	private const int WindowsMaximumReparseDataBufferSize = 16 * 1024;
 	private readonly IFileSystemMetadataProvider metadataProvider;
 
 	/// <summary>Gets the shared system provider.</summary>
@@ -258,15 +273,47 @@ public sealed class SystemFileSystemMutationProvider : IFileSystemMutationProvid
 		var created = false;
 		try {
 			cancellationToken.ThrowIfCancellationRequested();
-			if ( IsUnixLike ) {
+			if ( OperatingSystem.IsLinux() ) {
 				var flags = existingPathDereferenceMode == PathDereferenceMode.FollowEligiblePathIndirection
-					? NativeAtSymbolicLinkFollow
+					? LinuxAtSymbolicLinkFollow
 					: 0;
 				if (
-					NativeCreateHardLink(
-						NativeAtCurrentWorkingDirectory,
+					NativeCreateHardLinkLinux(
+						LinuxAtCurrentWorkingDirectory,
 						normalizedExisting,
-						NativeAtCurrentWorkingDirectory,
+						LinuxAtCurrentWorkingDirectory,
+						normalized,
+						flags
+					) != 0
+				) {
+					return FromNativeFailure( normalized, "create hard link" );
+				}
+				created = true;
+			} else if ( OperatingSystem.IsMacOS() ) {
+				var flags = existingPathDereferenceMode == PathDereferenceMode.FollowEligiblePathIndirection
+					? DarwinAtSymbolicLinkFollow
+					: 0;
+				if (
+					NativeCreateHardLinkMacOS(
+						DarwinAtCurrentWorkingDirectory,
+						normalizedExisting,
+						DarwinAtCurrentWorkingDirectory,
+						normalized,
+						flags
+					) != 0
+				) {
+					return FromNativeFailure( normalized, "create hard link" );
+				}
+				created = true;
+			} else if ( OperatingSystem.IsFreeBSD() ) {
+				var flags = existingPathDereferenceMode == PathDereferenceMode.FollowEligiblePathIndirection
+					? FreeBsdAtSymbolicLinkFollow
+					: 0;
+				if (
+					NativeCreateHardLinkFreeBsd(
+						FreeBsdAtCurrentWorkingDirectory,
+						normalizedExisting,
+						FreeBsdAtCurrentWorkingDirectory,
 						normalized,
 						flags
 					) != 0
@@ -289,7 +336,9 @@ public sealed class SystemFileSystemMutationProvider : IFileSystemMutationProvid
 					}
 					sourcePath = resolved.FullName;
 				}
-				File.CreateHardLink( normalized, sourcePath );
+				if ( !NativeCreateHardLinkWindows( normalized, sourcePath, IntPtr.Zero ) ) {
+					return FromWindowsFailure( normalized, "create hard link" );
+				}
 				created = true;
 			} else {
 				return FileSystemMutationResult.Unsupported(
@@ -385,6 +434,179 @@ public sealed class SystemFileSystemMutationProvider : IFileSystemMutationProvid
 		} catch ( Exception exception ) when ( IsControlledException( exception ) ) {
 			if ( created ) {
 				TryDeleteCreatedFile( normalized );
+			}
+			return FromManagedFailure( normalized, exception, creation: true );
+		}
+	}
+
+	/// <inheritdoc/>
+	public async ValueTask<FileSystemMutationResult> CreateJunctionAsync(
+		string path,
+		string target,
+		FileSystemMutationPrecondition? destinationPrecondition = null,
+		FileSystemMutationPrecondition? targetPrecondition = null,
+		CancellationToken cancellationToken = default
+	) {
+		ArgumentException.ThrowIfNullOrEmpty( target );
+		var normalized = TryNormalizePath( path, out var pathError );
+		if ( normalized is null ) {
+			return pathError!;
+		}
+		if ( !Capabilities.CanCreateJunctions ) {
+			return FileSystemMutationResult.Unsupported(
+				normalized,
+				"Directory-junction creation is supported only on Windows."
+			);
+		}
+		var normalizedTarget = TryNormalizePath( target, out var targetPathError );
+		if ( normalizedTarget is null ) {
+			return targetPathError!;
+		}
+		if ( IsRemoteWindowsPath( normalizedTarget ) ) {
+			return FileSystemMutationResult.Failure(
+				normalizedTarget,
+				FileSystemMutationErrorCode.InvalidPath,
+				"A Windows directory junction must target a local pathname."
+			);
+		}
+		if ( IsExactWindowsVolumeGuidPath( normalizedTarget ) ) {
+			return FileSystemMutationResult.Failure(
+				normalizedTarget,
+				FileSystemMutationErrorCode.InvalidPath,
+				"An exact volume GUID target represents a mounted volume rather than a directory junction."
+			);
+		}
+
+		var destinationCondition = destinationPrecondition
+			?? FileSystemMutationPrecondition.DestinationMustNotExist();
+		var destinationValidation = await ValidateAsync(
+			normalized,
+			destinationCondition,
+			cancellationToken
+		).ConfigureAwait( false );
+		if ( destinationValidation.Error is not null ) {
+			return destinationValidation.Error;
+		}
+		if ( destinationValidation.Effective is not null ) {
+			return AlreadyExists( normalized );
+		}
+
+		var targetCondition = targetPrecondition ?? new FileSystemMutationPrecondition(
+			FileSystemMutationExistence.MustExist,
+			PathDereferenceMode.FollowEligiblePathIndirection,
+			FileSystemEntryKind.Directory
+		);
+		if ( targetCondition.DereferenceMode != PathDereferenceMode.FollowEligiblePathIndirection ) {
+			return FileSystemMutationResult.Failure(
+				normalizedTarget,
+				FileSystemMutationErrorCode.UnsafePathIndirection,
+				"A junction target precondition must use the follow-eligible-path-indirection policy."
+			);
+		}
+		var targetValidation = await ValidateAsync(
+			normalizedTarget,
+			targetCondition,
+			cancellationToken
+		).ConfigureAwait( false );
+		if ( targetValidation.Error is not null ) {
+			return targetValidation.Error;
+		}
+		if ( targetValidation.Effective is null ) {
+			return NotFound( normalizedTarget );
+		}
+		if ( targetValidation.Effective.Kind != FileSystemEntryKind.Directory ) {
+			return WrongKind( normalizedTarget, "A directory junction must target a directory." );
+		}
+
+		var targetRevalidation = await RevalidateAsync(
+			normalizedTarget,
+			targetValidation,
+			PathDereferenceMode.FollowEligiblePathIndirection,
+			cancellationToken
+		).ConfigureAwait( false );
+		if ( targetRevalidation is not null ) {
+			return targetRevalidation;
+		}
+
+		var created = false;
+		try {
+			cancellationToken.ThrowIfCancellationRequested();
+			if ( !NativeCreateDirectoryWindows( normalized, IntPtr.Zero ) ) {
+				return FromWindowsFailure( normalized, "create junction directory" );
+			}
+			created = true;
+
+			using var handle = NativeOpenReparsePointWindows(
+				normalized,
+				WindowsGenericWrite,
+				WindowsFileShareRead | WindowsFileShareWrite | WindowsFileShareDelete,
+				IntPtr.Zero,
+				WindowsOpenExisting,
+				WindowsFileFlagOpenReparsePoint | WindowsFileFlagBackupSemantics,
+				IntPtr.Zero
+			);
+			if ( handle.IsInvalid ) {
+				var failure = FromWindowsFailure( normalized, "open junction directory" );
+				handle.Dispose();
+				TryDeleteCreatedDirectory( normalized );
+				created = false;
+				return failure;
+			}
+
+			var reparseData = CreateJunctionReparseData( normalizedTarget );
+			if (
+				!NativeSetReparsePointWindows(
+					handle,
+					WindowsFsctlSetReparsePoint,
+					reparseData,
+					checked( (uint)reparseData.Length ),
+					IntPtr.Zero,
+					0,
+					out _,
+					IntPtr.Zero
+				)
+			) {
+				var failure = FromWindowsFailure( normalized, "set junction reparse point" );
+				handle.Dispose();
+				TryDeleteCreatedDirectory( normalized );
+				created = false;
+				return failure;
+			}
+			handle.Dispose();
+
+			var junction = await TryObserveAsync(
+				normalized,
+				PathDereferenceMode.NoFollow,
+				cancellationToken
+			).ConfigureAwait( false );
+			if ( junction is null || !junction.IsJunction ) {
+				TryDeleteCreatedDirectory( normalized );
+				created = false;
+				return FileSystemMutationResult.Failure(
+					normalized,
+					FileSystemMutationErrorCode.IoFailure,
+					"The created reparse point was not recognized as a Windows directory junction."
+				);
+			}
+
+			return FileSystemMutationResult.Success(
+				new FileSystemMutationOutcome(
+					normalized,
+					FileSystemMutationOperation.CreateJunction,
+					junction.Kind,
+					junction.EntryIdentity,
+					null,
+					false
+				)
+			);
+		} catch ( OperationCanceledException exception ) {
+			if ( created ) {
+				TryDeleteCreatedDirectory( normalized );
+			}
+			return Cancelled( normalized, exception );
+		} catch ( Exception exception ) when ( IsControlledException( exception ) ) {
+			if ( created ) {
+				TryDeleteCreatedDirectory( normalized );
 			}
 			return FromManagedFailure( normalized, exception, creation: true );
 		}
@@ -580,7 +802,9 @@ public sealed class SystemFileSystemMutationProvider : IFileSystemMutationProvid
 			} else if ( OperatingSystem.IsWindows() ) {
 				var attributes = File.GetAttributes( normalized );
 				if ( (attributes & FileAttributes.Directory) != 0 ) {
-					Directory.Delete( normalized, false );
+					if ( !NativeRemoveDirectoryWindows( normalized ) ) {
+						return FromWindowsFailure( normalized, "remove directory link" );
+					}
 				} else {
 					File.Delete( normalized );
 				}
@@ -663,7 +887,9 @@ public sealed class SystemFileSystemMutationProvider : IFileSystemMutationProvid
 					return FromNativeFailure( normalized, "remove directory" );
 				}
 			} else if ( OperatingSystem.IsWindows() ) {
-				Directory.Delete( normalized, false );
+				if ( !NativeRemoveDirectoryWindows( normalized ) ) {
+					return FromWindowsFailure( normalized, "remove directory" );
+				}
 			} else {
 				return FileSystemMutationResult.Unsupported(
 					normalized,
@@ -963,7 +1189,8 @@ public sealed class SystemFileSystemMutationProvider : IFileSystemMutationProvid
 			known,
 			known,
 			unix,
-			false
+			false,
+			OperatingSystem.IsWindows()
 		);
 	}
 
@@ -972,15 +1199,86 @@ public sealed class SystemFileSystemMutationProvider : IFileSystemMutationProvid
 			|| OperatingSystem.IsMacOS()
 			|| OperatingSystem.IsFreeBSD();
 
-	private static int NativeAtCurrentWorkingDirectory =>
-		OperatingSystem.IsMacOS()
-			? DarwinAtCurrentWorkingDirectory
-			: LinuxAtCurrentWorkingDirectory;
+	private static bool IsRemoteWindowsPath( string path ) {
+		return path.StartsWith( @"\\?\UNC\", StringComparison.OrdinalIgnoreCase )
+			|| path.StartsWith( @"\??\UNC\", StringComparison.OrdinalIgnoreCase )
+			|| (
+				path.StartsWith( @"\\", StringComparison.Ordinal )
+					&& !path.StartsWith( @"\\?\", StringComparison.Ordinal )
+			);
+	}
 
-	private static int NativeAtSymbolicLinkFollow =>
-		OperatingSystem.IsMacOS()
-			? DarwinAtSymbolicLinkFollow
-			: LinuxAtSymbolicLinkFollow;
+	private static bool IsExactWindowsVolumeGuidPath( string path ) {
+		const string extendedPrefix = @"\\?\Volume{";
+		const string nativePrefix = @"\??\Volume{";
+		var prefixLength = path.StartsWith( extendedPrefix, StringComparison.OrdinalIgnoreCase )
+			? extendedPrefix.Length
+			: path.StartsWith( nativePrefix, StringComparison.OrdinalIgnoreCase )
+				? nativePrefix.Length
+				: 0;
+		if ( prefixLength == 0 ) {
+			return false;
+		}
+		var closingBrace = path.IndexOf( '}', prefixLength );
+		return closingBrace >= prefixLength
+			&& (
+				closingBrace == path.Length - 1
+					|| (
+						closingBrace == path.Length - 2
+							&& Path.EndsInDirectorySeparator( path )
+					)
+			);
+	}
+
+	private static byte[] CreateJunctionReparseData( string target ) {
+		var substituteName = ToNativeWindowsPath( target );
+		var substituteNameBytes = Encoding.Unicode.GetBytes( substituteName );
+		var printNameBytes = Encoding.Unicode.GetBytes( target );
+		var printNameOffset = checked( substituteNameBytes.Length + sizeof( char ) );
+		var pathBufferLength = checked( printNameOffset + printNameBytes.Length + sizeof( char ) );
+		var reparseDataLength = checked( 8 + pathBufferLength );
+		var totalLength = checked( 8 + reparseDataLength );
+		if (
+			totalLength > WindowsMaximumReparseDataBufferSize
+				|| substituteNameBytes.Length > ushort.MaxValue
+				|| printNameBytes.Length > ushort.MaxValue
+				|| printNameOffset > ushort.MaxValue
+				|| reparseDataLength > ushort.MaxValue
+		) {
+			throw new PathTooLongException( "The junction target is too long for a Windows reparse-point buffer." );
+		}
+
+		var buffer = new byte[totalLength];
+		BinaryPrimitives.WriteUInt32LittleEndian( buffer.AsSpan( 0, 4 ), WindowsMountPointReparseTag );
+		BinaryPrimitives.WriteUInt16LittleEndian( buffer.AsSpan( 4, 2 ), checked( (ushort)reparseDataLength ) );
+		BinaryPrimitives.WriteUInt16LittleEndian( buffer.AsSpan( 6, 2 ), 0 );
+		BinaryPrimitives.WriteUInt16LittleEndian( buffer.AsSpan( 8, 2 ), 0 );
+		BinaryPrimitives.WriteUInt16LittleEndian(
+			buffer.AsSpan( 10, 2 ),
+			checked( (ushort)substituteNameBytes.Length )
+		);
+		BinaryPrimitives.WriteUInt16LittleEndian(
+			buffer.AsSpan( 12, 2 ),
+			checked( (ushort)printNameOffset )
+		);
+		BinaryPrimitives.WriteUInt16LittleEndian(
+			buffer.AsSpan( 14, 2 ),
+			checked( (ushort)printNameBytes.Length )
+		);
+		substituteNameBytes.CopyTo( buffer, 16 );
+		printNameBytes.CopyTo( buffer, checked( 16 + printNameOffset ) );
+		return buffer;
+	}
+
+	private static string ToNativeWindowsPath( string path ) {
+		if ( path.StartsWith( @"\\?\", StringComparison.Ordinal ) ) {
+			return string.Concat( @"\??\", path[4..] );
+		}
+		if ( path.StartsWith( @"\??\", StringComparison.Ordinal ) ) {
+			return path;
+		}
+		return string.Concat( @"\??\", path );
+	}
 
 	private static bool TryEncodeDeviceNumber( DeviceNumber number, out ulong value ) {
 		if ( OperatingSystem.IsLinux() ) {
@@ -1099,8 +1397,9 @@ public sealed class SystemFileSystemMutationProvider : IFileSystemMutationProvid
 			80 or 183 => FileSystemMutationErrorCode.AlreadyExists,
 			87 or 123 or 206 => FileSystemMutationErrorCode.InvalidPath,
 			145 => FileSystemMutationErrorCode.DirectoryNotEmpty,
-			267 => FileSystemMutationErrorCode.WrongObjectKind,
+			267 or 4390 or 4394 => FileSystemMutationErrorCode.WrongObjectKind,
 			1314 => FileSystemMutationErrorCode.PrivilegeRequired,
+			4392 or 4393 => FileSystemMutationErrorCode.InvalidPath,
 			_ => FileSystemMutationErrorCode.IoFailure
 		};
 	}
@@ -1219,8 +1518,8 @@ public sealed class SystemFileSystemMutationProvider : IFileSystemMutationProvid
 		try {
 			if ( IsUnixLike ) {
 				_ = NativeRemoveDirectory( path );
-			} else if ( Directory.Exists( path ) ) {
-				Directory.Delete( path, false );
+			} else if ( OperatingSystem.IsWindows() ) {
+				_ = NativeRemoveDirectoryWindows( path );
 			}
 		} catch {
 			// Preserve the primary failure.
@@ -1230,6 +1529,42 @@ public sealed class SystemFileSystemMutationProvider : IFileSystemMutationProvid
 	[DllImport( "kernel32.dll", EntryPoint = "CreateDirectoryW", SetLastError = true, CharSet = CharSet.Unicode )]
 	[return: MarshalAs( UnmanagedType.Bool )]
 	private static extern bool NativeCreateDirectoryWindows( string path, IntPtr securityAttributes );
+
+	[DllImport( "kernel32.dll", EntryPoint = "CreateFileW", SetLastError = true, CharSet = CharSet.Unicode )]
+	private static extern SafeFileHandle NativeOpenReparsePointWindows(
+		string path,
+		uint desiredAccess,
+		uint shareMode,
+		IntPtr securityAttributes,
+		uint creationDisposition,
+		uint flagsAndAttributes,
+		IntPtr templateFile
+	);
+
+	[DllImport( "kernel32.dll", EntryPoint = "DeviceIoControl", SetLastError = true )]
+	[return: MarshalAs( UnmanagedType.Bool )]
+	private static extern bool NativeSetReparsePointWindows(
+		SafeFileHandle device,
+		uint controlCode,
+		byte[] inputBuffer,
+		uint inputBufferSize,
+		IntPtr outputBuffer,
+		uint outputBufferSize,
+		out uint bytesReturned,
+		IntPtr overlapped
+	);
+
+	[DllImport( "kernel32.dll", EntryPoint = "RemoveDirectoryW", SetLastError = true, CharSet = CharSet.Unicode )]
+	[return: MarshalAs( UnmanagedType.Bool )]
+	private static extern bool NativeRemoveDirectoryWindows( string path );
+
+	[DllImport( "kernel32.dll", EntryPoint = "CreateHardLinkW", SetLastError = true, CharSet = CharSet.Unicode )]
+	[return: MarshalAs( UnmanagedType.Bool )]
+	private static extern bool NativeCreateHardLinkWindows(
+		string path,
+		string existingPath,
+		IntPtr securityAttributes
+	);
 
 	[DllImport( "libc", EntryPoint = "mkdir", SetLastError = true )]
 	private static extern int NativeCreateDirectory( string path, uint mode );
@@ -1241,7 +1576,25 @@ public sealed class SystemFileSystemMutationProvider : IFileSystemMutationProvid
 	private static extern int NativeCreateDeviceNode( string path, uint mode, ulong device );
 
 	[DllImport( "libc", EntryPoint = "linkat", SetLastError = true )]
-	private static extern int NativeCreateHardLink(
+	private static extern int NativeCreateHardLinkLinux(
+		int oldDirectoryFileDescriptor,
+		string oldPath,
+		int newDirectoryFileDescriptor,
+		string newPath,
+		int flags
+	);
+
+	[DllImport( "libSystem.dylib", EntryPoint = "linkat", SetLastError = true )]
+	private static extern int NativeCreateHardLinkMacOS(
+		int oldDirectoryFileDescriptor,
+		string oldPath,
+		int newDirectoryFileDescriptor,
+		string newPath,
+		int flags
+	);
+
+	[DllImport( "libc", EntryPoint = "linkat", SetLastError = true )]
+	private static extern int NativeCreateHardLinkFreeBsd(
 		int oldDirectoryFileDescriptor,
 		string oldPath,
 		int newDirectoryFileDescriptor,
