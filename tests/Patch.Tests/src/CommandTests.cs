@@ -2,6 +2,7 @@ namespace Icod.Patch.Tests;
 
 using System.Text;
 using Icod.CoreUtils.Shared.Diagnostics;
+using System.IO;
 using Xunit;
 
 /// <summary>Exercises the Wave A command boundary.</summary>
@@ -45,7 +46,7 @@ public sealed class CommandTests {
 		);
 		var result = await RunAsync( new[] { "--binary" }, bytes );
 		Assert.Equal( 2, result.Status );
-		Assert.Contains( "input was recognized", result.Error );
+		Assert.Contains( "filesystem artifacts and transactional replacement begin in phase P8", result.Error );
 	}
 
 	/// <summary>Verifies that GNU's short backup option is not misused as binary mode.</summary>
@@ -73,7 +74,7 @@ public sealed class CommandTests {
 		try {
 			var result = await RunAsync( new[] { "--inp", path } );
 			Assert.Equal( 2, result.Status );
-			Assert.Contains( "input was recognized", result.Error );
+			Assert.Contains( "filesystem artifacts and transactional replacement begin in phase P8", result.Error );
 		} finally {
 			File.Delete( path );
 		}
@@ -89,7 +90,7 @@ public sealed class CommandTests {
 		using var error = new StringWriter();
 		var status = Command.Run( Array.Empty<string>(), input, output, error );
 		Assert.Equal( 2, status );
-		Assert.Contains( "input was recognized", error.ToString() );
+		Assert.Contains( "filesystem artifacts and transactional replacement begin in phase P8", error.ToString() );
 	}
 
 	/// <summary>Verifies that excess operands are diagnosed.</summary>
@@ -108,7 +109,7 @@ public sealed class CommandTests {
 		);
 		var result = await RunAsync( Array.Empty<string>(), bytes );
 		Assert.Equal( 2, result.Status );
-		Assert.Contains( "input was recognized", result.Error );
+		Assert.Contains( "filesystem artifacts and transactional replacement begin in phase P8", result.Error );
 	}
 
 	/// <summary>Verifies an original-file operand may accompany a patch stream on standard input.</summary>
@@ -121,7 +122,7 @@ public sealed class CommandTests {
 		try {
 			var result = await RunAsync( new[] { target }, bytes );
 			Assert.Equal( 2, result.Status );
-			Assert.Contains( "input was recognized", result.Error );
+			Assert.Contains( "filesystem artifacts and transactional replacement begin in phase P8", result.Error );
 			Assert.Equal( "old\n", await File.ReadAllTextAsync( target ) );
 		} finally {
 			File.Delete( target );
@@ -137,7 +138,7 @@ public sealed class CommandTests {
 		try {
 			var result = await RunAsync( new[] { "-i", path } );
 			Assert.Equal( 2, result.Status );
-			Assert.Contains( "input was recognized", result.Error );
+			Assert.Contains( "filesystem artifacts and transactional replacement begin in phase P8", result.Error );
 		} finally {
 			File.Delete( path );
 		}
@@ -181,7 +182,7 @@ public sealed class CommandTests {
 	public async Task ExplicitFormatOptionsAreAccepted( string option, string patchText ) {
 		var result = await RunAsync( new[] { option }, Encoding.UTF8.GetBytes( patchText ) );
 		Assert.Equal( 2, result.Status );
-		Assert.Contains( "recognized and parsed", result.Error );
+		Assert.Contains( "filesystem artifacts and transactional replacement begin in phase P8", result.Error );
 	}
 
 	/// <summary>Verifies mutually exclusive format-selection options are diagnosed.</summary>

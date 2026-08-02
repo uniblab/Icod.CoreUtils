@@ -2,6 +2,7 @@ namespace Icod.Patch;
 
 using System.Buffers;
 using System.Collections.ObjectModel;
+using System.IO;
 
 /// <summary>Defines bounded-resource limits for indexed target content.</summary>
 internal sealed class PatchTargetLimits {

@@ -1,5 +1,7 @@
 namespace Icod.Patch;
 
+using System.IO;
+
 /// <summary>Applies parsed patch hunks to virtual, byte-preserved target content.</summary>
 internal static class PatchApplicationEngine {
 	private sealed class LineReference {

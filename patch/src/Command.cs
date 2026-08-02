@@ -9,22 +9,27 @@ using Icod.CoreUtils.Shared.IO;
 
 /// <summary>Implements the GNU-compatible <c>patch</c> command front end.</summary>
 public static class Command {
-	private const string VersionText = "patch (Icod.Patch) 0.5";
+	private const string VersionText = "patch (Icod.Patch) 0.7";
 	private static readonly HashSet<string> ImplementedOptionKeys = new( StringComparer.Ordinal ) {
 		"batch",
 		"binary",
 		"context",
+		"directory",
 		"ed",
+		"follow-symlinks",
 		"force",
 		"forward",
 		"fuzz",
+		"get",
 		"help",
 		"ignore-whitespace",
 		"input",
 		"merge",
 		"merge-short",
 		"normal",
+		"posix",
 		"reverse",
+		"strip",
 		"unified",
 		"version"
 	};
@@ -214,7 +219,12 @@ public static class Command {
 		}
 	}
 
-	private static PatchOptions CreateOptions( OptionParseResult parsed ) {
+	/// <summary>Maps a successful parse and environment lookup into validated command options.</summary>
+	/// <param name="parsed">The successful declarative option parse.</param>
+	/// <param name="environment">An optional environment-variable lookup used by deterministic tests.</param>
+	/// <returns>The validated immutable command options.</returns>
+	internal static PatchOptions CreateOptions( OptionParseResult parsed, Func<string, string?>? environment = null ) {
+		environment ??= Environment.GetEnvironmentVariable;
 		if ( 2 < parsed.Operands.Count ) {
 			throw new PatchUsageException( string.Concat( "extra operand '", parsed.Operands[2], "'" ) );
 		}
@@ -250,6 +260,31 @@ public static class Command {
 			) || fuzz < 0 ) ) {
 			throw new PatchUsageException( string.Concat( "invalid maximum fuzz factor '", fuzzText, "'" ) );
 		}
+		int? stripCount = null;
+		var stripText = parsed.GetLastValue( "strip" );
+		if ( null != stripText ) {
+			if ( !int.TryParse(
+				stripText,
+				System.Globalization.NumberStyles.None,
+				System.Globalization.CultureInfo.InvariantCulture,
+				out var parsedStrip
+			) || parsedStrip < 0 ) {
+				throw new PatchUsageException( string.Concat( "invalid strip count '", stripText, "'" ) );
+			}
+			stripCount = parsedStrip;
+		}
+		var posix = parsed.HasOption( "posix" ) || null != environment( "POSIXLY_CORRECT" );
+		var get = posix ? 0 : -1;
+		var getText = parsed.GetLastValue( "get" ) ?? environment( "PATCH_GET" );
+		if ( null != getText
+			&& !int.TryParse(
+				getText,
+				System.Globalization.NumberStyles.AllowLeadingSign,
+				System.Globalization.CultureInfo.InvariantCulture,
+				out get
+			) ) {
+			throw new PatchUsageException( string.Concat( "invalid version-control retrieval policy '", getText, "'" ) );
+		}
 		var mergeStyle = PatchMergeStyle.None;
 		if ( parsed.HasOption( "merge-short" ) ) {
 			mergeStyle = PatchMergeStyle.Merge;
@@ -267,6 +302,11 @@ public static class Command {
 		return new PatchOptions {
 			OriginalFile = 0 < parsed.Operands.Count ? parsed.Operands[0] : null,
 			PatchFile = optionInput ?? operandInput,
+			Directory = parsed.GetLastValue( "directory" ),
+			StripCount = stripCount,
+			Posix = posix,
+			FollowSymbolicLinks = parsed.HasOption( "follow-symlinks" ),
+			Get = get,
 			Binary = parsed.HasOption( "binary" ),
 			ForcedFormat = 0 < selectedFormats.Count ? selectedFormats[0] : null,
 			Force = parsed.HasOption( "force" ),
@@ -302,25 +342,30 @@ public static class Command {
 				"Apply a difference listing to an original file or files.",
 				string.Empty,
 				"  -c, --context          interpret the patch as a context diff",
+				"  -d, --directory=DIR    change to DIR before resolving patch filenames",
 				"  -e, --ed               interpret the patch as an ed script",
 				"  -f, --force            assume the patch is not reversed",
 				"  -F, --fuzz=NUM         set the maximum fuzz factor",
+				"  -g, --get=NUM          control version-control retrieval policy",
 				"  -i, --input=PATCHFILE  read patch from PATCHFILE instead of standard input",
 				"  -l, --ignore-whitespace ignore horizontal blank-run changes",
 				"  -m, --merge            merge using two-way conflict markers",
 				"      --merge[=STYLE]    merge using STYLE 'merge' or 'diff3'",
 				"  -n, --normal           interpret the patch as a normal diff",
 				"  -N, --forward          ignore patches that seem reversed or applied",
+				"  -p, --strip=NUM        strip NUM leading separator-delimited components",
 				"  -R, --reverse          assume the patch was created in reverse",
 				"  -t, --batch            ask no questions; skip bad prerequisites",
 				"  -u, --unified          interpret the patch as a unified diff",
 				"      --binary           read and write data in binary mode",
+				"      --follow-symlinks  follow a target link after containment checks",
+				"      --posix            use POSIX filename-selection and retrieval defaults",
 				"      --help             display this help and exit",
 				"  -v, --version          output version information and exit",
 				string.Empty,
-				"Wave B1 provides pure virtual application, offsets, fuzz, reversal,",
-				"whitespace matching, prerequisite policy, and conflict-marker output.",
-				"Live path selection and filesystem replacement begin in Patch phase P7."
+				"Wave B2 selects and canonicalizes targets, plans multiple file patches,",
+				"and applies hunks to immutable virtual results without committing changes.",
+				"Rejects, backups, output artifacts, and transactional replacement begin in P8."
 			}
 		);
 		await output.WriteLineAsync( text.AsMemory(), cancellationToken ).ConfigureAwait( false );

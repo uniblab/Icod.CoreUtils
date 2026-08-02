@@ -1,6 +1,7 @@
 namespace Icod.Patch.Tests;
 
 using System.Diagnostics;
+using System.IO;
 using Xunit;
 
 /// <summary>Exercises the built command through the .NET process host.</summary>
