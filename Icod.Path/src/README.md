@@ -15,7 +15,7 @@ The `Icod.Path` namespace separates pathname grammar from filesystem observation
 
 ## Link and reparse behavior
 
-The provider observes each component without following it. The resolver follows symbolic links itself, preserving relative-target semantics and checking both repeated resolution states and a caller-configurable expansion limit. The final link may be inspected without following it. A non-link reparse point is a controlled unsupported result when final-object rejection is requested; command policy remains outside this library.
+The provider observes each component without following it. The resolver follows symbolic links itself, preserving relative-target semantics and checking both repeated resolution states and a caller-configurable expansion limit. The final link may be inspected without following it. Callers may also preserve every link component while applying the selected existence policy, and may require the resolved final object to be a directory. A non-link reparse point is a controlled unsupported result when final-object rejection is requested; command policy remains outside this library.
 
 ## Platform profile
 

@@ -68,8 +68,17 @@ public sealed class CanonicalPathResolutionOptions {
 	/// <summary>Gets or sets the maximum number of symbolic links followed during one resolution.</summary>
 	public int MaximumSymbolicLinks { get; init; } = 40;
 
+	/// <summary>Gets or sets whether supported symbolic links are expanded while resolving the pathname.</summary>
+	/// <value><see langword="true"/> performs physical resolution; <see langword="false"/> preserves link components while still validating the selected existence policy.</value>
+	public bool FollowSymbolicLinks { get; init; } = true;
+
 	/// <summary>Gets or sets whether a symbolic link in the final component is dereferenced.</summary>
+	/// <remarks>This setting applies only when <see cref="FollowSymbolicLinks"/> is <see langword="true"/>.</remarks>
 	public bool FollowFinalSymbolicLink { get; init; } = true;
+
+	/// <summary>Gets or sets whether the resolved final pathname must designate a directory.</summary>
+	/// <remarks>This supports the trailing-separator contract of strict canonicalization modes.</remarks>
+	public bool RequireFinalDirectory { get; init; }
 
 	/// <summary>Gets or sets whether an unsupported reparse point in the final component is a resolution failure.</summary>
 	public bool RejectUnsupportedFinalReparsePoint { get; init; } = true;
