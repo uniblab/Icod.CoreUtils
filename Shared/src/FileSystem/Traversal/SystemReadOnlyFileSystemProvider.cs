@@ -1,3 +1,4 @@
+using Icod.Path;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
@@ -24,16 +25,24 @@ public sealed class SystemReadOnlyFileSystemProvider : IReadOnlyFileSystemProvid
 	private const uint FileFlagOpenReparsePoint = 0x00200000;
 	private const uint OpenExisting = 3;
 
+	private readonly IPathIndirectionInspector indirectionInspector;
+
 	/// <summary>
 	/// Gets the shared system provider.
 	/// </summary>
-	public static SystemReadOnlyFileSystemProvider Instance { get; } = new();
+	public static SystemReadOnlyFileSystemProvider Instance { get; } = new(
+		SystemPathIndirectionInspector.Instance
+	);
 
-	private SystemReadOnlyFileSystemProvider() {
+	/// <summary>Initializes a host provider over an injectable no-follow indirection inspector.</summary>
+	/// <param name="indirectionInspector">The physical pathname-indirection inspector.</param>
+	public SystemReadOnlyFileSystemProvider( IPathIndirectionInspector indirectionInspector ) {
+		this.indirectionInspector = indirectionInspector
+			?? throw new ArgumentNullException( nameof( indirectionInspector ) );
 	}
 
 	/// <inheritdoc/>
-	public ValueTask<ReadOnlyFileSystemEntry> ObserveAsync(
+	public async ValueTask<ReadOnlyFileSystemEntry> ObserveAsync(
 		string path,
 		bool followSymbolicLink,
 		CancellationToken cancellationToken = default
@@ -59,15 +68,26 @@ public sealed class SystemReadOnlyFileSystemProvider : IReadOnlyFileSystemProvid
 			throw attributeException ?? new IOException( "The filesystem entry could not be observed." );
 		}
 
-		var isLink = physicalNative.Kind == FileSystemEntryKind.SymbolicLink
-			|| (attributes is FileAttributes value && (value & FileAttributes.ReparsePoint) != 0);
-		var linkTarget = isLink ? TryGetLinkTarget( path, attributes ) : null;
-		var native = followSymbolicLink && isLink
+		var indirection = await indirectionInspector.InspectAsync(
+			path,
+			cancellationToken
+		).ConfigureAwait( false );
+		if (
+			physicalNative.Kind == FileSystemEntryKind.SymbolicLink
+			&& !indirection.IsPathIndirection
+		) {
+			indirection = PathIndirectionInfo.PosixSymbolicLink(
+				indirection.Target,
+				false,
+				attributes ?? default
+			);
+		}
+		var shouldDereference = followSymbolicLink && indirection.CanResolveAsPath;
+		var native = shouldDereference
 			? TryGetNativeObservation( path, true )
 			: physicalNative;
 		if (
-			isLink
-			&& followSymbolicLink
+			shouldDereference
 			&& (
 				(
 					physicalNative.Kind != FileSystemEntryKind.Unknown
@@ -79,26 +99,55 @@ public sealed class SystemReadOnlyFileSystemProvider : IReadOnlyFileSystemProvid
 				)
 			)
 		) {
-			throw new FileNotFoundException( "The symbolic-link or reparse-point target does not exist.", path );
+			throw new FileNotFoundException( "The pathname-indirection target does not exist.", path );
 		}
 
-		var kind = isLink && !followSymbolicLink
+		var kind = !shouldDereference && indirection.IsSymbolicLink
 			? FileSystemEntryKind.SymbolicLink
-			: native.Kind != FileSystemEntryKind.Unknown
-				? native.Kind
-				: ClassifyUsingManagedApis( path, attributes, isLink, followSymbolicLink );
+			: !shouldDereference && indirection.IsNameSurrogate
+				? FileSystemEntryKind.NameSurrogate
+				: !shouldDereference
+					&& indirection.IsReparsePoint
+					&& indirection.Kind == PathIndirectionKind.Unknown
+						? FileSystemEntryKind.ReparsePoint
+						: native.Kind != FileSystemEntryKind.Unknown
+							? native.Kind
+							: !shouldDereference && indirection.IsReparsePoint
+								? FileSystemEntryKind.ReparsePoint
+								: ClassifyUsingManagedApis(
+									path,
+									attributes,
+									indirection.IsPathIndirection,
+									shouldDereference
+								);
 
-		var result = new ReadOnlyFileSystemEntry(
+		return new ReadOnlyFileSystemEntry(
 			path,
 			GetName( path ),
 			kind,
-			isLink,
-			isLink && followSymbolicLink,
-			linkTarget,
+			indirection.IsSymbolicLink,
+			shouldDereference,
+			indirection.Target,
 			native.EntryIdentity,
-			native.FileSystemIdentity
+			native.FileSystemIdentity,
+			indirection
 		);
-		return ValueTask.FromResult( result );
+	}
+
+	/// <inheritdoc/>
+	public ValueTask<ReadOnlyFileSystemEntry> ObserveAsync(
+		string path,
+		PathDereferenceMode dereferenceMode,
+		CancellationToken cancellationToken = default
+	) {
+		if ( !Enum.IsDefined( typeof( PathDereferenceMode ), dereferenceMode ) ) {
+			throw new ArgumentOutOfRangeException( nameof( dereferenceMode ) );
+		}
+		return ObserveAsync(
+			path,
+			dereferenceMode == PathDereferenceMode.FollowEligiblePathIndirection,
+			cancellationToken
+		);
 	}
 
 	/// <inheritdoc/>
@@ -113,22 +162,6 @@ public sealed class SystemReadOnlyFileSystemProvider : IReadOnlyFileSystemProvid
 		foreach ( var path in Directory.EnumerateFileSystemEntries( directoryPath ) ) {
 			cancellationToken.ThrowIfCancellationRequested();
 			yield return new ReadOnlyDirectoryEntry( GetName( path ), path );
-		}
-	}
-
-	private static string? TryGetLinkTarget( string path, FileAttributes? attributes ) {
-		try {
-			if ( attributes is FileAttributes value && (value & FileAttributes.Directory) != 0 ) {
-				return new DirectoryInfo( path ).LinkTarget;
-			}
-			return new FileInfo( path ).LinkTarget ?? new DirectoryInfo( path ).LinkTarget;
-		} catch ( Exception exception ) when (
-			exception is IOException
-				or UnauthorizedAccessException
-				or System.Security.SecurityException
-				or NotSupportedException
-		) {
-			return null;
 		}
 	}
 
@@ -219,9 +252,6 @@ public sealed class SystemReadOnlyFileSystemProvider : IReadOnlyFileSystemProvid
 			: (information.FileAttributes & FileAttributes.Directory) != 0
 				? FileSystemEntryKind.Directory
 				: FileSystemEntryKind.File;
-		if ( !followSymbolicLink && (information.FileAttributes & FileAttributes.ReparsePoint) != 0 ) {
-			kind = FileSystemEntryKind.SymbolicLink;
-		}
 		return new NativeObservation( entryIdentity, fileSystemIdentity, kind );
 	}
 

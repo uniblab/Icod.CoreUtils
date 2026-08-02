@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Win32.SafeHandles;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
+using Icod.Path;
 using Xunit;
 
 namespace Icod.CoreUtils.Shared.Tests.FileSystem.Traversal;
@@ -274,10 +275,18 @@ public sealed partial class SystemReadOnlyFileSystemProviderTests {
 			}
 
 			var provider = SystemReadOnlyFileSystemProvider.Instance;
-			var physical = await provider.ObserveAsync( junction, false );
-			var followed = await provider.ObserveAsync( junction, true );
-			Assert.Equal( FileSystemEntryKind.SymbolicLink, physical.Kind );
-			Assert.True( physical.IsSymbolicLink );
+			var physical = await provider.ObserveAsync( junction, PathDereferenceMode.NoFollow );
+			var followed = await provider.ObserveAsync(
+				junction,
+				PathDereferenceMode.FollowEligiblePathIndirection
+			);
+			Assert.Equal( FileSystemEntryKind.NameSurrogate, physical.Kind );
+			Assert.False( physical.IsSymbolicLink );
+			Assert.True( physical.IsPathIndirection );
+			Assert.True( physical.IsJunction );
+			Assert.False( physical.IsVolumeMountPoint );
+			Assert.Equal( PathIndirectionKind.WindowsJunction, physical.Indirection.Kind );
+			Assert.Equal( WindowsReparseTags.MountPoint, physical.Indirection.ReparseTag );
 			Assert.Equal( FileSystemEntryKind.Directory, followed.Kind );
 			Assert.True( followed.WasDereferenced );
 			Assert.Equal( (await provider.ObserveAsync( target, false )).EntryIdentity, followed.EntryIdentity );

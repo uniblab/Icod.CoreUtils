@@ -6,16 +6,19 @@
 
 `IFileSystemMetadataProvider` exposes three injectable operations:
 
-1. observe one pathname with an explicit terminal-link dereference policy;
+1. observe one pathname with an explicit terminal `PathDereferenceMode`;
 2. observe the containing filesystem, volume, or mount; and
-3. apply a selective timestamp-mutation request.
+3. apply a selective timestamp-mutation request under the same dereference vocabulary.
+
+Source-compatible Boolean overloads remain available for existing consumers.
 
 `SystemFileSystemMetadataProvider.Instance` is the host implementation. Commands should accept the interface through an overload or constructor and use the shared instance by default. Deterministic tests may inject a provider without touching the host filesystem.
 
 `FileSystemMetadata` reports:
 
 - detailed file type and logical size;
-- hard-link count, immediate link target, link-object identity, and effective entry identity;
+- hard-link count, immediate pathname-indirection target, physical link/reparse-object identity, and effective entry identity;
+- strict symbolic-link status plus Windows reparse tag, junction, mounted-volume, Cloud placeholder, name-surrogate, and opaque-object characterization;
 - native mode, numeric owner and group IDs, and owner/group account names or identifiers where available;
 - access, modification, inode-change, and birth timestamps;
 - device or volume identifier, inode or platform object number, and special-device identifier;
@@ -38,14 +41,16 @@ Consumers must not substitute zero, an empty string, the Unix epoch, or a fabric
 
 ## Link and identity semantics
 
-The source pathname is first observed without dereferencing through `IReadOnlyFileSystemProvider`. When terminal-link following is requested, a second E1 observation supplies the effective target identity and filesystem identity.
+The source pathname is first observed without dereferencing through `IReadOnlyFileSystemProvider`. When following is requested, a second E1 observation is performed only when `PathIndirectionInfo.CanResolveAsPath` is true.
 
 - `EntryIdentity` always identifies the effective object represented by the metadata result.
-- `LinkIdentity` identifies the source link object when the source pathname is a link.
+- `LinkIdentity` identifies the source physical link or reparse object when applicable.
 - `WasDereferenced` records whether the result describes a followed target.
 - `LinkTarget` preserves the immediate provider-reported target text when available.
+- `ReparseTag` preserves the Windows tag without treating that tag as proof of symbolic-link semantics.
+- `Indirection` exposes the complete neutral E3R classification inherited from `Icod.Path`.
 
-This lets traversal, `stat`, `touch`, `test`, and Patch compare identities through the same E1 types.
+This lets traversal, canonicalization, `stat`, `touch`, `test`, Patch, Tar, and later mutation commands compare identities and apply one link/reparse policy vocabulary.
 
 ## Platform profile
 
@@ -60,7 +65,7 @@ This lets traversal, `stat`, `touch`, `test`, and Patch compare identities throu
 | Filesystem information | volume APIs plus `DriveInfo` | `statvfs` plus `DriveInfo` | `statvfs` plus `DriveInfo` | `DriveInfo` where available |
 | Access/modify timestamp mutation | `SetFileTime` | `utimensat` | `utimensat` | BCL fallback |
 | Birth-time mutation | Supported | Unsupported | Unsupported | Platform-dependent fallback is not claimed |
-| No-follow link timestamp mutation | Reparse-point handle | `AT_SYMLINK_NOFOLLOW` | `AT_SYMLINK_NOFOLLOW` | Unsupported |
+| No-follow indirection/reparse timestamp mutation | Reparse-point handle | `AT_SYMLINK_NOFOLLOW` | `AT_SYMLINK_NOFOLLOW` | Unsupported |
 
 Windows owner and primary-group accounts are read through the entry security descriptor. Account names are preferred; an SID string is returned when the account cannot be resolved. Unix numeric owner and group IDs remain authoritative, while display-name resolution is intentionally left to a later injectable resolver so locale and directory-service policy do not alter the metadata contract.
 
@@ -72,4 +77,4 @@ Unix explicit instants are converted to signed seconds plus nanoseconds and ther
 
 ## Gate boundaries
 
-E3 supplies observation and timestamp mutation, but it does not parse GNU `stat` format strings, parse user-facing date expressions, decide whether `touch` creates a missing file, define command-specific owner/group formatting, or implement mode/pathname mutation. Batch 36 owns the `stat` and `touch` command policies. Completion Gate E4 owns mode parsing and basic pathname mutation. Patch Phase P8 consumes both gates.
+E3 and E3R supply observation, reparse characterization, and timestamp mutation, but they do not parse GNU `stat` format strings, parse user-facing date expressions, decide whether `touch` creates a missing file, define command-specific owner/group formatting, or implement mode/pathname mutation. Batch 36 owns the `stat` and `touch` command policies. Completion Gate E4 owns mode parsing and basic pathname mutation. Patch Phase P8 consumes both gates.

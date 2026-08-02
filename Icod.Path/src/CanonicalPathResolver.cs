@@ -159,9 +159,23 @@ public sealed class CanonicalPathResolver {
 				missingComponentCount = 1;
 				continue;
 			}
-			if ( observation.IsReparsePoint && !observation.IsSymbolicLink ) {
+			var unsupportedReparsePoint = observation.IsReparsePoint
+				&& observation.Indirection.Kind is (
+					PathIndirectionKind.WindowsOtherNameSurrogate
+					or PathIndirectionKind.Unknown
+				);
+			if ( unsupportedReparsePoint ) {
+				if ( 0 < remaining.Count ) {
+					return CanonicalPathResult.Failed(
+						new CanonicalPathFailure(
+							CanonicalPathFailureCode.UnsupportedReparsePoint,
+							candidate,
+							"the nonterminal reparse point cannot be traversed without supported target semantics"
+						)
+					);
+				}
 				if ( !options.FollowSymbolicLinks ) {
-					if ( 0 == remaining.Count && options.RequireFinalDirectory ) {
+					if ( options.RequireFinalDirectory ) {
 						return CanonicalPathResult.Failed(
 							new CanonicalPathFailure(
 								CanonicalPathFailureCode.UnsupportedReparsePoint,
@@ -173,7 +187,7 @@ public sealed class CanonicalPathResolver {
 					resolved.Add( component );
 					continue;
 				}
-				if ( 0 == remaining.Count && !options.RejectUnsupportedFinalReparsePoint ) {
+				if ( !options.RejectUnsupportedFinalReparsePoint ) {
 					resolved.Add( component );
 					continue;
 				}
@@ -181,11 +195,11 @@ public sealed class CanonicalPathResolver {
 					new CanonicalPathFailure(
 						CanonicalPathFailureCode.UnsupportedReparsePoint,
 						candidate,
-						"the reparse point does not expose supported symbolic-link semantics"
+						"the reparse point does not expose a supported pathname target"
 					)
 				);
 			}
-			if ( observation.IsSymbolicLink ) {
+			if ( observation.IsPathIndirection ) {
 				if ( !options.FollowSymbolicLinks ) {
 					if (
 						0 == remaining.Count
@@ -216,7 +230,7 @@ public sealed class CanonicalPathResolver {
 						new CanonicalPathFailure(
 							CanonicalPathFailureCode.LinkTargetUnavailable,
 							candidate,
-							"the symbolic-link target is unavailable"
+							"the pathname-indirection target is unavailable"
 						)
 					);
 				}
@@ -225,7 +239,7 @@ public sealed class CanonicalPathResolver {
 						new CanonicalPathFailure(
 							CanonicalPathFailureCode.TooManySymbolicLinks,
 							candidate,
-							"the symbolic-link traversal limit was exceeded"
+							"the pathname-indirection traversal limit was exceeded"
 						)
 					);
 				}
@@ -244,7 +258,7 @@ public sealed class CanonicalPathResolver {
 						new CanonicalPathFailure(
 							CanonicalPathFailureCode.LinkTargetUnavailable,
 							candidate,
-							"the symbolic-link target is not a valid pathname"
+							"the pathname-indirection target is not a valid pathname"
 						)
 					);
 				}
@@ -258,7 +272,7 @@ public sealed class CanonicalPathResolver {
 						new CanonicalPathFailure(
 							CanonicalPathFailureCode.LinkTargetUnavailable,
 							candidate,
-							"the symbolic-link target is not a valid pathname"
+							"the pathname-indirection target is not a valid pathname"
 						)
 					);
 				}
@@ -332,7 +346,7 @@ public sealed class CanonicalPathResolver {
 		);
 	}
 
-	/// <summary>Inspects a terminal pathname object without dereferencing a symbolic link.</summary>
+	/// <summary>Inspects a terminal pathname object without dereferencing pathname indirection.</summary>
 	/// <param name="path">The input pathname.</param>
 	/// <param name="basePath">The absolute base directory, or <see langword="null"/> for the provider current directory.</param>
 	/// <param name="cancellationToken">The cancellation token.</param>
@@ -382,9 +396,7 @@ public sealed class CanonicalPathResolver {
 		return PathLinkInspectionResult.Success(
 			resolved.Path!,
 			observation.Kind,
-			observation.IsSymbolicLink,
-			observation.IsReparsePoint,
-			observation.LinkTarget
+			observation.Indirection
 		);
 	}
 

@@ -5,10 +5,10 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `35` |
-| Current engineering milestone | Batch 36 — `stat` and `touch`; Completion Gate E3 is complete |
-| Completed infrastructure milestone | Completion Gates E2 and E3 — canonical paths plus authoritative filesystem metadata and timestamps |
+| Current engineering milestone | Completion Gate E3R — Windows reparse-point characterization is implemented; Batch 36 is next |
+| Completed infrastructure milestone | Completion Gates E2, E3, and E3R — canonical paths, authoritative metadata, and shared reparse-point characterization |
 | Next infrastructure dependency | Completion Gate E4 — shared mode and basic pathname mutation before Batch 38 and Patch P8 |
-| Next command batch | Batch 36 — `stat` and `touch`; Patch P8 follows Completion Gate E4 |
+| Next command batch | Batch 36 — `stat` and `touch`, consuming the completed E3/E3R metadata and indirection contracts |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -227,13 +227,13 @@ Man7 pages are useful synopses and secondary references, but they must not repla
 
 ### Defects and risks that remain
 
-1. **Several implementations still silently accept unsupported behavior.**  
+1. **Several implementations still silently accept unsupported behavior.**
    Unknown or unsupported options are ignored by some commands. Unsupported platform behavior sometimes returns success. Both patterns are incompatible with a conformance-oriented port.
 
-2. **Several commands still throw unhandled `NotImplementedException`.**  
+2. **Several commands still throw unhandled `NotImplementedException`.**
    The existing `chown`, `chgrp`, `runcon`, and `chroot` implementations are examples. Unsupported operations must produce a controlled diagnostic and documented nonzero status.
 
-3. **Some commands delegate their defining operation to an installed native utility.**  
+3. **Some commands delegate their defining operation to an installed native utility.**
    Examples include portions of `link`, `chcon`, `install`, and `stdbuf`. Production implementations must not obtain apparent compatibility by invoking the same host utility. Native utilities may be used only by optional differential tests.
 
 4. **Some implementations are not yet the command they claim to be.**
@@ -245,16 +245,16 @@ Man7 pages are useful synopses and secondary references, but they must not repla
    - `tar` needs correct entry typing, metadata handling, and extraction-path safety.
    - `stdbuf` cannot silently run a child without applying the requested buffering mode.
 
-5. **Several text commands use the wrong data model.**  
+5. **Several text commands use the wrong data model.**
    Common problems include ordinal comparison instead of locale collation, UTF-16 `char` processing where bytes or locale characters are required, line-based processing for commands that must transform delimiters, and whole-input buffering where bounded memory or temporary spill files are required.
 
-6. **Several recursive filesystem commands lack a common traversal policy.**  
+6. **Several recursive filesystem commands lack a common traversal policy.**
    Symlink traversal, hard-link identity, cycles, mount boundaries, sparse files, metadata preservation, and destination-inside-source detection must be centralized before `rm`, `cp`, `mv`, `du`, `ls`, and `tar` are considered conformant.
 
-7. **Injected standard streams are not consistently respected or owned correctly.**  
+7. **Injected standard streams are not consistently respected or owned correctly.**
    A command must use the supplied `stdin`, `stdout`, and `stderr`, and must never dispose a caller-owned standard stream.
 
-8. **The current Sed implementation has not yet exposed its final internal boundaries.**  
+8. **The current Sed implementation has not yet exposed its final internal boundaries.**
    `Icod.LineEditor.Sed.Command` presently contains a large monolithic interpreter with nested option, parser, address, instruction, execution, record, substitution, process, and in-place-editing types. It also translates GNU BRE syntax into `System.Text.RegularExpressions`, uses a decoded record reader that may normalize CR before LF, combines script fragments with a host-generated line ending, and performs in-place replacement through command-local file moves. The LineEditor sequence must first characterize and decompose this implementation, then migrate regex, record, security, and replacement mechanics to the applicable shared contracts without moving Sed's pattern-space and command-cycle state into a general library.
 
 ## Project conventions
@@ -723,7 +723,7 @@ The completed implementation pins GNU Coreutils 9.11 and replaces the former sim
 
 The Gate E1 implementation is prepared on the `Gate_e1` branch under `Icod.CoreUtils.Shared.FileSystem.Traversal`. It includes the shared pathname-pattern and expansion layer, injectable one-level provider, Windows/Linux/macOS identity providers, iterative event traversal, selectors, policies, XML documentation, README files, deterministic synthetic tests, and conditional host-filesystem integration tests. The gate remains open until the complete applicable Debug, Staging, and Release test suites pass on `windows-latest`, `ubuntu-latest`, and `macos-latest`.
 
-This gate remains read-only. Completion Gate E2 owns canonical path construction, complete symbolic-link-chain resolution, missing-component policies, and resolution-loop semantics. Completion Gate E3 enriches E1's minimal entry and filesystem identities into the authoritative metadata model. Completion Gate E5 extends E1's provenance, event, identity, cycle, boundary, and error contracts for race-aware recursive mutation and copying rather than introducing a second incompatible traversal model.
+This gate remains read-only. Completion Gate E2 owns canonical path construction, complete symbolic-link-chain resolution, missing-component policies, and resolution-loop semantics. Completion Gate E3 enriches E1's minimal entry and filesystem identities into the authoritative metadata model. Completion Gate E3R characterizes pathname indirection and Windows reparse points consistently across E1, E2, and E3. Completion Gate E5 extends E1's provenance, event, identity, cycle, boundary, and error contracts for race-aware recursive mutation and copying rather than introducing a second incompatible traversal model.
 
 E1 is completed before Batch 26 so co-resident `Icod.Grep` consumes stable root-only and full-link traversal modes, directory pruning, matching scopes, provenance, cycle handling, mount boundaries, and error continuation. The same contract later supports Coreutils directory listing and filesystem accounting, recursive directory comparison in `Icod.DiffUtils`, and archive traversal in `Icod.Tar`. Search, comparison, listing, accounting, and archive policy remain in their respective command or suite engines. The cross-suite portions are provisional `Icod.CommandFramework` candidates.
 
@@ -832,9 +832,9 @@ Patch P0 → P1 → P2 → P3/P4 → P5 → P6
                     │                    └──────────────┐
                     │                                   │
 Completion Gate E2 ─┴──────────────→ Patch P7          │
-Completion Gates E3 and E4 ─────────→ Patch P8          │
+Completion Gates E3, E3R, and E4 ─────→ Patch P8          │
 Completion Gate E4 ─────────────────────────────────→ Patch P9
-Patch P7 + P8 + P9 + E2/E3/E4 ─────→ Patch P10
+Patch P7 + P8 + P9 + E2/E3/E3R/E4 ─→ Patch P10
 Completion Gate E6 + Patch P10 ─────→ Patch P11A
 Patch P11A + Batches 44 and 45 ─────→ Patch P11B → Patch P12
 ```
@@ -842,9 +842,9 @@ Patch P11A + Batches 44 and 45 ─────→ Patch P11B → Patch P12
 The hard ordering rules are:
 
 - Patch Phase P2 and Completion Gate E2 must both complete before Phase P7.
-- Phase P7 and Completion Gates E3 and E4 must complete before Phase P8 is closed.
+- Phase P7 and Completion Gates E3, E3R, and E4 must complete before Phase P8 is closed.
 - Phase P6 and Completion Gate E4 must complete before the E6-facing filesystem work in Phase P9 can be closed.
-- Phases P7 through P9 and Completion Gates E2 through E4 must complete before the Phase P10 conformance checkpoint.
+- Phases P7 through P9 and Completion Gates E2, E3, E3R, and E4 must complete before the Phase P10 conformance checkpoint.
 - Completion Gate E6 and Phase P10 must complete before initial transaction integration in Phase P11A.
 - Phase P11A and the independent `cp`, `mv`, and `install` validation in Batches 44 and 45 must complete before Phase P11B and final Patch conformance in Phase P12.
 - Completion Gate E5 is not a direct Patch feature prerequisite. Patch does not need recursive-copy traversal, but E6 may consume the metadata, containment, identity, and cleanup portions of E5 that are needed by the shared transaction contract.
@@ -883,7 +883,7 @@ Wave B1 implementation is complete. The managed project and focused test suite s
 
   * [x] lexical path normalization;
   * [x] physical path resolution;
-  * [x] symbolic-link and reparse-point inspection;
+  * [x] symbolic-link and reparse-point inspection, later enriched by E3R characterization;
   * [x] missing-component policies;
   * [x] loop detection;
   * [x] relative-path calculation;
@@ -901,7 +901,7 @@ This gate supplies the defining infrastructure for `readlink` and `realpath` and
 - [x] `readlink`
 - [x] `realpath`
 
-Implement lexical versus physical resolution, missing-component policies, canonicalization modes, delimiters, quiet/verbose behavior, relative output, symlink loops, reparse points, and deterministic failures. Never return the unresolved input as a false success.
+Implement lexical versus physical resolution, missing-component policies, canonicalization modes, delimiters, quiet/verbose behavior, relative output, symlink loops, characterized reparse points, and deterministic failures. Never return the unresolved input as a false success.
 
 Batch 35 is implemented over the neutral `Icod.Path` contract and audited against GNU Coreutils 9.11. `readlink` supports raw terminal-link inspection; `-f` all-but-final, `-e` strict-existing, and `-m` missing-suffix canonicalization; GNU option-order precedence; quiet/verbose policy; no-newline and NUL delimiters; multiple operands; continuation; cancellation; loops; and controlled reparse-point failure. Its `-f` mode ignores a trailing separator, while `-e` requires a trailing-separator operand to resolve to a directory. `realpath` supports the default and explicit `-E` missing-final policy, strict `-e`, missing-suffix `-m`, physical `-P`, logical `-L`, and no-link `-s` resolution; `--relative-to` and `--relative-base`; quiet and NUL output; multiple operands; loops; roots and volumes; and deterministic failure without echoing unresolved input. Default `realpath` ignores nonleading trailing separators, strict `-e` requires a directory there, logical mode validates the no-link spelling before processing `..`, and only the combined `-s -m` profile is guaranteed to remain purely lexical. The `Icod.Path` resolver now also exposes explicit no-link traversal and final-directory validation so both commands share the same canonicalization machinery.
 
@@ -935,7 +935,28 @@ P7 produces an owned multi-file application plan over immutable virtual results.
 
 Completion Gate E3 is implemented in `Icod.CoreUtils.Shared.FileSystem.Metadata`. `IFileSystemMetadataProvider` exposes injectable entry observation, containing-filesystem observation, and selective timestamp mutation. `FileSystemMetadataValue<T>` distinguishes available, unavailable, unsupported, and not-applicable values instead of using sentinels. The system provider reuses the E1 `FileSystemEntryIdentity` and `FileSystemIdentity` types and enriches them through Windows handle/security/volume APIs, Linux `statx`, macOS `stat`/`lstat`, POSIX `statvfs`, and controlled BCL fallbacks. Detailed special-file kinds, allocated-block accounting, link-object identity, post-2038 timestamp conversion, preflighted mutation capabilities, and cross-platform host tests are included.
 
-This gate enriches and reuses the minimal entry and filesystem identities established by Completion Gate E1 rather than introducing parallel identity types. It supports `stat`, `touch`, and the file predicates subsequently required by `test`. Patch Phase P8 now depends only on Completion Gate E4 before it can consume the shared timestamp, metadata, identity, and availability contracts for targets, backups, rejects, output files, and post-2038 patch timestamps.
+This gate enriches and reuses the minimal entry and filesystem identities established by Completion Gate E1 rather than introducing parallel identity types. It supports `stat`, `touch`, and the file predicates subsequently required by `test`. With Completion Gate E3R complete, Patch Phase P8 now depends only on Completion Gate E4 before it can consume the shared timestamp, metadata, identity, availability, and pathname-indirection contracts for targets, backups, rejects, output files, and post-2038 patch timestamps.
+
+### Completion Gate E3R — Windows reparse-point characterization before Batch 36
+
+* [x] Establish one shared, injectable physical pathname-indirection contract:
+
+  * [x] place `IPathIndirectionInspector`, `PathIndirectionInfo`, and the host implementation in the neutral `Icod.Path` project;
+  * [x] preserve raw Windows reparse tags, Microsoft ownership and name-surrogate bits, physical attributes, raw and normalized targets, relative-target state, mounted-volume GUID paths, and offline/recall indicators;
+  * [x] distinguish POSIX symbolic links, Windows symbolic links, directory junctions, mounted volumes, unknown name surrogates, Cloud Files placeholders, opaque reparse points, and unknown host indirection;
+  * [x] decode only the documented Microsoft symbolic-link and mount-point buffers and preserve unknown provider data as opaque rather than guessing;
+  * [x] distinguish a junction from a mounted volume through the Windows volume-mount API;
+  * [x] avoid opening file content during classification so metadata observation does not itself hydrate remote placeholder data;
+  * [x] migrate E1 traversal, E2 canonicalization, and E3 metadata to the same characterization rather than retaining parallel Boolean-only models;
+  * [x] retain source-compatible Boolean overloads while adding the typed `PathDereferenceMode` vocabulary for new traversal and metadata consumers;
+  * [x] make `FileSystemEntryKind.SymbolicLink` strict, represent junctions and other name surrogates separately, retain recognized non-name-surrogate reparse points' underlying file or directory kind, and quarantine only uncharacterized points;
+  * [x] add platform-neutral classification tests plus conditional Windows junction integration tests for canonicalization, traversal, identity, and metadata.
+
+Completion Gate E3R is implemented across `Icod.Path`, `Icod.CoreUtils.Shared.FileSystem.Traversal`, and `Icod.CoreUtils.Shared.FileSystem.Metadata`. On Windows, the inspector opens the physical object with no-follow semantics, obtains `FileAttributeTagInfo`, retrieves documented reparse data with `FSCTL_GET_REPARSE_POINT`, and uses `GetVolumeNameForVolumeMountPointW` to distinguish mount-manager mounted volumes from directory junctions. Cloud and known opaque non-name-surrogate points remain their underlying physical file or directory and are not reinterpreted as symbolic links. Unknown name surrogates are observable but are not followed without a decoder, while reparse points whose tag cannot be characterized are quarantined.
+
+The historical public members named `FollowSymbolicLinks`, `MaximumSymbolicLinks`, and `IsFollowedSymbolicLink` remain for source compatibility, but their documented enabled behavior now covers all eligible pathname indirection. New shared consumers use `PathDereferenceMode.NoFollow` or `PathDereferenceMode.FollowEligiblePathIndirection`. Full-checkout Debug, Staging, Release, and Windows/Ubuntu/macOS CI validation remain to be executed after integration.
+
+This gate is a hard predecessor of Batch 36 and informs Batches 37 through 45, Completion Gates E4 through E6, Patch P8 through P11, Tar, and every command that inspects, traverses, removes, copies, archives, mutates, or replaces a pathname object. In particular, `rm` and `rmdir` must remove a junction object without descending into its target; `cp`, `mv`, `install`, and Tar must preserve, follow, or reject each supported reparse kind explicitly; and replacement engines must revalidate the terminal physical object immediately before commit.
 
 ### Batch 36 — File metadata and timestamps (2 tools)
 
@@ -958,7 +979,7 @@ Implement the complete GNU/POSIX operand-count grammar, file type and characteri
   * [ ] symbolic mode-clause parsing;
   * [ ] umask application;
   * [ ] basic directory, file, link, FIFO, and device-node capability providers;
-  * [ ] no-follow and dereference policies;
+  * [ ] no-follow and dereference policies built on the E3R pathname-indirection contract;
   * [ ] race-aware single-path mutation;
   * [ ] controlled privilege and platform diagnostics.
 
@@ -966,16 +987,16 @@ This gate supports `mkdir`, `rmdir`, `unlink`, `link`, `ln`, `mkfifo`, `mknod`, 
 
 #### Patch Wave C — Phase P8 and the start of Phase P9
 
-This wave begins only after Completion Gates E3 and E4 are complete. It proceeds concurrently with Batches 38 through 43 and with the design of E6.
+This wave begins only after Completion Gates E3, E3R, and E4 are complete. It proceeds concurrently with Batches 38 through 43 and with the design of E6.
 
 - [ ] **P8:** implement rejects, backup policy, output-file mode, dry runs, quoting, verbosity, prompts, status aggregation, and write-failure behavior over the shared metadata, timestamp, mode, and single-path capability contracts.
 - [ ] Start **P9** by placing every target mutation behind an injected Patch filesystem/transaction boundary.
 - [ ] Use secure exclusive temporary creation and guarantee that no original is removed before a complete replacement is ready.
-- [ ] Add failure injection, cancellation cleanup, symlink and reparse-point characterization, and provisional transaction tests.
+- [ ] Add failure injection, cancellation cleanup, E3R-based terminal-object revalidation, and provisional transaction tests.
 - [ ] Keep command-specific reject, backup, partial-application, and prompt policy above the shared mechanism.
 - [ ] Treat P9's command-local replacement internals as temporary scaffolding for E6, not as a competing permanent transaction framework.
 
-P8 depends on P7, E3, and E4. P9 may help refine the E6 contract while the E4/E5 validator batches are being implemented, but it cannot claim final transaction conformance until E6 exists.
+P8 depends on P7, E3, E3R, and E4. P9 may help refine the E6 contract while the E4/E5 validator batches are being implemented, but it cannot claim final transaction conformance until E6 exists.
 
 ### Batch 38 — Basic directory and name removal (3 tools)
 
@@ -1600,7 +1621,7 @@ Completion of this gate establishes `Icod.CommandFramework` as the neutral cross
 
 - `Icod.DiffUtils` remains independent of `Icod.Patch` and `Icod.LineEditor.Ed` at runtime. Unified, context, normal, and ed-script text are the compatibility contracts, ensuring the implementations can interoperate with GNU and third-party tools rather than only with each other.
 
-- Patch and the E-series gates are scheduled as one dependency-aligned workstream rather than as an isolated Patch milestone followed by an unrelated filesystem block. P0 through P4 establish syntax and immutable models; P5 and P6 proceed concurrently with E2 because they need no live path semantics; P2, P5, P6, and E2 are all required before P7; P7 together with E3 and E4 precedes P8; P9 co-develops the E6-facing mutation boundary; P10 closes E2–E4 conformance before E6; and P11 is split around the independent `cp`, `mv`, and `install` validation before P12 closes Patch.
+- Patch and the E-series gates are scheduled as one dependency-aligned workstream rather than as an isolated Patch milestone followed by an unrelated filesystem block. P0 through P4 establish syntax and immutable models; P5 and P6 proceed concurrently with E2 because they need no live path semantics; P2, P5, P6, and E2 are all required before P7; P7 together with E3, E3R, and E4 precedes P8; P9 co-develops the E6-facing mutation boundary; P10 closes E2, E3, E3R, and E4 conformance before E6; and P11 is split around the independent `cp`, `mv`, and `install` validation before P12 closes Patch.
 
 - E5 is not treated as a direct Patch feature prerequisite because Patch does not recursively copy directory trees. Only the E5 identity, containment, metadata-preservation, no-follow mutation, failure, and cleanup contracts needed by E6 lie on Patch's transaction dependency path.
 

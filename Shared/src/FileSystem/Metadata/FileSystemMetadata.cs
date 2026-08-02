@@ -1,3 +1,4 @@
+using Icod.Path;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
 
 namespace Icod.CoreUtils.Shared.FileSystem.Metadata;
@@ -11,17 +12,19 @@ public sealed class FileSystemMetadata {
 	/// </summary>
 	/// <param name="path">The operational pathname.</param>
 	/// <param name="kind">The effective entry kind.</param>
-	/// <param name="isSymbolicLink">Whether the source pathname names a symbolic link or reparse-point link.</param>
+	/// <param name="isSymbolicLink">Whether the source pathname specifically names a symbolic link.</param>
 	/// <param name="wasDereferenced">Whether the source link was dereferenced.</param>
 	/// <param name="entryIdentity">The effective entry identity established by Completion Gate E1.</param>
 	/// <param name="fileSystemIdentity">The effective filesystem identity established by Completion Gate E1.</param>
+	/// <param name="indirection">The physical indirection and reparse-point characterization.</param>
 	public FileSystemMetadata(
 		string path,
 		FileSystemEntryKind kind,
 		bool isSymbolicLink,
 		bool wasDereferenced,
 		FileSystemEntryIdentity entryIdentity,
-		FileSystemIdentity fileSystemIdentity
+		FileSystemIdentity fileSystemIdentity,
+		PathIndirectionInfo? indirection = null
 	) {
 		ArgumentException.ThrowIfNullOrEmpty( path );
 		if ( !Enum.IsDefined( typeof( FileSystemEntryKind ), kind ) ) {
@@ -29,7 +32,10 @@ public sealed class FileSystemMetadata {
 		}
 		Path = path;
 		Kind = kind;
-		IsSymbolicLink = isSymbolicLink;
+		Indirection = indirection ?? (isSymbolicLink
+			? PathIndirectionInfo.PosixSymbolicLink( null )
+			: PathIndirectionInfo.None);
+		IsSymbolicLink = indirection is null ? isSymbolicLink : Indirection.IsSymbolicLink;
 		WasDereferenced = wasDereferenced;
 		EntryIdentity = entryIdentity;
 		FileSystemIdentity = fileSystemIdentity;
@@ -41,8 +47,26 @@ public sealed class FileSystemMetadata {
 	/// <summary>Gets the effective entry kind.</summary>
 	public FileSystemEntryKind Kind { get; }
 
-	/// <summary>Gets whether the source pathname names a symbolic link or reparse-point link.</summary>
+	/// <summary>Gets the complete physical indirection and reparse-point characterization.</summary>
+	public PathIndirectionInfo Indirection { get; }
+
+	/// <summary>Gets whether the source pathname specifically names a symbolic link.</summary>
 	public bool IsSymbolicLink { get; }
+
+	/// <summary>Gets whether the source pathname participates in pathname indirection.</summary>
+	public bool IsPathIndirection => Indirection.IsPathIndirection || IsSymbolicLink;
+
+	/// <summary>Gets whether the source pathname is a Windows directory junction.</summary>
+	public bool IsJunction => Indirection.IsJunction;
+
+	/// <summary>Gets whether the source pathname is a mounted Windows volume.</summary>
+	public bool IsVolumeMountPoint => Indirection.IsVolumeMountPoint;
+
+	/// <summary>Gets whether the source pathname is a recognized Cloud Files placeholder.</summary>
+	public bool IsCloudPlaceholder => Indirection.IsCloudPlaceholder;
+
+	/// <summary>Gets whether the source pathname carries the Windows reparse-point attribute.</summary>
+	public bool IsReparsePoint => Indirection.IsReparsePoint;
 
 	/// <summary>Gets whether the source link was dereferenced.</summary>
 	public bool WasDereferenced { get; }
@@ -53,8 +77,11 @@ public sealed class FileSystemMetadata {
 	/// <summary>Gets the effective filesystem identity supplied by the E1 identity contract.</summary>
 	public FileSystemIdentity FileSystemIdentity { get; }
 
-	/// <summary>Gets the immediate link target text.</summary>
+	/// <summary>Gets the immediate pathname-indirection target text.</summary>
 	public FileSystemMetadataValue<string> LinkTarget { get; init; }
+
+	/// <summary>Gets the Windows reparse tag when the source object carries one.</summary>
+	public FileSystemMetadataValue<uint> ReparseTag { get; init; }
 
 	/// <summary>Gets the identity of the source link object when the source pathname is a link.</summary>
 	public FileSystemMetadataValue<FileSystemEntryIdentity> LinkIdentity { get; init; }
