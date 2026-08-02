@@ -5,10 +5,10 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `35` |
-| Current engineering milestone | Completion Gate E3 before Batch 36; Patch Wave B2 (P7) is complete |
-| Completed infrastructure milestone | Completion Gate E2 — neutral canonical-path model in `Icod.Path` |
-| Next infrastructure dependency | Completion Gate E3 — authoritative filesystem-metadata model before Batch 36 and Patch P8 |
-| Next command batch | Batch 36 — `stat` and `touch`; Patch P8 follows Completion Gates E3 and E4 |
+| Current engineering milestone | Batch 36 — `stat` and `touch`; Completion Gate E3 is complete |
+| Completed infrastructure milestone | Completion Gates E2 and E3 — canonical paths plus authoritative filesystem metadata and timestamps |
+| Next infrastructure dependency | Completion Gate E4 — shared mode and basic pathname mutation before Batch 38 and Patch P8 |
+| Next command batch | Batch 36 — `stat` and `touch`; Patch P8 follows Completion Gate E4 |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -921,19 +921,21 @@ P7 produces an owned multi-file application plan over immutable virtual results.
 
 ### Completion Gate E3 — before Batch 36
 
-* [ ] Add the authoritative shared filesystem-metadata model:
+* [x] Add the authoritative shared filesystem-metadata model:
 
-  * [ ] file type and size;
-  * [ ] link count and link identity;
-  * [ ] mode, ownership, and group information;
-  * [ ] access, modification, inode-change, and birth timestamps;
-  * [ ] device, inode, and platform-equivalent identity;
-  * [ ] allocated-block accounting;
-  * [ ] filesystem information;
-  * [ ] timestamp mutation capabilities;
-  * [ ] explicit reporting of unavailable platform metadata.
+  * [x] file type and size;
+  * [x] link count and link identity;
+  * [x] mode, ownership, and group information;
+  * [x] access, modification, inode-change, and birth timestamps;
+  * [x] device, inode, and platform-equivalent identity;
+  * [x] allocated-block accounting;
+  * [x] filesystem information;
+  * [x] timestamp mutation capabilities;
+  * [x] explicit reporting of unavailable platform metadata.
 
-This gate enriches and reuses the minimal entry and filesystem identities established by Completion Gate E1 rather than introducing parallel identity types. It supports `stat`, `touch`, and the file predicates subsequently required by `test`. It is also a hard predecessor of Patch Phase P8, which consumes the shared timestamp, metadata, identity, and availability contracts for targets, backups, rejects, output files, and post-2038 patch timestamps.
+Completion Gate E3 is implemented in `Icod.CoreUtils.Shared.FileSystem.Metadata`. `IFileSystemMetadataProvider` exposes injectable entry observation, containing-filesystem observation, and selective timestamp mutation. `FileSystemMetadataValue<T>` distinguishes available, unavailable, unsupported, and not-applicable values instead of using sentinels. The system provider reuses the E1 `FileSystemEntryIdentity` and `FileSystemIdentity` types and enriches them through Windows handle/security/volume APIs, Linux `statx`, macOS `stat`/`lstat`, POSIX `statvfs`, and controlled BCL fallbacks. Detailed special-file kinds, allocated-block accounting, link-object identity, post-2038 timestamp conversion, preflighted mutation capabilities, and cross-platform host tests are included.
+
+This gate enriches and reuses the minimal entry and filesystem identities established by Completion Gate E1 rather than introducing parallel identity types. It supports `stat`, `touch`, and the file predicates subsequently required by `test`. Patch Phase P8 now depends only on Completion Gate E4 before it can consume the shared timestamp, metadata, identity, and availability contracts for targets, backups, rejects, output files, and post-2038 patch timestamps.
 
 ### Batch 36 — File metadata and timestamps (2 tools)
 

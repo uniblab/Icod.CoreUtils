@@ -87,7 +87,7 @@ The traversal layer owns no command streams and opens no persistent caller-visib
 E1 intentionally supplies only the minimum metadata needed for safe traversal: effective kind, link status, stable entry identity, and filesystem identity.
 
 - Completion Gate E2 owns lexical and physical canonicalization, missing-component policies, and complete link resolution.
-- Completion Gate E3 owns authoritative metadata such as modes, ownership, timestamps, allocated blocks, and presentation.
+- Completion Gate E3 supplies authoritative metadata, explicit availability, allocated blocks, filesystem information, and timestamp mutation through the sibling [`Metadata`](../Metadata/README.md) namespace while reusing these E1 identities.
 - Completion Gate E5 extends E1 traversal and identity policy for race-resistant mutation, preserve-root behavior, copying, moving, deletion, and cleanup.
 
 Commands must not use E1 as an implicit `realpath` implementation or as a substitute for the later metadata and mutation contracts.

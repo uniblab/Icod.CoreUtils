@@ -12,8 +12,16 @@ public enum FileSystemEntryKind {
 	Directory = 2,
 	/// <summary>A symbolic link or reparse-point link that was not dereferenced.</summary>
 	SymbolicLink = 3,
-	/// <summary>Another filesystem object such as a device, socket, or FIFO.</summary>
-	Other = 4
+	/// <summary>Another filesystem object that the provider cannot classify more precisely.</summary>
+	Other = 4,
+	/// <summary>A block device.</summary>
+	BlockDevice = 5,
+	/// <summary>A character device.</summary>
+	CharacterDevice = 6,
+	/// <summary>A named pipe or FIFO.</summary>
+	Fifo = 7,
+	/// <summary>A local-domain socket.</summary>
+	Socket = 8
 }
 
 /// <summary>

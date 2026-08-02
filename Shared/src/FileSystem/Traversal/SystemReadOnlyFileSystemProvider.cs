@@ -13,9 +13,13 @@ public sealed class SystemReadOnlyFileSystemProvider : IReadOnlyFileSystemProvid
 	private const uint StatxBasicStatistics = 0x000007ff;
 	private const uint StatxMountIdentifier = 0x00001000;
 	private const ushort FileTypeMask = 0xf000;
+	private const ushort FileTypeFifo = 0x1000;
+	private const ushort FileTypeCharacterDevice = 0x2000;
 	private const ushort FileTypeDirectory = 0x4000;
+	private const ushort FileTypeBlockDevice = 0x6000;
 	private const ushort FileTypeRegular = 0x8000;
 	private const ushort FileTypeSymbolicLink = 0xa000;
+	private const ushort FileTypeSocket = 0xc000;
 	private const uint FileFlagBackupSemantics = 0x02000000;
 	private const uint FileFlagOpenReparsePoint = 0x00200000;
 	private const uint OpenExisting = 3;
@@ -305,9 +309,13 @@ public sealed class SystemReadOnlyFileSystemProvider : IReadOnlyFileSystemProvid
 	}
 
 	private static FileSystemEntryKind ClassifyUnixMode( ushort mode ) => (ushort)(mode & FileTypeMask) switch {
+		FileTypeFifo => FileSystemEntryKind.Fifo,
+		FileTypeCharacterDevice => FileSystemEntryKind.CharacterDevice,
 		FileTypeDirectory => FileSystemEntryKind.Directory,
+		FileTypeBlockDevice => FileSystemEntryKind.BlockDevice,
 		FileTypeRegular => FileSystemEntryKind.File,
 		FileTypeSymbolicLink => FileSystemEntryKind.SymbolicLink,
+		FileTypeSocket => FileSystemEntryKind.Socket,
 		_ => FileSystemEntryKind.Other
 	};
 

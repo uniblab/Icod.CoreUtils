@@ -1,8 +1,8 @@
 # Shared.FileSystem
 
-`Shared.FileSystem` contains injectable host-filesystem capabilities. The original operations layer supports flush, allocation, and sparse-file behavior. Completion Gate E1 adds a separate read-only pathname-expansion and traversal layer under [`Traversal`](Traversal/README.md).
+`Shared.FileSystem` contains injectable host-filesystem capabilities. The original operations layer supports flush, allocation, and sparse-file behavior. Completion Gate E1 adds a read-only pathname-expansion and traversal layer under [`Traversal`](Traversal/README.md), and Completion Gate E3 adds authoritative metadata and timestamp mutation under [`Metadata`](Metadata/README.md).
 
-The operations layer distinguishes operating-system API availability from the behavior of an individual filesystem or volume. Every operation therefore returns `PlatformOperationResult` rather than silently claiming unsupported semantics. The traversal layer instead yields caller-independent roots, entries, event phases, identities, boundaries, cycles, and structured errors.
+The operations layer distinguishes operating-system API availability from the behavior of an individual filesystem or volume. Every operation therefore returns `PlatformOperationResult` rather than silently claiming unsupported semantics. The traversal layer yields caller-independent roots, entries, event phases, identities, boundaries, cycles, and structured errors. The metadata layer enriches those same identities with typed values whose availability is always explicit.
 
 ## Operations
 
@@ -57,3 +57,10 @@ Commands should accept `IFileSystemOperations` through an overload or constructo
 Completion Gate E1 lives in `Icod.CoreUtils.Shared.FileSystem.Traversal`. It provides segment-aware `*`, `?`, bracket, and `**` matching; command-selectable pathname operand expansion; an injectable one-level provider; stable entry and filesystem identities; and iterative asynchronous traversal with separate yield/prune, link, cycle, boundary, ordering, resource, cancellation, and error-continuation policies.
 
 See [`Traversal/README.md`](Traversal/README.md) for the API boundaries and platform profile. `IFileSystemOperations` remains focused on flush and allocation operations and is not enlarged into a traversal interface.
+
+
+## Authoritative metadata and timestamps
+
+Completion Gate E3 lives in `Icod.CoreUtils.Shared.FileSystem.Metadata`. `IFileSystemMetadataProvider` observes one entry or its containing filesystem and applies selective access, modification, and birth timestamp requests where supported. `SystemFileSystemMetadataProvider` combines the E1 identity provider with Windows handle APIs, Linux `statx`, macOS `stat`/`lstat`, POSIX `statvfs`, Windows volume APIs, and controlled BCL fallbacks.
+
+Every optional field uses `FileSystemMetadataValue<T>` to distinguish available, unavailable, unsupported, and not-applicable states. Commands must not invent zero values for missing modes, ownership, timestamps, allocation data, or identifiers. See [`Metadata/README.md`](Metadata/README.md) for the complete contract and platform profile.
