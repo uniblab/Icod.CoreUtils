@@ -31,25 +31,25 @@ patch [OPTION]... [ORIGFILE [PATCHFILE]]
 
 ## Complete option inventory
 
-| Short form | Long form | Argument | GNU patch 2.8 behavior | Planned owner | Current state after Wave B1 |
+| Short form | Long form | Argument | GNU patch 2.8 behavior | Planned owner | Current state after Wave B2 |
 |---|---|---|---|---|---|
 | `-b` | `--backup` | none | Back up each original file. GNU 2.8 also retains a narrowly triggered obsolete `-b SUFFIX ORIGFILE PATCHFILE` compatibility form and warns in favor of `-b -z SUFFIX`. | P8 | Reserved; rejected until P8. |
 | `-B PREFIX` | `--prefix=PREFIX` | required, nonempty | Prefix backup filenames. | P8 | Reserved; rejected until P8. |
 | `-c` | `--context` | none | Force interpretation as context diff. | P3 | Implemented; selects the complete context parser. |
-| `-d DIR` | `--directory=DIR` | required | Change working directory before processing. | P7 | Reserved; rejected until P7/E2. |
+| `-d DIR` | `--directory=DIR` | required | Change working directory before processing. | P7 | Implemented for target names and relative patch-source arguments through the canonical P7 working root. |
 | `-D NAME` | `--ifdef=NAME` | required | Emit merged if/then/else output using `NAME`. | P8 | Reserved; rejected until P8. |
 | `-e` | `--ed` | none | Force interpretation as an ed script. | P4 | Implemented; selects the internal GNU-compatible ed parser. |
 | `-E` | `--remove-empty-files` | none | Remove output files left empty after patching. | P8/P9 | Reserved; rejected until filesystem policy exists. |
-| `-f` | `--force` | none | Noninteractive policy that ignores bad prerequisites and assumes unreversed input. | P6 | Implemented in the pure engine and accepted by the command; live application waits for P7. |
+| `-f` | `--force` | none | Noninteractive policy that ignores bad prerequisites and assumes unreversed input. | P6 | Implemented in the pure engine, accepted by the command, and consumed by the P7 virtual multi-file planner; committed application remains deferred. |
 | `-F LINES` | `--fuzz=LINES` | required, nonnegative integer | Set maximum context fuzz. | P6 | Implemented in the pure matcher and accepted by the command. |
-| `-g NUM` | `--get=NUM` | required, signed integer | Retrieve files from version control when positive; ask when negative. | P7 | Reserved; rejected until P7. |
+| `-g NUM` | `--get=NUM` | required, signed integer | Retrieve files from version control when positive; ask when negative. | P7 | Implemented as disabled/decision-gated/enabled policy over an injected provider; `PATCH_GET` and POSIX defaults are honored without shell interpolation. |
 | `-i PATCHFILE` | `--input=PATCHFILE` | required | Read patch text from `PATCHFILE` instead of standard input. `-` denotes standard input. | P1 | Implemented. |
 | `-l` | `--ignore-whitespace` | none | Canonicalize whitespace while matching patch context to input. | P6 | Implemented for nonempty horizontal blank runs in the pure matcher. |
 | `-m` | `--merge[=STYLE]` | short form has no argument; long argument optional | Merge conflicts instead of producing rejects. Supported styles are `merge` and `diff3`; no style selects `merge`. Present when GNU patch is built with merge support. | P6/P8 | Pure `merge` and `diff3` conflict construction is implemented and accepted; P8 still owns live output and artifact policy. |
 | `-n` | `--normal` | none | Force interpretation as normal diff. | P4 | Implemented; selects the complete normal-diff parser. |
 | `-N` | `--forward` | none | Ignore input that appears reversed or already applied. | P6 | Implemented in the pure direction policy and accepted by the command. |
 | `-o FILE` | `--output=FILE` | required | Write patched output to `FILE`. | P8 | Reserved; rejected until P8. |
-| `-p NUM` | `--strip=NUM` | required, nonnegative integer | Strip `NUM` leading pathname components. | P7 | Reserved; rejected until P7/E2. |
+| `-p NUM` | `--strip=NUM` | required, nonnegative integer | Strip `NUM` leading pathname components. | P7 | Implemented with adjacent-separator-run counting and platform-aware POSIX/Windows separator semantics. |
 | `-r FILE` | `--reject-file=FILE` | required | Write rejected hunks to `FILE`. | P8 | Reserved; rejected until P8. |
 | `-R` | `--reverse` | none | Assume old and new sides were swapped. | P6 | Implemented for formats with both old and new models; ed scripts reject reverse application explicitly. |
 | `-s` | `--quiet`, `--silent` | none | Suppress normal output while retaining errors. | P8 | Reserved; rejected until P8. |
@@ -68,11 +68,11 @@ patch [OPTION]... [ORIGFILE [PATCHFILE]]
 | — | `--help` | none | Print help and exit successfully. | P1 | Implemented. |
 | — | `--backup-if-mismatch` | none | Back up when a patch is not an exact match. | P8 | Reserved; rejected until P8. |
 | — | `--no-backup-if-mismatch` | none | Do not create mismatch backups unless another option requests backups. | P8 | Reserved; rejected until P8. |
-| — | `--posix` | none | Select GNU patch's POSIX-conformance policy. | P12 | Reserved; rejected until the complete policy is implemented. |
+| — | `--posix` | none | Select GNU patch's POSIX-conformance policy. | P7/P12 | Implemented for P7 filename ordering and version-control defaults; remaining command-wide POSIX differences close in P12. |
 | — | `--quoting-style=WORD` | required | Select filename diagnostic quoting: `literal`, `shell`, `shell-always`, `c`, or `escape`. | P7/P8 | Reserved; rejected until filename and diagnostic policy are complete. |
 | — | `--reject-format=FORMAT` | required | Select `context` or `unified` reject output. | P8 | Reserved; rejected until P8. |
 | — | `--read-only=BEHAVIOR` | required | Handle read-only inputs using `ignore`, `warn`, or `fail`. | P8/P9 | Reserved; rejected until E3/E4-backed mutation policy exists. |
-| — | `--follow-symlinks` | none | Follow symbolic links when opening targets. It is source-defined but omitted from GNU 2.8's ordinary help array. | P9/P10 | Reserved; rejected until the E2/E4 path and no-follow contracts exist. |
+| — | `--follow-symlinks` | none | Follow symbolic links when opening targets. It is source-defined but omitted from GNU 2.8's ordinary help array. | P7/P9/P10 | Implemented for P7 input-target selection after containment checks; output links and committed mutation remain P9/P10 work. |
 
 ## Aliases, conditional surface, and compatibility traps
 
@@ -101,4 +101,4 @@ The complete 2.8 test inventory is retained as research evidence. The most direc
 | Creation, deletion, modes, and timestamps | `create-delete`, `empty-files`, `file-create-modes`, `file-modes`, `preserve-mode-and-timestamp`, `unmodified-files` |
 | Links and special files | `symlinks`, `hardlinks`, `fifo` |
 
-Wave A, P0-P4, uses a provenance-separated corpus to establish the source model and all four complete syntax parsers. Wave B1, P5-P6, adds pure exact and heuristic application plus opt-in GNU 2.8 differential checks. P7-P12 progressively add live path, artifact, metadata, transaction, and conformance behavior without shelling out to a locally installed GNU `patch` during ordinary tests.
+Wave A, P0-P4, uses a provenance-separated corpus to establish the source model and all four complete syntax parsers. Wave B1, P5-P6, adds pure exact and heuristic application plus opt-in GNU 2.8 differential checks. Wave B2, P7, adds canonical filename selection, secure multi-file planning, and retrieval policy. P8-P12 progressively add artifacts, metadata, transactions, and conformance behavior without shelling out to a locally installed GNU `patch` during ordinary tests.

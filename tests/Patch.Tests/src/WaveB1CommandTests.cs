@@ -21,7 +21,7 @@ public sealed class WaveB1CommandTests {
 			stdinStream: input
 		);
 		Assert.Equal( 2, status );
-		Assert.Contains( "Wave B1 virtual application is available", error.ToString() );
+		Assert.Contains( "filesystem artifacts and transactional replacement begin in phase P8", error.ToString() );
 	}
 
 	/// <summary>Verifies command options map without loss into pure application policy.</summary>

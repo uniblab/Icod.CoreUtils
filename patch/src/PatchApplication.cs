@@ -3,13 +3,29 @@ namespace Icod.Patch;
 using System.Security;
 using Icod.CoreUtils.Shared.Diagnostics;
 
-/// <summary>Contains validated Wave B1 invocation options.</summary>
+/// <summary>Contains validated Wave B2 invocation options.</summary>
 internal sealed class PatchOptions {
 	/// <summary>Gets or initializes the optional original-file operand.</summary>
 	public string? OriginalFile { get; init; }
 
 	/// <summary>Gets or initializes the selected patch source, or <see langword="null"/> for standard input.</summary>
 	public string? PatchFile { get; init; }
+
+
+	/// <summary>Gets or initializes the optional working directory selected by <c>-d</c>.</summary>
+	public string? Directory { get; init; }
+
+	/// <summary>Gets or initializes the explicit component strip count, or <see langword="null"/> for basename selection.</summary>
+	public int? StripCount { get; init; }
+
+	/// <summary>Gets or initializes whether POSIX filename-selection policy is active.</summary>
+	public bool Posix { get; init; }
+
+	/// <summary>Gets or initializes whether target symbolic links are followed.</summary>
+	public bool FollowSymbolicLinks { get; init; }
+
+	/// <summary>Gets or initializes GNU version-control retrieval policy.</summary>
+	public int Get { get; init; }
 
 	/// <summary>Gets or initializes whether binary mode was requested.</summary>
 	public bool Binary { get; init; }
@@ -42,21 +58,27 @@ internal sealed class PatchOptions {
 	public bool PromptInputAvailable => null != this.PatchFile && "-" != this.PatchFile;
 }
 
-/// <summary>Coordinates patch-source acquisition and pure Wave B1 engine configuration.</summary>
+/// <summary>Coordinates patch-source acquisition and Wave B2 path planning.</summary>
 internal static class PatchApplication {
 	/// <summary>Parses the selected patch source without mutating target files.</summary>
 	/// <param name="options">The validated invocation options.</param>
 	/// <param name="context">The command context.</param>
+	/// <param name="planner">An optional injected path planner.</param>
 	/// <returns>The process status.</returns>
-	public static async Task<int> ExecuteAsync( PatchOptions options, CommandContext context ) {
+	public static async Task<int> ExecuteAsync(
+		PatchOptions options,
+		CommandContext context,
+		PatchApplicationPlanner? planner = null
+	) {
 		ArgumentNullException.ThrowIfNull( options );
 		ArgumentNullException.ThrowIfNull( context );
+		planner ??= new PatchApplicationPlanner();
 		Stream? ownedInput = null;
 		try {
 			var input = context.StandardInputStream;
 			if ( null != options.PatchFile && "-" != options.PatchFile ) {
 				ownedInput = new FileStream(
-					options.PatchFile,
+					ResolvePatchFilePath( options ),
 					FileMode.Open,
 					FileAccess.Read,
 					FileShare.Read,
@@ -85,20 +107,34 @@ internal static class PatchApplication {
 				).ConfigureAwait( false );
 				return (int)PatchExitStatus.Trouble;
 			}
-			_ = await PatchDocumentParser.ParseAsync(
+			var document = await PatchDocumentParser.ParseAsync(
 				source,
 				result,
 				PatchParseLimits.Default,
 				context.CancellationToken
 			).ConfigureAwait( false );
-			var prerequisite = await PatchPrerequisite.ExtractAsync(
+			await using var plan = await planner.BuildAsync(
 				source,
-				result.LeadingText,
+				document,
+				new PatchPathPlanningOptions {
+					OriginalFile = options.OriginalFile,
+					Directory = options.Directory,
+					StripCount = options.StripCount,
+					Posix = options.Posix,
+					FollowSymbolicLinks = options.FollowSymbolicLinks,
+					Get = options.Get,
+					EngineOptions = CreateEngineOptions( options, prerequisiteToken: null )
+				},
 				context.CancellationToken
 			).ConfigureAwait( false );
-			_ = CreateEngineOptions( options, prerequisite );
+			foreach ( var file in plan.Files.Where( value => null != value.FailureMessage ) ) {
+				await context.Diagnostics.ErrorAsync(
+					file.FailureMessage!,
+					context.CancellationToken
+				).ConfigureAwait( false );
+			}
 			await context.Diagnostics.ErrorAsync(
-				"patch input was recognized and parsed; Wave B1 virtual application is available, but live path integration begins in phase P7",
+				"patch paths and virtual results were planned; filesystem artifacts and transactional replacement begin in phase P8",
 				context.CancellationToken
 			).ConfigureAwait( false );
 			return (int)PatchExitStatus.Trouble;
@@ -118,6 +154,16 @@ internal static class PatchApplication {
 				await ownedInput.DisposeAsync().ConfigureAwait( false );
 			}
 		}
+	}
+
+	/// <summary>Resolves a relative patch-source argument as though <c>-d</c> changed directory first.</summary>
+	private static string ResolvePatchFilePath( PatchOptions options ) {
+		var patchFile = options.PatchFile!;
+		if ( System.IO.Path.IsPathFullyQualified( patchFile ) || null == options.Directory ) {
+			return patchFile;
+		}
+		var directory = System.IO.Path.GetFullPath( options.Directory );
+		return System.IO.Path.GetFullPath( patchFile, directory );
 	}
 
 	/// <summary>Maps validated command options into pure application-engine policy.</summary>

@@ -25,7 +25,9 @@ internal enum PatchDecisionKind {
 	/// <summary>The first hunk appears to be reversed or already applied.</summary>
 	ReversePatch,
 	/// <summary>A prerequisite token was not found.</summary>
-	IgnoreMissingPrerequisite
+	IgnoreMissingPrerequisite,
+	/// <summary>A missing file may be retrieved from version control.</summary>
+	RetrieveFromVersionControl
 }
 
 /// <summary>Describes a policy decision requested by the application engine.</summary>

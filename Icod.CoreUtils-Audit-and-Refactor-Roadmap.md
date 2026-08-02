@@ -5,10 +5,10 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `35` |
-| Current engineering milestone | Completion Gate E3 before Batch 36; Patch Wave B2 (P7) is unblocked by E2 and Batch 35 |
+| Current engineering milestone | Completion Gate E3 before Batch 36; Patch Wave B2 (P7) is complete |
 | Completed infrastructure milestone | Completion Gate E2 — neutral canonical-path model in `Icod.Path` |
 | Next infrastructure dependency | Completion Gate E3 — authoritative filesystem-metadata model before Batch 36 and Patch P8 |
-| Next command batch | Batch 36 — `stat` and `touch`; next Patch phase is Wave B2, P7 |
+| Next command batch | Batch 36 — `stat` and `touch`; Patch P8 follows Completion Gates E3 and E4 |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -238,7 +238,7 @@ Man7 pages are useful synopses and secondary references, but they must not repla
 
 4. **Some implementations are not yet the command they claim to be.**
    - The existing `diff` implementation is not a complete difference algorithm and does not yet implement the required result-status model; it will be migrated into `Icod.DiffUtils.Diff` and corrected during the consecutive Diffutils batches.
-   - The historical `patch` seed handled a private simplified format rather than GNU patch syntax. Patch Waves A and B1, Phases P0–P6, have retired that format, normalized the co-resident `Icod.Patch` project, added byte-preserving detection and complete parsers, and supplied a pure indexed application/matching engine with offsets, fuzz, reversal, prerequisites, and merge output. Live filename resolution and filesystem integration remain scheduled for P7 and later phases.
+   - The historical `patch` seed handled a private simplified format rather than GNU patch syntax. Patch Waves A, B1, and B2, Phases P0–P7, have retired that format, normalized the co-resident `Icod.Patch` project, added byte-preserving detection and complete parsers, supplied a pure indexed application/matching engine with offsets, fuzz, reversal, prerequisites, and merge output, and added secure canonical multi-file planning over `Icod.Path`. Artifact generation, metadata/mode handling, prompts, and committed filesystem replacement remain scheduled for P8 and later phases.
    - `link` behaves like a partial `ln` front end rather than the simple two-operand hard-link command.
    - `stat` substitutes creation time where inode-change time is required.
    - `chmod` does not yet implement GNU/POSIX numeric and symbolic mode semantics correctly.
@@ -863,7 +863,7 @@ This wave follows Batch 34 and may proceed while Completion Gates E2 and E3 are 
 - [x] Preserved independent fixtures from GNU Diffutils, `Icod.DiffUtils`, third-party producers, and hand-authored patches.
 - [x] Kept all parser and model work independent from target filesystem mutation.
 
-Wave A implementation is complete, with full-checkout Debug/Release and three-runner validation pending after integration. The command intentionally performs no live target mutation. The pure virtual application and matching engine is supplied by Wave B1, while command-level path selection and filesystem integration remain deferred to P7 after E2 and Batch 35.
+Wave A implementation is complete, with full-checkout Debug/Release and three-runner validation pending after integration. The command intentionally performs no live target mutation. Wave B1 supplies pure virtual application and matching, and the completed Wave B2 P7 layer now supplies canonical filename selection and multi-file planning without committed mutation.
 
 Completion of all of Wave A establishes the patch syntax and source model required by every later Patch phase. It does not claim path, metadata, mode, backup, reject, or transaction conformance.
 
@@ -875,7 +875,7 @@ P5 and P6 depend on the parsed hunk models from P3 and P4, but not on canonical 
 - [x] **P6:** implemented forward-first nearby offset search, configurable fuzz, canonical horizontal-blank matching, reverse and already-applied detection, force/forward/batch/interactive policy, prerequisite checks, GNU-compatible merge/diff3 conflict output, adversarial candidate limits, and opt-in GNU patch 2.8 differential coverage.
 - [x] Kept both phases pure: they operate on parsed patch documents and immutable virtual target content, not canonical paths or committed filesystem mutations.
 
-Wave B1 implementation is complete. The managed project and focused test suite still require full-checkout Debug/Release execution and the repository Windows, Ubuntu, and macOS CI matrix after integration. Completion Gate E2 is now implemented; P7 remains blocked on Batch 35 exercising and fixing the command-level canonical-path conformance profile rather than on any missing parser or matcher work.
+Wave B1 implementation is complete. The managed project and focused test suite still require full-checkout Debug/Release execution and the repository Windows, Ubuntu, and macOS CI matrix after integration. Completion Gate E2 and Batch 35 have now been consumed by the completed P7 planner.
 
 ### Completion Gate E2 — before Batch 35
 
@@ -909,14 +909,15 @@ Dedicated `Icod.CoreUtils.ReadLink.Tests` and `Icod.CoreUtils.RealPath.Tests` pr
 
 #### Patch Wave B2 — Phase P7
 
-Phase P7 is unblocked now that Completion Gate E2 and Batch 35 have established and exercised the canonical-path contract. It combines the already completed Patch source and application models with E2.
+Phase P7 is implemented over the Completion Gate E2 `Icod.Path` contract and the command-level validation supplied by Batch 35.
 
-- [ ] **P7:** consume E2 for filename candidate resolution, `-d`, component-aware `-p`, roots and volumes, link/reparse-point observation, containment, missing-file decisions, multi-file application, version-control retrieval policy, and path-security tests.
-- [ ] Keep matching and hunk application independent from live filesystem mutation.
-- [ ] Do not introduce a Patch-private canonical-path model.
-- [ ] Do not claim metadata, mode, backup, reject, or transaction conformance yet.
+- [x] **P7:** consumes E2 for filename candidate resolution, `-d`, component-aware and platform-aware `-p`, roots and volumes, link/reparse-point observation, containment, missing-file decisions, multi-file application planning, version-control retrieval policy, and path-security tests.
+- [x] Implements explicit original-file operands, quoted names, `Index:` evidence, GNU best-name and POSIX first-existing selection, `/dev/null` creation/deletion planning, and virtual state carried across multiple file patches.
+- [x] Keeps matching and hunk application independent from live filesystem mutation.
+- [x] Uses the neutral `Icod.Path` project rather than introducing a Patch-private canonical-path model.
+- [x] Does not claim metadata, mode, backup, reject, output, prompt, or transaction conformance.
 
-Phase P7 cannot be marked complete merely because the parser can spell a pathname. P2 supplies the parsed filename candidates and source evidence, P5/P6 supply the application and matching engines, and E2 supplies the canonical path, link, containment, and failure semantics.
+P7 produces an owned multi-file application plan over immutable virtual results. Target selection is confined to the physically canonical `-d` root: lexical traversal, cross-volume names, and link/reparse resolutions that escape the root fail deterministically. Terminal links require explicit `--follow-symlinks`; output-link mutation remains deferred. `-g`, `PATCH_GET`, and POSIX defaults are represented by an injected retrieval provider and decision policy without shell interpolation. The executable still returns controlled trouble because P8 owns artifacts, prompts, and complete user-visible statuses, while P9/P11 own committed replacement. Full-checkout Debug/Release and Windows, Ubuntu, and macOS CI validation remain pending after integration.
 
 ### Completion Gate E3 — before Batch 36
 
