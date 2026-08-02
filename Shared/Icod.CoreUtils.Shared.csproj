@@ -15,7 +15,10 @@
 		<PlatformTarget>AnyCPU</PlatformTarget>
 	</PropertyGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\Icod.Path\Icod.Path.csproj" />
+		<ProjectReference Include="..\Icod.Path\Icod.Path.csproj">
+			<Aliases>IcodPath</Aliases>
+			<PrivateAssets>all</PrivateAssets>
+		</ProjectReference>
 	</ItemGroup>
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
 		<ErrorReport>prompt</ErrorReport>

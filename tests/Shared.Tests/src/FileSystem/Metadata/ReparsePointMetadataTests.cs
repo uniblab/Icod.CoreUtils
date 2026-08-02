@@ -1,7 +1,10 @@
+extern alias IcodPath;
+
 using System.Diagnostics;
 using Icod.CoreUtils.Shared.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
-using Icod.Path;
+using PathIndirectionKind = IcodPath::Icod.Path.PathIndirectionKind;
+using WindowsReparseTags = IcodPath::Icod.Path.WindowsReparseTags;
 using Xunit;
 
 namespace Icod.CoreUtils.Shared.Tests.FileSystem.Metadata;

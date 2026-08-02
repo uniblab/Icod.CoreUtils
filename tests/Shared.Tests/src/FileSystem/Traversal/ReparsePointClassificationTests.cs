@@ -1,5 +1,9 @@
+extern alias IcodPath;
+
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
-using Icod.Path;
+using IPathIndirectionInspector = IcodPath::Icod.Path.IPathIndirectionInspector;
+using PathIndirectionInfo = IcodPath::Icod.Path.PathIndirectionInfo;
+using WindowsReparseTags = IcodPath::Icod.Path.WindowsReparseTags;
 using Xunit;
 
 namespace Icod.CoreUtils.Shared.Tests.FileSystem.Traversal;

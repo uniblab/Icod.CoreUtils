@@ -1,4 +1,6 @@
-using Icod.Path;
+extern alias IcodPath;
+
+using PathIndirectionKind = IcodPath::Icod.Path.PathIndirectionKind;
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.InteropServices;
@@ -613,7 +615,7 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 				size = CaptureUnsigned( () => new FileInfo( path ).Length );
 			}
 			if ( !OperatingSystem.IsWindows() ) {
-				mode = Capture( () => checked( (uint)File.GetUnixFileMode( path ) ) );
+				mode = CaptureUnixFileMode( path );
 			}
 		}
 
@@ -1107,6 +1109,11 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 		if ( change.Kind != FileTimestampChangeKind.Unchanged ) {
 			apply( ResolveTimestampChange( change, now ) );
 		}
+	}
+
+	[System.Runtime.Versioning.UnsupportedOSPlatform( "windows" )]
+	private static FileSystemMetadataValue<uint> CaptureUnixFileMode( string path ) {
+		return Capture( () => checked( (uint)File.GetUnixFileMode( path ) ) );
 	}
 
 	private static FileSystemMetadataValue<T> Capture<T>( Func<T> valueFactory ) {
