@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `35` |
-| Current engineering milestone | Completion Gate E3R — Windows reparse-point characterization is implemented; Batch 36 is next |
+| Completed command batches | `0` through `36` |
+| Current engineering milestone | Batch 36 — `stat` and `touch` are implemented; Batch 37 is next |
 | Completed infrastructure milestone | Completion Gates E2, E3, and E3R — canonical paths, authoritative metadata, and shared reparse-point characterization |
 | Next infrastructure dependency | Completion Gate E4 — shared mode and basic pathname mutation before Batch 38 and Patch P8 |
-| Next command batch | Batch 36 — `stat` and `touch`, consuming the completed E3/E3R metadata and indirection contracts |
+| Next command batch | Batch 37 — `test`, consuming the completed E3/E3R metadata and indirection contracts |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -240,7 +240,6 @@ Man7 pages are useful synopses and secondary references, but they must not repla
    - The existing `diff` implementation is not a complete difference algorithm and does not yet implement the required result-status model; it will be migrated into `Icod.DiffUtils.Diff` and corrected during the consecutive Diffutils batches.
    - The historical `patch` seed handled a private simplified format rather than GNU patch syntax. Patch Waves A, B1, and B2, Phases P0–P7, have retired that format, normalized the co-resident `Icod.Patch` project, added byte-preserving detection and complete parsers, supplied a pure indexed application/matching engine with offsets, fuzz, reversal, prerequisites, and merge output, and added secure canonical multi-file planning over `Icod.Path`. Artifact generation, metadata/mode handling, prompts, and committed filesystem replacement remain scheduled for P8 and later phases.
    - `link` behaves like a partial `ln` front end rather than the simple two-operand hard-link command.
-   - `stat` substitutes creation time where inode-change time is required.
    - `chmod` does not yet implement GNU/POSIX numeric and symbolic mode semantics correctly.
    - `tar` needs correct entry typing, metadata handling, and extraction-path safety.
    - `stdbuf` cannot silently run a child without applying the requested buffering mode.
@@ -960,10 +959,14 @@ This gate is a hard predecessor of Batch 36 and informs Batches 37 through 45, C
 
 ### Batch 36 — File metadata and timestamps (2 tools)
 
-- [ ] `stat`
-- [ ] `touch`
+- [x] `stat`
+- [x] `touch`
 
 Build the authoritative metadata adapter and format-string engine. Distinguish access, modification, inode-change, and birth times where available; expose controlled platform gaps; support dereference policies, filesystems, reference files, date parsing, selective timestamps, no-create, and directories.
+
+Batch 36 is implemented and audited against GNU Coreutils 9.11. `stat` now consumes the authoritative E3/E3R metadata provider for physical and dereferenced entry reports, hard-link counts and identities, ownership, modes, allocation, special files, access/modification/inode-change/birth timestamps, and containing-filesystem information. It supports GNU file and filesystem format directives, width/precision and numeric flags, `--format`, escape-aware `--printf`, terse output, symbolic-link and characterized reparse-point dereference policy, multiple operands, continuation after per-operand failures, and controlled diagnostics for metadata fields or cache policies the shared provider cannot yet enforce. The former creation-time substitution for inode-change time is removed.
+
+`touch` now uses the E3 selective timestamp-mutation contract instead of `FileInfo` approximations. It supports independent access and modification updates, current and explicit GNU date expressions, reference files and reference-relative dates, POSIX `[[CC]YY]MMDDhhmm[.ss]` timestamps, no-create, directories, the compatibility `-f` option, standard-output operands where the host exposes `/dev/stdout`, and E3R no-follow mutation of symbolic-link objects when the platform advertises that capability. Dedicated `Icod.CoreUtils.Stat.Tests` and `Icod.CoreUtils.Touch.Tests` projects cover formats, filesystems, distinct change/birth fields, links, directories, creation, selective preservation, references, relative dates, no-follow behavior, diagnostics, and command endpoints. Full-checkout Debug, Staging, Release, and Windows/Ubuntu/macOS CI validation remain to be executed after integration.
 
 ### Batch 37 — Condition evaluator (1 tool)
 
