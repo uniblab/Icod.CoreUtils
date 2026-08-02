@@ -13,6 +13,7 @@
 - `RegularExpressions`: fully managed GNU basic regular-expression parsing, leftmost-longest matching, GNU/Gnulib capture-register behavior, back-references, structured diagnostics, cancellation, and injectable locale/classification providers.
 - `Temporary`: cryptographically secure base-62 name generation, exclusive temporary file/directory creation, collision retries, and deterministic cleanup support.
 - `FileSystem.Traversal`: segment-aware pathname expansion, injectable one-level filesystem observation, stable entry/filesystem identities, and iterative event-based read-only traversal.
+- `FileSystem.Metadata`: authoritative entry and filesystem metadata, explicit availability, E1 identity reuse, allocated-block accounting, and selective timestamp mutation.
 - `Platform`: BCL-first capability reporting and controlled unsupported results.
 
 ## Text processing
@@ -114,3 +115,10 @@ The `Icod.CoreUtils.Shared.Ordering` namespace supplies the Completion Gate D ex
 Completion Gate E1 adds `Icod.CoreUtils.Shared.FileSystem.Traversal`. Pathname patterns support segment-local `*`, `?`, and bracket expressions plus a complete `**` segment for zero or more pathname segments. `PathnameExpander` preserves operand provenance and delegates every host observation to `IReadOnlyFileSystemProvider`. `ReadOnlyPathTraversalEngine` yields preorder, entry, postorder, error, cycle, and filesystem-boundary events while keeping yielding independent from pruning.
 
 The system provider obtains stable platform identities through Windows file IDs, Linux `statx`, and macOS `stat`/`lstat`. Link following distinguishes never, command-line roots only, and all eligible links. Cycle detection is limited to active ancestry rather than global deduplication. See [`src/FileSystem/Traversal/README.md`](src/FileSystem/Traversal/README.md).
+
+
+## Filesystem metadata and timestamps
+
+Completion Gate E3 adds `Icod.CoreUtils.Shared.FileSystem.Metadata`. The model reports detailed file kinds, size, link count and link-object identity, native mode and ownership, access/modification/change/birth timestamps, device and inode-equivalent identity, allocated blocks, containing-filesystem information, and timestamp-mutation capabilities. Every platform-dependent field uses an explicit availability state rather than a sentinel value.
+
+`SystemFileSystemMetadataProvider` reuses the E1 `FileSystemEntryIdentity` and `FileSystemIdentity` contracts and supplies Windows, Linux, and macOS native adapters with a controlled managed fallback. See [`src/FileSystem/Metadata/README.md`](src/FileSystem/Metadata/README.md).
