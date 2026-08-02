@@ -1,6 +1,7 @@
 namespace Icod.Patch;
 
 using System.Buffers;
+using System.IO;
 
 /// <summary>Owns a byte-preserved, spill-backed patch stream and its source map.</summary>
 internal sealed class PatchSource : IAsyncDisposable {

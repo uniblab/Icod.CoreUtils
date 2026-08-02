@@ -236,7 +236,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "paste", "paste", "{5297186F
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Paste", "paste\Icod.CoreUtils.Paste.csproj", "{E1E09F0B-A657-4B66-B4D2-C7101B0D1BEC}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Icod.Patch", "Icod.Patch", "{1FD88518-ECAC-85DC-1FAA-6D212824F78D}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "patch", "patch", "{1FD88518-ECAC-85DC-1FAA-6D212824F78D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.Patch", "patch\Icod.Patch.csproj", "{4ADCD43A-58D4-4F21-AD47-FC2B3228FBA6}"
 EndProject
