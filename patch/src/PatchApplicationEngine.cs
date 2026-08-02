@@ -448,7 +448,8 @@ internal static class PatchApplicationEngine {
 			CountLeadingContext( projection.OldLines ),
 			CountTrailingContext( projection.OldLines )
 		);
-		var maximumFuzz = format is PatchFormat.Unified or PatchFormat.Context
+		var maximumFuzz = PatchMergeStyle.None == options.MergeStyle
+			&& ( format is PatchFormat.Unified or PatchFormat.Context )
 			? Math.Min( options.Fuzz, maximumContext )
 			: 0;
 		var checks = 0;
@@ -543,7 +544,7 @@ internal static class PatchApplicationEngine {
 			var actual = target[start + index];
 			var wanted = expected[index];
 			if ( actual.Terminator != wanted.Terminator
-				|| actual.ContentLength != wanted.Content.Length ) {
+				|| ( !ignoreWhitespace && actual.ContentLength != wanted.Content.Length ) ) {
 				return false;
 			}
 			var actualBytes = await actual.ReadContentAsync( cancellationToken ).ConfigureAwait( false );
