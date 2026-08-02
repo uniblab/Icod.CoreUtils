@@ -262,15 +262,15 @@ public static class Command {
 		}
 		int? stripCount = null;
 		var stripText = parsed.GetLastValue( "strip" );
-		if ( null != stripText
-			&& ( !int.TryParse(
+		if ( null != stripText ) {
+			if ( !int.TryParse(
 				stripText,
 				System.Globalization.NumberStyles.None,
 				System.Globalization.CultureInfo.InvariantCulture,
 				out var parsedStrip
-			) || parsedStrip < 0 ) ) {
-			throw new PatchUsageException( string.Concat( "invalid strip count '", stripText, "'" ) );
-		} else if ( null != stripText ) {
+			) || parsedStrip < 0 ) {
+				throw new PatchUsageException( string.Concat( "invalid strip count '", stripText, "'" ) );
+			}
 			stripCount = parsedStrip;
 		}
 		var posix = parsed.HasOption( "posix" ) || null != environment( "POSIXLY_CORRECT" );
