@@ -1,3 +1,7 @@
+extern alias IcodPath;
+
+using PathIndirectionInfo = IcodPath::Icod.Path.PathIndirectionInfo;
+
 namespace Icod.CoreUtils.Shared.FileSystem.Traversal;
 
 /// <summary>
@@ -14,11 +18,12 @@ public sealed class PathTraversalEntry {
 	/// <param name="name">The entry basename.</param>
 	/// <param name="depth">The zero-based traversal depth.</param>
 	/// <param name="kind">The effective entry kind.</param>
-	/// <param name="isSymbolicLink">Whether the source path names a symbolic link or reparse-point link.</param>
+	/// <param name="isSymbolicLink">Whether the source path specifically names a symbolic link.</param>
 	/// <param name="isFollowedSymbolicLink">Whether the link was followed.</param>
 	/// <param name="linkTarget">The immediate provider-reported link target.</param>
 	/// <param name="entryIdentity">The effective entry identity.</param>
 	/// <param name="fileSystemIdentity">The effective filesystem identity.</param>
+	/// <param name="indirection">The physical indirection and reparse-point characterization.</param>
 	public PathTraversalEntry(
 		PathTraversalRoot root,
 		string accessPath,
@@ -31,7 +36,8 @@ public sealed class PathTraversalEntry {
 		bool isFollowedSymbolicLink,
 		string? linkTarget,
 		FileSystemEntryIdentity entryIdentity,
-		FileSystemIdentity fileSystemIdentity
+		FileSystemIdentity fileSystemIdentity,
+		PathIndirectionInfo? indirection = null
 	) {
 		ArgumentNullException.ThrowIfNull( root );
 		ArgumentException.ThrowIfNullOrEmpty( accessPath );
@@ -62,9 +68,12 @@ public sealed class PathTraversalEntry {
 		Name = name;
 		Depth = depth;
 		Kind = kind;
-		IsSymbolicLink = isSymbolicLink;
-		IsFollowedSymbolicLink = isFollowedSymbolicLink;
-		LinkTarget = linkTarget;
+		Indirection = indirection ?? (isSymbolicLink
+			? PathIndirectionInfo.PosixSymbolicLink( linkTarget )
+			: PathIndirectionInfo.None);
+		IsSymbolicLink = indirection is null ? isSymbolicLink : Indirection.IsSymbolicLink;
+		WasDereferenced = isFollowedSymbolicLink;
+		LinkTarget = Indirection.Target ?? linkTarget;
 		EntryIdentity = entryIdentity;
 		FileSystemIdentity = fileSystemIdentity;
 	}
@@ -90,11 +99,32 @@ public sealed class PathTraversalEntry {
 	/// <summary>Gets the effective entry kind.</summary>
 	public FileSystemEntryKind Kind { get; }
 
-	/// <summary>Gets whether the source path names a symbolic link or reparse-point link.</summary>
+	/// <summary>Gets the complete physical indirection and reparse-point characterization.</summary>
+	public PathIndirectionInfo Indirection { get; }
+
+	/// <summary>Gets whether the source path specifically names a symbolic link.</summary>
 	public bool IsSymbolicLink { get; }
 
-	/// <summary>Gets whether the link was followed.</summary>
-	public bool IsFollowedSymbolicLink { get; }
+	/// <summary>Gets whether the source path participates in pathname indirection.</summary>
+	public bool IsPathIndirection => Indirection.IsPathIndirection || IsSymbolicLink;
+
+	/// <summary>Gets whether the source path is a Windows directory junction.</summary>
+	public bool IsJunction => Indirection.IsJunction;
+
+	/// <summary>Gets whether the source path is a mounted Windows volume.</summary>
+	public bool IsVolumeMountPoint => Indirection.IsVolumeMountPoint;
+
+	/// <summary>Gets whether the source path is a recognized Cloud Files placeholder.</summary>
+	public bool IsCloudPlaceholder => Indirection.IsCloudPlaceholder;
+
+	/// <summary>Gets whether the source path carries the Windows reparse-point attribute.</summary>
+	public bool IsReparsePoint => Indirection.IsReparsePoint;
+
+	/// <summary>Gets whether a supported pathname indirection was followed.</summary>
+	public bool WasDereferenced { get; }
+
+	/// <summary>Gets whether the historical link-following flag is set.</summary>
+	public bool IsFollowedSymbolicLink => WasDereferenced;
 
 	/// <summary>Gets the immediate provider-reported link target.</summary>
 	public string? LinkTarget { get; }

@@ -65,14 +65,14 @@ public sealed class CanonicalPathResolutionOptions {
 		MissingPathComponentPolicy.RequireExisting
 	;
 
-	/// <summary>Gets or sets the maximum number of symbolic links followed during one resolution.</summary>
+	/// <summary>Gets or sets the maximum number of pathname-indirection objects followed during one resolution.</summary>
 	public int MaximumSymbolicLinks { get; init; } = 40;
 
-	/// <summary>Gets or sets whether supported symbolic links are expanded while resolving the pathname.</summary>
+	/// <summary>Gets or sets whether supported symbolic links, junctions, and mounted volumes are expanded while resolving the pathname.</summary>
 	/// <value><see langword="true"/> performs physical resolution; <see langword="false"/> preserves link components while still validating the selected existence policy.</value>
 	public bool FollowSymbolicLinks { get; init; } = true;
 
-	/// <summary>Gets or sets whether a symbolic link in the final component is dereferenced.</summary>
+	/// <summary>Gets or sets whether supported pathname indirection in the final component is dereferenced.</summary>
 	/// <remarks>This setting applies only when <see cref="FollowSymbolicLinks"/> is <see langword="true"/>.</remarks>
 	public bool FollowFinalSymbolicLink { get; init; } = true;
 
@@ -84,9 +84,9 @@ public sealed class CanonicalPathResolutionOptions {
 	public bool RejectUnsupportedFinalReparsePoint { get; init; } = true;
 }
 
-/// <summary>Records one symbolic link traversed during physical pathname resolution.</summary>
-/// <param name="LinkPath">The absolute lexical pathname of the link object.</param>
-/// <param name="TargetText">The target text stored in the link.</param>
+/// <summary>Records one pathname-indirection object traversed during physical pathname resolution.</summary>
+/// <param name="LinkPath">The absolute lexical pathname of the indirection object.</param>
+/// <param name="TargetText">The target text stored in the indirection object.</param>
 /// <param name="ResolvedTargetPath">The absolute lexical pathname produced from that target.</param>
 public sealed record ResolvedPathLink(
 	string LinkPath,
@@ -119,7 +119,7 @@ public sealed class CanonicalPathResult {
 	/// <summary>Gets the parsed root and volume, or <see langword="null"/> after failure.</summary>
 	public PathRootInfo? Root { get; }
 
-	/// <summary>Gets the symbolic links traversed in encounter order.</summary>
+	/// <summary>Gets the pathname-indirection objects traversed in encounter order.</summary>
 	public IReadOnlyList<ResolvedPathLink> ResolvedLinks { get; }
 
 	/// <summary>Gets the number of unresolved components admitted by the missing-component policy.</summary>
@@ -131,7 +131,7 @@ public sealed class CanonicalPathResult {
 	/// <summary>Creates a successful canonicalization result.</summary>
 	/// <param name="path">The canonical absolute pathname.</param>
 	/// <param name="root">The parsed root and volume.</param>
-	/// <param name="resolvedLinks">The traversed symbolic links.</param>
+	/// <param name="resolvedLinks">The traversed pathname-indirection objects.</param>
 	/// <param name="missingComponentCount">The admitted missing-component count.</param>
 	/// <returns>A successful result.</returns>
 	public static CanonicalPathResult Success(
@@ -260,19 +260,15 @@ public sealed class PathComponentObservation {
 		bool observationSucceeded,
 		bool exists,
 		CanonicalPathEntryKind kind,
-		bool isSymbolicLink,
-		bool isReparsePoint,
-		string? linkTarget,
+		PathIndirectionInfo indirection,
 		CanonicalPathFailure? failure
 	) {
-		this.Path = path;
-		this.ObservationSucceeded = observationSucceeded;
-		this.Exists = exists;
-		this.Kind = kind;
-		this.IsSymbolicLink = isSymbolicLink;
-		this.IsReparsePoint = isReparsePoint;
-		this.LinkTarget = linkTarget;
-		this.Failure = failure;
+		Path = path;
+		ObservationSucceeded = observationSucceeded;
+		Exists = exists;
+		Kind = kind;
+		Indirection = indirection;
+		Failure = failure;
 	}
 
 	/// <summary>Gets the pathname that was inspected.</summary>
@@ -281,30 +277,50 @@ public sealed class PathComponentObservation {
 	/// <summary>Gets whether the provider completed the observation.</summary>
 	public bool ObservationSucceeded { get; }
 
-	/// <summary>Gets whether a pathname object exists without dereferencing a terminal link.</summary>
+	/// <summary>Gets whether a pathname object exists without dereferencing a terminal indirection.</summary>
 	public bool Exists { get; }
 
-	/// <summary>Gets the effective kind for a non-link object.</summary>
+	/// <summary>Gets the physical non-indirection object kind.</summary>
 	public CanonicalPathEntryKind Kind { get; }
 
-	/// <summary>Gets whether the object is a symbolic link or supported link-like reparse point.</summary>
-	public bool IsSymbolicLink { get; }
+	/// <summary>Gets the complete physical indirection and reparse-point characterization.</summary>
+	public PathIndirectionInfo Indirection { get; }
 
-	/// <summary>Gets whether the object carries the host reparse-point attribute.</summary>
-	public bool IsReparsePoint { get; }
+	/// <summary>Gets whether the object is specifically a POSIX or Windows symbolic link.</summary>
+	public bool IsSymbolicLink => Indirection.IsSymbolicLink;
 
-	/// <summary>Gets the raw link target text when available.</summary>
-	public string? LinkTarget { get; }
+	/// <summary>Gets whether the object participates in supported pathname indirection.</summary>
+	public bool IsPathIndirection => Indirection.IsPathIndirection;
+
+	/// <summary>Gets whether the object carries the Windows reparse-point attribute.</summary>
+	public bool IsReparsePoint => Indirection.IsReparsePoint;
+
+	/// <summary>Gets the target text preferred for pathname resolution when available.</summary>
+	public string? LinkTarget => Indirection.Target;
 
 	/// <summary>Gets a structured provider failure.</summary>
 	public CanonicalPathFailure? Failure { get; }
 
 	/// <summary>Creates an observation for an existing pathname object.</summary>
 	/// <param name="path">The observed pathname.</param>
-	/// <param name="kind">The non-link object kind.</param>
-	/// <param name="isSymbolicLink">Whether the object is a supported link.</param>
-	/// <param name="linkTarget">The raw link target text.</param>
-	/// <param name="isReparsePoint">Whether the object has the reparse-point attribute.</param>
+	/// <param name="kind">The physical non-indirection object kind.</param>
+	/// <param name="indirection">The indirection and reparse-point characterization.</param>
+	/// <returns>An existing-object observation.</returns>
+	public static PathComponentObservation Existing(
+		string path,
+		CanonicalPathEntryKind kind,
+		PathIndirectionInfo indirection
+	) {
+		ArgumentNullException.ThrowIfNull( indirection );
+		return new PathComponentObservation( path, true, true, kind, indirection, null );
+	}
+
+	/// <summary>Creates a source-compatible existing-object observation.</summary>
+	/// <param name="path">The observed pathname.</param>
+	/// <param name="kind">The physical non-link object kind.</param>
+	/// <param name="isSymbolicLink">Whether the object is a supported symbolic link.</param>
+	/// <param name="linkTarget">The target text.</param>
+	/// <param name="isReparsePoint">Whether the object has the Windows reparse-point attribute.</param>
 	/// <returns>An existing-object observation.</returns>
 	public static PathComponentObservation Existing(
 		string path,
@@ -312,15 +328,10 @@ public sealed class PathComponentObservation {
 		bool isSymbolicLink = false,
 		string? linkTarget = null,
 		bool isReparsePoint = false
-	) => new(
+	) => Existing(
 		path,
-		true,
-		true,
 		kind,
-		isSymbolicLink,
-		isReparsePoint,
-		linkTarget,
-		null
+		CreateLegacyIndirection( isSymbolicLink, isReparsePoint, linkTarget )
 	);
 
 	/// <summary>Creates an observation for a missing pathname object.</summary>
@@ -331,14 +342,12 @@ public sealed class PathComponentObservation {
 		true,
 		false,
 		CanonicalPathEntryKind.Unknown,
-		false,
-		false,
-		null,
+		PathIndirectionInfo.None,
 		null
 	);
 
 	/// <summary>Creates an observation that failed before existence could be determined.</summary>
-	/// <param name="failure">The structured provider failure.</param>
+	/// <param name="failure">The structured failure.</param>
 	/// <returns>A failed observation.</returns>
 	public static PathComponentObservation Failed( CanonicalPathFailure failure ) {
 		ArgumentNullException.ThrowIfNull( failure );
@@ -347,11 +356,28 @@ public sealed class PathComponentObservation {
 			false,
 			false,
 			CanonicalPathEntryKind.Unknown,
-			false,
-			false,
-			null,
+			PathIndirectionInfo.None,
 			failure
 		);
+	}
+
+	private static PathIndirectionInfo CreateLegacyIndirection(
+		bool isSymbolicLink,
+		bool isReparsePoint,
+		string? linkTarget
+	) {
+		if ( isReparsePoint ) {
+			return PathIndirectionInfo.WindowsReparsePoint(
+				isSymbolicLink ? WindowsReparseTags.SymbolicLink : 0,
+				false,
+				linkTarget,
+				linkTarget,
+				!string.IsNullOrEmpty( linkTarget ) && !System.IO.Path.IsPathRooted( linkTarget )
+			);
+		}
+		return isSymbolicLink
+			? PathIndirectionInfo.PosixSymbolicLink( linkTarget )
+			: PathIndirectionInfo.None;
 	}
 }
 
@@ -360,46 +386,62 @@ public sealed class PathLinkInspectionResult {
 	private PathLinkInspectionResult(
 		string? path,
 		CanonicalPathEntryKind kind,
-		bool isSymbolicLink,
-		bool isReparsePoint,
-		string? target,
+		PathIndirectionInfo indirection,
 		CanonicalPathFailure? failure
 	) {
-		this.Path = path;
-		this.Kind = kind;
-		this.IsSymbolicLink = isSymbolicLink;
-		this.IsReparsePoint = isReparsePoint;
-		this.Target = target;
-		this.Failure = failure;
+		Path = path;
+		Kind = kind;
+		Indirection = indirection;
+		Failure = failure;
 	}
 
 	/// <summary>Gets whether inspection succeeded.</summary>
-	public bool Succeeded => null == this.Failure;
+	public bool Succeeded => null == Failure;
 
 	/// <summary>Gets the absolute lexical pathname inspected.</summary>
 	public string? Path { get; }
 
-	/// <summary>Gets the observed non-link object kind.</summary>
+	/// <summary>Gets the observed physical object kind.</summary>
 	public CanonicalPathEntryKind Kind { get; }
 
-	/// <summary>Gets whether the object is a supported symbolic link or link-like reparse point.</summary>
-	public bool IsSymbolicLink { get; }
+	/// <summary>Gets the complete physical indirection and reparse-point characterization.</summary>
+	public PathIndirectionInfo Indirection { get; }
 
-	/// <summary>Gets whether the object carries the host reparse-point attribute.</summary>
-	public bool IsReparsePoint { get; }
+	/// <summary>Gets whether the object is specifically a POSIX or Windows symbolic link.</summary>
+	public bool IsSymbolicLink => Indirection.IsSymbolicLink;
 
-	/// <summary>Gets the raw target text when the object is a supported link.</summary>
-	public string? Target { get; }
+	/// <summary>Gets whether the object participates in pathname indirection.</summary>
+	public bool IsPathIndirection => Indirection.IsPathIndirection;
+
+	/// <summary>Gets whether the object carries the Windows reparse-point attribute.</summary>
+	public bool IsReparsePoint => Indirection.IsReparsePoint;
+
+	/// <summary>Gets the target text preferred for pathname resolution.</summary>
+	public string? Target => Indirection.Target;
 
 	/// <summary>Gets the structured failure, or <see langword="null"/> after success.</summary>
 	public CanonicalPathFailure? Failure { get; }
 
 	/// <summary>Creates a successful link inspection.</summary>
 	/// <param name="path">The inspected absolute lexical pathname.</param>
-	/// <param name="kind">The observed non-link object kind.</param>
-	/// <param name="isSymbolicLink">Whether the object is a supported link.</param>
-	/// <param name="isReparsePoint">Whether the object carries the reparse-point attribute.</param>
-	/// <param name="target">The raw target text.</param>
+	/// <param name="kind">The observed physical object kind.</param>
+	/// <param name="indirection">The indirection and reparse-point characterization.</param>
+	/// <returns>A successful inspection.</returns>
+	public static PathLinkInspectionResult Success(
+		string path,
+		CanonicalPathEntryKind kind,
+		PathIndirectionInfo indirection
+	) {
+		ArgumentNullException.ThrowIfNull( indirection );
+		return new PathLinkInspectionResult( path, kind, indirection, null );
+	}
+
+	/// <summary>Creates a source-compatible successful link inspection.</summary>
+	/// <param name="path">The inspected absolute lexical pathname.</param>
+	/// <param name="kind">The observed physical object kind.</param>
+	/// <param name="isSymbolicLink">Whether the object is a supported symbolic link.</param>
+	/// <param name="isReparsePoint">Whether the object carries the Windows reparse-point attribute.</param>
+	/// <param name="target">The target text.</param>
 	/// <returns>A successful inspection.</returns>
 	public static PathLinkInspectionResult Success(
 		string path,
@@ -407,13 +449,20 @@ public sealed class PathLinkInspectionResult {
 		bool isSymbolicLink,
 		bool isReparsePoint,
 		string? target
-	) => new(
+	) => Success(
 		path,
 		kind,
-		isSymbolicLink,
-		isReparsePoint,
-		target,
-		null
+		isReparsePoint
+			? PathIndirectionInfo.WindowsReparsePoint(
+				isSymbolicLink ? WindowsReparseTags.SymbolicLink : 0,
+				false,
+				target,
+				target,
+				!string.IsNullOrEmpty( target ) && !System.IO.Path.IsPathRooted( target )
+			)
+			: isSymbolicLink
+				? PathIndirectionInfo.PosixSymbolicLink( target )
+				: PathIndirectionInfo.None
 	);
 
 	/// <summary>Creates a failed link inspection.</summary>
@@ -424,9 +473,7 @@ public sealed class PathLinkInspectionResult {
 		return new PathLinkInspectionResult(
 			null,
 			CanonicalPathEntryKind.Unknown,
-			false,
-			false,
-			null,
+			PathIndirectionInfo.None,
 			failure
 		);
 	}

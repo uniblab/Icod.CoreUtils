@@ -73,11 +73,13 @@ public sealed class ReadOnlyPathTraversalEngine {
 			ReadOnlyFileSystemEntry? rootObservation = null;
 			PathTraversalError? rootObservationError = null;
 			try {
-				var followRoot = options.SymbolicLinkMode is SymbolicLinkTraversalMode.RootsOnly
-					or SymbolicLinkTraversalMode.Always;
+				var rootDereferenceMode = options.SymbolicLinkMode is SymbolicLinkTraversalMode.RootsOnly
+					or SymbolicLinkTraversalMode.Always
+					? PathDereferenceMode.FollowEligiblePathIndirection
+					: PathDereferenceMode.NoFollow;
 				rootObservation = await _provider.ObserveAsync(
 					root.AccessPath,
-					followRoot,
+					rootDereferenceMode,
 					cancellationToken
 				).ConfigureAwait( false );
 			} catch ( OperationCanceledException ) when ( cancellationToken.IsCancellationRequested ) {
@@ -237,10 +239,12 @@ public sealed class ReadOnlyPathTraversalEngine {
 				ReadOnlyFileSystemEntry? observation = null;
 				PathTraversalError? observationError = null;
 				try {
-					var followChild = options.SymbolicLinkMode == SymbolicLinkTraversalMode.Always;
+					var childDereferenceMode = options.SymbolicLinkMode == SymbolicLinkTraversalMode.Always
+						? PathDereferenceMode.FollowEligiblePathIndirection
+						: PathDereferenceMode.NoFollow;
 					observation = await _provider.ObserveAsync(
 						child.AccessPath,
-						followChild,
+						childDereferenceMode,
 						cancellationToken
 					).ConfigureAwait( false );
 				} catch ( OperationCanceledException ) when ( cancellationToken.IsCancellationRequested ) {
@@ -392,7 +396,8 @@ public sealed class ReadOnlyPathTraversalEngine {
 		observation.WasDereferenced,
 		observation.LinkTarget,
 		observation.EntryIdentity,
-		observation.FileSystemIdentity
+		observation.FileSystemIdentity,
+		observation.Indirection
 	);
 
 	private static PathTraversalEntry CreateChildEntry(
@@ -416,7 +421,8 @@ public sealed class ReadOnlyPathTraversalEngine {
 			observation.WasDereferenced,
 			observation.LinkTarget,
 			observation.EntryIdentity,
-			observation.FileSystemIdentity
+			observation.FileSystemIdentity,
+			observation.Indirection
 		);
 	}
 

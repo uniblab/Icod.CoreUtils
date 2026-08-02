@@ -31,8 +31,10 @@ Current-directory segments are evaluated lexically without changing the operatio
 
 `IReadOnlyFileSystemProvider` exposes only:
 
-- observation of one pathname, optionally dereferencing a link; and
+- observation of one pathname under an explicit terminal `PathDereferenceMode`; and
 - enumeration of one directory level.
+
+The historical Boolean overload remains source-compatible, but new consumers use `NoFollow` or `FollowEligiblePathIndirection`.
 
 `SystemReadOnlyFileSystemProvider` supplies the host implementation. Stable entry and filesystem identities are obtained through:
 
@@ -70,7 +72,9 @@ Cycle detection uses the identities in the active directory ancestry. It is deli
 - `RootsOnly` — a link supplied as a root may be followed, but descendant links are not;
 - `Always` — eligible root and descendant links may be followed.
 
-Windows reparse-point links participate in the same policy. The system provider reports available link metadata rather than treating every reparse point as an ordinary directory.
+The policy applies only to eligible pathname indirection. Through the neutral `Icod.Path` inspector, Windows symbolic links, directory junctions, and mounted volumes may be followed when policy permits. Unknown name surrogates are not followed. Recognized non-name-surrogate points, including Cloud Files placeholders and opaque filter-managed objects, retain their underlying file or directory kind and are not treated as links. Reparse points whose tag cannot be characterized are quarantined and are not descended into merely because they carry directory-like attributes.
+
+No-follow entries preserve `PathIndirectionInfo`, including the Windows tag, junction-versus-mounted-volume classification, provider-normalized and raw targets, name-surrogate status, and recall/offline attributes. `FileSystemEntryKind.SymbolicLink` is now strict; junctions and other name surrogates use `NameSurrogate`. Recognized non-name-surrogate reparse points retain their underlying file or directory kind, while only uncharacterized reparse points use `ReparsePoint`.
 
 `FileSystemBoundaryMode.StayOnRootFileSystem` compares each directory's filesystem identity with the root identity before descent. A different identity produces a boundary event. An unavailable required identity produces a structured error.
 
@@ -84,10 +88,10 @@ The traversal layer owns no command streams and opens no persistent caller-visib
 
 ## Gate boundaries
 
-E1 intentionally supplies only the minimum metadata needed for safe traversal: effective kind, link status, stable entry identity, and filesystem identity.
+E1 intentionally supplies only the minimum metadata needed for safe traversal: effective kind, pathname-indirection/reparse characterization, stable entry identity, and filesystem identity.
 
 - Completion Gate E2 owns lexical and physical canonicalization, missing-component policies, and complete link resolution.
-- Completion Gate E3 supplies authoritative metadata, explicit availability, allocated blocks, filesystem information, and timestamp mutation through the sibling [`Metadata`](../Metadata/README.md) namespace while reusing these E1 identities.
+- Completion Gate E3 supplies authoritative metadata, explicit availability, allocated blocks, filesystem information, and timestamp mutation through the sibling [`Metadata`](../Metadata/README.md) namespace while reusing these E1 identities. Completion Gate E3R makes E1, E2, and E3 consume the same neutral reparse-point characterization.
 - Completion Gate E5 extends E1 traversal and identity policy for race-resistant mutation, preserve-root behavior, copying, moving, deletion, and cleanup.
 
 Commands must not use E1 as an implicit `realpath` implementation or as a substitute for the later metadata and mutation contracts.

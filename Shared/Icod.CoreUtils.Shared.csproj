@@ -14,9 +14,12 @@
 	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
 		<PlatformTarget>AnyCPU</PlatformTarget>
 	</PropertyGroup>
-	<!--
-		INTENTIONALLY OMITTED: <ProjectReference> to support batch editing with sed by line #.
-	-->
+	<ItemGroup>
+		<ProjectReference Include="..\Icod.Path\Icod.Path.csproj">
+			<Aliases>IcodPath</Aliases>
+			<PrivateAssets>all</PrivateAssets>
+		</ProjectReference>
+	</ItemGroup>
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
 		<ErrorReport>prompt</ErrorReport>
 		<WarningLevel>2</WarningLevel>
@@ -58,7 +61,6 @@
 		<IncludeSymbols>True</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	</PropertyGroup>
-
 	<ItemGroup>
 		<Content Include="README.md">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

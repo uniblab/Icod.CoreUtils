@@ -1,3 +1,6 @@
+extern alias IcodPath;
+
+using PathIndirectionKind = IcodPath::Icod.Path.PathIndirectionKind;
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.InteropServices;
@@ -48,9 +51,7 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 	private readonly IReadOnlyFileSystemProvider readOnlyProvider;
 
 	/// <summary>Gets the shared system provider.</summary>
-	public static SystemFileSystemMetadataProvider Instance {
-		get;
-	} = new(
+	public static SystemFileSystemMetadataProvider Instance { get; } = new(
 		SystemReadOnlyFileSystemProvider.Instance
 	);
 
@@ -71,25 +72,33 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 		ArgumentException.ThrowIfNullOrEmpty( path );
 		cancellationToken.ThrowIfCancellationRequested();
 
-		var physical = await readOnlyProvider.ObserveAsync( path, false, cancellationToken ).ConfigureAwait( false );
-		var effective = followSymbolicLink && physical.IsSymbolicLink
-			? await readOnlyProvider.ObserveAsync( path, true, cancellationToken ).ConfigureAwait( false )
+		var physical = await readOnlyProvider.ObserveAsync(
+			path,
+			PathDereferenceMode.NoFollow,
+			cancellationToken
+		).ConfigureAwait( false );
+		var effective = followSymbolicLink && physical.Indirection.CanResolveAsPath
+			? await readOnlyProvider.ObserveAsync(
+				path,
+				PathDereferenceMode.FollowEligiblePathIndirection,
+				cancellationToken
+			).ConfigureAwait( false )
 			: physical;
 		cancellationToken.ThrowIfCancellationRequested();
 
 		try {
 			if ( OperatingSystem.IsWindows() ) {
-				var windows = TryGetWindowsMetadata( path, followSymbolicLink, physical, effective );
+				var windows = TryGetWindowsMetadata( path, effective.WasDereferenced, physical, effective );
 				if ( windows is not null ) {
 					return windows;
 				}
 			} else if ( OperatingSystem.IsLinux() ) {
-				var linux = TryGetLinuxMetadata( path, followSymbolicLink, physical, effective );
+				var linux = TryGetLinuxMetadata( path, effective.WasDereferenced, physical, effective );
 				if ( linux is not null ) {
 					return linux;
 				}
 			} else if ( OperatingSystem.IsMacOS() ) {
-				var darwin = TryGetDarwinMetadata( path, followSymbolicLink, physical, effective );
+				var darwin = TryGetDarwinMetadata( path, effective.WasDereferenced, physical, effective );
 				if ( darwin is not null ) {
 					return darwin;
 				}
@@ -102,7 +111,23 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 			// Fall through to the managed observation with explicit unavailable native fields.
 		}
 
-		return GetManagedMetadata( path, followSymbolicLink, physical, effective );
+		return GetManagedMetadata( path, effective.WasDereferenced, physical, effective );
+	}
+
+	/// <inheritdoc/>
+	public ValueTask<FileSystemMetadata> GetMetadataAsync(
+		string path,
+		PathDereferenceMode dereferenceMode,
+		CancellationToken cancellationToken = default
+	) {
+		if ( !Enum.IsDefined( typeof( PathDereferenceMode ), dereferenceMode ) ) {
+			throw new ArgumentOutOfRangeException( nameof( dereferenceMode ) );
+		}
+		return GetMetadataAsync(
+			path,
+			dereferenceMode == PathDereferenceMode.FollowEligiblePathIndirection,
+			cancellationToken
+		);
 	}
 
 	/// <inheritdoc/>
@@ -161,22 +186,27 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 			return PlatformOperationResult.Success();
 		}
 
-		var physical = await readOnlyProvider.ObserveAsync( path, false, cancellationToken ).ConfigureAwait( false );
+		var physical = await readOnlyProvider.ObserveAsync(
+			path,
+			PathDereferenceMode.NoFollow,
+			cancellationToken
+		).ConfigureAwait( false );
 		var capabilities = GetTimestampCapabilities();
 		var unsupported = GetUnsupportedTimestampRequest( request, physical, followSymbolicLink, capabilities );
 		if ( unsupported is not null ) {
 			return PlatformOperationResult.Unsupported( unsupported );
 		}
+		var shouldDereference = followSymbolicLink && physical.Indirection.CanResolveAsPath;
 		cancellationToken.ThrowIfCancellationRequested();
 
 		try {
 			if ( OperatingSystem.IsWindows() ) {
-				return SetWindowsTimestamps( path, request, followSymbolicLink );
+				return SetWindowsTimestamps( path, request, shouldDereference );
 			}
 			if ( OperatingSystem.IsLinux() || OperatingSystem.IsMacOS() ) {
-				return SetUnixTimestamps( path, request, followSymbolicLink );
+				return SetUnixTimestamps( path, request, shouldDereference );
 			}
-			return SetManagedTimestamps( path, request, physical, followSymbolicLink );
+			return SetManagedTimestamps( path, request, physical, shouldDereference );
 		} catch ( Exception exception ) when (
 			exception is IOException
 				or UnauthorizedAccessException
@@ -189,6 +219,24 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 		) {
 			return PlatformOperationResult.Failure( exception.Message, exception );
 		}
+	}
+
+	/// <inheritdoc/>
+	public ValueTask<PlatformOperationResult> SetTimestampsAsync(
+		string path,
+		FileTimestampMutationRequest request,
+		PathDereferenceMode dereferenceMode,
+		CancellationToken cancellationToken = default
+	) {
+		if ( !Enum.IsDefined( typeof( PathDereferenceMode ), dereferenceMode ) ) {
+			throw new ArgumentOutOfRangeException( nameof( dereferenceMode ) );
+		}
+		return SetTimestampsAsync(
+			path,
+			request,
+			dereferenceMode == PathDereferenceMode.FollowEligiblePathIndirection,
+			cancellationToken
+		);
 	}
 
 	private static FileSystemMetadata? TryGetWindowsMetadata(
@@ -218,33 +266,35 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 			handle,
 			FileInformationClass.Basic,
 			out var basic,
-			checked((uint)Marshal.SizeOf<FileBasicInformation>())
+			checked( (uint)Marshal.SizeOf<FileBasicInformation>() )
 		);
 		var hasStandard = GetFileStandardInformationByHandle(
 			handle,
 			FileInformationClass.Standard,
 			out var standard,
-			checked((uint)Marshal.SizeOf<FileStandardInformation>())
+			checked( (uint)Marshal.SizeOf<FileStandardInformation>() )
 		);
 		var size = hasStandard
-			? checked((ulong)Math.Max( 0, standard.EndOfFile ))
-			: ( (ulong)information.FileSizeHigh << 32 ) | information.FileSizeLow;
+			? checked( (ulong)Math.Max( 0, standard.EndOfFile ) )
+			: ((ulong)information.FileSizeHigh << 32) | information.FileSizeLow;
 		var linkCount = hasStandard ? standard.NumberOfLinks : information.NumberOfLinks;
-		var fileIndex = ( (ulong)information.FileIndexHigh << 32 ) | information.FileIndexLow;
+		var fileIndex = ((ulong)information.FileIndexHigh << 32) | information.FileIndexLow;
 		var security = TryGetWindowsAccountNames( path, followSymbolicLink );
 		var allocationSize = hasStandard
-			? FileSystemMetadataValue<ulong>.Available( checked((ulong)Math.Max( 0, standard.AllocationSize )) )
+			? FileSystemMetadataValue<ulong>.Available( checked( (ulong)Math.Max( 0, standard.AllocationSize ) ) )
 			: FileSystemMetadataValue<ulong>.Unavailable( "Windows allocation size could not be queried." );
 
 		return new FileSystemMetadata(
 			path,
 			effective.Kind,
 			physical.IsSymbolicLink,
-			physical.IsSymbolicLink && followSymbolicLink,
+			effective.WasDereferenced,
 			effective.EntryIdentity,
-			effective.FileSystemIdentity
+			effective.FileSystemIdentity,
+			physical.Indirection
 		) {
 			LinkTarget = GetLinkTargetValue( physical ),
+			ReparseTag = GetReparseTagValue( physical ),
 			LinkIdentity = GetLinkIdentityValue( physical ),
 			Size = FileSystemMetadataValue<ulong>.Available( size ),
 			LinkCount = FileSystemMetadataValue<ulong>.Available( linkCount ),
@@ -323,7 +373,7 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 			if ( securityDescriptor != IntPtr.Zero ) {
 				_ = LocalFree( securityDescriptor );
 			}
-			var message = new Win32Exception( checked((int)result) ).Message;
+			var message = new Win32Exception( checked( (int)result ) ).Message;
 			return (
 				FileSystemMetadataValue<string>.Unavailable( message ),
 				FileSystemMetadataValue<string>.Unavailable( message )
@@ -364,9 +414,9 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 		);
 		var lookupError = Marshal.GetLastPInvokeError();
 		if ( lookupError == ErrorInsufficientBuffer && nameLength > 0 ) {
-			var name = new StringBuilder( checked((int)nameLength) );
+			var name = new StringBuilder( checked( (int)nameLength ) );
 			domainLength = Math.Max( domainLength, 1 );
-			var domain = new StringBuilder( checked((int)domainLength) );
+			var domain = new StringBuilder( checked( (int)domainLength ) );
 			if (
 				LookupAccountSidW(
 					null,
@@ -440,11 +490,13 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 			path,
 			effective.Kind,
 			physical.IsSymbolicLink,
-			physical.IsSymbolicLink && followSymbolicLink,
+			effective.WasDereferenced,
 			effective.EntryIdentity,
-			effective.FileSystemIdentity
+			effective.FileSystemIdentity,
+			physical.Indirection
 		) {
 			LinkTarget = GetLinkTargetValue( physical ),
+			ReparseTag = GetReparseTagValue( physical ),
 			LinkIdentity = GetLinkIdentityValue( physical ),
 			Size = FromStatxUnsigned( statistics.Mask, StatxSize, statistics.Size, "size" ),
 			LinkCount = FromStatxUnsigned( statistics.Mask, StatxLinkCount, statistics.LinkCount, "link count" ),
@@ -467,7 +519,7 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 			InodeNumber = FromStatxUnsigned( statistics.Mask, StatxInode, statistics.Inode, "inode" ),
 			SpecialDeviceIdentifier = specialDevice,
 			AllocatedBlocks = FromStatxUnsigned( statistics.Mask, StatxBlocks, statistics.Blocks, "allocated blocks" ),
-			AllocationBlockSize = ( statistics.Mask & StatxBlocks ) != 0
+			AllocationBlockSize = (statistics.Mask & StatxBlocks) != 0
 				? FileSystemMetadataValue<ulong>.Available( 512 )
 				: FileSystemMetadataValue<ulong>.Unavailable( "statx did not report allocated blocks." ),
 			PreferredIoBlockSize = FileSystemMetadataValue<ulong>.Available( statistics.BlockSize ),
@@ -487,10 +539,10 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 		if ( InvokeDarwinStat( path, followSymbolicLink, out var statistics ) != 0 ) {
 			return null;
 		}
-		var device = unchecked((uint)statistics.Device);
+		var device = unchecked( (uint)statistics.Device );
 		var specialDevice = effective.Kind is FileSystemEntryKind.BlockDevice or FileSystemEntryKind.CharacterDevice
 			? FileSystemMetadataValue<string>.Available(
-				unchecked((uint)statistics.SpecialDevice).ToString( CultureInfo.InvariantCulture )
+				unchecked( (uint)statistics.SpecialDevice ).ToString( CultureInfo.InvariantCulture )
 			)
 			: FileSystemMetadataValue<string>.NotApplicable();
 
@@ -498,14 +550,16 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 			path,
 			effective.Kind,
 			physical.IsSymbolicLink,
-			physical.IsSymbolicLink && followSymbolicLink,
+			effective.WasDereferenced,
 			effective.EntryIdentity,
-			effective.FileSystemIdentity
+			effective.FileSystemIdentity,
+			physical.Indirection
 		) {
 			LinkTarget = GetLinkTargetValue( physical ),
+			ReparseTag = GetReparseTagValue( physical ),
 			LinkIdentity = GetLinkIdentityValue( physical ),
 			Size = statistics.Size >= 0
-				? FileSystemMetadataValue<ulong>.Available( checked((ulong)statistics.Size) )
+				? FileSystemMetadataValue<ulong>.Available( checked( (ulong)statistics.Size ) )
 				: FileSystemMetadataValue<ulong>.Unavailable( "Darwin reported a negative size." ),
 			LinkCount = FileSystemMetadataValue<ulong>.Available( statistics.LinkCount ),
 			Mode = FileSystemMetadataValue<uint>.Available( statistics.Mode ),
@@ -521,13 +575,13 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 			InodeNumber = FileSystemMetadataValue<ulong>.Available( statistics.Inode ),
 			SpecialDeviceIdentifier = specialDevice,
 			AllocatedBlocks = statistics.Blocks >= 0
-				? FileSystemMetadataValue<ulong>.Available( checked((ulong)statistics.Blocks) )
+				? FileSystemMetadataValue<ulong>.Available( checked( (ulong)statistics.Blocks ) )
 				: FileSystemMetadataValue<ulong>.Unavailable( "Darwin reported a negative allocated-block count." ),
 			AllocationBlockSize = statistics.Blocks >= 0
 				? FileSystemMetadataValue<ulong>.Available( 512 )
 				: FileSystemMetadataValue<ulong>.Unavailable( "Darwin did not report allocated blocks." ),
 			PreferredIoBlockSize = statistics.BlockSize > 0
-				? FileSystemMetadataValue<ulong>.Available( checked((ulong)statistics.BlockSize) )
+				? FileSystemMetadataValue<ulong>.Available( checked( (ulong)statistics.BlockSize ) )
 				: FileSystemMetadataValue<ulong>.Unavailable( "Darwin did not report a preferred I/O block size." ),
 			Attributes = Capture( () => File.GetAttributes( path ) ),
 			TimestampMutationCapabilities = FileSystemMetadataValue<FileTimestampMutationCapabilities>.Available(
@@ -542,7 +596,8 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 		ReadOnlyFileSystemEntry physical,
 		ReadOnlyFileSystemEntry effective
 	) {
-		var linkObject = physical.IsSymbolicLink && !followSymbolicLink;
+		var linkObject = (physical.IsPathIndirection || physical.IsReparsePoint)
+			&& !effective.WasDereferenced;
 		var attributes = Capture( () => File.GetAttributes( path ) );
 		var size = FileSystemMetadataValue<ulong>.Unavailable( "The managed fallback did not expose an authoritative size." );
 		var accessTime = FileSystemMetadataValue<DateTimeOffset>.Unavailable( "The managed fallback could not obtain access time." );
@@ -560,21 +615,21 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 				size = CaptureUnsigned( () => new FileInfo( path ).Length );
 			}
 			if ( !OperatingSystem.IsWindows() ) {
-#pragma warning disable CA1416
-				mode = Capture( () => checked((uint)File.GetUnixFileMode( path )) );
-#pragma warning restore CA1416
+				mode = CaptureUnixFileMode( path );
 			}
 		}
 
 		return new FileSystemMetadata(
-		path,
-		effective.Kind,
-		physical.IsSymbolicLink,
-		physical.IsSymbolicLink && followSymbolicLink,
-		effective.EntryIdentity,
-		effective.FileSystemIdentity
-	) {
+			path,
+			effective.Kind,
+			physical.IsSymbolicLink,
+			effective.WasDereferenced,
+			effective.EntryIdentity,
+			effective.FileSystemIdentity,
+			physical.Indirection
+		) {
 			LinkTarget = GetLinkTargetValue( physical ),
+			ReparseTag = GetReparseTagValue( physical ),
 			LinkIdentity = GetLinkIdentityValue( physical ),
 			Size = size,
 			LinkCount = FileSystemMetadataValue<ulong>.Unavailable( "The managed fallback did not expose a link count." ),
@@ -591,8 +646,7 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 			InodeNumber = FileSystemMetadataValue<ulong>.Unavailable( "The managed fallback did not expose an inode or platform object number." ),
 			SpecialDeviceIdentifier = effective.Kind is FileSystemEntryKind.BlockDevice or FileSystemEntryKind.CharacterDevice
 				? FileSystemMetadataValue<string>.Unavailable( "The managed fallback did not expose a special-device identifier." )
-				: FileSystemMetadataValue<string>.NotApplicable()
-			,
+				: FileSystemMetadataValue<string>.NotApplicable(),
 			AllocatedBlocks = FileSystemMetadataValue<ulong>.Unavailable( "The managed fallback did not expose allocated blocks." ),
 			AllocationBlockSize = FileSystemMetadataValue<ulong>.Unavailable( "The managed fallback did not expose allocated-block size." ),
 			PreferredIoBlockSize = FileSystemMetadataValue<ulong>.Unavailable( "The managed fallback did not expose preferred I/O block size." ),
@@ -676,14 +730,17 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 		ReadOnlyFileSystemEntry physical,
 		bool followSymbolicLink
 	) {
-		if ( physical.IsSymbolicLink && !followSymbolicLink ) {
+		if (
+			(physical.IsPathIndirection || physical.IsReparsePoint)
+			&& (!followSymbolicLink || !physical.Indirection.CanResolveAsPath)
+		) {
 			return PlatformOperationResult.Unsupported(
-				"The managed timestamp adapter cannot mutate a link object without dereferencing it."
+				"The managed timestamp adapter cannot safely select this reparse object without native no-follow support."
 			);
 		}
 		var now = DateTimeOffset.UtcNow;
 		var isDirectory = physical.Kind == FileSystemEntryKind.Directory
-			|| ( physical.IsSymbolicLink && Directory.Exists( path ) );
+			|| (physical.Indirection.CanResolveAsPath && Directory.Exists( path ));
 		ApplyManagedTime(
 			request.AccessTime,
 			now,
@@ -728,28 +785,41 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 	) {
 		if (
 			request.AccessTime.Kind != FileTimestampChangeKind.Unchanged
-			&& ( capabilities & FileTimestampMutationCapabilities.AccessTime ) == 0
+			&& (capabilities & FileTimestampMutationCapabilities.AccessTime) == 0
 		) {
 			return "Access-time mutation is unsupported on this platform.";
 		}
 		if (
 			request.ModificationTime.Kind != FileTimestampChangeKind.Unchanged
-			&& ( capabilities & FileTimestampMutationCapabilities.ModificationTime ) == 0
+			&& (capabilities & FileTimestampMutationCapabilities.ModificationTime) == 0
 		) {
 			return "Modification-time mutation is unsupported on this platform.";
 		}
 		if (
 			request.BirthTime.Kind != FileTimestampChangeKind.Unchanged
-			&& ( capabilities & FileTimestampMutationCapabilities.BirthTime ) == 0
+			&& (capabilities & FileTimestampMutationCapabilities.BirthTime) == 0
 		) {
 			return "Birth- or creation-time mutation is unsupported on this platform.";
 		}
 		if (
-			physical.IsSymbolicLink
-			&& !followSymbolicLink
-			&& ( capabilities & FileTimestampMutationCapabilities.NoFollowSymbolicLink ) == 0
+			followSymbolicLink
+			&& !physical.Indirection.CanResolveAsPath
+			&& (
+				physical.IsPathIndirection
+				|| (
+					physical.IsReparsePoint
+					&& physical.Indirection.Kind == PathIndirectionKind.Unknown
+				)
+			)
 		) {
-			return "Timestamp mutation of a symbolic-link object without dereferencing it is unsupported on this platform.";
+			return "The requested reparse point does not expose a supported pathname target.";
+		}
+		if (
+			(physical.IsPathIndirection || physical.IsReparsePoint)
+			&& !followSymbolicLink
+			&& (capabilities & FileTimestampMutationCapabilities.NoFollowSymbolicLink) == 0
+		) {
+			return "Timestamp mutation of a pathname-indirection or reparse object without dereferencing it is unsupported on this platform.";
 		}
 		return null;
 	}
@@ -815,7 +885,7 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 		) {
 			return NativeFileSystemDetails.Unavailable( new Win32Exception( Marshal.GetLastPInvokeError() ).Message );
 		}
-		var allocationUnit = checked((ulong)sectorsPerCluster * bytesPerSector);
+		var allocationUnit = checked( (ulong)sectorsPerCluster * bytesPerSector );
 		return new NativeFileSystemDetails {
 			MountPoint = FileSystemMetadataValue<string>.Available( root ),
 			FileSystemType = FileSystemMetadataValue<string>.Available( fileSystemName.ToString() ),
@@ -823,7 +893,7 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 			BlockSize = FileSystemMetadataValue<ulong>.Available( bytesPerSector ),
 			FragmentSize = FileSystemMetadataValue<ulong>.Available( allocationUnit ),
 			MaximumNameLength = FileSystemMetadataValue<ulong>.Available( maximumComponentLength ),
-			IsReadOnly = FileSystemMetadataValue<bool>.Available( ( flags & FileReadOnlyVolume ) != 0 )
+			IsReadOnly = FileSystemMetadataValue<bool>.Available( (flags & FileReadOnlyVolume) != 0 )
 		};
 	}
 
@@ -840,7 +910,7 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 			FragmentSize = FileSystemMetadataValue<ulong>.Available( fragmentSize ),
 			MaximumNameLength = FileSystemMetadataValue<ulong>.Available( statistics.MaximumNameLength ),
 			IsReadOnly = FileSystemMetadataValue<bool>.Available(
-				( statistics.Flags & PosixReadOnlyFileSystem ) != 0
+				(statistics.Flags & PosixReadOnlyFileSystem) != 0
 			)
 		};
 	}
@@ -883,7 +953,7 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 	}
 
 	private static FileSystemMetadataValue<string> GetLinkTargetValue( ReadOnlyFileSystemEntry physical ) {
-		if ( !physical.IsSymbolicLink ) {
+		if ( !physical.IsPathIndirection ) {
 			return FileSystemMetadataValue<string>.NotApplicable();
 		}
 		return physical.LinkTarget is null
@@ -891,10 +961,21 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 			: FileSystemMetadataValue<string>.Available( physical.LinkTarget );
 	}
 
+	private static FileSystemMetadataValue<uint> GetReparseTagValue( ReadOnlyFileSystemEntry physical ) {
+		if ( !physical.IsReparsePoint ) {
+			return FileSystemMetadataValue<uint>.NotApplicable();
+		}
+		return physical.Indirection.ReparseTag is uint tag
+			? FileSystemMetadataValue<uint>.Available( tag )
+			: FileSystemMetadataValue<uint>.Unavailable(
+				"The Windows reparse tag could not be obtained."
+			);
+	}
+
 	private static FileSystemMetadataValue<FileSystemEntryIdentity> GetLinkIdentityValue(
 		ReadOnlyFileSystemEntry physical
 	) {
-		if ( !physical.IsSymbolicLink ) {
+		if ( !physical.IsPathIndirection && !physical.IsReparsePoint ) {
 			return FileSystemMetadataValue<FileSystemEntryIdentity>.NotApplicable();
 		}
 		return physical.EntryIdentity.IsAvailable
@@ -909,7 +990,7 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 		uint requiredMask,
 		ulong value,
 		string name
-	) => ( mask & requiredMask ) == requiredMask
+	) => (mask & requiredMask) == requiredMask
 		? FileSystemMetadataValue<ulong>.Available( value )
 		: FileSystemMetadataValue<ulong>.Unavailable( string.Concat( "statx did not report ", name, "." ) );
 
@@ -918,7 +999,7 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 		uint requiredMask,
 		uint value,
 		string name
-	) => ( mask & requiredMask ) == requiredMask
+	) => (mask & requiredMask) == requiredMask
 		? FileSystemMetadataValue<uint>.Available( value )
 		: FileSystemMetadataValue<uint>.Unavailable( string.Concat( "statx did not report ", name, "." ) );
 
@@ -927,7 +1008,7 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 		uint requiredMask,
 		LinuxStatxTimestamp value,
 		string name
-	) => ( mask & requiredMask ) == requiredMask
+	) => (mask & requiredMask) == requiredMask
 		? FromUnixTimestamp( value.Seconds, value.Nanoseconds, name )
 		: FileSystemMetadataValue<DateTimeOffset>.Unavailable(
 			string.Concat( "statx did not report ", name, "." )
@@ -969,7 +1050,7 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 	private static FileSystemMetadataValue<DateTimeOffset> FromWindowsFileTime(
 		System.Runtime.InteropServices.ComTypes.FILETIME value
 	) {
-		var combined = ( (long)(uint)value.dwHighDateTime << 32 ) | (uint)value.dwLowDateTime;
+		var combined = ((long)(uint)value.dwHighDateTime << 32) | (uint)value.dwLowDateTime;
 		return FromWindowsFileTime( combined );
 	}
 
@@ -1001,7 +1082,7 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 			return new UnixTimespec { Seconds = 0, Nanoseconds = timeNow };
 		}
 		var value = change.Value ?? throw new InvalidOperationException( "An explicit timestamp requires a value." );
-		var ticks = checked(( value.ToUniversalTime() - DateTimeOffset.UnixEpoch ).Ticks);
+		var ticks = checked( (value.ToUniversalTime() - DateTimeOffset.UnixEpoch).Ticks );
 		var seconds = Math.DivRem( ticks, TimeSpan.TicksPerSecond, out var remainder );
 		if ( remainder < 0 ) {
 			seconds--;
@@ -1009,7 +1090,7 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 		}
 		return new UnixTimespec {
 			Seconds = seconds,
-			Nanoseconds = checked(remainder * 100)
+			Nanoseconds = checked( remainder * 100 )
 		};
 	}
 
@@ -1028,6 +1109,11 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 		if ( change.Kind != FileTimestampChangeKind.Unchanged ) {
 			apply( ResolveTimestampChange( change, now ) );
 		}
+	}
+
+	[System.Runtime.Versioning.UnsupportedOSPlatform( "windows" )]
+	private static FileSystemMetadataValue<uint> CaptureUnixFileMode( string path ) {
+		return Capture( () => checked( (uint)File.GetUnixFileMode( path ) ) );
 	}
 
 	private static FileSystemMetadataValue<T> Capture<T>( Func<T> valueFactory ) {
@@ -1049,7 +1135,7 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 		try {
 			var value = valueFactory();
 			return value >= 0
-				? FileSystemMetadataValue<ulong>.Available( checked((ulong)value) )
+				? FileSystemMetadataValue<ulong>.Available( checked( (ulong)value ) )
 				: FileSystemMetadataValue<ulong>.Unavailable( "The host reported a negative value." );
 		} catch ( Exception exception ) when (
 			exception is IOException
@@ -1075,7 +1161,7 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 		string name
 	) {
 		try {
-			return FileSystemMetadataValue<ulong>.Available( checked(left * right) );
+			return FileSystemMetadataValue<ulong>.Available( checked( left * right ) );
 		} catch ( OverflowException ) {
 			return FileSystemMetadataValue<ulong>.Unavailable(
 				string.Concat( "The reported ", name, " exceeds UInt64." )
@@ -1085,7 +1171,7 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 
 	private static ulong DivideRoundUp( ulong value, ulong divisor ) => value == 0
 		? 0
-		: checked(( ( value - 1 ) / divisor ) + 1);
+		: checked( ((value - 1) / divisor) + 1 );
 
 	private static int InvokeDarwinStat(
 		string path,
@@ -1401,54 +1487,34 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 
 	private readonly record struct NativeFileSystemDetails {
 		/// <summary>Gets the native mount point or volume root.</summary>
-		public FileSystemMetadataValue<string> MountPoint {
-			get; init;
-		}
+		public FileSystemMetadataValue<string> MountPoint { get; init; }
 
 		/// <summary>Gets the native filesystem type.</summary>
-		public FileSystemMetadataValue<string> FileSystemType {
-			get; init;
-		}
+		public FileSystemMetadataValue<string> FileSystemType { get; init; }
 
 		/// <summary>Gets the native volume name.</summary>
-		public FileSystemMetadataValue<string> VolumeName {
-			get; init;
-		}
+		public FileSystemMetadataValue<string> VolumeName { get; init; }
 
 		/// <summary>Gets total bytes reported by the native adapter.</summary>
-		public FileSystemMetadataValue<ulong> TotalBytes {
-			get; init;
-		}
+		public FileSystemMetadataValue<ulong> TotalBytes { get; init; }
 
 		/// <summary>Gets free bytes reported by the native adapter.</summary>
-		public FileSystemMetadataValue<ulong> FreeBytes {
-			get; init;
-		}
+		public FileSystemMetadataValue<ulong> FreeBytes { get; init; }
 
 		/// <summary>Gets caller-available bytes reported by the native adapter.</summary>
-		public FileSystemMetadataValue<ulong> AvailableBytes {
-			get; init;
-		}
+		public FileSystemMetadataValue<ulong> AvailableBytes { get; init; }
 
 		/// <summary>Gets the native filesystem block size.</summary>
-		public FileSystemMetadataValue<ulong> BlockSize {
-			get; init;
-		}
+		public FileSystemMetadataValue<ulong> BlockSize { get; init; }
 
 		/// <summary>Gets the native fragment or allocation-unit size.</summary>
-		public FileSystemMetadataValue<ulong> FragmentSize {
-			get; init;
-		}
+		public FileSystemMetadataValue<ulong> FragmentSize { get; init; }
 
 		/// <summary>Gets the native maximum component-name length.</summary>
-		public FileSystemMetadataValue<ulong> MaximumNameLength {
-			get; init;
-		}
+		public FileSystemMetadataValue<ulong> MaximumNameLength { get; init; }
 
 		/// <summary>Gets the native read-only state.</summary>
-		public FileSystemMetadataValue<bool> IsReadOnly {
-			get; init;
-		}
+		public FileSystemMetadataValue<bool> IsReadOnly { get; init; }
 
 		/// <summary>Creates a native-detail result whose fields are unavailable.</summary>
 		/// <param name="message">The unavailability explanation.</param>

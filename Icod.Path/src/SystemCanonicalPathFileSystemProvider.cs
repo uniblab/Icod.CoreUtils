@@ -2,7 +2,16 @@ namespace Icod.Path;
 
 /// <summary>Supplies no-follow canonical-path observations using the current host filesystem.</summary>
 public sealed class SystemCanonicalPathFileSystemProvider : ICanonicalPathFileSystemProvider {
-	private SystemCanonicalPathFileSystemProvider() {
+	private readonly IPathIndirectionInspector indirectionInspector;
+
+	private SystemCanonicalPathFileSystemProvider() : this( SystemPathIndirectionInspector.Instance ) {
+	}
+
+	/// <summary>Initializes a system provider over an injectable physical indirection inspector.</summary>
+	/// <param name="indirectionInspector">The no-follow indirection inspector.</param>
+	public SystemCanonicalPathFileSystemProvider( IPathIndirectionInspector indirectionInspector ) {
+		this.indirectionInspector = indirectionInspector
+			?? throw new ArgumentNullException( nameof( indirectionInspector ) );
 	}
 
 	/// <summary>Gets the shared system-provider instance.</summary>
@@ -15,90 +24,55 @@ public sealed class SystemCanonicalPathFileSystemProvider : ICanonicalPathFileSy
 	public string CurrentDirectory => Directory.GetCurrentDirectory();
 
 	/// <inheritdoc/>
-	public ValueTask<PathComponentObservation> ObserveAsync(
+	public async ValueTask<PathComponentObservation> ObserveAsync(
 		string path,
 		CancellationToken cancellationToken = default
 	) {
 		ArgumentException.ThrowIfNullOrEmpty( path );
 		cancellationToken.ThrowIfCancellationRequested();
 		try {
-			var linkTarget = GetLinkTarget( path );
-			if ( null != linkTarget ) {
-				return ValueTask.FromResult(
-					PathComponentObservation.Existing(
-						path,
-						CanonicalPathEntryKind.Unknown,
-						isSymbolicLink: true,
-						linkTarget: linkTarget,
-						isReparsePoint: OperatingSystem.IsWindows()
-					)
-				);
-			}
 			var attributes = File.GetAttributes( path );
-			var kind = 0 != ( attributes & FileAttributes.Directory )
-				? CanonicalPathEntryKind.Directory
-				: CanonicalPathEntryKind.File
-			;
-			return ValueTask.FromResult(
-				PathComponentObservation.Existing(
-					path,
-					kind,
-					isReparsePoint: 0 != ( attributes & FileAttributes.ReparsePoint )
-				)
-			);
+			var indirection = await indirectionInspector.InspectAsync(
+				path,
+				cancellationToken
+			).ConfigureAwait( false );
+			var kind = (attributes & FileAttributes.Device) != 0
+				? CanonicalPathEntryKind.Other
+				: (attributes & FileAttributes.Directory) != 0
+					? CanonicalPathEntryKind.Directory
+					: CanonicalPathEntryKind.File;
+			return PathComponentObservation.Existing( path, kind, indirection );
 		} catch ( FileNotFoundException ) {
-			return ValueTask.FromResult( PathComponentObservation.Missing( path ) );
+			return PathComponentObservation.Missing( path );
 		} catch ( DirectoryNotFoundException ) {
-			return ValueTask.FromResult( PathComponentObservation.Missing( path ) );
+			return PathComponentObservation.Missing( path );
 		} catch ( UnauthorizedAccessException exception ) {
-			return ValueTask.FromResult(
-				PathComponentObservation.Failed(
-					new CanonicalPathFailure(
-						CanonicalPathFailureCode.AccessDenied,
-						path,
-						"access to the pathname was denied",
-						exception
-					)
+			return PathComponentObservation.Failed(
+				new CanonicalPathFailure(
+					CanonicalPathFailureCode.AccessDenied,
+					path,
+					"access to the pathname was denied",
+					exception
 				)
 			);
 		} catch ( IOException exception ) {
-			return ValueTask.FromResult(
-				PathComponentObservation.Failed(
-					new CanonicalPathFailure(
-						CanonicalPathFailureCode.IoError,
-						path,
-						"the pathname could not be inspected",
-						exception
-					)
+			return PathComponentObservation.Failed(
+				new CanonicalPathFailure(
+					CanonicalPathFailureCode.IoError,
+					path,
+					"the pathname could not be inspected",
+					exception
 				)
 			);
 		} catch ( System.Security.SecurityException exception ) {
-			return ValueTask.FromResult(
-				PathComponentObservation.Failed(
-					new CanonicalPathFailure(
-						CanonicalPathFailureCode.AccessDenied,
-						path,
-						"access to the pathname was denied",
-						exception
-					)
+			return PathComponentObservation.Failed(
+				new CanonicalPathFailure(
+					CanonicalPathFailureCode.AccessDenied,
+					path,
+					"access to the pathname was denied",
+					exception
 				)
 			);
-		}
-	}
-
-	private static string? GetLinkTarget( string path ) {
-		string? target = null;
-		try {
-			target = new FileInfo( path ).LinkTarget;
-		} catch ( IOException ) {
-		}
-		if ( null != target ) {
-			return target;
-		}
-		try {
-			return new DirectoryInfo( path ).LinkTarget;
-		} catch ( IOException ) {
-			return null;
 		}
 	}
 }
