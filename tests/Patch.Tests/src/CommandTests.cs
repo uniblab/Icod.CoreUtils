@@ -2,6 +2,7 @@ namespace Icod.Patch.Tests;
 
 using System.Text;
 using Icod.CoreUtils.Shared.Diagnostics;
+using System.IO;
 using Xunit;
 
 /// <summary>Exercises the Wave A command boundary.</summary>

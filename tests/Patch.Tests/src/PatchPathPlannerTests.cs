@@ -627,7 +627,7 @@ public sealed class PatchPathPlannerTests {
 		Assert.Null( rejected.Files[0].SelectedCandidate );
 	}
 
-	private static TestFileSystem PosixFileSystem() => new(
+	private static TestFileSystem PosixFileSystem() => new TestFileSystem(
 		PathPlatformSemantics.Posix,
 		"/work"
 	).AddDirectory( "/work" );
