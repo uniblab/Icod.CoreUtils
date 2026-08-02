@@ -5,9 +5,9 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `34` |
-| Current engineering milestone | Completion Gate E2 — shared canonical-path model |
+| Current engineering milestone | Completion Gate E2 — shared canonical-path model; Patch P0-P2 implementation complete with full-checkout build/CI validation pending |
 | Next infrastructure dependencies | Completion Gate E2 canonical-path work in `Icod.Path` |
-| Next command batch | Batch 35 — `readlink` and `realpath` |
+| Next command batch | Batch 35 — `readlink` and `realpath`; next Patch phases are P3-P4 |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -233,7 +233,7 @@ Man7 pages are useful synopses and secondary references, but they must not repla
 
 4. **Some implementations are not yet the command they claim to be.**
    - The existing `diff` implementation is not a complete difference algorithm and does not yet implement the required result-status model; it will be migrated into `Icod.DiffUtils.Diff` and corrected during the consecutive Diffutils batches.
-   - The existing `patch` implementation handles a private simplified format rather than normal, context, and unified patches; it will be migrated into the co-resident `Icod.Patch` project and re-audited there.
+   - The historical `patch` seed handled a private simplified format rather than GNU patch syntax. Patch Phases P0–P2 have retired that format, normalized the co-resident `Icod.Patch` project, and added a byte-preserving detector for normal, context, unified, and ed-script candidates; complete parsers and application remain scheduled for P3–P6.
    - `link` behaves like a partial `ln` front end rather than the simple two-operand hard-link command.
    - `stat` substitutes creation time where inode-change time is required.
    - `chmod` does not yet implement GNU/POSIX numeric and symbolic mode semantics correctly.
@@ -817,7 +817,7 @@ Completion of Batches 30 through 34 leaves the complete GNU Diffutils family imp
 
 ### In-solution Patch and E-series partial-order workstream
 
-This workstream does not alter command-batch numbering. The detailed Patch architecture, conformance matrix, security model, test requirements, and phase checklists remain in [`Icod.Patch-Development-Roadmap-Regenerated.md`](Icod.Patch-Development-Roadmap-Regenerated.md); this roadmap records the repository-wide ordering constraints and the points at which Patch consumes the E-series infrastructure.
+This workstream does not alter command-batch numbering. The detailed Patch architecture, conformance matrix, security model, test requirements, and phase checklists remain in [`Icod.Patch-Development-Roadmap.md`](Icod.Patch-Development-Roadmap.md); this roadmap records the repository-wide ordering constraints and the points at which Patch consumes the E-series infrastructure.
 
 Patch is no longer scheduled as one isolated milestone completed before the E series. Its parser and pure application engine can proceed independently, while its path, metadata, mode, symlink, backup, reject, and replacement behavior must consume the corresponding shared gates as soon as they exist. The schedule is therefore a partial order:
 
@@ -850,15 +850,17 @@ The production boundary with Diffutils remains textual. `Icod.Patch` consumes no
 
 This wave follows Batch 34 and may proceed while Completion Gates E2 and E3 are being designed. It contains no live target-file mutation dependency.
 
-- [ ] **P0:** normalize and verify the `Icod.Patch` project, tests, C# 13 policy, GNU patch 2.8 baseline, fixtures, and seed characterization.
-- [ ] **P1:** implement command context, asynchronous invocation, option parsing, patch-source selection, diagnostics, prompts, and exit-status accumulation.
-- [ ] **P2:** implement byte-preserving patch-stream input, source mapping, multiple-patch recognition, format detection, directive validation, and parser resource limits.
+- [x] **P0:** normalized the `Icod.Patch` project and solution family, added C# 13 and dedicated tests/fixtures/docs, pinned GNU patch 2.8 and its complete source-defined option inventory, and retired the private seed syntax; full-checkout build/CI execution remains pending.
+- [x] **P1:** implemented shared command context, asynchronous invocation, compatibility wrappers, declarative parsing over the complete GNU 2.8 option-name inventory, explicit later-phase option rejection, standard-input/`-i`/operand source selection, diagnostics, prompt ownership, and exit-status accumulation.
+- [x] **P2:** implemented a spill-backed byte-preserving source map, LF/CRLF/CR/incomplete-record preservation, multiple-section and surrounding-text recognition, unified/context/normal/ed candidate detection, directive hardening, fuzz coverage, and resource limits.
 - [ ] **P3:** implement unified and context formats and immutable hunk models.
 - [ ] **P4:** implement normal and patch-compatible ed-script formats without invoking or referencing the Ed implementation.
 - [ ] Preserve independent fixtures from GNU Diffutils, `Icod.DiffUtils`, third-party producers, and hand-authored patches.
 - [ ] Keep all parser and model work independent from target filesystem mutation.
 
-Completion of Wave A establishes the patch syntax and source model required by every later Patch phase. It does not claim path, metadata, mode, backup, reject, or transaction conformance.
+P0-P2 implementation is complete, with full-checkout Debug/Release and three-runner validation pending after integration. The command intentionally performs no target mutation and returns a controlled trouble status after recognizing patch input until P3-P5 supply full syntax models and application. P3 and P4 are the next Patch work while E2 continues independently.
+
+Completion of all of Wave A establishes the patch syntax and source model required by every later Patch phase. It does not claim path, metadata, mode, backup, reject, or transaction conformance.
 
 #### Patch Wave B1 — Phases P5 and P6
 
