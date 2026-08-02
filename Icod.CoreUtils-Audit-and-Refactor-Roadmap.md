@@ -5,9 +5,10 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `34` |
-| Current engineering milestone | Completion Gate E2 — shared canonical-path model; Patch Wave B1 (P5–P6) implementation complete with full-checkout build/CI validation pending |
-| Next infrastructure dependencies | Completion Gate E2 canonical-path work in `Icod.Path` |
-| Next command batch | Batch 35 — `readlink` and `realpath`; next Patch phase is Wave B2, P7, after E2 and Batch 35 |
+| Current engineering milestone | Batch 35 — `readlink` and `realpath`; Patch Wave B1 (P5–P6) implementation complete with full-checkout build/CI validation pending |
+| Completed infrastructure milestone | Completion Gate E2 — neutral canonical-path model in `Icod.Path` |
+| Next infrastructure dependency | Completion Gate E3 — authoritative filesystem-metadata model before Batch 36 |
+| Next command batch | Batch 35 — `readlink` and `realpath`; next Patch phase is Wave B2, P7, after Batch 35 exercises E2 |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -22,17 +23,18 @@ Historical references:
 
 The primary supported CI targets are `windows-latest`, `ubuntu-latest`, and `macos-latest`. BSD support remains a best-effort target. The implementation is therefore not a Unix-only port: platform-independent behavior is preferred, native behavior is implemented per supported ABI where required, and unsupported platform capabilities receive controlled diagnostics.
 
-The repository and solution will also serve as the **temporary development home** for projects that ultimately belong to other upstream suites:
+The repository and solution will also serve as the **temporary development home** for projects that ultimately belong to other upstream suites and for cross-suite neutral foundations proven by those consumers:
 
 - `Icod.DiffUtils.Shared`, `Icod.DiffUtils.Cmp`, `Icod.DiffUtils.Diff`, `Icod.DiffUtils.Diff3`, and `Icod.DiffUtils.SDiff`;
 - `Icod.Grep`;
 - `Icod.Patch`;
+- `Icod.Path`, the cross-suite neutral canonical-path foundation;
 - `Icod.LineEditor.Ed.Shared`, `Icod.LineEditor.Ed`, `Icod.LineEditor.Red`, and `Icod.LineEditor.Sed`;
 - an optional `Icod.LineEditor.Shared` only if the completed Ed and Sed engines later demonstrate cohesive family-specific reuse that is neither cross-suite framework material nor specific to one engine;
 - `Icod.Tar`;
 - `Icod.ProcPs.Shared` and the complete procps-ng command family.
 
-These projects will use their **final suite-correct project names and namespaces from the beginning**, but they will remain in `Icod.CoreUtils.sln` and this repository until the final architectural extraction. Developing the suites together provides real consumers for the current `Shared` APIs, makes cross-suite duplication visible, and supplies the evidence needed to decide which APIs belong in `Icod.CommandFramework`, which remain in `Icod.CoreUtils.Shared`, and which belong in a suite-specific Shared library.
+These projects will use their **final ownership-correct project names and namespaces from the beginning**, but they will remain in `Icod.CoreUtils.sln` and this repository until the final architectural extraction. Developing the suites together provides real consumers for the current `Shared` APIs, makes cross-suite duplication visible, and supplies the evidence needed to decide which APIs belong in `Icod.CommandFramework`, which remain in `Icod.CoreUtils.Shared`, and which belong in a suite-specific Shared library.
 
 No separate `[` project will be added. The existing `test` project remains the condition evaluator.
 
@@ -65,13 +67,16 @@ Suite-specific Shared or engine project, when justified
 Individual command projects
 ```
 
-The suite-specific projects must use their final namespace families now:
+`Icod.Path` is a parallel neutral foundation rather than a suite-specific Shared library. It has no dependency on an individual command or on the current CoreUtils Shared incubation project; commands and suite engines reference it directly when canonical-path behavior is required.
+
+The suite-specific and neutral projects must use their final namespace families now:
 
 ```text
 Icod.CoreUtils.*
 Icod.DiffUtils.*
 Icod.Grep
 Icod.Patch
+Icod.Path
 Icod.LineEditor.Ed
 Icod.LineEditor.Red
 Icod.LineEditor.Sed
@@ -870,20 +875,24 @@ P5 and P6 depend on the parsed hunk models from P3 and P4, but not on canonical 
 - [x] **P6:** implemented forward-first nearby offset search, configurable fuzz, canonical horizontal-blank matching, reverse and already-applied detection, force/forward/batch/interactive policy, prerequisite checks, GNU-compatible merge/diff3 conflict output, adversarial candidate limits, and opt-in GNU patch 2.8 differential coverage.
 - [x] Kept both phases pure: they operate on parsed patch documents and immutable virtual target content, not canonical paths or committed filesystem mutations.
 
-Wave B1 implementation is complete. The managed project and focused test suite still require full-checkout Debug/Release execution and the repository Windows, Ubuntu, and macOS CI matrix after integration. P7 remains blocked on Completion Gate E2 and Batch 35 rather than on any missing parser or matcher work.
+Wave B1 implementation is complete. The managed project and focused test suite still require full-checkout Debug/Release execution and the repository Windows, Ubuntu, and macOS CI matrix after integration. Completion Gate E2 is now implemented; P7 remains blocked on Batch 35 exercising and fixing the command-level canonical-path conformance profile rather than on any missing parser or matcher work.
 
 ### Completion Gate E2 — before Batch 35
 
-* [ ] Complete the shared canonical-path model:
+* [x] Complete the shared canonical-path model:
 
-  * [ ] lexical path normalization;
-  * [ ] physical path resolution;
-  * [ ] symbolic-link and reparse-point inspection;
-  * [ ] missing-component policies;
-  * [ ] loop detection;
-  * [ ] relative-path calculation;
-  * [ ] platform root, volume, and separator semantics;
-  * [ ] deterministic failure without returning unresolved input as success.
+  * [x] lexical path normalization;
+  * [x] physical path resolution;
+  * [x] symbolic-link and reparse-point inspection;
+  * [x] missing-component policies;
+  * [x] loop detection;
+  * [x] relative-path calculation;
+  * [x] platform root, volume, and separator semantics;
+  * [x] deterministic failure without returning unresolved input as success.
+
+Completion Gate E2 is implemented in the neutral `Icod.Path` library with a dedicated `Icod.Path.Tests` project. The model separates POSIX and Windows pathname grammar from injectable no-follow filesystem observation; resolves components in traversal order so a symbolic link is handled before a following `..`; supports strict, missing-final, and missing-suffix policies; resumes physical observation when a missing suffix returns to an existing prefix; detects repeated resolution states and configurable link-expansion limits; exposes raw final-link and reparse-point inspection; and provides component-aware relative-path and containment operations. Failures carry stable codes and never return unresolved input as a successful canonical path.
+
+Synthetic tests exercise POSIX, drive, UNC, extended-root, volume, link, loop, missing, containment, and cancellation behavior on every runner. Conditional host tests exercise real file and directory links, dangling links, and loops where link creation is available. Full-checkout Debug, Staging, Release, and the Windows/Ubuntu/macOS CI matrix remain to be executed after integration.
 
 This gate supplies the defining infrastructure for `readlink` and `realpath` and is a hard predecessor of Patch Phase P7. Patch Phase P2 and E2 are independent predecessors: P2 supplies the parsed filename candidates and source evidence, while E2 supplies the canonical path, root, volume, link, containment, and failure semantics used to act on them.
 
