@@ -2,7 +2,7 @@ namespace Icod.Patch;
 
 using System.Collections.ObjectModel;
 
-/// <summary>Identifies a patch syntax recognized by the phase P2 detector.</summary>
+/// <summary>Identifies a patch syntax recognized by the Wave A detector.</summary>
 internal enum PatchFormat {
 	/// <summary>Unified diff syntax.</summary>
 	Unified,
@@ -162,7 +162,7 @@ internal sealed class PatchScanLimits {
 	}
 }
 
-/// <summary>Contains the source map and candidate sections found by the phase P2 scanner.</summary>
+/// <summary>Contains the source map and candidate sections found by the Wave A scanner.</summary>
 internal sealed class PatchScanResult {
 	/// <summary>Initializes a scan result.</summary>
 	/// <param name="records">The source records.</param>

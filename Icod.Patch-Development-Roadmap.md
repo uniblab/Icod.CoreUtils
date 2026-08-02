@@ -32,7 +32,7 @@ This roadmap is subordinate to the repository-wide conventions and engineering g
 | Public command class | `Icod.Patch.Command` |
 | Executable assembly name | `patch` |
 | Current repository project | `patch/Icod.Patch.csproj` |
-| Current implementation state | Phases P0-P2 implemented: normalized async front end and byte-preserving format detector; no target mutation |
+| Current implementation state | Wave A, Phases P0-P4, implemented: normalized async front end, byte-preserving source model, and complete unified/context/normal/ed parsers; no target mutation |
 | Current dedicated test project | `tests/Patch.Tests/Icod.Patch.Tests.csproj` |
 | Required target framework | `net10.0` |
 | Required language version | C# 13 |
@@ -41,16 +41,16 @@ This roadmap is subordinate to the repository-wide conventions and engineering g
 | Additional platform goal | Best-effort BSD support |
 | Repository status | Co-resident in `Icod.CoreUtils.sln` until Completion Gate G |
 | Scheduling model | Dependency-aligned partial order with Completion Gates E2–E6 |
-| First scheduled wave | P0–P2 complete; P3 and P4 next while E2/E3 design proceeds concurrently |
+| First scheduled wave | Wave A, P0–P4, complete; Wave B1, P5 and P6, is next while E2/E3 design proceeds concurrently |
 | Detailed ordering status | Provisional until the GNU 2.8 option and conformance matrices are complete |
 
 ---
 
-## P0-P2 implementation status
+## Wave A implementation status
 
-Phases P0, P1, and P2 were implemented on August 1, 2026; full-checkout build and CI validation remain pending. The historical private `+`/`-` mutation format was removed rather than retained as a compatibility mode. The replacement front end uses the shared asynchronous `CommandContext` and `OptionParser`, accepts standard input, `-i`, and GNU-style operands, and feeds a bounded spill-backed source model. The scanner preserves byte offsets and LF, CRLF, CR, and incomplete-final-record state while detecting unified, context, normal, and patch-compatible ed-script candidates, multiple sections, and surrounding text.
+Wave A, Phases P0 through P4, was implemented on August 1, 2026; full-checkout build and CI validation remain pending. The historical private `+`/`-` mutation format was removed rather than retained as a compatibility mode. The replacement front end uses the shared asynchronous `CommandContext` and `OptionParser`, accepts standard input, `-i`, and GNU-style operands, and feeds a bounded spill-backed source model. The source layer preserves byte offsets and LF, CRLF, CR, and incomplete-final-record state while identifying multiple sections and surrounding text. Complete unified, context, normal, and patch-compatible ed-script parsers now normalize file patches and hunks into immutable byte-preserving models while retaining exact source records for later reject generation.
 
-The P0-P2 executable deliberately refuses to mutate targets. It returns a controlled trouble status after recognizing valid patch syntax until P3-P5 provide parsed hunks and the pure application engine. This protects the repository from presenting source detection as completed patch application.
+The Wave A executable deliberately refuses to mutate targets. It returns a controlled trouble status after successfully parsing valid patch syntax until P5 provides the pure application engine. This protects the repository from presenting syntax support as completed patch application.
 
 The GNU patch 2.8 release archive metadata, official SHA-256, signing fingerprint, and `v2.8` source ref are recorded in `patch/upstream/GNU-patch-2.8.md`. Debug/Release and three-runner execution remain an integration validation item after these files are applied to a complete checkout.
 
@@ -60,16 +60,17 @@ The GNU patch 2.8 release archive metadata, official SHA-256, signing fingerprin
 
 The historical Patch seed was not an incomplete GNU patch implementation in the ordinary sense. It consumed a private `+`/`-` line-command format associated with the repository's former simplified Diff output, decoded complete files as UTF-8 text, created a `.orig` backup, and rewrote the target directly.
 
-P0 through P2 have now replaced that seed with a GNU-oriented command boundary and source model. The current command:
+Wave A, P0 through P4, has now replaced that seed with a GNU-oriented command boundary, source model, and complete syntax parsers. The current command:
 
 - uses asynchronous orchestration and the shared `CommandContext` and `OptionParser`;
 - accepts patch input from standard input, `-i`, or the GNU-style patch-file operand position;
 - retains the optional original-file operand without mutating it;
 - preserves patch bytes, byte offsets, line numbers, LF, CRLF, CR, and incomplete final records in a bounded spill-backed source;
-- detects unified, context, normal, and patch-compatible ed-script candidates, multiple sections, and surrounding non-patch text;
-- rejects NUL-bearing directive lines and newline-bearing quoted filename evidence;
+- detects and completely parses unified, context, normal, and patch-compatible ed-script sections, including multiple file patches and surrounding or interstitial non-patch text;
+- normalizes all four syntaxes into immutable byte-preserving file, range, hunk, operation, and data-line models while retaining exact source records for later rejects;
+- rejects NUL-bearing directive lines, newline-bearing quoted filename evidence, malformed ranges, count mismatches, inconsistent context copies, unterminated ed text blocks, and resource exhaustion;
 - has a dedicated Patch test project and separated fixture provenance;
-- deliberately returns controlled trouble after recognition because complete format parsing and target application begin in P3 through P5.
+- deliberately returns controlled trouble after parsing because pure target application begins in P5.
 
 The former private syntax remains only as characterized historical evidence and is not exposed as a compatibility mode.
 
@@ -341,15 +342,16 @@ The public command class should expose the repository's established synchronous 
 
 ## Current command implementation
 
-The P0-P2 command is a GNU-oriented front end and source detector rather than a target applicator. It:
+The Wave A command is a GNU-oriented front end and complete syntax parser rather than a target applicator. It:
 
 - accepts `[ORIGFILE [PATCHFILE]]`, `-i/--input`, standard-input patch streams, `--binary`, `--help`, and `-v/--version`;
 - reserves GNU `-b` for its later `--backup` implementation rather than aliasing it to `--binary`;
 - validates duplicate source selection, missing option values, extra operands, and cancellation;
 - uses raw streams when available and a streaming text-reader adapter only for compatibility calls;
 - indexes input into a uniquely named private temporary spool and removes that exact spool on disposal;
-- recognizes source-level patch candidates without parsing complete hunks or mutating the original-file operand;
-- returns status 2 after successful recognition until P3-P5 provide the immutable syntax and application engines.
+- recognizes and parses complete unified, context, normal, and patch-compatible ed-script file sections into immutable byte-preserving models without mutating the original-file operand;
+- preserves exact hunk source records for later reject serialization and retains leading, interstitial, and trailing non-patch regions;
+- returns status 2 after successful parsing until P5 provides the pure application engine.
 
 The implementation preserves the public namespace `Icod.Patch`, lowercase assembly name `patch`, and public `Command` facade. The private simplified format has been removed and remains covered only by a retirement characterization test.
 
@@ -359,7 +361,7 @@ The implementation preserves the public namespace `Icod.Patch`, lowercase assemb
 
 P0 created `tests/Patch.Tests/Icod.Patch.Tests.csproj` with root namespace `Icod.Patch.Tests`, `InternalsVisibleTo` access to the internal detector, and Debug, Staging, and Release solution mappings beneath the top-level `tests` solution folder.
 
-The P0-P2 suite covers direct command invocation, process-host help and diagnostics, source selection, operand conflicts, retirement of the private syntax, non-mutation, cancellation, status accumulation, every detected format, separated fixture roots, source offsets and terminators, multiple sections, surrounding text, malformed directives and filenames, binary records, resource limits, deterministic fuzz input, and exact temporary-spool cleanup.
+The Wave A suite covers direct command invocation, process-host help and diagnostics, source selection, operand conflicts, retirement of the private syntax, non-mutation, cancellation, status accumulation, every parsed format, separated fixture roots, source offsets and terminators, multiple sections, leading/interstitial/trailing text, headers and timestamps, ranges, hunk counts, context-copy consistency, normal data blocks, ed reverse ordering and dot protection, malformed directives and filenames, binary records, resource limits, deterministic fuzz input, and exact temporary-spool cleanup.
 
 A separate parser or engine test project is not currently justified. Full solution builds and Windows, Ubuntu, and macOS CI execution remain integration validation items.
 
@@ -1482,28 +1484,30 @@ P11B and P12
 
 ## Phase P3 — Unified and context formats
 
-- [ ] Implement unified file headers.
-- [ ] Implement unified hunk headers and optional section text.
-- [ ] Implement unified hunk lines and ranges.
-- [ ] Implement context file headers.
-- [ ] Implement context old and new hunk sections.
-- [ ] Implement added, removed, changed, and context lines.
-- [ ] Normalize both formats into common immutable hunk models.
-- [ ] Preserve source data needed for rejects.
-- [ ] Implement file creation and deletion forms.
-- [ ] Add independent GNU, hand-written, malformed, and third-party corpora.
+- [x] Implement unified file headers.
+- [x] Implement unified hunk headers and optional section text.
+- [x] Implement unified hunk lines and ranges.
+- [x] Implement context file headers.
+- [x] Implement context old and new hunk sections.
+- [x] Implement added, removed, changed, and context lines.
+- [x] Normalize both formats into common immutable hunk models.
+- [x] Preserve source data needed for rejects.
+- [x] Implement file creation and deletion forms.
+- [x] Add independent GNU, hand-written, malformed, and third-party corpora.
 
 ## Phase P4 — Normal and ed-script formats
 
-- [ ] Implement normal append, change, and delete commands.
-- [ ] Validate ranges and trailing garbage.
-- [ ] Implement normal-format data blocks.
-- [ ] Implement the minimal GNU patch ed-script grammar internally.
-- [ ] Do not invoke native `ed`.
-- [ ] Do not reference `Icod.LineEditor.Ed.Shared`.
-- [ ] Normalize operations into application models where safe.
-- [ ] Preserve format-specific reject behavior.
-- [ ] Add fixtures from GNU Diffutils and `Icod.DiffUtils`.
+- [x] Implement normal append, change, and delete commands.
+- [x] Validate ranges and trailing garbage.
+- [x] Implement normal-format data blocks.
+- [x] Implement the minimal GNU patch ed-script grammar internally.
+- [x] Do not invoke native `ed`.
+- [x] Do not reference `Icod.LineEditor.Ed.Shared`.
+- [x] Normalize operations into application models where safe.
+- [x] Preserve format-specific reject behavior.
+- [x] Add fixtures from GNU Diffutils and `Icod.DiffUtils`.
+
+Wave A parser implementation is complete. The format-selection options `-u`, `-c`, `-n`, and `-e` now select the corresponding complete parser. Parser fixtures were independently smoke-checked with GNU patch 2.8 where applicable. Full repository Debug/Release builds and Windows, Ubuntu, and macOS CI execution remain pending integration validation. No P3/P4 code opens or mutates a target file.
 
 ## Phase P5 — Pure exact application engine
 

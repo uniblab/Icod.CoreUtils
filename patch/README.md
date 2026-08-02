@@ -6,16 +6,19 @@ The authoritative behavioral baseline is GNU patch 2.8. The pinned release metad
 
 ## Current phase
 
-Phases P0, P1, and P2 are implemented:
+Wave A, Phases P0 through P4, is implemented:
 
 - the project and dedicated tests are normalized in the `Icod.Patch` solution family;
 - invocation uses the shared asynchronous command framework and a declarative parser containing the complete GNU 2.8 option-name inventory; options owned by later phases fail explicitly rather than being silently ignored;
 - patch input may come from standard input, `-i`, or the second operand;
 - the input layer preserves bytes, offsets, record terminators, incomplete final records, and bounded-resource behavior;
-- the detector identifies unified, context, normal, and patch-compatible ed-script candidates, including multiple sections and surrounding non-patch text;
-- directive NULs, unsafe newline-bearing quoted filenames, overflow, and configured resource limits fail deterministically.
+- the detector identifies unified, context, normal, and patch-compatible ed-script sections, including multiple sections and surrounding or interstitial non-patch text;
+- complete parsers normalize all four formats into immutable byte-preserving file, range, hunk, operation, and data-line models;
+- exact source records remain attached to parsed hunks for later reject serialization;
+- unified/context creation and deletion forms, normal append/change/delete commands, and GNU Diffutils ed single-dot protection are represented without invoking native tools;
+- directive NULs, unsafe newline-bearing quoted filenames, malformed ranges and counts, inconsistent context copies, unterminated ed blocks, overflow, and configured resource limits fail deterministically.
 
-This phase does **not** modify target files. Unified/context parsing begins in P3, normal/ed parsing in P4, and application begins in P5. A recognized patch therefore receives a controlled nonzero diagnostic until those phases are implemented.
+Wave A does **not** modify target files. Pure exact application begins in P5, so a successfully parsed patch receives a controlled nonzero diagnostic until that phase is implemented.
 
 ## Historical seed format
 

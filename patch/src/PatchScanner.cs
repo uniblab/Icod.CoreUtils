@@ -31,7 +31,11 @@ internal enum PatchProbeKind {
 	/// <summary>An incomplete-final-line marker.</summary>
 	NoNewlineMarker,
 	/// <summary>A single dot terminating ed input text.</summary>
-	EdDot
+	EdDot,
+	/// <summary>GNU Diffutils' dot-unprotection substitution.</summary>
+	EdSubstitute,
+	/// <summary>The append command used after GNU dot unprotection.</summary>
+	EdAppend
 }
 
 /// <summary>Contains the bounded structural classification of one source record.</summary>
@@ -41,11 +45,31 @@ internal readonly struct PatchLineProbe {
 	/// <param name="fileName">A parsed file name, when present.</param>
 	/// <param name="firstByte">The first content byte, or zero for an empty line.</param>
 	/// <param name="secondByte">The second content byte, or zero when absent.</param>
-	public PatchLineProbe( PatchProbeKind kind, string? fileName, byte firstByte, byte secondByte ) {
+	/// <param name="oldLineCount">The declared unified old-side count, when parsed.</param>
+	/// <param name="newLineCount">The declared unified new-side count, when parsed.</param>
+	/// <param name="rangeLineCount">The declared context-range count, when parsed.</param>
+	/// <param name="hasRightRange">Whether a numeric directive has a normal-diff right range.</param>
+	/// <param name="directiveOperation">The numeric directive operation byte, when present.</param>
+	public PatchLineProbe(
+		PatchProbeKind kind,
+		string? fileName,
+		byte firstByte,
+		byte secondByte,
+		long oldLineCount = -1,
+		long newLineCount = -1,
+		long rangeLineCount = -1,
+		bool hasRightRange = false,
+		byte directiveOperation = 0
+	) {
 		this.Kind = kind;
 		this.FileName = fileName;
 		this.FirstByte = firstByte;
 		this.SecondByte = secondByte;
+		this.OldLineCount = oldLineCount;
+		this.NewLineCount = newLineCount;
+		this.RangeLineCount = rangeLineCount;
+		this.HasRightRange = hasRightRange;
+		this.DirectiveOperation = directiveOperation;
 	}
 
 	/// <summary>Gets the structural kind.</summary>
@@ -59,40 +83,25 @@ internal readonly struct PatchLineProbe {
 
 	/// <summary>Gets the second content byte, or zero when absent.</summary>
 	public byte SecondByte { get; }
+
+	/// <summary>Gets the declared unified old-side count, or -1 when unavailable.</summary>
+	public long OldLineCount { get; }
+
+	/// <summary>Gets the declared unified new-side count, or -1 when unavailable.</summary>
+	public long NewLineCount { get; }
+
+	/// <summary>Gets the declared context-range count, or -1 when unavailable.</summary>
+	public long RangeLineCount { get; }
+
+	/// <summary>Gets whether a numeric directive has a normal-diff right range.</summary>
+	public bool HasRightRange { get; }
+
+	/// <summary>Gets the numeric directive operation byte, or zero when unavailable.</summary>
+	public byte DirectiveOperation { get; }
 }
 
 /// <summary>Detects patch-section candidates while preserving parsing for later phases.</summary>
 internal static class PatchScanner {
-	private readonly struct SectionSeed {
-		/// <summary>Initializes a detected-section seed.</summary>
-		/// <param name="format">The candidate patch format.</param>
-		/// <param name="start">The first record index.</param>
-		/// <param name="oldFileName">The old-file name, when present.</param>
-		/// <param name="newFileName">The new-file name, when present.</param>
-		public SectionSeed(
-			PatchFormat format,
-			int start,
-			string? oldFileName,
-			string? newFileName
-		) {
-			this.Format = format;
-			this.Start = start;
-			this.OldFileName = oldFileName;
-			this.NewFileName = newFileName;
-		}
-
-		/// <summary>Gets the candidate patch format.</summary>
-		public PatchFormat Format { get; }
-
-		/// <summary>Gets the first record index.</summary>
-		public int Start { get; }
-
-		/// <summary>Gets the old-file name, when present.</summary>
-		public string? OldFileName { get; }
-
-		/// <summary>Gets the new-file name, when present.</summary>
-		public string? NewFileName { get; }
-	}
 
 	/// <summary>Classifies one byte-oriented source record.</summary>
 	/// <param name="line">The record bytes excluding its terminator.</param>
@@ -121,10 +130,24 @@ internal static class PatchScanner {
 			return new PatchLineProbe( PatchProbeKind.ContextSeparator, null, first, second );
 		}
 		if ( StartsWithAscii( line, "@@" ) ) {
-			return new PatchLineProbe( PatchProbeKind.UnifiedHunk, null, first, second );
+			TryParseUnifiedHunkCounts( line, location, out var oldCount, out var newCount );
+			return new PatchLineProbe(
+				PatchProbeKind.UnifiedHunk,
+				null,
+				first,
+				second,
+				oldCount,
+				newCount
+			);
 		}
-		if ( IsContextRange( line, location ) ) {
-			return new PatchLineProbe( PatchProbeKind.ContextRange, null, first, second );
+		if ( TryParseContextRange( line, location, out var rangeCount ) ) {
+			return new PatchLineProbe(
+				PatchProbeKind.ContextRange,
+				null,
+				first,
+				second,
+				rangeLineCount: rangeCount
+			);
 		}
 		if ( StartsHeader( line, "+++" ) ) {
 			return new PatchLineProbe(
@@ -150,8 +173,23 @@ internal static class PatchScanner {
 				second
 			);
 		}
-		if ( TryParseNumericDirective( line, location, out var candidate ) ) {
-			return new PatchLineProbe( PatchProbeKind.NumericDirective, null, first, second );
+		if (
+			TryParseNumericDirective(
+				line,
+				location,
+				out var candidate,
+				out var hasRightRange,
+				out var directiveOperation
+			)
+		) {
+			return new PatchLineProbe(
+				PatchProbeKind.NumericDirective,
+				null,
+				first,
+				second,
+				hasRightRange: hasRightRange,
+				directiveOperation: directiveOperation
+			);
 		}
 		if ( candidate ) {
 			if ( containsNul ) {
@@ -171,40 +209,33 @@ internal static class PatchScanner {
 		if ( line.SequenceEqual( "."u8 ) ) {
 			return new PatchLineProbe( PatchProbeKind.EdDot, null, first, second );
 		}
+		if ( line.SequenceEqual( "s/.//"u8 ) ) {
+			return new PatchLineProbe( PatchProbeKind.EdSubstitute, null, first, second );
+		}
+		if ( line.SequenceEqual( "a"u8 ) ) {
+			return new PatchLineProbe( PatchProbeKind.EdAppend, null, first, second );
+		}
 		return new PatchLineProbe( PatchProbeKind.Other, null, first, second );
 	}
 
 	/// <summary>Builds patch sections and adjacent text regions from source probes.</summary>
 	/// <param name="records">The source records.</param>
 	/// <param name="probes">The structural probes.</param>
+	/// <param name="forcedFormat">The explicitly selected input format, when supplied.</param>
 	/// <returns>The completed scan result.</returns>
 	public static PatchScanResult Detect(
 		IReadOnlyList<PatchRecord> records,
-		IReadOnlyList<PatchLineProbe> probes
+		IReadOnlyList<PatchLineProbe> probes,
+		PatchFormat? forcedFormat = null
 	) {
 		ArgumentNullException.ThrowIfNull( records );
 		ArgumentNullException.ThrowIfNull( probes );
 		if ( records.Count != probes.Count ) {
 			throw new ArgumentException( "record and probe counts differ", nameof( probes ) );
 		}
-		var seeds = FindSectionSeeds( probes );
-		if ( 0 == seeds.Count ) {
+		var sections = FindSections( probes, forcedFormat );
+		if ( 0 == sections.Count ) {
 			return new PatchScanResult( records, Array.Empty<PatchSection>(), null, null );
-		}
-		var sections = new List<PatchSection>( seeds.Count );
-		for ( var index = 0; index < seeds.Count; index++ ) {
-			var seed = seeds[index];
-			var nextSeed = index + 1 < seeds.Count ? seeds[index + 1].Start : probes.Count;
-			var end = FindSectionEnd( seed, probes, nextSeed );
-			sections.Add(
-				new PatchSection(
-					seed.Format,
-					seed.Start,
-					Math.Max( 1, end - seed.Start ),
-					seed.OldFileName,
-					seed.NewFileName
-				)
-			);
 		}
 		var first = sections[0].FirstRecordIndex;
 		var lastSection = sections[^1];
@@ -216,58 +247,234 @@ internal static class PatchScanner {
 		return new PatchScanResult( records, sections, leading, trailing );
 	}
 
-	private static List<SectionSeed> FindSectionSeeds( IReadOnlyList<PatchLineProbe> probes ) {
-		var seeds = new List<SectionSeed>();
+	private static List<PatchSection> FindSections(
+		IReadOnlyList<PatchLineProbe> probes,
+		PatchFormat? forcedFormat
+	) {
+		var sections = new List<PatchSection>();
 		var index = 0;
 		while ( index < probes.Count ) {
 			if (
-				PatchProbeKind.DashHeader == probes[index].Kind
-				&& index + 1 < probes.Count
-				&& PatchProbeKind.UnifiedNewHeader == probes[index + 1].Kind
+				( null == forcedFormat || PatchFormat.Unified == forcedFormat )
+				&& IsUnifiedHeaderPairStart( probes, index )
 			) {
-				seeds.Add(
-					new SectionSeed(
+				var end = FindUnifiedSectionEnd( probes, index );
+				sections.Add(
+					new PatchSection(
 						PatchFormat.Unified,
 						index,
+						Math.Max( 2, end - index ),
 						probes[index].FileName,
 						probes[index + 1].FileName
 					)
 				);
-				index += 2;
+				index = Math.Max( index + 2, end );
 				continue;
 			}
 			if (
-				PatchProbeKind.ContextOldHeader == probes[index].Kind
-				&& index + 1 < probes.Count
-				&& PatchProbeKind.DashHeader == probes[index + 1].Kind
+				( null == forcedFormat || PatchFormat.Context == forcedFormat )
+				&& IsContextHeaderPairStart( probes, index )
 			) {
-				seeds.Add(
-					new SectionSeed(
+				var end = FindContextSectionEnd( probes, index );
+				sections.Add(
+					new PatchSection(
 						PatchFormat.Context,
 						index,
+						Math.Max( 2, end - index ),
 						probes[index].FileName,
 						probes[index + 1].FileName
 					)
 				);
-				index += 2;
+				index = Math.Max( index + 2, end );
 				continue;
 			}
-			if ( PatchProbeKind.NumericDirective == probes[index].Kind ) {
-				var format = LooksLikeNormalDiff( probes, index )
+			if (
+				PatchProbeKind.NumericDirective == probes[index].Kind
+				&& ( null == forcedFormat || forcedFormat is PatchFormat.Normal or PatchFormat.EdScript )
+			) {
+				var format = forcedFormat ?? ( probes[index].HasRightRange
 					? PatchFormat.Normal
-					: PatchFormat.EdScript;
-				seeds.Add( new SectionSeed( format, index, null, null ) );
-				index = SkipNumericSection( probes, index + 1 );
+					: PatchFormat.EdScript );
+				var end = PatchFormat.EdScript == format
+					? FindEdSectionEnd( probes, index )
+					: SkipNumericSection( probes, index + 1, format );
+				sections.Add(
+					new PatchSection( format, index, Math.Max( 1, end - index ), null, null )
+				);
+				index = Math.Max( index + 1, end );
 				continue;
 			}
 			index++;
 		}
-		return seeds;
+		return sections;
 	}
 
-	private static int SkipNumericSection( IReadOnlyList<PatchLineProbe> probes, int index ) {
+	private static int FindUnifiedSectionEnd(
+		IReadOnlyList<PatchLineProbe> probes,
+		int start
+	) {
+		var index = checked( start + 2 );
+		while ( index < probes.Count && PatchProbeKind.UnifiedHunk == probes[index].Kind ) {
+			var header = probes[index++];
+			if ( header.OldLineCount < 0 || header.NewLineCount < 0 ) {
+				return FindRecognizedSectionEnd( PatchFormat.Unified, probes, index );
+			}
+			var oldRemaining = header.OldLineCount;
+			var newRemaining = header.NewLineCount;
+			while ( index < probes.Count && ( 0 < oldRemaining || 0 < newRemaining ) ) {
+				var probe = probes[index];
+				if ( PatchProbeKind.NoNewlineMarker == probe.Kind ) {
+					index++;
+					continue;
+				}
+				switch ( probe.FirstByte ) {
+					case (byte)' ':
+						oldRemaining--;
+						newRemaining--;
+						break;
+					case (byte)'-':
+						oldRemaining--;
+						break;
+					case (byte)'+':
+						newRemaining--;
+						break;
+					default:
+						return FindRecognizedSectionEnd( PatchFormat.Unified, probes, index );
+				}
+				index++;
+			}
+			while ( index < probes.Count && PatchProbeKind.NoNewlineMarker == probes[index].Kind ) {
+				index++;
+			}
+		}
+		return index;
+	}
+
+	private static int FindContextSectionEnd(
+		IReadOnlyList<PatchLineProbe> probes,
+		int start
+	) {
+		var index = checked( start + 2 );
+		while ( index < probes.Count && PatchProbeKind.ContextSeparator == probes[index].Kind ) {
+			index++;
+			if (
+				index >= probes.Count
+				|| PatchProbeKind.ContextRange != probes[index].Kind
+				|| (byte)'*' != probes[index].FirstByte
+				|| probes[index].RangeLineCount < 0
+			) {
+				return FindRecognizedSectionEnd( PatchFormat.Context, probes, index );
+			}
+			var oldCount = probes[index++].RangeLineCount;
+			index = SkipContextDataLines( probes, index, oldCount );
+			if (
+				index >= probes.Count
+				|| PatchProbeKind.ContextRange != probes[index].Kind
+				|| (byte)'-' != probes[index].FirstByte
+				|| probes[index].RangeLineCount < 0
+			) {
+				return FindRecognizedSectionEnd( PatchFormat.Context, probes, index );
+			}
+			var newCount = probes[index++].RangeLineCount;
+			index = SkipContextDataLines( probes, index, newCount );
+		}
+		return index;
+	}
+
+	private static int SkipContextDataLines(
+		IReadOnlyList<PatchLineProbe> probes,
+		int index,
+		long count
+	) {
+		while ( index < probes.Count && 0 < count ) {
+			if ( PatchProbeKind.NoNewlineMarker == probes[index].Kind ) {
+				index++;
+				continue;
+			}
+			count--;
+			index++;
+		}
+		while ( index < probes.Count && PatchProbeKind.NoNewlineMarker == probes[index].Kind ) {
+			index++;
+		}
+		return index;
+	}
+
+	private static int FindRecognizedSectionEnd(
+		PatchFormat format,
+		IReadOnlyList<PatchLineProbe> probes,
+		int index
+	) {
+		var sawBody = false;
 		for ( ; index < probes.Count; index++ ) {
 			if ( IsHeaderPairStart( probes, index ) ) {
+				return index;
+			}
+			if ( IsSectionBodyLine( format, probes[index] ) ) {
+				sawBody = true;
+				continue;
+			}
+			if ( sawBody ) {
+				return index;
+			}
+		}
+		return probes.Count;
+	}
+
+	private static int FindEdSectionEnd(
+		IReadOnlyList<PatchLineProbe> probes,
+		int start
+	) {
+		var index = start;
+		while (
+			index < probes.Count
+			&& PatchProbeKind.NumericDirective == probes[index].Kind
+			&& !probes[index].HasRightRange
+		) {
+			var operation = probes[index].DirectiveOperation;
+			index++;
+			if ( (byte)'d' == operation ) {
+				continue;
+			}
+			index = SkipEdTextBlock( probes, index );
+			while ( index < probes.Count && PatchProbeKind.EdSubstitute == probes[index].Kind ) {
+				index++;
+				if ( index < probes.Count && PatchProbeKind.EdAppend == probes[index].Kind ) {
+					index = SkipEdTextBlock( probes, index + 1 );
+				}
+			}
+		}
+		return index;
+	}
+
+	private static int SkipEdTextBlock(
+		IReadOnlyList<PatchLineProbe> probes,
+		int index
+	) {
+		while ( index < probes.Count ) {
+			if ( PatchProbeKind.EdDot == probes[index].Kind ) {
+				return index + 1;
+			}
+			index++;
+		}
+		return probes.Count;
+	}
+
+	private static int SkipNumericSection(
+		IReadOnlyList<PatchLineProbe> probes,
+		int index,
+		PatchFormat format
+	) {
+		var sawBody = false;
+		for ( ; index < probes.Count; index++ ) {
+			if ( IsHeaderPairStart( probes, index ) ) {
+				return index;
+			}
+			if ( IsSectionBodyLine( format, probes[index] ) ) {
+				sawBody = true;
+				continue;
+			}
+			if ( sawBody ) {
 				return index;
 			}
 		}
@@ -275,39 +482,26 @@ internal static class PatchScanner {
 	}
 
 	private static bool IsHeaderPairStart( IReadOnlyList<PatchLineProbe> probes, int index ) {
-		if ( index + 1 >= probes.Count ) {
-			return false;
-		}
-		return (
-			PatchProbeKind.DashHeader == probes[index].Kind
-			&& PatchProbeKind.UnifiedNewHeader == probes[index + 1].Kind
-		) || (
-			PatchProbeKind.ContextOldHeader == probes[index].Kind
-			&& PatchProbeKind.DashHeader == probes[index + 1].Kind
-		);
+		return IsUnifiedHeaderPairStart( probes, index )
+			|| IsContextHeaderPairStart( probes, index );
 	}
 
-	private static int FindSectionEnd(
-		SectionSeed seed,
+	private static bool IsUnifiedHeaderPairStart(
 		IReadOnlyList<PatchLineProbe> probes,
-		int upperBound
+		int index
 	) {
-		var minimum = seed.Format is PatchFormat.Unified or PatchFormat.Context
-			? Math.Min( upperBound, seed.Start + 2 )
-			: seed.Start + 1;
-		var lastRecognized = minimum;
-		var sawBody = false;
-		for ( var index = minimum; index < upperBound; index++ ) {
-			if ( IsSectionBodyLine( seed.Format, probes[index] ) ) {
-				lastRecognized = index + 1;
-				sawBody = true;
-				continue;
-			}
-			if ( sawBody ) {
-				break;
-			}
-		}
-		return Math.Max( minimum, lastRecognized );
+		return index + 1 < probes.Count
+			&& PatchProbeKind.DashHeader == probes[index].Kind
+			&& PatchProbeKind.UnifiedNewHeader == probes[index + 1].Kind;
+	}
+
+	private static bool IsContextHeaderPairStart(
+		IReadOnlyList<PatchLineProbe> probes,
+		int index
+	) {
+		return index + 1 < probes.Count
+			&& PatchProbeKind.ContextOldHeader == probes[index].Kind
+			&& PatchProbeKind.DashHeader == probes[index + 1].Kind;
 	}
 
 	private static bool IsSectionBodyLine( PatchFormat format, PatchLineProbe probe ) {
@@ -330,27 +524,13 @@ internal static class PatchScanner {
 			PatchFormat.EdScript => probe.Kind is
 				PatchProbeKind.NumericDirective or
 				PatchProbeKind.EdDot or
+				PatchProbeKind.EdSubstitute or
+				PatchProbeKind.EdAppend or
 				PatchProbeKind.NoNewlineMarker or
 				PatchProbeKind.Other or
 				PatchProbeKind.Empty,
 			_ => false
 		};
-	}
-
-	private static bool LooksLikeNormalDiff( IReadOnlyList<PatchLineProbe> probes, int directiveIndex ) {
-		var limit = Math.Min( probes.Count, directiveIndex + 8 );
-		for ( var index = directiveIndex + 1; index < limit; index++ ) {
-			if ( probes[index].Kind is
-				PatchProbeKind.NormalOldData or
-				PatchProbeKind.NormalNewData or
-				PatchProbeKind.NormalSeparator ) {
-				return true;
-			}
-			if ( PatchProbeKind.NumericDirective == probes[index].Kind || IsHeaderPairStart( probes, index ) ) {
-				break;
-			}
-		}
-		return false;
 	}
 
 	private static bool LooksHeaderDirectiveLike( ReadOnlySpan<byte> line ) {
@@ -406,9 +586,13 @@ internal static class PatchScanner {
 	private static bool TryParseNumericDirective(
 		ReadOnlySpan<byte> line,
 		PatchSourceLocation location,
-		out bool candidate
+		out bool candidate,
+		out bool hasRightRange,
+		out byte directiveOperation
 	) {
 		candidate = false;
+		hasRightRange = false;
+		directiveOperation = 0;
 		var index = 0;
 		SkipSpace( line, ref index );
 		if ( index >= line.Length || !IsAsciiDigit( line[index] ) ) {
@@ -429,6 +613,7 @@ internal static class PatchScanner {
 		if ( index >= line.Length || ( line[index] != (byte)'a' && line[index] != (byte)'c' && line[index] != (byte)'d' ) ) {
 			return false;
 		}
+		directiveOperation = line[index];
 		candidate = true;
 		if ( firstNumberOverflowed ) {
 			throw new PatchInputException( "line number is too large", location );
@@ -438,6 +623,7 @@ internal static class PatchScanner {
 		if ( index == line.Length ) {
 			return true;
 		}
+		hasRightRange = true;
 		ParseNumber( line, ref index, location );
 		SkipSpace( line, ref index );
 		if ( index < line.Length && (byte)',' == line[index] ) {
@@ -575,10 +761,73 @@ internal static class PatchScanner {
 		return true;
 	}
 
-	private static bool IsContextRange(
+	private static void TryParseUnifiedHunkCounts(
 		ReadOnlySpan<byte> line,
-		PatchSourceLocation location
+		PatchSourceLocation location,
+		out long oldCount,
+		out long newCount
 	) {
+		oldCount = -1;
+		newCount = -1;
+		var index = 2;
+		SkipSpace( line, ref index );
+		if ( index >= line.Length || (byte)'-' != line[index++] ) {
+			return;
+		}
+		if ( !TryParseUnifiedRangeCount( line, ref index, location, out oldCount ) ) {
+			oldCount = -1;
+			return;
+		}
+		SkipSpace( line, ref index );
+		if ( index >= line.Length || (byte)'+' != line[index++] ) {
+			oldCount = -1;
+			return;
+		}
+		if ( !TryParseUnifiedRangeCount( line, ref index, location, out newCount ) ) {
+			oldCount = -1;
+			newCount = -1;
+			return;
+		}
+		SkipSpace( line, ref index );
+		if ( !StartsWithAscii( line[index..], "@@" ) ) {
+			oldCount = -1;
+			newCount = -1;
+		}
+	}
+
+	private static bool TryParseUnifiedRangeCount(
+		ReadOnlySpan<byte> line,
+		ref int index,
+		PatchSourceLocation location,
+		out long count
+	) {
+		count = -1;
+		SkipSpace( line, ref index );
+		if ( index >= line.Length || !IsAsciiDigit( line[index] ) ) {
+			return false;
+		}
+		if ( ScanNumber( line, ref index ) ) {
+			throw new PatchInputException( "line number is too large", location );
+		}
+		SkipSpace( line, ref index );
+		count = 1;
+		if ( index < line.Length && (byte)',' == line[index] ) {
+			index++;
+			SkipSpace( line, ref index );
+			if ( index >= line.Length || !IsAsciiDigit( line[index] ) ) {
+				return false;
+			}
+			count = ParseNumber( line, ref index, location );
+		}
+		return true;
+	}
+
+	private static bool TryParseContextRange(
+		ReadOnlySpan<byte> line,
+		PatchSourceLocation location,
+		out long count
+	) {
+		count = -1;
 		var isOldRange = StartsWithAscii( line, "***" );
 		var isNewRange = StartsWithAscii( line, "---" );
 		if ( !isOldRange && !isNewRange ) {
@@ -592,15 +841,22 @@ internal static class PatchScanner {
 		if ( index >= line.Length || !IsAsciiDigit( line[index] ) ) {
 			return false;
 		}
+		var startIndex = index;
 		var overflowed = ScanNumber( line, ref index );
+		var start = ParseNumberAt( line[startIndex..index], location );
 		SkipSpace( line, ref index );
+		var end = start;
+		var hasComma = false;
 		if ( index < line.Length && (byte)',' == line[index] ) {
+			hasComma = true;
 			index++;
 			SkipSpace( line, ref index );
 			if ( index >= line.Length || !IsAsciiDigit( line[index] ) ) {
 				return false;
 			}
+			var endIndex = index;
 			overflowed |= ScanNumber( line, ref index );
+			end = ParseNumberAt( line[endIndex..index], location );
 			SkipSpace( line, ref index );
 		}
 		if ( !StartsWithAscii( line[index..], isOldRange ? "****" : "----" ) ) {
@@ -609,7 +865,30 @@ internal static class PatchScanner {
 		if ( overflowed ) {
 			throw new PatchInputException( "line number is too large", location );
 		}
+		if ( 0 == start ) {
+			if ( hasComma && 0 != end ) {
+				return false;
+			}
+			count = 0;
+			return true;
+		}
+		if ( end < start ) {
+			return false;
+		}
+		try {
+			count = checked( end - start + 1 );
+		} catch ( OverflowException ) {
+			throw new PatchInputException( "line range is too large", location );
+		}
 		return true;
+	}
+
+	private static long ParseNumberAt(
+		ReadOnlySpan<byte> value,
+		PatchSourceLocation location
+	) {
+		var index = 0;
+		return ParseNumber( value, ref index, location );
 	}
 
 	private static bool IsNoNewlineMarker( ReadOnlySpan<byte> line ) {

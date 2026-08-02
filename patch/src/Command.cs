@@ -9,11 +9,15 @@ using Icod.CoreUtils.Shared.IO;
 
 /// <summary>Implements the GNU-compatible <c>patch</c> command front end.</summary>
 public static class Command {
-	private const string VersionText = "patch (Icod.Patch) 0.2";
+	private const string VersionText = "patch (Icod.Patch) 0.3";
 	private static readonly HashSet<string> ImplementedOptionKeys = new( StringComparer.Ordinal ) {
 		"binary",
+		"context",
+		"ed",
 		"help",
 		"input",
+		"normal",
+		"unified",
 		"version"
 	};
 
@@ -211,10 +215,27 @@ public static class Command {
 		if ( null != optionInput && null != operandInput ) {
 			throw new PatchUsageException( "patch source specified by both -i and an operand" );
 		}
+		var selectedFormats = new List<PatchFormat>( 4 );
+		if ( parsed.HasOption( "unified" ) ) {
+			selectedFormats.Add( PatchFormat.Unified );
+		}
+		if ( parsed.HasOption( "context" ) ) {
+			selectedFormats.Add( PatchFormat.Context );
+		}
+		if ( parsed.HasOption( "normal" ) ) {
+			selectedFormats.Add( PatchFormat.Normal );
+		}
+		if ( parsed.HasOption( "ed" ) ) {
+			selectedFormats.Add( PatchFormat.EdScript );
+		}
+		if ( 1 < selectedFormats.Count ) {
+			throw new PatchUsageException( "only one patch input format may be specified" );
+		}
 		return new PatchOptions {
 			OriginalFile = 0 < parsed.Operands.Count ? parsed.Operands[0] : null,
 			PatchFile = optionInput ?? operandInput,
-			Binary = parsed.HasOption( "binary" )
+			Binary = parsed.HasOption( "binary" ),
+			ForcedFormat = 0 < selectedFormats.Count ? selectedFormats[0] : null
 		};
 	}
 
@@ -240,13 +261,17 @@ public static class Command {
 				"Usage: patch [OPTION]... [ORIGFILE [PATCHFILE]]",
 				"Apply a difference listing to an original file or files.",
 				string.Empty,
+				"  -c, --context          interpret the patch as a context diff",
+				"  -e, --ed               interpret the patch as an ed script",
 				"  -i, --input=PATCHFILE  read patch from PATCHFILE instead of standard input",
+				"  -n, --normal           interpret the patch as a normal diff",
+				"  -u, --unified          interpret the patch as a unified diff",
 				"      --binary           read and write data in binary mode",
 				"      --help             display this help and exit",
 				"  -v, --version          output version information and exit",
 				string.Empty,
-				"P0-P2 provide GNU-style invocation and byte-preserving format detection.",
-				"Target-file application is introduced by later Patch phases."
+				"Wave A provides GNU-style invocation and byte-preserving syntax parsing.",
+				"Target-file application is introduced by Patch phase P5."
 			}
 		);
 		await output.WriteLineAsync( text.AsMemory(), cancellationToken ).ConfigureAwait( false );
