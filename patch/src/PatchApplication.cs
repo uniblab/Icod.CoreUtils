@@ -3,7 +3,7 @@ namespace Icod.Patch;
 using System.Security;
 using Icod.CoreUtils.Shared.Diagnostics;
 
-/// <summary>Contains validated phase P1 invocation options.</summary>
+/// <summary>Contains validated Wave A invocation options.</summary>
 internal sealed class PatchOptions {
 	/// <summary>Gets or initializes the optional original-file operand.</summary>
 	public string? OriginalFile { get; init; }
@@ -14,13 +14,16 @@ internal sealed class PatchOptions {
 	/// <summary>Gets or initializes whether binary mode was requested.</summary>
 	public bool Binary { get; init; }
 
+	/// <summary>Gets or initializes an explicitly selected input format.</summary>
+	public PatchFormat? ForcedFormat { get; init; }
+
 	/// <summary>Gets whether later interactive prompts may own standard input.</summary>
 	public bool PromptInputAvailable => null != this.PatchFile && "-" != this.PatchFile;
 }
 
-/// <summary>Coordinates patch-source acquisition and the pure phase P2 scan.</summary>
+/// <summary>Coordinates patch-source acquisition and pure Wave A syntax parsing.</summary>
 internal static class PatchApplication {
-	/// <summary>Scans the selected patch source without mutating target files.</summary>
+	/// <summary>Parses the selected patch source without mutating target files.</summary>
 	/// <param name="options">The validated invocation options.</param>
 	/// <param name="context">The command context.</param>
 	/// <returns>The process status.</returns>
@@ -49,7 +52,11 @@ internal static class PatchApplication {
 				PatchScanLimits.Default,
 				context.CancellationToken
 			).ConfigureAwait( false );
-			var result = PatchScanner.Detect( source.Records, source.Probes );
+			var result = PatchScanner.Detect(
+				source.Records,
+				source.Probes,
+				options.ForcedFormat
+			);
 			if ( !result.HasPatch ) {
 				await context.Diagnostics.ErrorAsync(
 					"Only garbage was found in the patch input.",
@@ -57,8 +64,14 @@ internal static class PatchApplication {
 				).ConfigureAwait( false );
 				return (int)PatchExitStatus.Trouble;
 			}
+			_ = await PatchDocumentParser.ParseAsync(
+				source,
+				result,
+				PatchParseLimits.Default,
+				context.CancellationToken
+			).ConfigureAwait( false );
 			await context.Diagnostics.ErrorAsync(
-				"patch input was recognized, but patch application begins in phase P5",
+				"patch input was recognized and parsed, but patch application begins in phase P5",
 				context.CancellationToken
 			).ConfigureAwait( false );
 			return (int)PatchExitStatus.Trouble;

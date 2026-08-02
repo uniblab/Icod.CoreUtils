@@ -4,7 +4,7 @@ using System.Text;
 using Icod.CoreUtils.Shared.Diagnostics;
 using Xunit;
 
-/// <summary>Exercises the phase P0-P2 command boundary.</summary>
+/// <summary>Exercises the Wave A command boundary.</summary>
 public sealed class CommandTests {
 	/// <summary>Verifies help and version short-circuit source acquisition.</summary>
 	/// <param name="option">The standard information option.</param>
@@ -152,7 +152,7 @@ public sealed class CommandTests {
 		Assert.Contains( "Only garbage was found", result.Error );
 	}
 
-	/// <summary>Verifies that P0-P2 never mutate an original-file operand.</summary>
+	/// <summary>Verifies that Wave A never mutates an original-file operand.</summary>
 	[Fact]
 	public async Task RecognizedPatchDoesNotMutateTarget() {
 		var target = await WriteTemporaryAsync( Encoding.UTF8.GetBytes( "old\n" ) );
@@ -168,6 +168,40 @@ public sealed class CommandTests {
 			File.Delete( target );
 			File.Delete( patch );
 		}
+	}
+
+	/// <summary>Verifies each implemented format-selection option reaches its parser.</summary>
+	/// <param name="option">The GNU format-selection option.</param>
+	/// <param name="patchText">A patch in the selected format.</param>
+	[Theory]
+	[InlineData( "-u", "--- old\n+++ new\n@@ -1 +1 @@\n-old\n+new\n" )]
+	[InlineData( "-c", "*** old\n--- new\n***************\n*** 1 ****\n- old\n--- 1 ----\n+ new\n" )]
+	[InlineData( "-n", "1c1\n< old\n---\n> new\n" )]
+	[InlineData( "-e", "1c\nnew\n.\n" )]
+	public async Task ExplicitFormatOptionsAreAccepted( string option, string patchText ) {
+		var result = await RunAsync( new[] { option }, Encoding.UTF8.GetBytes( patchText ) );
+		Assert.Equal( 2, result.Status );
+		Assert.Contains( "recognized and parsed", result.Error );
+	}
+
+	/// <summary>Verifies mutually exclusive format-selection options are diagnosed.</summary>
+	[Fact]
+	public async Task MultipleFormatOptionsAreRejected() {
+		var result = await RunAsync( new[] { "-u", "-c" } );
+		Assert.Equal( 2, result.Status );
+		Assert.Contains( "only one patch input format", result.Error );
+		Assert.Contains( "Try 'patch --help'", result.Error );
+	}
+
+	/// <summary>Verifies a forced format does not silently fall back to autodetection.</summary>
+	[Fact]
+	public async Task ForcedFormatDoesNotFallBackToAnotherSyntax() {
+		var result = await RunAsync(
+			new[] { "-u" },
+			Encoding.UTF8.GetBytes( "1c1\n< old\n---\n> new\n" )
+		);
+		Assert.Equal( 2, result.Status );
+		Assert.Contains( "Only garbage was found", result.Error );
 	}
 
 	/// <summary>Verifies the repository-wide cancellation status.</summary>

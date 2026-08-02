@@ -31,14 +31,14 @@ patch [OPTION]... [ORIGFILE [PATCHFILE]]
 
 ## Complete option inventory
 
-| Short form | Long form | Argument | GNU patch 2.8 behavior | Planned owner | Current state after P0-P2 |
+| Short form | Long form | Argument | GNU patch 2.8 behavior | Planned owner | Current state after Wave A |
 |---|---|---|---|---|---|
 | `-b` | `--backup` | none | Back up each original file. GNU 2.8 also retains a narrowly triggered obsolete `-b SUFFIX ORIGFILE PATCHFILE` compatibility form and warns in favor of `-b -z SUFFIX`. | P8 | Reserved; rejected until P8. |
 | `-B PREFIX` | `--prefix=PREFIX` | required, nonempty | Prefix backup filenames. | P8 | Reserved; rejected until P8. |
-| `-c` | `--context` | none | Force interpretation as context diff. | P3 | Reserved; rejected until P3. |
+| `-c` | `--context` | none | Force interpretation as context diff. | P3 | Implemented; selects the complete context parser. |
 | `-d DIR` | `--directory=DIR` | required | Change working directory before processing. | P7 | Reserved; rejected until P7/E2. |
 | `-D NAME` | `--ifdef=NAME` | required | Emit merged if/then/else output using `NAME`. | P8 | Reserved; rejected until P8. |
-| `-e` | `--ed` | none | Force interpretation as an ed script. | P4 | Reserved; rejected until P4. |
+| `-e` | `--ed` | none | Force interpretation as an ed script. | P4 | Implemented; selects the internal GNU-compatible ed parser. |
 | `-E` | `--remove-empty-files` | none | Remove output files left empty after patching. | P8/P9 | Reserved; rejected until filesystem policy exists. |
 | `-f` | `--force` | none | Noninteractive policy that ignores bad prerequisites and assumes unreversed input. | P6 | Reserved; rejected until P6. |
 | `-F LINES` | `--fuzz=LINES` | required, nonnegative integer | Set maximum context fuzz. | P6 | Reserved; rejected until P6. |
@@ -46,7 +46,7 @@ patch [OPTION]... [ORIGFILE [PATCHFILE]]
 | `-i PATCHFILE` | `--input=PATCHFILE` | required | Read patch text from `PATCHFILE` instead of standard input. `-` denotes standard input. | P1 | Implemented. |
 | `-l` | `--ignore-whitespace` | none | Canonicalize whitespace while matching patch context to input. | P6 | Reserved; rejected until P6. |
 | `-m` | `--merge[=STYLE]` | short form has no argument; long argument optional | Merge conflicts instead of producing rejects. Supported styles are `merge` and `diff3`; no style selects `merge`. Present when GNU patch is built with merge support. | P6/P8 | Reserved; rejected until matching and artifact policy exist. |
-| `-n` | `--normal` | none | Force interpretation as normal diff. | P4 | Reserved; rejected until P4. |
+| `-n` | `--normal` | none | Force interpretation as normal diff. | P4 | Implemented; selects the complete normal-diff parser. |
 | `-N` | `--forward` | none | Ignore input that appears reversed or already applied. | P6 | Reserved; rejected until P6. |
 | `-o FILE` | `--output=FILE` | required | Write patched output to `FILE`. | P8 | Reserved; rejected until P8. |
 | `-p NUM` | `--strip=NUM` | required, nonnegative integer | Strip `NUM` leading pathname components. | P7 | Reserved; rejected until P7/E2. |
@@ -55,7 +55,7 @@ patch [OPTION]... [ORIGFILE [PATCHFILE]]
 | `-s` | `--quiet`, `--silent` | none | Suppress normal output while retaining errors. | P8 | Reserved; rejected until P8. |
 | `-t` | `--batch` | none | Ask no questions, skip bad prerequisites, and assume reversed input when needed. | P6/P8 | Reserved; rejected until policy and prompts exist. |
 | `-T` | `--set-time` | none | Set output timestamps, interpreting diff timestamps as local time. | P8/E3 | Reserved; rejected until P8/E3. |
-| `-u` | `--unified` | none | Force interpretation as unified diff. | P3 | Reserved; rejected until P3. |
+| `-u` | `--unified` | none | Force interpretation as unified diff. | P3 | Implemented; selects the complete unified parser. |
 | `-v` | `--version` | none | Print version information and exit successfully. | P1 | Implemented. |
 | `-V STYLE` | `--version-control=STYLE` | required | Select backup version control. Help names `simple`, `numbered`, and `existing`. | P8 | Reserved; rejected until P8. |
 | `-x NUM` | `--debug=NUM` | required, signed integer | Internal debugging flags. The option is declared in the source table, but handling is compiled only with `DEBUGGING`; normal help omits it. | P12 | Not part of the normal release surface unless a deliberate debug-build policy is adopted. |
@@ -101,4 +101,4 @@ The complete 2.8 test inventory is retained as research evidence. The most direc
 | Creation, deletion, modes, and timestamps | `create-delete`, `empty-files`, `file-create-modes`, `file-modes`, `preserve-mode-and-timestamp`, `unmodified-files` |
 | Links and special files | `symlinks`, `hardlinks`, `fifo` |
 
-P0-P2 use a small provenance-separated corpus to establish the source model. P3-P12 progressively port or independently reproduce the applicable behavioral cases without shelling out to a locally installed GNU `patch` during ordinary tests.
+Wave A, P0-P4, uses a provenance-separated corpus to establish the source model and all four complete syntax parsers. P5-P12 progressively port or independently reproduce the applicable application and conformance cases without shelling out to a locally installed GNU `patch` during ordinary tests.

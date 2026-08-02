@@ -5,9 +5,9 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `34` |
-| Current engineering milestone | Completion Gate E2 — shared canonical-path model; Patch P0-P2 implementation complete with full-checkout build/CI validation pending |
+| Current engineering milestone | Completion Gate E2 — shared canonical-path model; Patch Wave A (P0–P4) implementation complete with full-checkout build/CI validation pending |
 | Next infrastructure dependencies | Completion Gate E2 canonical-path work in `Icod.Path` |
-| Next command batch | Batch 35 — `readlink` and `realpath`; next Patch phases are P3-P4 |
+| Next command batch | Batch 35 — `readlink` and `realpath`; next Patch phases are Wave B1, P5-P6 |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -233,7 +233,7 @@ Man7 pages are useful synopses and secondary references, but they must not repla
 
 4. **Some implementations are not yet the command they claim to be.**
    - The existing `diff` implementation is not a complete difference algorithm and does not yet implement the required result-status model; it will be migrated into `Icod.DiffUtils.Diff` and corrected during the consecutive Diffutils batches.
-   - The historical `patch` seed handled a private simplified format rather than GNU patch syntax. Patch Phases P0–P2 have retired that format, normalized the co-resident `Icod.Patch` project, and added a byte-preserving detector for normal, context, unified, and ed-script candidates; complete parsers and application remain scheduled for P3–P6.
+   - The historical `patch` seed handled a private simplified format rather than GNU patch syntax. Patch Wave A, Phases P0–P4, has retired that format, normalized the co-resident `Icod.Patch` project, and added byte-preserving detection plus complete unified, context, normal, and patch-compatible ed-script parsers. Pure application and matching remain scheduled for P5–P6.
    - `link` behaves like a partial `ln` front end rather than the simple two-operand hard-link command.
    - `stat` substitutes creation time where inode-change time is required.
    - `chmod` does not yet implement GNU/POSIX numeric and symbolic mode semantics correctly.
@@ -853,12 +853,12 @@ This wave follows Batch 34 and may proceed while Completion Gates E2 and E3 are 
 - [x] **P0:** normalized the `Icod.Patch` project and solution family, added C# 13 and dedicated tests/fixtures/docs, pinned GNU patch 2.8 and its complete source-defined option inventory, and retired the private seed syntax; full-checkout build/CI execution remains pending.
 - [x] **P1:** implemented shared command context, asynchronous invocation, compatibility wrappers, declarative parsing over the complete GNU 2.8 option-name inventory, explicit later-phase option rejection, standard-input/`-i`/operand source selection, diagnostics, prompt ownership, and exit-status accumulation.
 - [x] **P2:** implemented a spill-backed byte-preserving source map, LF/CRLF/CR/incomplete-record preservation, multiple-section and surrounding-text recognition, unified/context/normal/ed candidate detection, directive hardening, fuzz coverage, and resource limits.
-- [ ] **P3:** implement unified and context formats and immutable hunk models.
-- [ ] **P4:** implement normal and patch-compatible ed-script formats without invoking or referencing the Ed implementation.
-- [ ] Preserve independent fixtures from GNU Diffutils, `Icod.DiffUtils`, third-party producers, and hand-authored patches.
-- [ ] Keep all parser and model work independent from target filesystem mutation.
+- [x] **P3:** implemented complete unified and context file headers, ranges, hunks, change markers, immutable common models, exact source retention for rejects, and `/dev/null` creation/deletion forms.
+- [x] **P4:** implemented normal append/change/delete commands and the minimal GNU-compatible ed-script grammar internally, including GNU Diffutils single-dot protection, without invoking native `ed` or referencing the Ed implementation.
+- [x] Preserved independent fixtures from GNU Diffutils, `Icod.DiffUtils`, third-party producers, and hand-authored patches.
+- [x] Kept all parser and model work independent from target filesystem mutation.
 
-P0-P2 implementation is complete, with full-checkout Debug/Release and three-runner validation pending after integration. The command intentionally performs no target mutation and returns a controlled trouble status after recognizing patch input until P3-P5 supply full syntax models and application. P3 and P4 are the next Patch work while E2 continues independently.
+Wave A implementation is complete, with full-checkout Debug/Release and three-runner validation pending after integration. The command intentionally performs no target mutation and returns a controlled trouble status after parsing patch input until P5 supplies the pure application engine. P5 and P6 are the next Patch work while E2 continues independently.
 
 Completion of all of Wave A establishes the patch syntax and source model required by every later Patch phase. It does not claim path, metadata, mode, backup, reject, or transaction conformance.
 
