@@ -5,9 +5,9 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `34` |
-| Current engineering milestone | Completion Gate E2 — shared canonical-path model; Patch Wave A (P0–P4) implementation complete with full-checkout build/CI validation pending |
+| Current engineering milestone | Completion Gate E2 — shared canonical-path model; Patch Wave B1 (P5–P6) implementation complete with full-checkout build/CI validation pending |
 | Next infrastructure dependencies | Completion Gate E2 canonical-path work in `Icod.Path` |
-| Next command batch | Batch 35 — `readlink` and `realpath`; next Patch phases are Wave B1, P5-P6 |
+| Next command batch | Batch 35 — `readlink` and `realpath`; next Patch phase is Wave B2, P7, after E2 and Batch 35 |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -233,7 +233,7 @@ Man7 pages are useful synopses and secondary references, but they must not repla
 
 4. **Some implementations are not yet the command they claim to be.**
    - The existing `diff` implementation is not a complete difference algorithm and does not yet implement the required result-status model; it will be migrated into `Icod.DiffUtils.Diff` and corrected during the consecutive Diffutils batches.
-   - The historical `patch` seed handled a private simplified format rather than GNU patch syntax. Patch Wave A, Phases P0–P4, has retired that format, normalized the co-resident `Icod.Patch` project, and added byte-preserving detection plus complete unified, context, normal, and patch-compatible ed-script parsers. Pure application and matching remain scheduled for P5–P6.
+   - The historical `patch` seed handled a private simplified format rather than GNU patch syntax. Patch Waves A and B1, Phases P0–P6, have retired that format, normalized the co-resident `Icod.Patch` project, added byte-preserving detection and complete parsers, and supplied a pure indexed application/matching engine with offsets, fuzz, reversal, prerequisites, and merge output. Live filename resolution and filesystem integration remain scheduled for P7 and later phases.
    - `link` behaves like a partial `ln` front end rather than the simple two-operand hard-link command.
    - `stat` substitutes creation time where inode-change time is required.
    - `chmod` does not yet implement GNU/POSIX numeric and symbolic mode semantics correctly.
@@ -858,7 +858,7 @@ This wave follows Batch 34 and may proceed while Completion Gates E2 and E3 are 
 - [x] Preserved independent fixtures from GNU Diffutils, `Icod.DiffUtils`, third-party producers, and hand-authored patches.
 - [x] Kept all parser and model work independent from target filesystem mutation.
 
-Wave A implementation is complete, with full-checkout Debug/Release and three-runner validation pending after integration. The command intentionally performs no target mutation and returns a controlled trouble status after parsing patch input until P5 supplies the pure application engine. P5 and P6 are the next Patch work while E2 continues independently.
+Wave A implementation is complete, with full-checkout Debug/Release and three-runner validation pending after integration. The command intentionally performs no live target mutation. The pure virtual application and matching engine is supplied by Wave B1, while command-level path selection and filesystem integration remain deferred to P7 after E2 and Batch 35.
 
 Completion of all of Wave A establishes the patch syntax and source model required by every later Patch phase. It does not claim path, metadata, mode, backup, reject, or transaction conformance.
 
@@ -866,9 +866,11 @@ Completion of all of Wave A establishes the patch syntax and source model requir
 
 P5 and P6 depend on the parsed hunk models from P3 and P4, but not on canonical paths or live filesystem mutation. They should proceed while E2 is completed rather than waiting behind it.
 
-- [ ] **P5:** implement the exact, byte-preserving application engine with indexed in-memory and secure spill-backed target content, exact hunk verification, multi-hunk state, file creation/deletion in the virtual model, cancellation, and invariants.
-- [ ] **P6:** implement offsets, fuzz, whitespace-canonical matching, reversal and already-applied detection, direction policy, prerequisites, merge behavior, adversarial-search limits, and GNU differential tests.
-- [ ] Keep both phases pure: they operate on patch documents and virtual target content, not canonical paths or committed filesystem mutations.
+- [x] **P5:** implemented the exact, byte-preserving application engine with indexed in-memory and owner-private spill-backed target content, exact hunk verification, multi-hunk state, ed operation interpretation, virtual file creation/deletion, immutable independently owned results, cancellation, resource limits, and property/invariant coverage.
+- [x] **P6:** implemented forward-first nearby offset search, configurable fuzz, canonical horizontal-blank matching, reverse and already-applied detection, force/forward/batch/interactive policy, prerequisite checks, GNU-compatible merge/diff3 conflict output, adversarial candidate limits, and opt-in GNU patch 2.8 differential coverage.
+- [x] Kept both phases pure: they operate on parsed patch documents and immutable virtual target content, not canonical paths or committed filesystem mutations.
+
+Wave B1 implementation is complete. The managed project and focused test suite still require full-checkout Debug/Release execution and the repository Windows, Ubuntu, and macOS CI matrix after integration. P7 remains blocked on Completion Gate E2 and Batch 35 rather than on any missing parser or matcher work.
 
 ### Completion Gate E2 — before Batch 35
 

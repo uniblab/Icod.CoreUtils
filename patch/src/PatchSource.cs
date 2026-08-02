@@ -49,12 +49,8 @@ internal sealed class PatchSource : IAsyncDisposable {
 		);
 		FileStream? spool = null;
 		try {
-			spool = new FileStream(
+			spool = PatchTemporaryFile.CreateNew(
 				path,
-				FileMode.CreateNew,
-				FileAccess.ReadWrite,
-				FileShare.None,
-				BufferSize,
 				FileOptions.Asynchronous | FileOptions.SequentialScan
 			);
 			var records = new List<PatchRecord>();
