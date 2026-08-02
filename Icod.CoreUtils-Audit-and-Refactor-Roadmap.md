@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `34` |
-| Current engineering milestone | Batch 35 — `readlink` and `realpath`; Patch Wave B1 (P5–P6) implementation complete with full-checkout build/CI validation pending |
+| Completed command batches | `0` through `35` |
+| Current engineering milestone | Completion Gate E3 before Batch 36; Patch Wave B2 (P7) is unblocked by E2 and Batch 35 |
 | Completed infrastructure milestone | Completion Gate E2 — neutral canonical-path model in `Icod.Path` |
-| Next infrastructure dependency | Completion Gate E3 — authoritative filesystem-metadata model before Batch 36 |
-| Next command batch | Batch 35 — `readlink` and `realpath`; next Patch phase is Wave B2, P7, after Batch 35 exercises E2 |
+| Next infrastructure dependency | Completion Gate E3 — authoritative filesystem-metadata model before Batch 36 and Patch P8 |
+| Next command batch | Batch 36 — `stat` and `touch`; next Patch phase is Wave B2, P7 |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -898,14 +898,18 @@ This gate supplies the defining infrastructure for `readlink` and `realpath` and
 
 ### Batch 35 — Symbolic-link and canonical-path resolution (2 tools)
 
-- [ ] `readlink`
-- [ ] `realpath`
+- [x] `readlink`
+- [x] `realpath`
 
 Implement lexical versus physical resolution, missing-component policies, canonicalization modes, delimiters, quiet/verbose behavior, relative output, symlink loops, reparse points, and deterministic failures. Never return the unresolved input as a false success.
 
+Batch 35 is implemented over the neutral `Icod.Path` contract and audited against GNU Coreutils 9.11. `readlink` supports raw terminal-link inspection; `-f` all-but-final, `-e` strict-existing, and `-m` missing-suffix canonicalization; GNU option-order precedence; quiet/verbose policy; no-newline and NUL delimiters; multiple operands; continuation; cancellation; loops; and controlled reparse-point failure. Its `-f` mode ignores a trailing separator, while `-e` requires a trailing-separator operand to resolve to a directory. `realpath` supports the default and explicit `-E` missing-final policy, strict `-e`, missing-suffix `-m`, physical `-P`, logical `-L`, and no-link `-s` resolution; `--relative-to` and `--relative-base`; quiet and NUL output; multiple operands; loops; roots and volumes; and deterministic failure without echoing unresolved input. Default `realpath` ignores nonleading trailing separators, strict `-e` requires a directory there, logical mode validates the no-link spelling before processing `..`, and only the combined `-s -m` profile is guaranteed to remain purely lexical. The `Icod.Path` resolver now also exposes explicit no-link traversal and final-directory validation so both commands share the same canonicalization machinery.
+
+Dedicated `Icod.CoreUtils.ReadLink.Tests` and `Icod.CoreUtils.RealPath.Tests` projects exercise the command profiles over deterministic injectable POSIX observations, while the expanded `Icod.Path.Tests` suite covers no-link preservation, dangling-link validation, and final-directory requirements independently. Full-checkout Debug, Staging, Release, and the Windows/Ubuntu/macOS CI matrix remain to be executed after integration.
+
 #### Patch Wave B2 — Phase P7
 
-Phase P7 begins after Completion Gate E2 and Batch 35 have established and exercised the canonical-path contract. It combines the already completed Patch source and application models with E2.
+Phase P7 is unblocked now that Completion Gate E2 and Batch 35 have established and exercised the canonical-path contract. It combines the already completed Patch source and application models with E2.
 
 - [ ] **P7:** consume E2 for filename candidate resolution, `-d`, component-aware `-p`, roots and volumes, link/reparse-point observation, containment, missing-file decisions, multi-file application, version-control retrieval policy, and path-security tests.
 - [ ] Keep matching and hunk application independent from live filesystem mutation.

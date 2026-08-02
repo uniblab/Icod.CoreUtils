@@ -160,6 +160,19 @@ public sealed class CanonicalPathResolver {
 				continue;
 			}
 			if ( observation.IsReparsePoint && !observation.IsSymbolicLink ) {
+				if ( !options.FollowSymbolicLinks ) {
+					if ( 0 == remaining.Count && options.RequireFinalDirectory ) {
+						return CanonicalPathResult.Failed(
+							new CanonicalPathFailure(
+								CanonicalPathFailureCode.UnsupportedReparsePoint,
+								candidate,
+								"the reparse point cannot be verified as a directory"
+							)
+						);
+					}
+					resolved.Add( component );
+					continue;
+				}
 				if ( 0 == remaining.Count && !options.RejectUnsupportedFinalReparsePoint ) {
 					resolved.Add( component );
 					continue;
@@ -173,6 +186,27 @@ public sealed class CanonicalPathResolver {
 				);
 			}
 			if ( observation.IsSymbolicLink ) {
+				if ( !options.FollowSymbolicLinks ) {
+					if (
+						0 == remaining.Count
+						&& (
+							MissingPathComponentPolicy.RequireExisting
+							== options.MissingComponentPolicy
+							|| options.RequireFinalDirectory
+						)
+					) {
+						var retainedLinkFailure = await this.ValidateRetainedFinalLinkAsync(
+							candidate,
+							options,
+							cancellationToken
+						).ConfigureAwait( false );
+						if ( null != retainedLinkFailure ) {
+							return CanonicalPathResult.Failed( retainedLinkFailure );
+						}
+					}
+					resolved.Add( component );
+					continue;
+				}
 				if ( 0 == remaining.Count && !options.FollowFinalSymbolicLink ) {
 					resolved.Add( component );
 					continue;
@@ -272,6 +306,19 @@ public sealed class CanonicalPathResolver {
 						CanonicalPathFailureCode.NotDirectory,
 						candidate,
 						"a nonfinal pathname component is not a directory"
+					)
+				);
+			}
+			if (
+				0 == remaining.Count
+				&& options.RequireFinalDirectory
+				&& CanonicalPathEntryKind.Directory != observation.Kind
+			) {
+				return CanonicalPathResult.Failed(
+					new CanonicalPathFailure(
+						CanonicalPathFailureCode.NotDirectory,
+						candidate,
+						"the final pathname component is not a directory"
 					)
 				);
 			}
@@ -444,6 +491,26 @@ public sealed class CanonicalPathResolver {
 			}
 		}
 		return PathContainmentResult.Success( true );
+	}
+
+	private async ValueTask<CanonicalPathFailure?> ValidateRetainedFinalLinkAsync(
+		string candidate,
+		CanonicalPathResolutionOptions options,
+		CancellationToken cancellationToken
+	) {
+		var validation = await this.ResolvePhysicalAsync(
+			candidate,
+			new CanonicalPathResolutionOptions {
+				MissingComponentPolicy = MissingPathComponentPolicy.RequireExisting,
+				MaximumSymbolicLinks = options.MaximumSymbolicLinks,
+				FollowSymbolicLinks = true,
+				FollowFinalSymbolicLink = true,
+				RequireFinalDirectory = options.RequireFinalDirectory,
+				RejectUnsupportedFinalReparsePoint = options.RejectUnsupportedFinalReparsePoint
+			},
+			cancellationToken
+		).ConfigureAwait( false );
+		return validation.Failure;
 	}
 
 	private async ValueTask<CanonicalPathFailure?> ObserveRootAsync(

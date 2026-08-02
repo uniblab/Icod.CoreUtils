@@ -269,6 +269,67 @@ public sealed class CanonicalPathResolverTests {
 		Assert.Null( result.Target );
 	}
 
+	/// <summary>Verifies that no-link resolution preserves a symbolic-link pathname component.</summary>
+	[Fact]
+	public async Task PreservesSymbolicLinkWhenFollowingIsDisabled() {
+		var provider = CreatePosixProvider()
+			.AddDirectory( "/work" )
+			.AddDirectory( "/target" )
+			.AddLink( "/work/link", "/target" );
+		var resolver = new CanonicalPathResolver( provider );
+
+		var result = await resolver.ResolvePhysicalAsync(
+			"/work/link",
+			new CanonicalPathResolutionOptions {
+				MissingComponentPolicy = MissingPathComponentPolicy.RequireExisting,
+				FollowSymbolicLinks = false
+			}
+		);
+
+		Assert.Equal( "/work/link", result.Path );
+		Assert.Empty( result.ResolvedLinks );
+	}
+
+	/// <summary>Verifies strict no-link resolution still rejects a dangling terminal link.</summary>
+	[Fact]
+	public async Task StrictNoLinkResolutionRejectsDanglingFinalLink() {
+		var provider = CreatePosixProvider()
+			.AddDirectory( "/work" )
+			.AddLink( "/work/link", "missing" );
+		var resolver = new CanonicalPathResolver( provider );
+
+		var result = await resolver.ResolvePhysicalAsync(
+			"/work/link",
+			new CanonicalPathResolutionOptions {
+				MissingComponentPolicy = MissingPathComponentPolicy.RequireExisting,
+				FollowSymbolicLinks = false
+			}
+		);
+
+		Assert.Equal( CanonicalPathFailureCode.NotFound, result.Failure!.Code );
+		Assert.Null( result.Path );
+	}
+
+	/// <summary>Verifies a requested terminal directory is checked independently of existence.</summary>
+	[Fact]
+	public async Task RequiresFinalDirectoryWhenRequested() {
+		var provider = CreatePosixProvider()
+			.AddDirectory( "/work" )
+			.AddFile( "/work/file" );
+		var resolver = new CanonicalPathResolver( provider );
+
+		var result = await resolver.ResolvePhysicalAsync(
+			"/work/file",
+			new CanonicalPathResolutionOptions {
+				MissingComponentPolicy = MissingPathComponentPolicy.RequireExisting,
+				RequireFinalDirectory = true
+			}
+		);
+
+		Assert.Equal( CanonicalPathFailureCode.NotDirectory, result.Failure!.Code );
+		Assert.Null( result.Path );
+	}
+
 	/// <summary>Verifies POSIX relative-path calculation.</summary>
 	[Fact]
 	public void CalculatesPosixRelativePath() {
