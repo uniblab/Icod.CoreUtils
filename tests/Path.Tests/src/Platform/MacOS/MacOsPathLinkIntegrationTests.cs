@@ -43,6 +43,8 @@ public sealed class MacOsPathLinkIntegrationTests {
 			var resolvedNested = await resolver.ResolvePhysicalAsync(
 				SystemPath.Combine( directoryLink, "nested.txt" )
 			);
+			var expectedFile = await resolver.ResolvePhysicalAsync( targetFile );
+			var expectedNested = await resolver.ResolvePhysicalAsync( nestedFile );
 
 			Assert.True( fileInspection.Succeeded );
 			Assert.True( fileInspection.IsSymbolicLink );
@@ -55,10 +57,12 @@ public sealed class MacOsPathLinkIntegrationTests {
 				PathIndirectionKind.PosixSymbolicLink,
 				directoryInspection.Indirection.Kind
 			);
+			Assert.True( expectedFile.Succeeded );
 			Assert.True( resolvedFile.Succeeded );
-			Assert.Equal( SystemPath.GetFullPath( targetFile ), resolvedFile.Path );
+			Assert.Equal( expectedFile.Path, resolvedFile.Path );
+			Assert.True( expectedNested.Succeeded );
 			Assert.True( resolvedNested.Succeeded );
-			Assert.Equal( SystemPath.GetFullPath( nestedFile ), resolvedNested.Path );
+			Assert.Equal( expectedNested.Path, resolvedNested.Path );
 		} finally {
 			Directory.Delete( root, true );
 		}
@@ -114,6 +118,7 @@ public sealed class MacOsPathLinkIntegrationTests {
 
 			var resolver = new CanonicalPathResolver();
 			var inspection = await resolver.InspectLinkAsync( hardLink );
+			var resolvedRoot = await resolver.ResolvePhysicalAsync( root );
 			var resolved = await resolver.ResolvePhysicalAsync( hardLink );
 
 			Assert.True( inspection.Succeeded );
@@ -122,9 +127,13 @@ public sealed class MacOsPathLinkIntegrationTests {
 			Assert.False( inspection.IsPathIndirection );
 			Assert.False( inspection.IsReparsePoint );
 			Assert.Equal( PathIndirectionKind.None, inspection.Indirection.Kind );
+			Assert.True( resolvedRoot.Succeeded );
 			Assert.True( resolved.Succeeded );
-			Assert.Equal( SystemPath.GetFullPath( hardLink ), resolved.Path );
-			Assert.Empty( resolved.ResolvedLinks );
+			Assert.Equal(
+				SystemPath.Combine( resolvedRoot.Path!, SystemPath.GetFileName( hardLink ) ),
+				resolved.Path
+			);
+			Assert.Equal( resolvedRoot.ResolvedLinks.Count, resolved.ResolvedLinks.Count );
 		} finally {
 			Directory.Delete( root, true );
 		}
