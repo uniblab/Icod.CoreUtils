@@ -9,14 +9,22 @@ using Icod.CoreUtils.Shared.IO;
 
 /// <summary>Implements the GNU-compatible <c>patch</c> command front end.</summary>
 public static class Command {
-	private const string VersionText = "patch (Icod.Patch) 0.3";
+	private const string VersionText = "patch (Icod.Patch) 0.5";
 	private static readonly HashSet<string> ImplementedOptionKeys = new( StringComparer.Ordinal ) {
+		"batch",
 		"binary",
 		"context",
 		"ed",
+		"force",
+		"forward",
+		"fuzz",
 		"help",
+		"ignore-whitespace",
 		"input",
+		"merge",
+		"merge-short",
 		"normal",
+		"reverse",
 		"unified",
 		"version"
 	};
@@ -231,11 +239,43 @@ public static class Command {
 		if ( 1 < selectedFormats.Count ) {
 			throw new PatchUsageException( "only one patch input format may be specified" );
 		}
+		var fuzz = 2;
+		var fuzzText = parsed.GetLastValue( "fuzz" );
+		if ( null != fuzzText
+			&& ( !int.TryParse(
+				fuzzText,
+				System.Globalization.NumberStyles.None,
+				System.Globalization.CultureInfo.InvariantCulture,
+				out fuzz
+			) || fuzz < 0 ) ) {
+			throw new PatchUsageException( string.Concat( "invalid maximum fuzz factor '", fuzzText, "'" ) );
+		}
+		var mergeStyle = PatchMergeStyle.None;
+		if ( parsed.HasOption( "merge-short" ) ) {
+			mergeStyle = PatchMergeStyle.Merge;
+		}
+		if ( parsed.HasOption( "merge" ) ) {
+			var mergeValue = parsed.GetLastValue( "merge" );
+			mergeStyle = mergeValue switch {
+				null or "merge" => PatchMergeStyle.Merge,
+				"diff3" => PatchMergeStyle.Diff3,
+				_ => throw new PatchUsageException(
+					string.Concat( "invalid merge style '", mergeValue, "'" )
+				)
+			};
+		}
 		return new PatchOptions {
 			OriginalFile = 0 < parsed.Operands.Count ? parsed.Operands[0] : null,
 			PatchFile = optionInput ?? operandInput,
 			Binary = parsed.HasOption( "binary" ),
-			ForcedFormat = 0 < selectedFormats.Count ? selectedFormats[0] : null
+			ForcedFormat = 0 < selectedFormats.Count ? selectedFormats[0] : null,
+			Force = parsed.HasOption( "force" ),
+			ForwardOnly = parsed.HasOption( "forward" ),
+			Reverse = parsed.HasOption( "reverse" ),
+			Batch = parsed.HasOption( "batch" ),
+			Fuzz = fuzz,
+			IgnoreWhitespace = parsed.HasOption( "ignore-whitespace" ),
+			MergeStyle = mergeStyle
 		};
 	}
 
@@ -263,15 +303,24 @@ public static class Command {
 				string.Empty,
 				"  -c, --context          interpret the patch as a context diff",
 				"  -e, --ed               interpret the patch as an ed script",
+				"  -f, --force            assume the patch is not reversed",
+				"  -F, --fuzz=NUM         set the maximum fuzz factor",
 				"  -i, --input=PATCHFILE  read patch from PATCHFILE instead of standard input",
+				"  -l, --ignore-whitespace ignore horizontal blank-run changes",
+				"  -m, --merge            merge using two-way conflict markers",
+				"      --merge[=STYLE]    merge using STYLE 'merge' or 'diff3'",
 				"  -n, --normal           interpret the patch as a normal diff",
+				"  -N, --forward          ignore patches that seem reversed or applied",
+				"  -R, --reverse          assume the patch was created in reverse",
+				"  -t, --batch            ask no questions; skip bad prerequisites",
 				"  -u, --unified          interpret the patch as a unified diff",
 				"      --binary           read and write data in binary mode",
 				"      --help             display this help and exit",
 				"  -v, --version          output version information and exit",
 				string.Empty,
-				"Wave A provides GNU-style invocation and byte-preserving syntax parsing.",
-				"Target-file application is introduced by Patch phase P5."
+				"Wave B1 provides pure virtual application, offsets, fuzz, reversal,",
+				"whitespace matching, prerequisite policy, and conflict-marker output.",
+				"Live path selection and filesystem replacement begin in Patch phase P7."
 			}
 		);
 		await output.WriteLineAsync( text.AsMemory(), cancellationToken ).ConfigureAwait( false );
