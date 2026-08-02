@@ -32,7 +32,7 @@ This roadmap is subordinate to the repository-wide conventions and engineering g
 | Public command class | `Icod.Patch.Command` |
 | Executable assembly name | `patch` |
 | Current repository project | `patch/Icod.Patch.csproj` |
-| Current implementation state | Wave A, Phases P0-P4, implemented: normalized async front end, byte-preserving source model, and complete unified/context/normal/ed parsers; no target mutation |
+| Current implementation state | Waves A and B1, Phases P0-P6, implemented: normalized async front end, byte-preserving parsers, and a pure indexed virtual application/matching engine; no live path mutation |
 | Current dedicated test project | `tests/Patch.Tests/Icod.Patch.Tests.csproj` |
 | Required target framework | `net10.0` |
 | Required language version | C# 13 |
@@ -41,8 +41,8 @@ This roadmap is subordinate to the repository-wide conventions and engineering g
 | Additional platform goal | Best-effort BSD support |
 | Repository status | Co-resident in `Icod.CoreUtils.sln` until Completion Gate G |
 | Scheduling model | Dependency-aligned partial order with Completion Gates E2–E6 |
-| First scheduled wave | Wave A, P0–P4, complete; Wave B1, P5 and P6, is next while E2/E3 design proceeds concurrently |
-| Detailed ordering status | Provisional until the GNU 2.8 option and conformance matrices are complete |
+| First scheduled wave | Wave A, P0–P4, and Wave B1, P5–P6, complete; Wave B2, P7, follows E2 and Batch 35 |
+| Detailed ordering status | P0–P6 implemented; P7 remains gated by E2 and Batch 35 |
 
 ---
 
@@ -50,9 +50,15 @@ This roadmap is subordinate to the repository-wide conventions and engineering g
 
 Wave A, Phases P0 through P4, was implemented on August 1, 2026; full-checkout build and CI validation remain pending. The historical private `+`/`-` mutation format was removed rather than retained as a compatibility mode. The replacement front end uses the shared asynchronous `CommandContext` and `OptionParser`, accepts standard input, `-i`, and GNU-style operands, and feeds a bounded spill-backed source model. The source layer preserves byte offsets and LF, CRLF, CR, and incomplete-final-record state while identifying multiple sections and surrounding text. Complete unified, context, normal, and patch-compatible ed-script parsers now normalize file patches and hunks into immutable byte-preserving models while retaining exact source records for later reject generation.
 
-The Wave A executable deliberately refuses to mutate targets. It returns a controlled trouble status after successfully parsing valid patch syntax until P5 provides the pure application engine. This protects the repository from presenting syntax support as completed patch application.
+The executable still deliberately refuses to resolve or mutate live targets. Wave B1 now provides the pure virtual application engine, but command-level filename selection and filesystem integration remain deferred to P7. This protects the repository from presenting parser and matcher support as completed live patch application.
 
 The GNU patch 2.8 release archive metadata, official SHA-256, signing fingerprint, and `v2.8` source ref are recorded in `patch/upstream/GNU-patch-2.8.md`. Debug/Release and three-runner execution remain an integration validation item after these files are applied to a complete checkout.
+
+## Wave B1 implementation status
+
+Wave B1, Phases P5 and P6, is implemented as a pure application layer. It indexes existing target bytes in memory or in owner-private spill files; preserves each original record terminator; applies unified, context, normal, and ed operations; carries accumulated line deltas across multiple hunks; and returns immutable virtual-file results whose storage is independent from the input. Matching proceeds at the predicted location, then by alternating forward and backward offsets with forward tie preference, and only then by increasing fuzz. Horizontal blank runs can be canonicalized, reverse and already-applied input is detected from the first hunk and virtual existence state, and force, forward-only, batch, prerequisite, injected decision, and merge/diff3 policy are explicit engine inputs.
+
+The executable still stops before live application because P7 owns filename selection, canonical paths, containment, and multi-file state. Full-checkout managed build/test and all three CI runners remain pending integration validation.
 
 ---
 
@@ -60,7 +66,7 @@ The GNU patch 2.8 release archive metadata, official SHA-256, signing fingerprin
 
 The historical Patch seed was not an incomplete GNU patch implementation in the ordinary sense. It consumed a private `+`/`-` line-command format associated with the repository's former simplified Diff output, decoded complete files as UTF-8 text, created a `.orig` backup, and rewrote the target directly.
 
-Wave A, P0 through P4, has now replaced that seed with a GNU-oriented command boundary, source model, and complete syntax parsers. The current command:
+Waves A and B1, P0 through P6, have now replaced that seed with a GNU-oriented command boundary, byte-preserving source model, complete syntax parsers, and a pure virtual application/matching engine. The current implementation:
 
 - uses asynchronous orchestration and the shared `CommandContext` and `OptionParser`;
 - accepts patch input from standard input, `-i`, or the GNU-style patch-file operand position;
@@ -70,7 +76,7 @@ Wave A, P0 through P4, has now replaced that seed with a GNU-oriented command bo
 - normalizes all four syntaxes into immutable byte-preserving file, range, hunk, operation, and data-line models while retaining exact source records for later rejects;
 - rejects NUL-bearing directive lines, newline-bearing quoted filename evidence, malformed ranges, count mismatches, inconsistent context copies, unterminated ed text blocks, and resource exhaustion;
 - has a dedicated Patch test project and separated fixture provenance;
-- deliberately returns controlled trouble after parsing because pure target application begins in P5.
+- exposes pure exact/offset/fuzz/reverse/prerequisite/merge application over immutable virtual target content while deliberately returning controlled trouble at the executable boundary until P7 supplies live path integration.
 
 The former private syntax remains only as characterized historical evidence and is not exposed as a compatibility mode.
 
@@ -342,7 +348,7 @@ The public command class should expose the repository's established synchronous 
 
 ## Current command implementation
 
-The Wave A command is a GNU-oriented front end and complete syntax parser rather than a target applicator. It:
+The Wave B1 command is a GNU-oriented front end over complete syntax parsers and a pure virtual target applicator. It:
 
 - accepts `[ORIGFILE [PATCHFILE]]`, `-i/--input`, standard-input patch streams, `--binary`, `--help`, and `-v/--version`;
 - reserves GNU `-b` for its later `--backup` implementation rather than aliasing it to `--binary`;
@@ -351,7 +357,8 @@ The Wave A command is a GNU-oriented front end and complete syntax parser rather
 - indexes input into a uniquely named private temporary spool and removes that exact spool on disposal;
 - recognizes and parses complete unified, context, normal, and patch-compatible ed-script file sections into immutable byte-preserving models without mutating the original-file operand;
 - preserves exact hunk source records for later reject serialization and retains leading, interstitial, and trailing non-patch regions;
-- returns status 2 after successful parsing until P5 provides the pure application engine.
+- maps `-f`, `-F`, `-l`, `-m`/`--merge`, `-N`, `-R`, and `-t` into the pure Wave B1 engine policy;
+- returns status 2 after successful parsing because live target selection, multi-file path state, and filesystem mutation begin in P7.
 
 The implementation preserves the public namespace `Icod.Patch`, lowercase assembly name `patch`, and public `Command` facade. The private simplified format has been removed and remains covered only by a retirement characterization test.
 
@@ -361,7 +368,7 @@ The implementation preserves the public namespace `Icod.Patch`, lowercase assemb
 
 P0 created `tests/Patch.Tests/Icod.Patch.Tests.csproj` with root namespace `Icod.Patch.Tests`, `InternalsVisibleTo` access to the internal detector, and Debug, Staging, and Release solution mappings beneath the top-level `tests` solution folder.
 
-The Wave A suite covers direct command invocation, process-host help and diagnostics, source selection, operand conflicts, retirement of the private syntax, non-mutation, cancellation, status accumulation, every parsed format, separated fixture roots, source offsets and terminators, multiple sections, leading/interstitial/trailing text, headers and timestamps, ranges, hunk counts, context-copy consistency, normal data blocks, ed reverse ordering and dot protection, malformed directives and filenames, binary records, resource limits, deterministic fuzz input, and exact temporary-spool cleanup.
+The suite covers direct command invocation, process-host help and diagnostics, source selection, operand conflicts, retirement of the private syntax, non-mutation, cancellation, status accumulation, every parsed format, separated fixture roots, source offsets and terminators, multiple sections, leading/interstitial/trailing text, headers and timestamps, ranges, hunk counts, context-copy consistency, normal data blocks, ed reverse ordering and dot protection, malformed directives and filenames, binary records, resource limits, deterministic scanner fuzz input, exact temporary-spool cleanup, indexed target round trips, spill-backed target and result lifecycles, exact and multi-hunk application, ed interpretation, creation/deletion, offsets, fuzz, whitespace matching, reversal, already-applied policy, prerequisites, merge/diff3 output, candidate limits, randomized invariants, and opt-in GNU patch 2.8 differential checks.
 
 A separate parser or engine test project is not currently justified. Full solution builds and Windows, Ubuntu, and macOS CI execution remain integration validation items.
 
@@ -1511,32 +1518,34 @@ Wave A parser implementation is complete. The format-selection options `-u`, `-c
 
 ## Phase P5 — Pure exact application engine
 
-- [ ] Implement in-memory indexed target content.
-- [ ] Add secure spill-backed target content for large files.
-- [ ] Preserve bytes and record terminators.
-- [ ] Implement exact hunk verification.
-- [ ] Implement additions, deletions, and replacements.
-- [ ] Implement accumulated hunk offsets.
-- [ ] Implement multi-hunk application.
-- [ ] Implement ed-script operation application.
-- [ ] Implement creation and deletion in the virtual filesystem model.
-- [ ] Produce immutable application results.
-- [ ] Add property and invariant tests.
-- [ ] Add cancellation and huge-input tests.
+- [x] Implement in-memory indexed target content.
+- [x] Add owner-private spill-backed target content for large files.
+- [x] Preserve bytes and record terminators.
+- [x] Implement exact hunk verification.
+- [x] Implement additions, deletions, and replacements.
+- [x] Implement accumulated hunk offsets.
+- [x] Implement multi-hunk application.
+- [x] Implement ed-script operation application.
+- [x] Implement creation and deletion in the virtual filesystem model.
+- [x] Produce immutable application results with storage ownership independent from the input.
+- [x] Add property and invariant tests.
+- [x] Add cancellation, spill-backed, and bounded huge-input tests.
 
 ## Phase P6 — Matching heuristics and direction policy
 
-- [ ] Implement nearby offset search.
-- [ ] Implement configurable fuzz.
-- [ ] Implement canonicalized whitespace matching.
-- [ ] Implement reverse-direction matching.
-- [ ] Implement already-applied detection.
-- [ ] Implement force, forward, and batch policies.
-- [ ] Implement interactive direction decisions.
-- [ ] Implement prerequisite checks.
-- [ ] Implement merge modes required by 2.8.
-- [ ] Add performance limits for adversarial matching.
-- [ ] Add differential tests against GNU patch 2.8.
+- [x] Implement nearby offset search with forward-before-backward tie ordering.
+- [x] Implement configurable fuzz.
+- [x] Implement canonicalized horizontal-blank matching.
+- [x] Implement reverse-direction matching.
+- [x] Implement already-applied detection, including create/delete virtual-state reversal.
+- [x] Implement force, forward, and batch policies.
+- [x] Implement injected interactive direction decisions without console coupling.
+- [x] Implement prerequisite checks.
+- [x] Implement GNU-compatible `merge` and `diff3` conflict output.
+- [x] Add performance limits for adversarial matching.
+- [x] Add opt-in differential tests against an installed GNU patch 2.8.
+
+Wave B1 implementation is complete. P5/P6 remain pure and do not select canonical paths or commit filesystem changes. Full-checkout Debug/Release builds and the Windows, Ubuntu, and macOS CI matrix remain pending integration validation.
 
 ## Phase P7 — Files, paths, and multi-file application
 
@@ -2050,20 +2059,12 @@ The Patch milestone is complete only when:
 
 ## Immediate next actions
 
-1. Pin and download GNU patch 2.8.
-2. Generate the complete option and behavior matrix from its source and tests.
-3. Verify the suite-correct `Icod.Patch.csproj` project identity and solution placement.
-4. Add C# 13 explicitly.
-5. Create `Icod.Patch.Tests`.
-6. Add characterization tests for the current seed.
-7. Replace the synchronous entry point with the standard command context and asynchronous orchestration.
-8. Build independent normal, context, unified, ed-script, malformed, and security corpora.
-9. Design the immutable patch document and source-location model.
-10. Implement format detection and the unified/context parsers before touching target files.
-11. Advance Completion Gate E2 in parallel so its canonical-path contract is available before P7.
-12. Keep all filesystem mutation behind a replaceable internal adapter and feed its requirements into E6.
-13. Do not close P8 before E3 and E4, or P11B before Batches 44 and 45.
-14. Keep the main roadmap and this document synchronized at every Patch/E-series checkpoint.
+1. Run the integrated Patch project and focused test suite in Debug and Release on a complete checkout.
+2. Run the repository Windows, Ubuntu, and macOS CI matrix and correct any integration-only failures.
+3. Complete Completion Gate E2 and Batch 35 so the canonical-path contract is available.
+4. Begin P7 by consuming E2 for filename candidates, `-d`, component-aware `-p`, roots, volumes, links, containment, missing-file decisions, and multi-file state.
+5. Keep live filesystem mutation behind the later P8/P9 transaction and artifact boundaries; do not bypass E3, E4, or E6.
+6. Keep the main roadmap and this document synchronized at every Patch/E-series checkpoint.
 
 ---
 
