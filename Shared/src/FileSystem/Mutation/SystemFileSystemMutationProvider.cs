@@ -1007,6 +1007,105 @@ public sealed class SystemFileSystemMutationProvider : IFileSystemMutationProvid
 		}
 	}
 
+	/// <inheritdoc/>
+	public async ValueTask<FileSystemMutationResult> SetOwnershipAsync(
+		string path,
+		uint? userId,
+		uint? groupId,
+		PathDereferenceMode dereferenceMode,
+		FileSystemMutationPrecondition? precondition = null,
+		CancellationToken cancellationToken = default
+	) {
+		if ( !userId.HasValue && !groupId.HasValue ) {
+			throw new ArgumentException( "At least one owner or group identifier must be supplied." );
+		}
+		if ( !Enum.IsDefined( typeof( PathDereferenceMode ), dereferenceMode ) ) {
+			throw new ArgumentOutOfRangeException( nameof( dereferenceMode ) );
+		}
+		var normalized = TryNormalizePath( path, out var pathError );
+		if ( normalized is null ) {
+			return pathError!;
+		}
+		if ( !Capabilities.CanSetOwnership ) {
+			return FileSystemMutationResult.Unsupported(
+				normalized,
+				"POSIX ownership mutation is not supported on this platform."
+			);
+		}
+		if (
+			dereferenceMode == PathDereferenceMode.NoFollow
+				&& !Capabilities.CanSetOwnershipWithoutFollowingPathIndirection
+		) {
+			return FileSystemMutationResult.Unsupported(
+				normalized,
+				"Ownership mutation without following terminal pathname indirection is not supported on this platform."
+			);
+		}
+		var condition = precondition ?? new FileSystemMutationPrecondition(
+			FileSystemMutationExistence.MustExist,
+			dereferenceMode
+		);
+		if ( condition.DereferenceMode != dereferenceMode ) {
+			return FileSystemMutationResult.Failure(
+				normalized,
+				FileSystemMutationErrorCode.UnsafePathIndirection,
+				"The ownership request and precondition dereference policies differ."
+			);
+		}
+		var validation = await ValidateAsync( normalized, condition, cancellationToken ).ConfigureAwait( false );
+		if ( validation.Error is not null ) {
+			return validation.Error;
+		}
+		var effective = validation.Effective;
+		if ( effective is null ) {
+			return NotFound( normalized );
+		}
+		var revalidation = await RevalidateAsync(
+			normalized,
+			validation,
+			dereferenceMode,
+			cancellationToken,
+			condition
+		).ConfigureAwait( false );
+		if ( revalidation is not null ) {
+			return revalidation;
+		}
+
+		try {
+			cancellationToken.ThrowIfCancellationRequested();
+			var nativeUserId = userId ?? uint.MaxValue;
+			var nativeGroupId = groupId ?? uint.MaxValue;
+			var result = dereferenceMode == PathDereferenceMode.NoFollow
+				? NativeChangeLinkOwnership( normalized, nativeUserId, nativeGroupId )
+				: NativeChangeOwnership( normalized, nativeUserId, nativeGroupId );
+			if ( result != 0 ) {
+				return FromNativeFailure( normalized, "change ownership" );
+			}
+			var post = await TryObserveAsync(
+				normalized,
+				dereferenceMode,
+				CancellationToken.None
+			).ConfigureAwait( false );
+			if ( post is null || IdentitiesConflict( effective.EntryIdentity, post.EntryIdentity ) ) {
+				return IdentityChanged( normalized );
+			}
+			return FileSystemMutationResult.Success(
+				new FileSystemMutationOutcome(
+					normalized,
+					FileSystemMutationOperation.SetOwnership,
+					post.Kind,
+					post.EntryIdentity,
+					null,
+					post.WasDereferenced
+				)
+			);
+		} catch ( OperationCanceledException exception ) {
+			return Cancelled( normalized, exception );
+		} catch ( Exception exception ) when ( IsControlledException( exception ) ) {
+			return FromManagedFailure( normalized, exception, creation: false );
+		}
+	}
+
 	private async ValueTask<Validation> ValidateAsync(
 		string path,
 		FileSystemMutationPrecondition precondition,
@@ -1077,6 +1176,9 @@ public sealed class SystemFileSystemMutationProvider : IFileSystemMutationProvid
 			) {
 				return new Validation( physical, effective, IdentityChanged( path ) );
 			}
+			if ( OwnershipConflicts( precondition, effective ) ) {
+				return new Validation( physical, effective, IdentityChanged( path ) );
+			}
 			return new Validation( physical, effective, null );
 		} catch ( OperationCanceledException exception ) {
 			return new Validation( null, null, Cancelled( path, exception ) );
@@ -1089,7 +1191,8 @@ public sealed class SystemFileSystemMutationProvider : IFileSystemMutationProvid
 		string path,
 		Validation validation,
 		PathDereferenceMode dereferenceMode,
-		CancellationToken cancellationToken
+		CancellationToken cancellationToken,
+		FileSystemMutationPrecondition? precondition = null
 	) {
 		try {
 			var expected = validation.Effective;
@@ -1103,6 +1206,7 @@ public sealed class SystemFileSystemMutationProvider : IFileSystemMutationProvid
 			if (
 				IdentitiesConflict( expected.EntryIdentity, current.EntryIdentity )
 					|| expected.Kind != current.Kind
+					|| (precondition is not null && OwnershipConflicts( precondition, current ))
 			) {
 				return IdentityChanged( path );
 			}
@@ -1112,6 +1216,22 @@ public sealed class SystemFileSystemMutationProvider : IFileSystemMutationProvid
 		} catch ( Exception exception ) when ( IsControlledException( exception ) ) {
 			return FromManagedFailure( path, exception, creation: false );
 		}
+	}
+
+	private static bool OwnershipConflicts(
+		FileSystemMutationPrecondition precondition,
+		FileSystemMetadata metadata
+	) {
+		return precondition.ExpectedUserId.HasValue
+			&& (
+				!metadata.UserId.IsAvailable
+					|| metadata.UserId.GetRequiredValue() != precondition.ExpectedUserId.Value
+			)
+			|| precondition.ExpectedGroupId.HasValue
+				&& (
+					!metadata.GroupId.IsAvailable
+						|| metadata.GroupId.GetRequiredValue() != precondition.ExpectedGroupId.Value
+				);
 	}
 
 	private async ValueTask<FileSystemMetadata?> TryObserveAsync(
@@ -1194,7 +1314,9 @@ public sealed class SystemFileSystemMutationProvider : IFileSystemMutationProvid
 			known,
 			unix,
 			false,
-			OperatingSystem.IsWindows()
+			OperatingSystem.IsWindows(),
+			unix,
+			unix
 		);
 	}
 
@@ -1605,6 +1727,12 @@ public sealed class SystemFileSystemMutationProvider : IFileSystemMutationProvid
 		string newPath,
 		int flags
 	);
+
+	[DllImport( "libc", EntryPoint = "chown", SetLastError = true )]
+	private static extern int NativeChangeOwnership( string path, uint userId, uint groupId );
+
+	[DllImport( "libc", EntryPoint = "lchown", SetLastError = true )]
+	private static extern int NativeChangeLinkOwnership( string path, uint userId, uint groupId );
 
 	[DllImport( "libc", EntryPoint = "unlink", SetLastError = true )]
 	private static extern int NativeRemoveFile( string path );

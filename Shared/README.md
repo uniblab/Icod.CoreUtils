@@ -14,7 +14,8 @@
 - `Temporary`: cryptographically secure base-62 name generation, exclusive temporary file/directory creation, collision retries, and deterministic cleanup support.
 - `FileSystem.Traversal`: segment-aware pathname expansion, injectable one-level filesystem observation, stable entry/filesystem identities, and iterative event-based read-only traversal.
 - `FileSystem.Metadata`: authoritative entry and filesystem metadata, explicit availability, E1 identity reuse, allocated-block accounting, and selective timestamp mutation.
-- `FileSystem.Mutation`: race-aware single-path creation, linking, removal, and mode mutation with explicit capability and identity preconditions.
+- `FileSystem.Ownership`: GNU/POSIX user and group resolution plus shared `chown`/`chgrp` recursive command policy.
+- `FileSystem.Mutation`: race-aware single-path creation, linking, removal, mode mutation, and UID/GID mutation with explicit capability and identity preconditions.
 - `FileSystem.RecursiveMutation`: E1-based recursive mutation/copy planning, preserve-root and containment preflight, hard-link and sparse-file preservation, metadata policy, and rollback cleanup.
 - `Platform`: BCL-first capability reporting and controlled unsupported results.
 
@@ -128,3 +129,7 @@ Completion Gate E3 adds `Icod.CoreUtils.Shared.FileSystem.Metadata`. The model r
 ## Recursive filesystem mutation and copying
 
 Completion Gate E5 adds `Icod.CoreUtils.Shared.FileSystem.RecursiveMutation`. The mutation-aware traversal engine wraps the E1 event stream, preserves its root provenance and traversal vocabulary, and attaches E4 identity-bearing preconditions to physical entries. Additional contracts cover preserve-root, one-filesystem delegation, destination containment, repeated hard links, sparse allocation, E3 metadata preservation, partial failure, and the rollback seam consumed by Completion Gate E6. See [`src/FileSystem/RecursiveMutation/README.md`](src/FileSystem/RecursiveMutation/README.md).
+
+## Ownership mutation
+
+Batch 42 adds `Icod.CoreUtils.Shared.FileSystem.Ownership`. It resolves user and group names through `IIdentityProvider`, honors GNU name-first and forced `+ID` syntax, supports reference and `--from` ownership, separates recursive traversal from terminal dereferencing, and combines E3 observations with ownership-aware E4 preconditions and E5 postorder recursion. The system mutation provider uses `chown` and `lchown` on supported Unix hosts and returns a controlled unsupported result on Windows.

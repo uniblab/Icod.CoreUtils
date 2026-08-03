@@ -1,33 +1,88 @@
-// Original behavior/reference: GNU coreutils
+// Original behavior/reference: GNU Coreutils 9.11 chgrp.c
 // Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
 
 namespace Icod.CoreUtils.Chgrp;
 
-using System;
-using System.IO;
+using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CoreUtils.Shared.FileSystem.Metadata;
+using Icod.CoreUtils.Shared.FileSystem.Mutation;
+using Icod.CoreUtils.Shared.FileSystem.Ownership;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
+using Icod.CoreUtils.Shared.Platform;
 
-/// <summary>
-/// chgrp: change group ownership of files.
-/// Best-effort implementation: Not implemented with BCL-only approach.
-/// True POSIX group changes require platform-specific APIs; this implementation throws NotImplementedException.
-/// </summary>
+/// <summary>Implements GNU <c>chgrp</c> through the shared ownership policy.</summary>
 public static class Command {
-	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
-		stderr ??= Console.Error;
-		if ( args.Length < 2 ) {
-			stderr.WriteLine( "chgrp: missing operand" );
-			return 1;
-		}
-
-		// First arg is group, remaining are files
-		var group = args[ 0 ];
-		var rem = new System.Collections.Generic.List<string>();
-		for ( var i = 1; i < args.Length; i++ ) {
-			rem.Add( args[ i ] );
-		}
-
-		// BCL does not provide a portable way to set file group on all platforms.
-		// Following your policy: throw NotImplementedException when true POSIX semantics are impossible.
-		throw new NotImplementedException( "chgrp: changing group is not implemented using BCL-only; requires platform-specific APIs." );
+	/// <summary>Runs <c>chgrp</c> synchronously against optional caller-owned streams.</summary>
+	/// <param name="args">The command-line arguments.</param>
+	/// <param name="stdin">The standard-input reader.</param>
+	/// <param name="stdout">The standard-output writer.</param>
+	/// <param name="stderr">The standard-error writer.</param>
+	/// <returns>The command exit status.</returns>
+	public static int Run(
+		string[] args,
+		TextReader? stdin = null,
+		TextWriter? stdout = null,
+		TextWriter? stderr = null
+	) {
+		var context = new CommandContext(
+			"chgrp",
+			stdin ?? Console.In,
+			stdout ?? Console.Out,
+			stderr ?? Console.Error
+		);
+		return RunAsync( args, context ).AsTask().GetAwaiter().GetResult();
 	}
+
+	/// <summary>Runs <c>chgrp</c> asynchronously with system providers.</summary>
+	/// <param name="args">The command-line arguments.</param>
+	/// <param name="context">The command context, or <see langword="null"/> for console streams.</param>
+	/// <returns>The command exit status.</returns>
+	public static ValueTask<int> RunAsync( string[] args, CommandContext? context = null ) {
+		return RunAsync(
+			args,
+			context ?? CommandContext.CreateConsole( "chgrp" ),
+			SystemReadOnlyFileSystemProvider.Instance,
+			SystemFileSystemMetadataProvider.Instance,
+			SystemFileSystemMutationProvider.Instance,
+			SystemIdentityProvider.Instance
+		);
+	}
+
+	/// <summary>Runs <c>chgrp</c> asynchronously with injected providers.</summary>
+	/// <param name="args">The command-line arguments.</param>
+	/// <param name="context">The command context.</param>
+	/// <param name="readOnlyProvider">The E1 traversal provider.</param>
+	/// <param name="metadataProvider">The E3 metadata provider.</param>
+	/// <param name="mutationProvider">The E4 mutation provider.</param>
+	/// <param name="identityProvider">The user and group identity provider.</param>
+	/// <returns>The command exit status.</returns>
+	public static ValueTask<int> RunAsync(
+		string[] args,
+		CommandContext context,
+		IReadOnlyFileSystemProvider readOnlyProvider,
+		IFileSystemMetadataProvider metadataProvider,
+		IFileSystemMutationProvider mutationProvider,
+		IIdentityProvider identityProvider
+	) => OwnershipCommandRunner.RunAsync(
+		OwnershipCommandKind.Chgrp,
+		args,
+		context,
+		readOnlyProvider,
+		metadataProvider,
+		mutationProvider,
+		identityProvider
+	);
+
+	/// <summary>Writes GNU-compatible <c>chgrp</c> usage text.</summary>
+	/// <param name="output">The destination writer.</param>
+	/// <param name="cancellationToken">The cancellation token.</param>
+	/// <returns>A task that completes when usage is written.</returns>
+	public static ValueTask WriteUsageAsync(
+		TextWriter output,
+		CancellationToken cancellationToken = default
+	) => OwnershipCommandRunner.WriteUsageAsync(
+		OwnershipCommandKind.Chgrp,
+		output,
+		cancellationToken
+	);
 }

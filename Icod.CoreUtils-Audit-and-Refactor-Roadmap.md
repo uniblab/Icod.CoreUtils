@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `41` |
-| Current engineering milestone | Batch 42 — `chown` and `chgrp` |
+| Completed command batches | `0` through `42` |
+| Current engineering milestone | Batch 43 — `rm` |
 | Completed infrastructure milestone | Completion Gates E2 through E5 — canonical paths, authoritative metadata, pathname-indirection characterization, mode expressions, single-path mutation, and recursive mutation/copy planning |
 | Active infrastructure dependency | Completion Gate E6 — transactional replacement before Batch 44 |
-| Next command batch | Batch 42 — `chown` and `chgrp` |
+| Next command batch | Batch 43 — `rm` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -231,7 +231,7 @@ Man7 pages are useful synopses and secondary references, but they must not repla
    Unknown or unsupported options are ignored by some commands. Unsupported platform behavior sometimes returns success. Both patterns are incompatible with a conformance-oriented port.
 
 2. **Several commands still throw unhandled `NotImplementedException`.**
-   The existing `chown`, `chgrp`, `runcon`, and `chroot` implementations are examples. Unsupported operations must produce a controlled diagnostic and documented nonzero status.
+   The existing `runcon` and `chroot` implementations are examples. Unsupported operations must produce a controlled diagnostic and documented nonzero status.
 
 3. **Some commands delegate their defining operation to an installed native utility.**
    Examples include portions of `link`, `chcon`, `install`, and `stdbuf`. Production implementations must not obtain apparent compatibility by invoking the same host utility. Native utilities may be used only by optional differential tests.
@@ -1072,12 +1072,12 @@ Patch is not a recursive-copy consumer and does not wait for all of E5 merely to
 
 Batch 41 replaces the former Windows read-only approximation with an asynchronous GNU-compatible command over the E3 metadata, E4 mutation, and E5 recursive-traversal contracts. It uses `FileModeParser` and `FileModeExpression` for absolute numeric, operator-numeric, and symbolic clauses; applies the process creation mask when symbolic clauses omit `who`; supports `--reference`, recursive traversal, command-line-versus-descendant link policy, `--dereference`, `--no-dereference`, opt-in `--preserve-root`, quiet, changes-only, and verbose reporting; and carries identity-bearing preconditions into every mode mutation. Native Windows reports POSIX mode observation or mutation as unsupported and never substitutes `FileAttributes.ReadOnly`. A dedicated `ChMod.Tests` project covers octal and symbolic modes, reference modes, recursive preconditions, preserve-root, reporting, quiet failures, and Windows non-emulation. Full Windows, Ubuntu, and macOS CI remains the repository merge gate.
 
-### Batch 42 — Ownership and group mutation (2 tools)
+### Batch 42 — Ownership and group mutation (2 tools) — implemented
 
-- [ ] `chown`
-- [ ] `chgrp`
+- [x] `chown`
+- [x] `chgrp`
 
-Replace `NotImplementedException` with real Unix ownership operations and controlled non-Unix diagnostics. Implement names and numeric IDs, reference files, dereference policies, recursive traversal, from-filtering, preserve-root, and verbose/change reporting.
+Implemented real Unix UID/GID mutation through E4 `chown`/`lchown` adapters with controlled unsupported diagnostics elsewhere. Shared ownership policy resolves users and groups with GNU name-first and forced `+ID` disambiguation, supports owner-only, group-only, `owner:group`, `owner:`, `:group`, no-op `:`, limited legacy `owner.group`, `--reference`, and ownership-aware `--from` filtering. Recursive operation uses E5 preserve-root preflight and postorder directory mutation; `-H`/`-L`/`-P` traversal remains independent from `--dereference`/`--no-dereference` mutation targeting; and E4 revalidates stable identity plus optional current UID/GID before mutation. Reporting honors option encounter order, changes-only, verbose success/retention/failure, and quiet diagnostics. Dedicated `ChOwn.Tests`, `ChGrp.Tests`, and shared host-mutation tests cover resolution, references, filtering, recursion, dereference policy, race preconditions, reporting, Windows non-emulation, and controlled failures. Full Windows, Ubuntu, and macOS CI remains the repository merge gate.
 
 ### Batch 43 — Recursive removal (1 tool)
 

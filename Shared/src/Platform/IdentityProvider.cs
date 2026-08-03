@@ -45,6 +45,28 @@ public interface IIdentityProvider {
 	ValueTask<UserIdentity?> FindUserAsync( string userName, CancellationToken cancellationToken = default );
 	/// <summary>Finds a user by numeric user ID.</summary>
 	ValueTask<UserIdentity?> FindUserByIdAsync( string userId, CancellationToken cancellationToken = default );
+	/// <summary>Finds a group by group name.</summary>
+	/// <param name="groupName">The group name to resolve.</param>
+	/// <param name="cancellationToken">The cancellation token.</param>
+	/// <returns>The matching group, or <see langword="null"/> when no group matches.</returns>
+	ValueTask<GroupIdentity?> FindGroupAsync(
+		string groupName,
+		CancellationToken cancellationToken = default
+	) {
+		cancellationToken.ThrowIfCancellationRequested();
+		return ValueTask.FromResult<GroupIdentity?>( null );
+	}
+	/// <summary>Finds a group by numeric group ID.</summary>
+	/// <param name="groupId">The numeric group ID text.</param>
+	/// <param name="cancellationToken">The cancellation token.</param>
+	/// <returns>The matching group, or <see langword="null"/> when no group matches.</returns>
+	ValueTask<GroupIdentity?> FindGroupByIdAsync(
+		string groupId,
+		CancellationToken cancellationToken = default
+	) {
+		cancellationToken.ThrowIfCancellationRequested();
+		return ValueTask.FromResult<GroupIdentity?>( null );
+	}
 	/// <summary>Gets the login-session name, which may differ from the effective user.</summary>
 	ValueTask<string?> GetLoginNameAsync( CancellationToken cancellationToken = default );
 }
@@ -115,6 +137,43 @@ public sealed class SystemIdentityProvider : IIdentityProvider {
 		return ValueTask.FromResult( ResolveUser( numericId ) );
 	}
 
+	/// <inheritdoc />
+	public ValueTask<GroupIdentity?> FindGroupAsync(
+		string groupName,
+		CancellationToken cancellationToken = default
+	) {
+		ArgumentException.ThrowIfNullOrWhiteSpace( groupName );
+		cancellationToken.ThrowIfCancellationRequested();
+		if ( !IsUnix ) {
+			var current = CreatePortableIdentity().EffectiveGroup;
+			return ValueTask.FromResult<GroupIdentity?>(
+				string.Equals( current.Name, groupName, StringComparison.OrdinalIgnoreCase )
+					? current
+					: null
+			);
+		}
+		return ValueTask.FromResult( TryResolveGroup( groupName ) );
+	}
+	/// <inheritdoc />
+	public ValueTask<GroupIdentity?> FindGroupByIdAsync(
+		string groupId,
+		CancellationToken cancellationToken = default
+	) {
+		ArgumentException.ThrowIfNullOrWhiteSpace( groupId );
+		cancellationToken.ThrowIfCancellationRequested();
+		if ( !TryParseUserId( groupId, out var numericId ) ) {
+			return ValueTask.FromResult<GroupIdentity?>( null );
+		}
+		if ( !IsUnix ) {
+			var current = CreatePortableIdentity().EffectiveGroup;
+			return ValueTask.FromResult<GroupIdentity?>(
+				current.Id == numericId.ToString( System.Globalization.CultureInfo.InvariantCulture )
+					? current
+					: null
+			);
+		}
+		return ValueTask.FromResult( TryResolveGroup( numericId ) );
+	}
 	/// <inheritdoc />
 	public ValueTask<string?> GetLoginNameAsync( CancellationToken cancellationToken = default ) {
 		cancellationToken.ThrowIfCancellationRequested();
@@ -221,22 +280,40 @@ public sealed class SystemIdentityProvider : IIdentityProvider {
 	}
 
 	private static GroupIdentity ResolveGroup( uint groupId ) {
+		return TryResolveGroup( groupId ) ?? CreateUnknownGroup( groupId );
+	}
+	private static GroupIdentity? TryResolveGroup( uint groupId ) {
+		return ReadGroup(
+			( IntPtr buffer, nuint size, out Group group, out IntPtr result ) =>
+				NativeMethods.GetGroupByGid( groupId, out group, buffer, size, out result )
+		);
+	}
+	private static GroupIdentity? TryResolveGroup( string groupName ) {
+		return ReadGroup(
+			( IntPtr buffer, nuint size, out Group group, out IntPtr result ) =>
+				NativeMethods.GetGroupByName( groupName, out group, buffer, size, out result )
+		);
+	}
+	private delegate int GroupReader( IntPtr buffer, nuint size, out Group group, out IntPtr result );
+	private static GroupIdentity? ReadGroup( GroupReader reader ) {
 		for ( var bufferSize = InitialBufferSize; bufferSize <= MaximumBufferSize; bufferSize *= 2 ) {
 			var buffer = Marshal.AllocHGlobal( bufferSize );
 			try {
-				var error = NativeMethods.GetGroupByGid( groupId, out var group, buffer, (nuint)bufferSize, out var result );
+				var error = reader( buffer, (nuint)bufferSize, out var group, out var result );
 				if ( Erange == error ) continue;
-				var id = groupId.ToString( System.Globalization.CultureInfo.InvariantCulture );
-				if ( 0 != error || IntPtr.Zero == result ) return new GroupIdentity( id, id );
+				if ( 0 != error || IntPtr.Zero == result ) return null;
+				var id = group.GroupId.ToString( System.Globalization.CultureInfo.InvariantCulture );
 				return new GroupIdentity( id, Marshal.PtrToStringUTF8( group.Name ) ?? id );
 			} finally {
 				Marshal.FreeHGlobal( buffer );
 			}
 		}
-		var fallback = groupId.ToString( System.Globalization.CultureInfo.InvariantCulture );
-		return new GroupIdentity( fallback, fallback );
+		return null;
 	}
-
+	private static GroupIdentity CreateUnknownGroup( uint groupId ) {
+		var id = groupId.ToString( System.Globalization.CultureInfo.InvariantCulture );
+		return new GroupIdentity( id, id );
+	}
 	private static IReadOnlyList<GroupIdentity> ResolveGroups( IEnumerable<uint> groupIds ) => groupIds
 		.Distinct()
 		.Select( ResolveGroup )
@@ -381,6 +458,11 @@ public sealed class SystemIdentityProvider : IIdentityProvider {
 		/// </summary>
 		[DllImport( "libc", EntryPoint = "getgrgid_r" )]
 		internal static extern int GetGroupByGid( uint groupId, out Group group, IntPtr buffer, nuint bufferSize, out IntPtr result );
+		/// <summary>
+		/// Gets group by name.
+		/// </summary>
+		[DllImport( "libc", EntryPoint = "getgrnam_r", CharSet = CharSet.Ansi )]
+		internal static extern int GetGroupByName( string groupName, out Group group, IntPtr buffer, nuint bufferSize, out IntPtr result );
 		/// <summary>
 		/// Gets login name.
 		/// </summary>
