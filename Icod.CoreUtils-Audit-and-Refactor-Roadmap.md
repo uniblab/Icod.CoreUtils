@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `37` |
-| Current engineering milestone | Batch 38 — basic directory and name removal |
+| Completed command batches | `0` through `38` |
+| Current engineering milestone | Batch 39 — hard and symbolic links |
 | Completed infrastructure milestone | Completion Gates E2, E3, E3R, and E4 — canonical paths, authoritative metadata, pathname-indirection characterization, mode expressions, and basic single-path mutation |
 | Next infrastructure dependency | Completion Gate E5 — recursive mutation and copying before Batch 41 |
-| Next command batch | Batch 38 — `mkdir`, `rmdir`, and `unlink` |
+| Next command batch | Batch 39 — `link` and `ln` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1013,11 +1013,15 @@ Wave C is implemented. P8 now materializes explicit target, backup, reject, outp
 
 ### Batch 38 — Basic directory and name removal (3 tools)
 
-- [ ] `mkdir`
-- [ ] `rmdir`
-- [ ] `unlink`
+- [x] `mkdir`
+- [x] `rmdir`
+- [x] `unlink`
 
 Implement modes, parents, verbose/context policy, ignore-fail behavior, parent removal, exact operand rules, and deterministic handling of files versus directories. These commands validate the new filesystem adapter without yet introducing recursive deletion.
+
+Batch 38 is implemented over the E3/E3R metadata and E4 single-path mutation contracts. `mkdir` supports numeric and symbolic modes, process-umask behavior without persistent process-global mutation, GNU owner-write-and-search treatment for intermediate `--parents` directories, verbose creation diagnostics, and controlled security-context diagnostics. `rmdir` removes only physical empty directories, implements nonempty-only failure suppression, parent-chain processing, and verbose diagnostics, and never follows symbolic links, junctions, or other reparse points.
+
+`unlink` enforces the exact one-operand contract and removes one physical non-directory name without traversal. Its explicit no-follow mutation precondition permits symbolic links, Windows junctions, and otherwise uncharacterized reparse points while protecting ordinary directories and mounted-volume reparse points. Dedicated `Icod.CoreUtils.MkDir.Tests`, `Icod.CoreUtils.RmDir.Tests`, and `Icod.CoreUtils.Unlink.Tests` projects cover mode and umask rules, parent creation and removal, nonempty handling, exact operands, links, and Windows junction safety. Full-checkout Debug, Staging, Release, and Windows/Ubuntu/macOS CI validation remain to be executed after integration.
 
 ### Batch 39 — Hard and symbolic links (2 tools)
 

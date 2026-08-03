@@ -1,21 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<OutputType>Exe</OutputType>
-		<TargetFramework>net10.0</TargetFramework>
 		<LangVersion>13.0</LangVersion>
+		<TargetFramework>net10.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<OutputPath>..\bin\$(Configuration)\</OutputPath>
-		<AssemblyName>mkdir</AssemblyName>
-		<RootNamespace>Icod.CoreUtils.MkDir</RootNamespace>
-	</PropertyGroup>
-	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
-		<PlatformTarget>AnyCPU</PlatformTarget>
+		<IsPackable>false</IsPackable>
+		<IsTestProject>true</IsTestProject>
+		<AssemblyName>Icod.CoreUtils.RmDir.Tests</AssemblyName>
+		<RootNamespace>Icod.CoreUtils.Rmdir.Tests</RootNamespace>
 	</PropertyGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\Shared\Icod.CoreUtils.Shared.csproj" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+		<PackageReference Include="xunit" Version="2.9.2" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\rmdir\Icod.CoreUtils.RmDir.csproj" />
+		<ProjectReference Include="..\..\Shared\Icod.CoreUtils.Shared.csproj" />
 	</ItemGroup>
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
 		<ErrorReport>prompt</ErrorReport>
