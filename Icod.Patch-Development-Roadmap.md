@@ -32,7 +32,7 @@ This roadmap is subordinate to the repository-wide conventions and engineering g
 | Public command class | `Icod.Patch.Command` |
 | Executable assembly name | `patch` |
 | Current repository project | `patch/Icod.Patch.csproj` |
-| Current implementation state | Waves A, B1, and B2, Phases P0-P7, implemented: normalized async front end, byte-preserving parsers, pure indexed application/matching, and secure canonical multi-file planning; no committed mutation |
+| Current implementation state | Waves A, B1, B2, and C implemented through P8 with P9 started: normalized async front end, byte-preserving parsers, pure indexed application/matching, secure canonical multi-file planning, explicit artifact policy, and provisional staged transaction commits |
 | Current dedicated test project | `tests/Patch.Tests/Icod.Patch.Tests.csproj` |
 | Required target framework | `net10.0` |
 | Required language version | C# 13 |
@@ -41,8 +41,8 @@ This roadmap is subordinate to the repository-wide conventions and engineering g
 | Additional platform goal | Best-effort BSD support |
 | Repository status | Co-resident in `Icod.CoreUtils.sln` until Completion Gate G |
 | Scheduling model | Dependency-aligned partial order with Completion Gates E2–E6 |
-| Completed scheduled waves | Wave A, P0–P4; Wave B1, P5–P6; and Wave B2, P7 |
-| Detailed ordering status | P0–P7 implemented; P8 awaits Completion Gates E3 and E4 |
+| Completed scheduled waves | Wave A, P0–P4; Wave B1, P5–P6; Wave B2, P7; and Wave C, P8 plus the initial P9 boundary |
+| Detailed ordering status | P0–P8 implemented; P9 started over E3/E3R/E4 and remains provisional until the E6-facing contract is closed |
 
 ---
 
@@ -50,7 +50,7 @@ This roadmap is subordinate to the repository-wide conventions and engineering g
 
 Wave A, Phases P0 through P4, was implemented on August 1, 2026; full-checkout build and CI validation remain pending. The historical private `+`/`-` mutation format was removed rather than retained as a compatibility mode. The replacement front end uses the shared asynchronous `CommandContext` and `OptionParser`, accepts standard input, `-i`, and GNU-style operands, and feeds a bounded spill-backed source model. The source layer preserves byte offsets and LF, CRLF, CR, and incomplete-final-record state while identifying multiple sections and surrounding text. Complete unified, context, normal, and patch-compatible ed-script parsers now normalize file patches and hunks into immutable byte-preserving models while retaining exact source records for later reject generation.
 
-The executable still deliberately refuses to mutate live targets. Wave B1 provides the pure virtual application engine, and Wave B2 now resolves filename evidence into secure canonical multi-file plans. Artifact creation and committed replacement remain deferred to P8 and later phases.
+At the end of Wave A the executable still deliberately refused to mutate live targets. Wave B1 then supplied the pure virtual application engine, Wave B2 resolved filename evidence into secure canonical multi-file plans, and Wave C added artifact creation plus provisional committed replacement.
 
 The GNU patch 2.8 release archive metadata, official SHA-256, signing fingerprint, and `v2.8` source ref are recorded in `patch/upstream/GNU-patch-2.8.md`. Debug/Release and three-runner execution remain an integration validation item after these files are applied to a complete checkout.
 
@@ -58,13 +58,21 @@ The GNU patch 2.8 release archive metadata, official SHA-256, signing fingerprin
 
 Wave B1, Phases P5 and P6, is implemented as a pure application layer. It indexes existing target bytes in memory or in owner-private spill files; preserves each original record terminator; applies unified, context, normal, and ed operations; carries accumulated line deltas across multiple hunks; and returns immutable virtual-file results whose storage is independent from the input. Matching proceeds at the predicted location, then by alternating forward and backward offsets with forward tie preference, and only then by increasing fuzz. Horizontal blank runs can be canonicalized, reverse and already-applied input is detected from the first hunk and virtual existence state, and force, forward-only, batch, prerequisite, injected decision, and merge/diff3 policy are explicit engine inputs.
 
-Wave B2 now supplies filename selection, canonical paths, containment, and multi-file state over the pure engine. The executable still stops before artifact creation and committed application. Full-checkout managed build/test and all three CI runners remain pending integration validation.
+Wave B2 supplied filename selection, canonical paths, containment, and multi-file state over the pure engine. Wave C now consumes that plan for artifact creation and provisional committed application. Full-checkout managed build/test and all three CI runners remain pending integration validation.
 
 ## Wave B2 implementation status
 
 Wave B2, Phase P7, is implemented as a read-only planning layer over `Icod.Path`. It decodes quoted filename evidence, extracts `Index:` candidates, honors explicit original-file operands, applies `-d` and platform-aware component stripping, ranks GNU candidates or selects the first existing POSIX candidate, and resolves every eligible target physically beneath the canonical working root. It models virtual creation and deletion, carries immutable state across multiple file patches, aggregates per-file statuses, and exposes revision-control retrieval through an injected provider and explicit disabled/ask/enabled policy.
 
-P7 deliberately rejects lexical traversal, cross-volume targets, and links or reparse points that resolve outside the working root. Terminal links require `--follow-symlinks`. This containment policy is intentionally stricter than historical permissive absolute-path behavior and is recorded as a security divergence. P7 performs no target, backup, reject, output, metadata, mode, or transaction mutation.
+P7 deliberately rejects lexical traversal, cross-volume targets, and links or reparse points that resolve outside the working root. Terminal links require `--follow-symlinks`. This containment policy is intentionally stricter than historical permissive absolute-path behavior and is recorded as a security divergence. P7 itself performs no target, backup, reject, output, metadata, mode, or transaction mutation; Wave C consumes its immutable plan.
+
+Full-checkout Debug/Release and Windows, Ubuntu, and macOS CI validation remain pending after integration.
+
+## Wave C implementation status
+
+Wave C closes Phase P8 and starts Phase P9. The command now converts final P7 virtual state into immutable target, backup, reject, alternate-output, standard-output, and validation-only artifacts. GNU-visible policy includes simple and numbered backup naming, `PATCH_VERSION_CONTROL` and `VERSION_CONTROL` precedence, prefix and suffix interactions, automatic/context/unified rejects, `-o`, `-o -`, dry runs, quiet/verbose diagnostics, deterministic prompts, filename quoting, status aggregation, broken-output handling, normal replacement timestamps, requested local/UTC header timestamps including post-2038 values, and portable mode preservation through E3 and E4. Output, backup, and reject pathnames consume E2 final-indirection policy so GNU patch 2.8's `--follow-symlinks` rule applies to both input and output artifacts.
+
+The initial P9 boundary is implemented through injectable `IPatchFileSystem` and `IPatchTransaction` contracts. It observes E3 identity and metadata, stages complete owner-private sibling files through E4 exclusive creation, preserves rollback copies before mutation, revalidates every destination and validation-only source immediately before commit, applies mode and timestamp metadata, and performs deterministic rollback and cleanup after injected failure or cancellation. The adapter is explicitly provisional: it supplies concrete E6 requirements and adversarial tests but does not claim final atomic replacement, crash recovery, or completed P9 transaction conformance.
 
 Full-checkout Debug/Release and Windows, Ubuntu, and macOS CI validation remain pending after integration.
 
@@ -74,7 +82,7 @@ Full-checkout Debug/Release and Windows, Ubuntu, and macOS CI validation remain 
 
 The historical Patch seed was not an incomplete GNU patch implementation in the ordinary sense. It consumed a private `+`/`-` line-command format associated with the repository's former simplified Diff output, decoded complete files as UTF-8 text, created a `.orig` backup, and rewrote the target directly.
 
-Waves A, B1, and B2, P0 through P7, have now replaced that seed with a GNU-oriented command boundary, byte-preserving source model, complete syntax parsers, a pure virtual application/matching engine, and secure canonical multi-file planning. The current implementation:
+Waves A, B1, B2, and C, P0 through P8 with P9 started, have now replaced that seed with a GNU-oriented command boundary, byte-preserving source model, complete syntax parsers, a pure virtual application/matching engine, secure canonical multi-file planning, explicit artifact policy, and a provisional injected transaction boundary. The current implementation:
 
 - uses asynchronous orchestration and the shared `CommandContext` and `OptionParser`;
 - accepts patch input from standard input, `-i`, or the GNU-style patch-file operand position;
@@ -86,7 +94,7 @@ Waves A, B1, and B2, P0 through P7, have now replaced that seed with a GNU-orien
 - has a dedicated Patch test project and separated fixture provenance;
 - exposes pure exact/offset/fuzz/reverse/prerequisite/merge application over immutable virtual target content;
 - consumes `Icod.Path` for `-d`, platform-aware `-p`, roots, volumes, links, containment, missing components, explicit operands, quoted and `Index:` names, and multi-file state;
-- returns controlled trouble after planning because P8 and later phases own artifacts, prompts, metadata/mode behavior, and committed replacement.
+- materializes target, backup, reject, output, standard-output, and validation-only artifacts, then commits filesystem changes through an injected provisional transaction boundary.
 
 The former private syntax remains only as characterized historical evidence and is not exposed as a compatibility mode.
 
@@ -358,7 +366,7 @@ The public command class should expose the repository's established synchronous 
 
 ## Current command implementation
 
-The Wave B2 command is a GNU-oriented front end over complete syntax parsers, a pure virtual target applicator, and a secure path planner. It:
+The Wave C command is a GNU-oriented front end over complete syntax parsers, a pure virtual target applicator, secure path planning, explicit artifact policy, and a provisional injected transaction boundary. It:
 
 - accepts `[ORIGFILE [PATCHFILE]]`, `-i/--input`, standard-input patch streams, `--binary`, `--help`, and `-v/--version`;
 - reserves GNU `-b` for its later `--backup` implementation rather than aliasing it to `--binary`;
@@ -371,7 +379,10 @@ The Wave B2 command is a GNU-oriented front end over complete syntax parsers, a 
 - implements `-d`, `-p`, `-g`, `--posix`, `POSIXLY_CORRECT`, `PATCH_GET`, and input-side `--follow-symlinks`;
 - selects explicit, old, new, and `Index:` candidates through `Icod.Path`, carries state across multiple file patches, and produces virtual create/modify/delete actions;
 - rejects targets that escape the canonical working root, including through links or reparse points;
-- returns status 2 after planning because artifacts, complete prompts/statuses, and committed filesystem replacement begin in P8 and later phases.
+- materializes target, backup, reject, output, standard-output, and validation-only artifacts with explicit metadata and expected-identity evidence;
+- implements GNU backup version control, mismatch backups, reject naming and formatting, `-o`, `-r`, dry runs, quiet/verbose output, deterministic prompts, filename quoting, timestamp policy, and statuses 0, 1, and 2;
+- stages every committed write behind an injected provisional transaction boundary with exclusive sibling temporaries, pre-commit revalidation, rollback copies, failure injection, cancellation cleanup, and no-follow output policy;
+- keeps the P9 replacement adapter provisional until Completion Gate E6 supplies the shared final atomic replacement contract.
 
 The implementation preserves the public namespace `Icod.Patch`, lowercase assembly name `patch`, and public `Command` facade. The private simplified format has been removed and remains covered only by a retirement characterization test.
 
@@ -381,7 +392,7 @@ The implementation preserves the public namespace `Icod.Patch`, lowercase assemb
 
 P0 created `tests/Patch.Tests/Icod.Patch.Tests.csproj` with root namespace `Icod.Patch.Tests`, `InternalsVisibleTo` access to the internal detector, and Debug, Staging, and Release solution mappings beneath the top-level `tests` solution folder.
 
-The suite covers direct command invocation, process-host help and diagnostics, source selection, operand conflicts, retirement of the private syntax, non-mutation, cancellation, status accumulation, every parsed format, separated fixture roots, source offsets and terminators, multiple sections, leading/interstitial/trailing text, headers and timestamps, ranges, hunk counts, context-copy consistency, normal data blocks, ed reverse ordering and dot protection, malformed directives and filenames, binary records, resource limits, deterministic scanner fuzz input, exact temporary-spool cleanup, indexed target round trips, spill-backed target and result lifecycles, exact and multi-hunk application, ed interpretation, creation/deletion, offsets, fuzz, whitespace matching, reversal, already-applied policy, prerequisites, merge/diff3 output, candidate limits, randomized invariants, GNU/POSIX filename ranking, `-d`, platform-aware `-p`, quoted and `Index:` names, roots, volumes, links, reparse points, containment, retrieval policy, multi-file state, path attacks, and opt-in GNU patch 2.8 differential checks.
+The suite covers direct command invocation, process-host help and diagnostics, source selection, operand conflicts, retirement of the private syntax, dry-run immutability, cancellation, status accumulation, every parsed format, separated fixture roots, source offsets and terminators, multiple sections, leading/interstitial/trailing text, headers and timestamps, ranges, hunk counts, context-copy consistency, normal data blocks, ed reverse ordering and dot protection, malformed directives and filenames, binary records, resource limits, deterministic scanner fuzz input, exact temporary-spool cleanup, indexed target round trips, spill-backed target and result lifecycles, exact and multi-hunk application, ed interpretation, creation/deletion, offsets, fuzz, whitespace matching, reversal, already-applied policy, prerequisites, merge/diff3 output, candidate limits, randomized invariants, GNU/POSIX filename ranking, `-d`, platform-aware `-p`, quoted and `Index:` names, roots, volumes, links, reparse points, containment, retrieval policy, multi-file state, path attacks, backups, rejects, output files, binary standard output, post-2038 timestamps, Unix modes, output symlinks, skipped/all-failed policies, rollback, stale-identity rejection, injected failures, cancellation cleanup, and opt-in GNU patch 2.8 differential checks.
 
 A separate parser or engine test project is not currently justified. Full solution builds and Windows, Ubuntu, and macOS CI execution remain integration validation items.
 
@@ -1442,7 +1453,7 @@ E2 + Batch 35
 Wave B2: P7
 E3 + Batch 36 + Batch 37
 E4
-Wave C: P8 and P9 start
+Wave C: P8 complete and P9 started
 Batches 38–40
 E5 + Batches 41–43
 Wave D: P9 and P10 close
@@ -1584,42 +1595,46 @@ P7 is complete. The application plan owns all virtual input and result storage a
 
 ## Phase P8 — Rejects, backups, output, and user interaction
 
-**Hard prerequisites:** P7, Completion Gate E3, and Completion Gate E4.
+**Hard prerequisites:** P7, Completion Gates E3, E3R, and E4.
 
-- [ ] Implement reject generation.
-- [ ] Implement reject naming and explicit reject destinations.
-- [ ] Implement backup policy.
-- [ ] Implement backup names and version-control styles.
-- [ ] Consume E3 timestamp, metadata, identity, and availability contracts.
-- [ ] Consume E4 mode, creation/deletion, no-follow, and race-aware single-path contracts.
-- [ ] Implement output-file mode.
-- [ ] Implement dry run.
-- [ ] Implement verbosity and silence.
-- [ ] Implement deterministic prompts and noninteractive behavior.
-- [ ] Implement filename quoting.
-- [ ] Implement complete exit statuses.
-- [ ] Add metadata, mode, write-failure, and broken-pipe tests.
-- [ ] Keep GNU Patch artifact and prompt policy above the shared mechanisms.
+- [x] Implement reject generation.
+- [x] Implement reject naming and explicit reject destinations.
+- [x] Implement backup policy.
+- [x] Implement backup names and version-control styles.
+- [x] Consume E3 timestamp, metadata, identity, and availability contracts.
+- [x] Consume E4 mode, creation/deletion, no-follow, and race-aware single-path contracts.
+- [x] Implement output-file mode.
+- [x] Implement dry run.
+- [x] Implement verbosity and silence.
+- [x] Implement deterministic prompts and noninteractive behavior.
+- [x] Implement filename quoting.
+- [x] Implement complete exit statuses.
+- [x] Add metadata, mode, write-failure, and broken-pipe tests.
+- [x] Keep GNU Patch artifact and prompt policy above the shared mechanisms.
+
+P8 is complete. Artifact policy remains Patch-specific while canonical path, metadata, mode, timestamp, and single-path mutation behavior are consumed from E2 through E4.
 
 ## Phase P9 — E6-facing filesystem isolation and safety
 
-**Start prerequisites:** P6 and Completion Gate E4.  
+**Start prerequisites:** P6 and Completion Gate E4.
 **Closure prerequisites:** P8 and the agreed E6-facing contract.
 
 This phase starts during the E4/E5 validator batches and proceeds concurrently with E6 contract design.
 
-- [ ] Put all target mutation behind `IPatchFileSystem`, `IPatchTransaction`, or equivalent injected boundaries.
-- [ ] Use exclusive secure temporary creation.
-- [ ] Ensure no original is removed before a complete replacement is ready.
-- [ ] Add failure injection at every stage.
-- [ ] Add cancellation cleanup.
-- [ ] Add symlink and reparse-point characterization.
-- [ ] Model target, backup, reject, and output artifacts explicitly.
-- [ ] Model GNU-visible multi-file partial success separately from per-file recoverability.
-- [ ] Keep parser and matcher independent from filesystem mutation.
-- [ ] Mark command-local replacement code provisional.
+- [x] Put all target mutation behind `IPatchFileSystem`, `IPatchTransaction`, or equivalent injected boundaries.
+- [x] Use exclusive secure temporary creation.
+- [x] Ensure no original is removed before a complete replacement is ready.
+- [x] Add failure injection at every stage.
+- [x] Add cancellation cleanup.
+- [x] Add symlink and reparse-point characterization.
+- [x] Model target, backup, reject, and output artifacts explicitly.
+- [x] Model GNU-visible multi-file partial success separately from per-file recoverability.
+- [x] Keep parser and matcher independent from filesystem mutation.
+- [x] Mark command-local replacement code provisional.
 - [ ] Supply Patch requirements and adversarial cases to Completion Gate E6.
-- [ ] Do not claim final transaction conformance.
+- [x] Do not claim final transaction conformance.
+
+P9 has started. The checked items describe the implemented provisional boundary; supplying and freezing the complete E6 contract, atomicity profile, and remaining adversarial cases are closure work for Wave D.
 
 ## Phase P10 — Close Completion Gates E2, E3, and E4 conformance
 
@@ -1642,7 +1657,7 @@ This is a closure checkpoint, not the first integration pass.
 
 ## Phase P11 — Integrate and validate Completion Gate E6
 
-**Hard prerequisites for P11A:** P10 and Completion Gate E6.  
+**Hard prerequisites for P11A:** P10 and Completion Gate E6.
 **Hard prerequisites for P11B:** P11A and Batches 44 and 45.
 
 ### Phase P11A — Initial Patch integration

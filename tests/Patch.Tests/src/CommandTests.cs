@@ -45,16 +45,17 @@ public sealed class CommandTests {
 			"--- a/file.txt\n+++ b/file.txt\n@@ -1 +1 @@\n-old\n+new\n"
 		);
 		var result = await RunAsync( new[] { "--binary" }, bytes );
-		Assert.Equal( 2, result.Status );
-		Assert.Contains( "filesystem artifacts and transactional replacement begin in phase P8", result.Error );
+		Assert.Equal( 1, result.Status );
+		Assert.Contains( "no usable file name", result.Error );
 	}
 
-	/// <summary>Verifies that GNU's short backup option is not misused as binary mode.</summary>
+	/// <summary>Verifies that GNU's short backup option is accepted as backup policy.</summary>
 	[Fact]
-	public async Task BackupShortOptionIsReservedRatherThanTreatedAsBinary() {
+	public async Task BackupShortOptionIsAcceptedAsBackupPolicy() {
 		var result = await RunAsync( new[] { "-b" } );
 		Assert.Equal( 2, result.Status );
-		Assert.Contains( "reserved for a later Icod.Patch phase", result.Error );
+		Assert.Contains( "Only garbage was found", result.Error );
+		Assert.DoesNotContain( "reserved for a later Icod.Patch phase", result.Error );
 	}
 
 	/// <summary>Verifies abbreviations are resolved against the complete GNU 2.8 option inventory.</summary>
@@ -73,8 +74,8 @@ public sealed class CommandTests {
 		);
 		try {
 			var result = await RunAsync( new[] { "--inp", path } );
-			Assert.Equal( 2, result.Status );
-			Assert.Contains( "filesystem artifacts and transactional replacement begin in phase P8", result.Error );
+			Assert.Equal( 1, result.Status );
+			Assert.Contains( "no usable file name", result.Error );
 		} finally {
 			File.Delete( path );
 		}
@@ -89,8 +90,8 @@ public sealed class CommandTests {
 		using var output = new StringWriter();
 		using var error = new StringWriter();
 		var status = Command.Run( Array.Empty<string>(), input, output, error );
-		Assert.Equal( 2, status );
-		Assert.Contains( "filesystem artifacts and transactional replacement begin in phase P8", error.ToString() );
+		Assert.Equal( 1, status );
+		Assert.Contains( "no usable file name", error.ToString() );
 	}
 
 	/// <summary>Verifies that excess operands are diagnosed.</summary>
@@ -108,24 +109,25 @@ public sealed class CommandTests {
 			"--- a/file.txt\n+++ b/file.txt\n@@ -1 +1 @@\n-old\n+new\n"
 		);
 		var result = await RunAsync( Array.Empty<string>(), bytes );
-		Assert.Equal( 2, result.Status );
-		Assert.Contains( "filesystem artifacts and transactional replacement begin in phase P8", result.Error );
+		Assert.Equal( 1, result.Status );
+		Assert.Contains( "no usable file name", result.Error );
 	}
 
 	/// <summary>Verifies an original-file operand may accompany a patch stream on standard input.</summary>
 	[Fact]
 	public async Task OriginalFileOperandMayUseStandardInputPatchSource() {
-		var target = await WriteTemporaryAsync( Encoding.UTF8.GetBytes( "old\n" ) );
+		var directory = CreateTemporaryDirectory();
+		var target = Path.Combine( directory, "target" );
+		await File.WriteAllTextAsync( target, "old\n" );
 		var bytes = Encoding.UTF8.GetBytes(
 			"--- target\n+++ target\n@@ -1 +1 @@\n-old\n+new\n"
 		);
 		try {
-			var result = await RunAsync( new[] { target }, bytes );
-			Assert.Equal( 2, result.Status );
-			Assert.Contains( "filesystem artifacts and transactional replacement begin in phase P8", result.Error );
-			Assert.Equal( "old\n", await File.ReadAllTextAsync( target ) );
+			var result = await RunAsync( new[] { "-d", directory, "target" }, bytes );
+			Assert.Equal( 0, result.Status );
+			Assert.Equal( "new\n", await File.ReadAllTextAsync( target ) );
 		} finally {
-			File.Delete( target );
+			Directory.Delete( directory, recursive: true );
 		}
 	}
 
@@ -137,8 +139,8 @@ public sealed class CommandTests {
 		);
 		try {
 			var result = await RunAsync( new[] { "-i", path } );
-			Assert.Equal( 2, result.Status );
-			Assert.Contains( "filesystem artifacts and transactional replacement begin in phase P8", result.Error );
+			Assert.Equal( 1, result.Status );
+			Assert.Contains( "no usable file name", result.Error );
 		} finally {
 			File.Delete( path );
 		}
@@ -153,21 +155,24 @@ public sealed class CommandTests {
 		Assert.Contains( "Only garbage was found", result.Error );
 	}
 
-	/// <summary>Verifies that Wave A never mutates an original-file operand.</summary>
+	/// <summary>Verifies Wave C commits a successfully applied target artifact.</summary>
 	[Fact]
-	public async Task RecognizedPatchDoesNotMutateTarget() {
-		var target = await WriteTemporaryAsync( Encoding.UTF8.GetBytes( "old\n" ) );
-		var patch = await WriteTemporaryAsync(
-			Encoding.UTF8.GetBytes( "--- target\n+++ target\n@@ -1 +1 @@\n-old\n+new\n" )
+	public async Task RecognizedPatchMutatesTarget() {
+		var directory = CreateTemporaryDirectory();
+		var target = Path.Combine( directory, "target" );
+		var patch = Path.Combine( directory, "change.patch" );
+		await File.WriteAllTextAsync( target, "old\n" );
+		await File.WriteAllTextAsync(
+			patch,
+			"--- target\n+++ target\n@@ -1 +1 @@\n-old\n+new\n"
 		);
 		try {
-			var result = await RunAsync( new[] { target, patch } );
-			Assert.Equal( 2, result.Status );
-			Assert.Equal( "old\n", await File.ReadAllTextAsync( target ) );
+			var result = await RunAsync( new[] { "-d", directory, "target", "change.patch" } );
+			Assert.Equal( 0, result.Status );
+			Assert.Equal( "new\n", await File.ReadAllTextAsync( target ) );
 			Assert.False( File.Exists( string.Concat( target, ".orig" ) ) );
 		} finally {
-			File.Delete( target );
-			File.Delete( patch );
+			Directory.Delete( directory, recursive: true );
 		}
 	}
 
@@ -181,8 +186,8 @@ public sealed class CommandTests {
 	[InlineData( "-e", "1c\nnew\n.\n" )]
 	public async Task ExplicitFormatOptionsAreAccepted( string option, string patchText ) {
 		var result = await RunAsync( new[] { option }, Encoding.UTF8.GetBytes( patchText ) );
-		Assert.Equal( 2, result.Status );
-		Assert.Contains( "filesystem artifacts and transactional replacement begin in phase P8", result.Error );
+		Assert.Equal( 1, result.Status );
+		Assert.DoesNotContain( "Only garbage was found", result.Error );
 	}
 
 	/// <summary>Verifies mutually exclusive format-selection options are diagnosed.</summary>
@@ -245,6 +250,15 @@ public sealed class CommandTests {
 			input
 		);
 		return ( status, output.ToString(), error.ToString() );
+	}
+
+	private static string CreateTemporaryDirectory() {
+		var path = Path.Combine(
+			Path.GetTempPath(),
+			string.Concat( "patch-test-", Guid.NewGuid().ToString( "N" ) )
+		);
+		Directory.CreateDirectory( path );
+		return path;
 	}
 
 	private static async Task<string> WriteTemporaryAsync( byte[] bytes ) {

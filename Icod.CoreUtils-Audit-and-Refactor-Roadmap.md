@@ -238,7 +238,7 @@ Man7 pages are useful synopses and secondary references, but they must not repla
 
 4. **Some implementations are not yet the command they claim to be.**
    - The existing `diff` implementation is not a complete difference algorithm and does not yet implement the required result-status model; it will be migrated into `Icod.DiffUtils.Diff` and corrected during the consecutive Diffutils batches.
-   - The historical `patch` seed handled a private simplified format rather than GNU patch syntax. Patch Waves A, B1, and B2, Phases P0–P7, have retired that format, normalized the co-resident `Icod.Patch` project, added byte-preserving detection and complete parsers, supplied a pure indexed application/matching engine with offsets, fuzz, reversal, prerequisites, and merge output, and added secure canonical multi-file planning over `Icod.Path`. Artifact generation, metadata/mode handling, prompts, and committed filesystem replacement remain scheduled for P8 and later phases.
+   - The historical `patch` seed handled a private simplified format rather than GNU patch syntax. Patch Waves A, B1, B2, and C, Phases P0–P8 with P9 started, have retired that format, normalized the co-resident `Icod.Patch` project, added byte-preserving detection and complete parsers, supplied a pure indexed application/matching engine with offsets, fuzz, reversal, prerequisites, and merge output, added secure canonical multi-file planning over `Icod.Path`, implemented explicit backup/reject/output/dry-run/prompt/metadata policy, and placed committed mutation behind a provisional injected transaction boundary. Final E6 atomicity and P9/P10 closure remain scheduled for later waves.
    - `link` behaves like a partial `ln` front end rather than the simple two-operand hard-link command.
    - `chmod` does not yet implement GNU/POSIX numeric and symbolic mode semantics correctly.
    - `tar` needs correct entry typing, metadata handling, and extraction-path safety.
@@ -1000,14 +1000,16 @@ This gate supports `mkdir`, `rmdir`, `unlink`, `link`, `ln`, `mkfifo`, `mknod`, 
 
 This wave begins only after Completion Gates E3, E3R, and E4 are complete. It proceeds concurrently with Batches 38 through 43 and with the design of E6.
 
-- [ ] **P8:** implement rejects, backup policy, output-file mode, dry runs, quoting, verbosity, prompts, status aggregation, and write-failure behavior over the shared metadata, timestamp, mode, and single-path capability contracts.
-- [ ] Start **P9** by placing every target mutation behind an injected Patch filesystem/transaction boundary.
-- [ ] Use secure exclusive temporary creation and guarantee that no original is removed before a complete replacement is ready.
-- [ ] Add failure injection, cancellation cleanup, E3R-based terminal-object revalidation, and provisional transaction tests.
-- [ ] Keep command-specific reject, backup, partial-application, and prompt policy above the shared mechanism.
-- [ ] Treat P9's command-local replacement internals as temporary scaffolding for E6, not as a competing permanent transaction framework.
+- [x] **P8:** implement rejects, backup policy, output-file mode, dry runs, quoting, verbosity, prompts, status aggregation, and write-failure behavior over the shared metadata, timestamp, mode, and single-path capability contracts.
+- [x] Start **P9** by placing every target mutation behind an injected Patch filesystem/transaction boundary.
+- [x] Use secure exclusive temporary creation and guarantee that no original is removed before a complete replacement is ready.
+- [x] Add failure injection, cancellation cleanup, E3R-based terminal-object revalidation, and provisional transaction tests.
+- [x] Keep command-specific reject, backup, partial-application, and prompt policy above the shared mechanism.
+- [x] Treat P9's command-local replacement internals as temporary scaffolding for E6, not as a competing permanent transaction framework.
 
 P8 depends on P7, E3, E3R, and E4. P9 may help refine the E6 contract while the E4/E5 validator batches are being implemented, but it cannot claim final transaction conformance until E6 exists.
+
+Wave C is implemented. P8 now materializes explicit target, backup, reject, output, standard-output, and validation-only artifacts; preserves modes through E3/E4; applies requested patch-header timestamps including post-2038 values; enforces GNU 2.8 input/output `--follow-symlinks`; and handles backups, rejects, dry runs, prompts, quoting, statuses, and broken output. The initial P9 adapter stages complete sibling files through E4, preserves rollback copies, revalidates E3 identities before commit, supports injected failures and cancellation, and cleans up deterministically. It remains provisional until Wave D and Completion Gate E6 close the shared replacement contract. Full-checkout Debug/Release and three-runner CI validation remain pending after integration.
 
 ### Batch 38 — Basic directory and name removal (3 tools)
 

@@ -3,7 +3,7 @@ namespace Icod.Patch;
 using System.Security;
 using Icod.CoreUtils.Shared.Diagnostics;
 
-/// <summary>Contains validated Wave B2 invocation options.</summary>
+/// <summary>Contains validated Patch Wave C invocation options.</summary>
 internal sealed class PatchOptions {
 	/// <summary>Gets or initializes the optional original-file operand.</summary>
 	public string? OriginalFile { get; init; }
@@ -54,25 +54,78 @@ internal sealed class PatchOptions {
 	/// <summary>Gets or initializes optional merge-conflict output.</summary>
 	public PatchMergeStyle MergeStyle { get; init; }
 
+	/// <summary>Gets or initializes whether every changed existing target receives a backup.</summary>
+	public bool Backup { get; init; }
+
+	/// <summary>Gets or initializes whether mismatched applications receive a backup.</summary>
+	public bool? BackupIfMismatch { get; init; }
+
+	/// <summary>Gets or initializes a prefix applied to the complete backup pathname.</summary>
+	public string? BackupPrefix { get; init; }
+
+	/// <summary>Gets or initializes a prefix applied only to the backup basename.</summary>
+	public string? BackupBasenamePrefix { get; init; }
+
+	/// <summary>Gets or initializes the simple backup suffix.</summary>
+	public string BackupSuffix { get; init; } = ".orig";
+
+	/// <summary>Gets or initializes whether <c>--suffix</c> explicitly selected simple backup naming.</summary>
+	public bool BackupSuffixSpecified { get; init; }
+
+	/// <summary>Gets or initializes the backup version-selection policy.</summary>
+	public PatchBackupVersionControl BackupVersionControl { get; init; } = PatchBackupVersionControl.Existing;
+
+	/// <summary>Gets or initializes the explicit reject destination.</summary>
+	public string? RejectFile { get; init; }
+
+	/// <summary>Gets or initializes reject serialization policy.</summary>
+	public PatchRejectFormat RejectFormat { get; init; } = PatchRejectFormat.Automatic;
+
+	/// <summary>Gets or initializes the alternate patched-output destination.</summary>
+	public string? OutputFile { get; init; }
+
+	/// <summary>Gets or initializes whether empty patched files are removed.</summary>
+	public bool RemoveEmptyFiles { get; init; }
+
+	/// <summary>Gets or initializes whether artifact planning runs without mutation.</summary>
+	public bool DryRun { get; init; }
+
+	/// <summary>Gets or initializes command diagnostic verbosity.</summary>
+	public PatchVerbosity Verbosity { get; init; } = PatchVerbosity.Normal;
+
+	/// <summary>Gets or initializes filename diagnostic quoting.</summary>
+	public PatchQuotingStyle QuotingStyle { get; init; } = PatchQuotingStyle.Shell;
+
+	/// <summary>Gets or initializes whether target timestamps come from patch headers.</summary>
+	public bool SetTime { get; init; }
+
+	/// <summary>Gets or initializes whether patch-header timestamps are interpreted as UTC.</summary>
+	public bool SetUtc { get; init; }
+
 	/// <summary>Gets whether later interactive prompts may own standard input.</summary>
 	public bool PromptInputAvailable => null != this.PatchFile && "-" != this.PatchFile;
 }
 
-/// <summary>Coordinates patch-source acquisition and Wave B2 path planning.</summary>
+/// <summary>Coordinates source acquisition, P7 planning, P8 artifacts, and the initial P9 transaction.</summary>
 internal static class PatchApplication {
 	/// <summary>Parses the selected patch source without mutating target files.</summary>
 	/// <param name="options">The validated invocation options.</param>
 	/// <param name="context">The command context.</param>
 	/// <param name="planner">An optional injected path planner.</param>
+	/// <param name="fileSystem">An optional injected Patch filesystem and transaction boundary.</param>
+	/// <param name="failureInjector">An optional transaction failure injector used by deterministic tests.</param>
 	/// <returns>The process status.</returns>
 	public static async Task<int> ExecuteAsync(
 		PatchOptions options,
 		CommandContext context,
-		PatchApplicationPlanner? planner = null
+		PatchApplicationPlanner? planner = null,
+		IPatchFileSystem? fileSystem = null,
+		IPatchTransactionFailureInjector? failureInjector = null
 	) {
 		ArgumentNullException.ThrowIfNull( options );
 		ArgumentNullException.ThrowIfNull( context );
 		planner ??= new PatchApplicationPlanner();
+		fileSystem ??= new SystemPatchFileSystem();
 		Stream? ownedInput = null;
 		try {
 			var input = context.StandardInputStream;
@@ -113,6 +166,10 @@ internal static class PatchApplication {
 				PatchParseLimits.Default,
 				context.CancellationToken
 			).ConfigureAwait( false );
+			IPatchDecisionProvider? decisionProvider = null;
+			if ( options.PromptInputAvailable && !options.Batch && !options.Force ) {
+				decisionProvider = new CommandPatchDecisionProvider( context );
+			}
 			await using var plan = await planner.BuildAsync(
 				source,
 				document,
@@ -123,7 +180,7 @@ internal static class PatchApplication {
 					Posix = options.Posix,
 					FollowSymbolicLinks = options.FollowSymbolicLinks,
 					Get = options.Get,
-					EngineOptions = CreateEngineOptions( options, prerequisiteToken: null )
+					EngineOptions = CreateEngineOptions( options, prerequisiteToken: null, decisionProvider )
 				},
 				context.CancellationToken
 			).ConfigureAwait( false );
@@ -133,11 +190,85 @@ internal static class PatchApplication {
 					context.CancellationToken
 				).ConfigureAwait( false );
 			}
-			await context.Diagnostics.ErrorAsync(
-				"patch paths and virtual results were planned; filesystem artifacts and transactional replacement begin in phase P8",
+			var artifactPlanner = new PatchArtifactPlanner( fileSystem );
+			var artifactPlan = await artifactPlanner.BuildAsync(
+				plan,
+				options,
 				context.CancellationToken
 			).ConfigureAwait( false );
-			return (int)PatchExitStatus.Trouble;
+			if ( PatchVerbosity.Verbose == options.Verbosity ) {
+				foreach ( var diagnostic in artifactPlan.Diagnostics ) {
+					await context.Diagnostics.ErrorAsync(
+						diagnostic,
+						context.CancellationToken
+					).ConfigureAwait( false );
+				}
+			}
+			if ( options.DryRun ) {
+				if ( PatchVerbosity.Quiet != options.Verbosity ) {
+					await context.Diagnostics.ErrorAsync(
+						string.Concat(
+							"dry run: planned ",
+							artifactPlan.Artifacts.Count(
+								artifact => PatchArtifactAction.ValidateOnly != artifact.Action
+							).ToString( System.Globalization.CultureInfo.InvariantCulture ),
+							" artifact operation(s)"
+						),
+						context.CancellationToken
+					).ConfigureAwait( false );
+				}
+				return (int)artifactPlan.Status;
+			}
+			await using var transaction = await fileSystem.CreateTransactionAsync(
+				artifactPlan,
+				failureInjector,
+				context.CancellationToken
+			).ConfigureAwait( false );
+			await transaction.StageAsync( context.CancellationToken ).ConfigureAwait( false );
+			foreach ( var outputArtifact in artifactPlan.Artifacts.Where(
+				artifact => PatchArtifactAction.WriteStandardOutput == artifact.Action
+			) ) {
+				if ( null == context.StandardOutputStream ) {
+					await context.Diagnostics.ErrorAsync(
+						"binary standard output is unavailable for --output=-",
+						CancellationToken.None
+					).ConfigureAwait( false );
+					return (int)PatchExitStatus.Trouble;
+				}
+				try {
+					await outputArtifact.Content!.WriteToAsync(
+						context.StandardOutputStream,
+						context.CancellationToken
+					).ConfigureAwait( false );
+					await context.StandardOutputStream.FlushAsync( context.CancellationToken ).ConfigureAwait( false );
+				} catch ( IOException exception ) {
+					await context.Diagnostics.ErrorAsync( exception.Message, CancellationToken.None ).ConfigureAwait( false );
+					return (int)PatchExitStatus.Trouble;
+				}
+			}
+			var transactionResult = await transaction.CommitAsync(
+				context.CancellationToken
+			).ConfigureAwait( false );
+			if ( !transactionResult.Succeeded ) {
+				foreach ( var diagnostic in transactionResult.Diagnostics ) {
+					await context.Diagnostics.ErrorAsync(
+						diagnostic,
+						CancellationToken.None
+					).ConfigureAwait( false );
+				}
+				return (int)PatchExitStatus.Trouble;
+			}
+			if ( PatchVerbosity.Quiet != options.Verbosity ) {
+				foreach ( var artifact in artifactPlan.Artifacts.Where(
+					artifact => PatchArtifactAction.ValidateOnly != artifact.Action
+				) ) {
+					await context.Diagnostics.ErrorAsync(
+						FormatArtifactDiagnostic( artifact ),
+						context.CancellationToken
+					).ConfigureAwait( false );
+				}
+			}
+			return (int)artifactPlan.Status;
 		} catch ( PatchInputException exception ) {
 			await context.Diagnostics.ErrorAsync(
 				string.Concat(
@@ -154,6 +285,18 @@ internal static class PatchApplication {
 				await ownedInput.DisposeAsync().ConfigureAwait( false );
 			}
 		}
+	}
+
+	/// <summary>Formats one successful artifact diagnostic.</summary>
+	private static string FormatArtifactDiagnostic( PatchArtifact artifact ) {
+		var verb = artifact.Action switch {
+			PatchArtifactAction.Delete => "removed",
+			_ when PatchArtifactKind.Backup == artifact.Kind => "saved backup",
+			_ when PatchArtifactKind.Reject == artifact.Kind => "saved rejects",
+			_ when PatchArtifactKind.Output == artifact.Kind => "wrote output",
+			_ => "patched"
+		};
+		return string.Concat( verb, " ", artifact.DisplayName );
 	}
 
 	/// <summary>Resolves a relative patch-source argument as though <c>-d</c> changed directory first.</summary>
