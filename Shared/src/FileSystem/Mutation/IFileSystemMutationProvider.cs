@@ -76,7 +76,7 @@ public interface IFileSystemMutationProvider {
 		CancellationToken cancellationToken = default
 	);
 
-	/// <summary>Removes one file, link object, FIFO, socket, or device node.</summary>
+	/// <summary>Removes one file, link object, explicitly accepted reparse object, FIFO, socket, or device node.</summary>
 	ValueTask<FileSystemMutationResult> RemoveFileAsync(
 		string path,
 		FileSystemMutationPrecondition? precondition = null,
