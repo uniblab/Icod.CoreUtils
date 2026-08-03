@@ -1,10 +1,7 @@
-// Port of the standard UNIX `ln` utility to .NET
 namespace Icod.CoreUtils.Ln;
 
-using System;
-
+/// <summary>Provides the asynchronous entry point for <c>ln</c>.</summary>
 internal static class Program {
-	public static int Main( string[] args ) {
-		return Command.Run( args, Console.In, Console.Out, Console.Error );
-	}
+	/// <summary>Runs the command.</summary>
+	public static async Task<int> Main( string[] args ) => await Command.RunAsync( args ).ConfigureAwait( false );
 }
