@@ -1,5 +1,6 @@
 namespace Icod.Patch.Tests;
 
+using System.IO;
 using System.Text;
 using Xunit;
 
@@ -184,10 +185,9 @@ public sealed class WaveCTransactionTests {
 	}
 
 	private static void AssertNoTemporaryFiles( string directory ) {
-		Assert.Empty(
-			Directory.EnumerateFiles( directory ).Where(
-				path => Path.GetFileName( path ).Contains( ".patch-", StringComparison.Ordinal )
-			)
+		Assert.DoesNotContain(
+			Directory.EnumerateFiles( directory ),
+			path => Path.GetFileName( path ).Contains( ".patch-", StringComparison.Ordinal )
 		);
 	}
 

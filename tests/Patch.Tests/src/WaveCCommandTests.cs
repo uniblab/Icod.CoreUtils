@@ -1,5 +1,6 @@
 namespace Icod.Patch.Tests;
 
+using System.IO;
 using System.Text;
 using Xunit;
 
@@ -110,7 +111,7 @@ public sealed class WaveCCommandTests {
 			Assert.Equal( "old\n", await File.ReadAllTextAsync( target ) );
 			Assert.Equal( originalTime.UtcDateTime, File.GetLastWriteTimeUtc( target ) );
 			var reject = await File.ReadAllTextAsync( Path.Combine( directory, "target.txt.rej" ) );
-			Assert.True( reject.StartsWith( "--- ", StringComparison.Ordinal ) );
+			Assert.StartsWith( "--- ", reject, StringComparison.Ordinal );
 			Assert.Contains( "@@ -1 +1 @@", reject, StringComparison.Ordinal );
 		} finally {
 			Directory.Delete( directory, recursive: true );
