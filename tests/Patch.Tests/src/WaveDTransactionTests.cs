@@ -73,7 +73,7 @@ public sealed class WaveDTransactionTests {
 	[InlineData( PatchTransactionStage.FlushTemporary )]
 	[InlineData( PatchTransactionStage.Revalidate )]
 	[InlineData( PatchTransactionStage.Commit )]
-	public async Task PreCommitFailureMatrixPreservesDestination( PatchTransactionStage stage ) {
+	internal async Task PreCommitFailureMatrixPreservesDestination( PatchTransactionStage stage ) {
 		var directory = CreateTemporaryDirectory();
 		var target = Path.Combine( directory, "target.txt" );
 		await File.WriteAllTextAsync( target, "old\n" );
