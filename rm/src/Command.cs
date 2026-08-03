@@ -155,7 +155,7 @@ public static class Command {
 				eligibleOperands,
 				new PathnameExpansionOptions {
 					UnmatchedPatternBehavior = UnmatchedPathnamePatternBehavior.PreserveAsLiteral,
-					SymbolicLinkMode = SymbolicLinkTraversalMode.Never,
+					SymbolicLinkMode = SymbolicLinkTraversalMode.RootsOnly,
 					ErrorMode = PathTraversalErrorMode.Continue
 				},
 				context.CancellationToken

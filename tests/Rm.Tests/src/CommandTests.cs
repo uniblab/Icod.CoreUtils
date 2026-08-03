@@ -224,6 +224,38 @@ public sealed class CommandTests {
 		}
 	}
 
+	/// <summary>Verifies explicitly named intermediate symbolic links may be followed while expanding a terminal pattern.</summary>
+	[Fact]
+	public async Task ExpandsThroughExplicitIntermediateSymbolicLink() {
+		var root = CreateTemporaryDirectory();
+		var target = Directory.CreateDirectory( Path.Combine( root, "target" ) ).FullName;
+		var link = Path.Combine( root, "link" );
+		var matched = Path.Combine( target, "matched.tmp" );
+		var retained = Path.Combine( target, "retained.txt" );
+		await File.WriteAllTextAsync( matched, "matched" );
+		await File.WriteAllTextAsync( retained, "retained" );
+		try {
+			try {
+				Directory.CreateSymbolicLink( link, target );
+			} catch ( Exception exception ) when ( exception is IOException or UnauthorizedAccessException or PlatformNotSupportedException ) {
+				return;
+			}
+			var status = await RunAsync(
+				new[] { Path.Combine( link, "*.tmp" ) },
+				TextReader.Null,
+				new StringWriter(),
+				new StringWriter()
+			);
+			Assert.Equal( CommandExitCodes.Success, status );
+			Assert.False( File.Exists( matched ) );
+			Assert.True( File.Exists( retained ) );
+			Assert.True( Directory.Exists( link ) );
+		} finally {
+			try { Directory.Delete( link, recursive: false ); } catch ( IOException ) { } catch ( UnauthorizedAccessException ) { }
+			DeleteTree( root );
+		}
+	}
+
 	/// <summary>Verifies a failed operand does not prevent a later operand from being removed.</summary>
 	[Fact]
 	public async Task ContinuesAfterOperandFailure() {
