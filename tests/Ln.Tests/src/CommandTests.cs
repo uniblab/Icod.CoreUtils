@@ -1,6 +1,7 @@
 namespace Icod.CoreUtils.Ln.Tests;
 
 using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CoreUtils.Shared.FileSystem.Mutation;
 using LnCommand = Icod.CoreUtils.Ln.Command;
 using Xunit;
 
@@ -14,9 +15,13 @@ public sealed class CommandTests {
 		var links = Path.Combine( temporary.Path, "links" );
 		Directory.CreateDirectory( links );
 		File.WriteAllText( source, "data" );
+		if ( !await CanCreateSymbolicLinksAsync( source, temporary.Path ) ) {
+			return;
+		}
 		var link = Path.Combine( links, "item" );
-		var status = await LnCommand.RunAsync( new[] { "-s", "-r", source, link }, new CommandContext( "ln", TextReader.Null, TextWriter.Null, new StringWriter() ) );
-		Assert.Equal( CommandExitCodes.Success, status );
+		var error = new StringWriter();
+		var status = await LnCommand.RunAsync( new[] { "-s", "-r", source, link }, new CommandContext( "ln", TextReader.Null, TextWriter.Null, error ) );
+		Assert.True( status == CommandExitCodes.Success, error.ToString() );
 		Assert.Equal( "data", File.ReadAllText( link ) );
 		Assert.False( Path.IsPathFullyQualified( new FileInfo( link ).LinkTarget! ) );
 	}
@@ -48,6 +53,28 @@ public sealed class CommandTests {
 		Assert.Equal( "new", File.ReadAllText( destination ) );
 	}
 
+	private static async ValueTask<bool> CanCreateSymbolicLinksAsync( string target, string directory ) {
+		var probe = Path.Combine( directory, string.Concat( ".ln-symlink-probe-", Guid.NewGuid().ToString( "N" ) ) );
+		var result = await SystemFileSystemMutationProvider.Instance.CreateSymbolicLinkAsync(
+			probe,
+			target,
+			false,
+			FileSystemMutationPrecondition.DestinationMustNotExist()
+		);
+		if ( result.Succeeded ) {
+			File.Delete( probe );
+			return true;
+		}
+		if (
+			OperatingSystem.IsWindows()
+			&& result.ErrorCode is FileSystemMutationErrorCode.PrivilegeRequired
+				or FileSystemMutationErrorCode.AccessDenied
+		) {
+			return false;
+		}
+		Assert.True( result.Succeeded, result.Message ?? result.ErrorCode.ToString() );
+		return false;
+	}
 	private sealed class TemporaryDirectory : IDisposable {
 		public TemporaryDirectory() { Path = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "Icod-Ln-", Guid.NewGuid().ToString( "N" ) ) ); Directory.CreateDirectory( Path ); }
 		public string Path { get; }
