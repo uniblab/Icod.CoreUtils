@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `42` |
-| Current engineering milestone | Batch 43 — `rm` |
+| Completed command batches | `0` through `43` |
+| Current engineering milestone | Patch Wave D — complete Phase P9 and close Phase P10 |
 | Completed infrastructure milestone | Completion Gates E2 through E5 — canonical paths, authoritative metadata, pathname-indirection characterization, mode expressions, single-path mutation, and recursive mutation/copy planning |
-| Active infrastructure dependency | Completion Gate E6 — transactional replacement before Batch 44 |
-| Next command batch | Batch 43 — `rm` |
+| Active infrastructure dependency | Patch Phase P10 and Completion Gate E6 before Batch 44 |
+| Next command batch | Batch 44 — `cp` and `mv` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1079,11 +1079,11 @@ Batch 41 replaces the former Windows read-only approximation with an asynchronou
 
 Implemented real Unix UID/GID mutation through E4 `chown`/`lchown` adapters with controlled unsupported diagnostics elsewhere. Shared ownership policy resolves users and groups with GNU name-first and forced `+ID` disambiguation, supports owner-only, group-only, `owner:group`, `owner:`, `:group`, no-op `:`, limited legacy `owner.group`, `--reference`, and ownership-aware `--from` filtering. Recursive operation uses E5 preserve-root preflight and postorder directory mutation; `-H`/`-L`/`-P` traversal remains independent from `--dereference`/`--no-dereference` mutation targeting; and E4 revalidates stable identity plus optional current UID/GID before mutation. Reporting honors option encounter order, changes-only, verbose success/retention/failure, and quiet diagnostics. Dedicated `ChOwn.Tests`, `ChGrp.Tests`, and shared host-mutation tests cover resolution, references, filtering, recursion, dereference policy, race preconditions, reporting, Windows non-emulation, and controlled failures. Full Windows, Ubuntu, and macOS CI remains the repository merge gate.
 
-### Batch 43 — Recursive removal (1 tool)
+### Batch 43 — Recursive removal (1 tool) — implemented
 
-- [ ] `rm`
+- [x] `rm`
 
-Use the shared traversal engine. Implement interactive modes, recursive directory handling, force, one-file-system, preserve-root, empty-directory removal, symlink safety, write-protected prompts, race-aware deletion, glob expansion policy, and error continuation.
+Batch 43 replaces direct recursive BCL deletion with a GNU-compatible command over E1 pathname expansion, E3 metadata, E4 single-path removal, and E5 mutation-safe traversal. It implements `-f`, `-i`, `-I`, `--interactive`, `-d`, `-r`/`-R`, `--one-file-system`, default and `all` preserve-root policy, verbose reporting, centralized `*`/`?`/`**` expansion, write-protected terminal prompts, refusal of final `.` and `..`, no-follow terminal-link handling, postorder directory removal, stable identity preconditions, and continuation after per-operand failures. Recursive parents are retained when a descendant is declined, skipped at a filesystem boundary, or cannot be removed; unavailable identity aborts the affected root rather than allowing later mutation through an unverified traversal. A trailing directory separator cannot turn a symbolic-link operand into target traversal. Dedicated `Rm.Tests` coverage exercises interaction precedence, recursive ordering and retention, glob roots, force, empty directories, preserve-root, link safety, write-protection, verbose output, and race-aware preconditions. Full Windows, Ubuntu, and macOS CI remains the repository merge gate.
 
 #### Patch Wave D — Complete Phase P9 and close Phase P10
 
