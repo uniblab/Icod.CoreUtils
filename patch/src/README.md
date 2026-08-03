@@ -1,11 +1,12 @@
 # Icod.Patch source layout
 
-The source directory contains complete Wave A parsers, the Wave B1 pure application engine, the Wave B2 path-planning layer, Phase P8 artifact policy, and the provisional Phase P9 transaction boundary:
+The source directory contains complete Wave A parsers, the Wave B1 pure application engine, the Wave B2 path-planning layer, Phase P8 artifact policy, and the completed Wave D P9/P10 pre-E6 boundary:
 
 - `Command.cs` owns public invocation, shared option parsing, environment policy, diagnostics, compatibility wrappers, help, version, cancellation, and GNU option validation.
 - `PatchApplication.cs` acquires the byte-oriented patch source, coordinates scanning and parsing, invokes P7 planning and P8 artifact planning, handles dry runs and byte-oriented standard output, and commits through the injected P9 boundary.
-- `PatchArtifacts.cs` derives explicit target, backup, reject, and output artifacts from final P7 virtual state; implements GNU backup/reject/output naming and metadata policy; quotes hostile pathnames; and consolidates repeated patches to one canonical target.
-- `PatchFileSystem.cs` defines `IPatchFileSystem` and `IPatchTransaction`, consumes E2/E3/E4 path, metadata, and mutation providers, applies final-link policy to every artifact pathname, stages complete sibling temporary files, revalidates destination and validation-only input identity, applies mode/timestamp metadata, and provides provisional rollback, cancellation cleanup, and deterministic failure injection pending E6.
+- `PatchArtifacts.cs` derives explicit target, backup, reject, and output artifacts from final P7 virtual state; implements GNU backup/reject/output naming and metadata policy; assigns per-file recovery units; quotes hostile pathnames; and consolidates repeated patches to one canonical target.
+- `PatchFileSystem.cs` defines `IPatchFileSystem` and `IPatchTransaction`, consumes E2/E3/E4 path, metadata, and mutation providers, enforces lexical and physical artifact containment, applies final-link policy to every artifact pathname, stages and flushes complete sibling temporary files, revalidates destination and validation-only input identity, applies mode/ownership/timestamp metadata, commits per-file units, and reports rollback, partial-commit, cancellation, and cleanup outcomes pending E6.
+- `PatchE6Contract.cs` freezes Patch's required recovery scope, multi-file policy, capability reporting, containment, metadata, cancellation, cleanup, and failure-injection matrix for Completion Gate E6.
 - `PatchInteraction.cs` supplies deterministic command-line answers for reversal, prerequisite, and version-control questions without allowing the patch source to compete for standard input.
 - `PatchSource.cs` streams patch input into an owner-private temporary spool while retaining bounded line metadata and exact record terminators.
 - `PatchScanner.cs` classifies structural records and finds count-aware unified, context, normal, and ed-script sections without splitting header-looking hunk or ed data.
@@ -24,4 +25,4 @@ The source directory contains complete Wave A parsers, the Wave B1 pure applicat
 - `PatchTemporaryFile.cs` creates exclusive owner-private temporary files shared by source, target, and result storage.
 - `AssemblyInfo.cs` exposes internals only to the dedicated test assembly.
 
-P8 consumes the P7 plan and does not repeat filename selection or matching. The current P9 adapter is intentionally replaceable: it establishes artifact, staging, revalidation, failure, rollback, and cleanup contracts but does not claim final E6 transaction or atomicity semantics.
+P8 consumes the P7 plan and does not repeat filename selection or matching. Wave D closes P9 and P10 while keeping the adapter intentionally replaceable: it establishes explicit artifact units, staging, flush, revalidation, failure, rollback, partial-success, capability, and cleanup contracts but does not claim final E6 atomicity or durability semantics.

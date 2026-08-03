@@ -44,6 +44,14 @@ internal sealed class PatchFileObservation {
 	public DateTimeOffset? ModificationTime => this.Metadata?.ModificationTime.IsAvailable == true
 		? this.Metadata.ModificationTime.GetRequiredValue()
 		: null;
+	/// <summary>Gets the numeric owner identifier when available.</summary>
+	public uint? UserId => this.Metadata?.UserId.IsAvailable == true
+		? this.Metadata.UserId.GetRequiredValue()
+		: null;
+	/// <summary>Gets the numeric group identifier when available.</summary>
+	public uint? GroupId => this.Metadata?.GroupId.IsAvailable == true
+		? this.Metadata.GroupId.GetRequiredValue()
+		: null;
 }
 
 /// <summary>Identifies a testable transaction lifecycle boundary.</summary>
@@ -54,12 +62,18 @@ internal enum PatchTransactionStage {
 	CreateTemporary,
 	/// <summary>Before writing staged artifact bytes.</summary>
 	WriteTemporary,
+	/// <summary>Before flushing staged artifact bytes to stable storage.</summary>
+	FlushTemporary,
 	/// <summary>Before preserving a rollback copy.</summary>
 	PreserveRollback,
+	/// <summary>Before revalidating one destination immediately prior to commit.</summary>
+	Revalidate,
 	/// <summary>Before committing one staged artifact.</summary>
 	Commit,
 	/// <summary>Before applying mode or timestamp metadata.</summary>
 	ApplyMetadata,
+	/// <summary>Before restoring metadata during rollback.</summary>
+	RestoreMetadata,
 	/// <summary>Before rolling back a committed artifact.</summary>
 	Rollback,
 	/// <summary>Before deleting temporary files.</summary>
@@ -95,24 +109,68 @@ internal sealed class NullPatchTransactionFailureInjector : IPatchTransactionFai
 	}
 }
 
+/// <summary>Identifies the terminal outcome of one Patch transaction.</summary>
+internal enum PatchTransactionOutcome {
+	/// <summary>Every transaction unit committed and cleaned up.</summary>
+	Succeeded,
+	/// <summary>No transaction unit committed.</summary>
+	FailedBeforeCommit,
+	/// <summary>The failing transaction unit was fully rolled back.</summary>
+	FailedRolledBack,
+	/// <summary>Earlier transaction units committed before a later unit failed and was rolled back.</summary>
+	FailedPartiallyCommitted,
+	/// <summary>Rollback did not completely recover the failing transaction unit.</summary>
+	FailedRollbackIncomplete,
+	/// <summary>Commit completed but deterministic temporary cleanup was incomplete.</summary>
+	FailedCleanupIncomplete
+}
+
 /// <summary>Contains the result of one Patch artifact transaction.</summary>
 internal sealed class PatchTransactionResult {
-	/// <summary>Initializes a transaction result.</summary>
+	/// <summary>Initializes a legacy success-or-failure transaction result.</summary>
 	public PatchTransactionResult(
 		bool succeeded,
 		IReadOnlyList<string> diagnostics,
 		Exception? exception = null
+	) : this(
+		succeeded ? PatchTransactionOutcome.Succeeded : PatchTransactionOutcome.FailedBeforeCommit,
+		diagnostics,
+		exception: exception
+	) {
+	}
+
+	/// <summary>Initializes a detailed transaction result.</summary>
+	public PatchTransactionResult(
+		PatchTransactionOutcome outcome,
+		IReadOnlyList<string> diagnostics,
+		IReadOnlyList<string>? committedUnitIds = null,
+		IReadOnlyList<string>? rolledBackUnitIds = null,
+		Exception? exception = null
 	) {
 		ArgumentNullException.ThrowIfNull( diagnostics );
-		this.Succeeded = succeeded;
+		this.Outcome = outcome;
 		this.Diagnostics = new ReadOnlyCollection<string>( diagnostics.ToArray() );
+		this.CommittedUnitIds = new ReadOnlyCollection<string>(
+			(committedUnitIds ?? Array.Empty<string>()).ToArray()
+		);
+		this.RolledBackUnitIds = new ReadOnlyCollection<string>(
+			(rolledBackUnitIds ?? Array.Empty<string>()).ToArray()
+		);
 		this.Exception = exception;
 	}
 
-	/// <summary>Gets whether every requested artifact committed successfully.</summary>
-	public bool Succeeded { get; }
+	/// <summary>Gets whether every requested transaction unit committed and cleaned up successfully.</summary>
+	public bool Succeeded => PatchTransactionOutcome.Succeeded == this.Outcome;
+	/// <summary>Gets the terminal transaction outcome.</summary>
+	public PatchTransactionOutcome Outcome { get; }
 	/// <summary>Gets deterministic controlled diagnostics.</summary>
 	public IReadOnlyList<string> Diagnostics { get; }
+	/// <summary>Gets transaction units that remain committed.</summary>
+	public IReadOnlyList<string> CommittedUnitIds { get; }
+	/// <summary>Gets transaction units recovered after a failed commit attempt.</summary>
+	public IReadOnlyList<string> RolledBackUnitIds { get; }
+	/// <summary>Gets whether at least one earlier patch-file unit remains committed.</summary>
+	public bool HasPartialCommit => 0 < this.CommittedUnitIds.Count && !this.Succeeded;
 	/// <summary>Gets the underlying operational exception.</summary>
 	public Exception? Exception { get; }
 }
@@ -128,6 +186,12 @@ internal interface IPatchTransaction : IAsyncDisposable {
 
 /// <summary>Provides the Patch-facing E3/E4 filesystem boundary.</summary>
 internal interface IPatchFileSystem {
+	/// <summary>Gets the frozen Patch-facing Completion Gate E6 requirements.</summary>
+	PatchE6TransactionContract TransactionContract => PatchE6TransactionContract.Current;
+
+	/// <summary>Gets the explicitly limited capabilities of the provisional P9 adapter.</summary>
+	PatchTransactionCapabilities TransactionCapabilities => PatchTransactionCapabilities.ProvisionalHost;
+
 	/// <summary>Observes one artifact path using explicit terminal-indirection policy.</summary>
 	ValueTask<PatchFileObservation> ObserveAsync(
 		string path,
@@ -156,6 +220,12 @@ internal sealed class SystemPatchFileSystem : IPatchFileSystem {
 	private readonly IFileSystemMetadataProvider metadataProvider;
 	private readonly IFileSystemMutationProvider mutationProvider;
 	private readonly CanonicalPathResolver pathResolver;
+
+	/// <inheritdoc/>
+	public PatchE6TransactionContract TransactionContract => PatchE6TransactionContract.Current;
+
+	/// <inheritdoc/>
+	public PatchTransactionCapabilities TransactionCapabilities => PatchTransactionCapabilities.ProvisionalHost;
 
 	/// <summary>Initializes the host adapter.</summary>
 	public SystemPatchFileSystem()
@@ -207,14 +277,35 @@ internal sealed class SystemPatchFileSystem : IPatchFileSystem {
 		if ( 0 <= path.IndexOfAny( new[] { '\r', '\n' } ) ) {
 			throw new PatchApplicationException( "an artifact pathname cannot contain a newline" );
 		}
-		var lexical = this.pathResolver.NormalizeLexically( path, workingDirectory );
+		var lexicalRoot = this.pathResolver.NormalizeLexically(
+			workingDirectory,
+			Directory.GetCurrentDirectory()
+		);
+		if ( !lexicalRoot.Succeeded ) {
+			throw new PatchApplicationException( FormatPathFailure( lexicalRoot.Failure! ) );
+		}
+		var physicalRoot = await this.pathResolver.ResolvePhysicalAsync(
+			lexicalRoot.Path!,
+			new CanonicalPathResolutionOptions {
+				BasePath = Directory.GetCurrentDirectory(),
+				MissingComponentPolicy = MissingPathComponentPolicy.RequireExisting,
+				FollowSymbolicLinks = true,
+				RequireFinalDirectory = true
+			},
+			cancellationToken
+		).ConfigureAwait( false );
+		if ( !physicalRoot.Succeeded ) {
+			throw new PatchApplicationException( FormatPathFailure( physicalRoot.Failure! ) );
+		}
+		var lexical = this.pathResolver.NormalizeLexically( path, lexicalRoot.Path! );
 		if ( !lexical.Succeeded ) {
 			throw new PatchApplicationException( FormatPathFailure( lexical.Failure! ) );
 		}
+		EnsureContained( this.pathResolver, lexicalRoot.Path!, lexical.Path!, "artifact pathname" );
 		if ( !followPathIndirection ) {
 			var inspection = await this.pathResolver.InspectLinkAsync(
 				lexical.Path!,
-				workingDirectory,
+				lexicalRoot.Path!,
 				cancellationToken
 			).ConfigureAwait( false );
 			if ( inspection.Succeeded && (inspection.IsSymbolicLink || inspection.IsReparsePoint) ) {
@@ -230,7 +321,7 @@ internal sealed class SystemPatchFileSystem : IPatchFileSystem {
 		var physical = await this.pathResolver.ResolvePhysicalAsync(
 			lexical.Path!,
 			new CanonicalPathResolutionOptions {
-				BasePath = workingDirectory,
+				BasePath = physicalRoot.Path!,
 				MissingComponentPolicy = MissingPathComponentPolicy.AllowMissingSuffix,
 				FollowSymbolicLinks = true,
 				FollowFinalSymbolicLink = followPathIndirection
@@ -240,7 +331,25 @@ internal sealed class SystemPatchFileSystem : IPatchFileSystem {
 		if ( !physical.Succeeded ) {
 			throw new PatchApplicationException( FormatPathFailure( physical.Failure! ) );
 		}
+		EnsureContained( this.pathResolver, physicalRoot.Path!, physical.Path!, "resolved artifact pathname" );
 		return physical.Path!;
+	}
+
+	private static void EnsureContained(
+		CanonicalPathResolver resolver,
+		string workingDirectory,
+		string path,
+		string description
+	) {
+		var containment = resolver.EvaluateContainment( workingDirectory, path );
+		if ( !containment.Succeeded ) {
+			throw new PatchApplicationException( FormatPathFailure( containment.Failure! ) );
+		}
+		if ( !containment.IsContained ) {
+			throw new PatchApplicationException(
+				string.Concat( path, ": ", description, " escapes the patch working directory" )
+			);
+		}
 	}
 
 	private static string FormatPathFailure( CanonicalPathFailure failure ) {
@@ -350,7 +459,11 @@ internal sealed class SystemPatchTransaction : IPatchTransaction {
 			}
 			this.stageCompleted = true;
 		} catch {
-			await this.CleanupAsync( CancellationToken.None, injectFailure: false ).ConfigureAwait( false );
+			await this.CleanupAsync(
+				this.staged,
+				new List<string>(),
+				injectFailure: false
+			).ConfigureAwait( false );
 			throw;
 		}
 	}
@@ -363,51 +476,158 @@ internal sealed class SystemPatchTransaction : IPatchTransaction {
 		}
 		this.commitAttempted = true;
 		var diagnostics = new List<string>();
+		var committedUnits = new List<string>();
+		var rolledBackUnits = new List<string>();
 		try {
 			await this.StageAsync( cancellationToken ).ConfigureAwait( false );
-			foreach ( var item in this.staged ) {
-				cancellationToken.ThrowIfCancellationRequested();
-				await this.failureInjector.OnStageAsync(
-					PatchTransactionStage.Commit,
-					item.Artifact,
-					cancellationToken
-				).ConfigureAwait( false );
-				await this.ValidateObservationAsync( item.Artifact, cancellationToken ).ConfigureAwait( false );
-				if ( PatchArtifactAction.ValidateOnly == item.Artifact.Action ) {
-					continue;
-				}
-				if ( PatchArtifactAction.Delete == item.Artifact.Action ) {
-					await this.DeleteArtifactAsync( item.Artifact, cancellationToken ).ConfigureAwait( false );
-				} else {
-					CommitTemporary( item.TemporaryPath!, item.Artifact.Path );
-					item.TemporaryPath = null;
-				}
-				item.Committed = true;
-				if ( PatchArtifactAction.Delete != item.Artifact.Action ) {
-					await this.ApplyMetadataAsync( item.Artifact, cancellationToken ).ConfigureAwait( false );
-				}
-			}
-			await this.CleanupAsync( CancellationToken.None, injectFailure: true ).ConfigureAwait( false );
-			return new PatchTransactionResult( true, diagnostics );
 		} catch ( OperationCanceledException ) when ( cancellationToken.IsCancellationRequested ) {
-			await this.TryRollbackAndCleanupAsync( diagnostics ).ConfigureAwait( false );
 			throw;
 		} catch ( Exception exception ) {
 			diagnostics.Add( exception.Message );
-			await this.TryRollbackAndCleanupAsync( diagnostics ).ConfigureAwait( false );
-			return new PatchTransactionResult( false, diagnostics, exception );
+			return new PatchTransactionResult(
+				PatchTransactionOutcome.FailedBeforeCommit,
+				diagnostics,
+				exception: exception
+			);
 		}
+
+		foreach ( var unit in this.GetTransactionUnits() ) {
+			try {
+				await this.CommitUnitAsync( unit.Items, cancellationToken ).ConfigureAwait( false );
+			} catch ( OperationCanceledException ) when ( cancellationToken.IsCancellationRequested ) {
+				await this.RollbackUnitAsync(
+					unit.Id,
+					unit.Items,
+					diagnostics,
+					rolledBackUnits
+				).ConfigureAwait( false );
+				await this.CleanupAsync(
+					this.staged,
+					diagnostics,
+					injectFailure: false
+				).ConfigureAwait( false );
+				throw;
+			} catch ( Exception exception ) {
+				diagnostics.Add( exception.Message );
+				var unitHadCommittedArtifact = unit.Items.Any( item => item.Committed );
+				var rollbackSucceeded = await this.RollbackUnitAsync(
+					unit.Id,
+					unit.Items,
+					diagnostics,
+					rolledBackUnits
+				).ConfigureAwait( false );
+				var cleanupSucceeded = await this.CleanupAsync(
+					this.staged,
+					diagnostics,
+					injectFailure: false
+				).ConfigureAwait( false );
+				var outcome = !rollbackSucceeded
+					? PatchTransactionOutcome.FailedRollbackIncomplete
+					: !cleanupSucceeded
+						? PatchTransactionOutcome.FailedCleanupIncomplete
+						: 0 < committedUnits.Count
+							? PatchTransactionOutcome.FailedPartiallyCommitted
+							: unitHadCommittedArtifact
+								? PatchTransactionOutcome.FailedRolledBack
+								: PatchTransactionOutcome.FailedBeforeCommit;
+				if ( 0 < committedUnits.Count ) {
+					diagnostics.Add(
+						string.Concat(
+							committedUnits.Count.ToString( System.Globalization.CultureInfo.InvariantCulture ),
+							" earlier patch-file transaction unit(s) remain committed"
+						)
+					);
+				}
+				return new PatchTransactionResult(
+					outcome,
+					diagnostics,
+					committedUnits,
+					rolledBackUnits,
+					exception
+				);
+			}
+
+			committedUnits.Add( unit.Id );
+			var unitCleanupSucceeded = await this.CleanupAsync(
+				unit.Items,
+				diagnostics,
+				injectFailure: true
+			).ConfigureAwait( false );
+			if ( !unitCleanupSucceeded ) {
+				await this.CleanupAsync(
+					this.staged,
+					diagnostics,
+					injectFailure: false
+				).ConfigureAwait( false );
+				return new PatchTransactionResult(
+					PatchTransactionOutcome.FailedCleanupIncomplete,
+					diagnostics,
+					committedUnits,
+					rolledBackUnits
+				);
+			}
+		}
+
+		return new PatchTransactionResult(
+			PatchTransactionOutcome.Succeeded,
+			diagnostics,
+			committedUnits,
+			rolledBackUnits
+		);
+	}
+
+	private async Task CommitUnitAsync(
+		IReadOnlyList<StagedArtifact> items,
+		CancellationToken cancellationToken
+	) {
+		foreach ( var item in items ) {
+			cancellationToken.ThrowIfCancellationRequested();
+			await this.failureInjector.OnStageAsync(
+				PatchTransactionStage.Revalidate,
+				item.Artifact,
+				cancellationToken
+			).ConfigureAwait( false );
+			await this.ValidateObservationAsync( item.Artifact, cancellationToken ).ConfigureAwait( false );
+			if ( PatchArtifactAction.ValidateOnly == item.Artifact.Action ) {
+				continue;
+			}
+			await this.failureInjector.OnStageAsync(
+				PatchTransactionStage.Commit,
+				item.Artifact,
+				cancellationToken
+			).ConfigureAwait( false );
+			if ( PatchArtifactAction.Delete == item.Artifact.Action ) {
+				await this.DeleteArtifactAsync( item.Artifact, cancellationToken ).ConfigureAwait( false );
+			} else {
+				CommitTemporary( item.TemporaryPath!, item.Artifact.Path );
+				item.TemporaryPath = null;
+			}
+			item.Committed = true;
+			if ( PatchArtifactAction.Delete != item.Artifact.Action ) {
+				await this.ApplyMetadataAsync( item.Artifact, cancellationToken ).ConfigureAwait( false );
+			}
+		}
+	}
+
+	private IReadOnlyList<(string Id, IReadOnlyList<StagedArtifact> Items)> GetTransactionUnits() {
+		var comparer = OperatingSystem.IsWindows()
+			? StringComparer.OrdinalIgnoreCase
+			: StringComparer.Ordinal;
+		return this.staged
+			.GroupBy( item => item.Artifact.TransactionUnitId, comparer )
+			.Select(
+				group => (
+					Id: group.Key,
+					Items: (IReadOnlyList<StagedArtifact>)group.ToArray()
+				)
+			)
+			.ToArray();
 	}
 
 	private async Task<string> StageContentAsync(
 		PatchArtifact artifact,
 		CancellationToken cancellationToken
 	) {
-		await this.failureInjector.OnStageAsync(
-			PatchTransactionStage.CreateTemporary,
-			artifact,
-			cancellationToken
-		).ConfigureAwait( false );
 		var temporaryPath = await this.CreateTemporaryAsync(
 			artifact.Path,
 			artifact,
@@ -422,6 +642,11 @@ internal sealed class SystemPatchTransaction : IPatchTransaction {
 			).ConfigureAwait( false );
 			await using var output = OpenTemporaryForWrite( temporaryPath );
 			await artifact.Content!.WriteToAsync( output, cancellationToken ).ConfigureAwait( false );
+			await this.failureInjector.OnStageAsync(
+				PatchTransactionStage.FlushTemporary,
+				artifact,
+				cancellationToken
+			).ConfigureAwait( false );
 			await output.FlushAsync( cancellationToken ).ConfigureAwait( false );
 			output.Flush( flushToDisk: true );
 			return temporaryPath;
@@ -444,9 +669,19 @@ internal sealed class SystemPatchTransaction : IPatchTransaction {
 			cancellationToken
 		).ConfigureAwait( false );
 		try {
+			await this.failureInjector.OnStageAsync(
+				PatchTransactionStage.WriteTemporary,
+				artifact,
+				cancellationToken
+			).ConfigureAwait( false );
 			await using var input = OpenExistingForRead( sourcePath );
 			await using var output = OpenTemporaryForWrite( temporaryPath );
 			await input.CopyToAsync( output, BufferSize, cancellationToken ).ConfigureAwait( false );
+			await this.failureInjector.OnStageAsync(
+				PatchTransactionStage.FlushTemporary,
+				artifact,
+				cancellationToken
+			).ConfigureAwait( false );
 			await output.FlushAsync( cancellationToken ).ConfigureAwait( false );
 			output.Flush( flushToDisk: true );
 			return temporaryPath;
@@ -462,6 +697,11 @@ internal sealed class SystemPatchTransaction : IPatchTransaction {
 		string purpose,
 		CancellationToken cancellationToken
 	) {
+		await this.failureInjector.OnStageAsync(
+			PatchTransactionStage.CreateTemporary,
+			artifact,
+			cancellationToken
+		).ConfigureAwait( false );
 		var directory = System.IO.Path.GetDirectoryName( destinationPath );
 		if ( string.IsNullOrEmpty( directory ) ) {
 			directory = Directory.GetCurrentDirectory();
@@ -587,15 +827,31 @@ internal sealed class SystemPatchTransaction : IPatchTransaction {
 			artifact,
 			cancellationToken
 		).ConfigureAwait( false );
+		var current = await this.metadataProvider.GetMetadataAsync(
+			artifact.Path,
+			PathDereferenceMode.NoFollow,
+			cancellationToken
+		).ConfigureAwait( false );
+		var metadataPrecondition = FileSystemMutationPrecondition.FromObservation(
+			current.Kind,
+			current.EntryIdentity,
+			PathDereferenceMode.NoFollow
+		);
+		await this.ApplyOwnershipAsync(
+			artifact,
+			current,
+			artifact.Metadata.UserId,
+			artifact.Metadata.GroupId,
+			metadataPrecondition,
+			"cannot set ownership of ",
+			cancellationToken
+		).ConfigureAwait( false );
 		if ( artifact.Metadata.Mode.HasValue && this.mutationProvider.Capabilities.CanSetModes ) {
 			var result = await this.mutationProvider.SetModeAsync(
 				artifact.Path,
 				new PosixFileMode( artifact.Metadata.Mode.Value ),
 				PathDereferenceMode.NoFollow,
-				new FileSystemMutationPrecondition(
-					FileSystemMutationExistence.MustExist,
-					PathDereferenceMode.NoFollow
-				),
+				metadataPrecondition,
 				cancellationToken
 			).ConfigureAwait( false );
 			if ( !result.Succeeded ) {
@@ -627,60 +883,162 @@ internal sealed class SystemPatchTransaction : IPatchTransaction {
 		}
 	}
 
-	private async Task RollbackAsync(
+	private async Task<bool> RollbackUnitAsync(
+		string unitId,
+		IReadOnlyList<StagedArtifact> items,
 		ICollection<string> diagnostics,
-		CancellationToken cancellationToken
+		ICollection<string> rolledBackUnits
 	) {
-		for ( var index = this.staged.Count - 1; 0 <= index; index-- ) {
-			var item = this.staged[index];
+		var succeeded = true;
+		var recoveredAny = false;
+		for ( var index = items.Count - 1; 0 <= index; index-- ) {
+			var item = items[index];
 			if ( !item.Committed ) {
 				continue;
 			}
-			await this.failureInjector.OnStageAsync(
-				PatchTransactionStage.Rollback,
-				item.Artifact,
-				cancellationToken
-			).ConfigureAwait( false );
-			if ( null != item.RollbackPath ) {
-				CommitTemporary( item.RollbackPath, item.Artifact.Path );
-				item.RollbackPath = null;
-				await this.RestoreObservedMetadataAsync( item.Artifact, cancellationToken ).ConfigureAwait( false );
-			} else {
-				TryDelete( item.Artifact.Path );
+			try {
+				await this.failureInjector.OnStageAsync(
+					PatchTransactionStage.Rollback,
+					item.Artifact,
+					CancellationToken.None
+				).ConfigureAwait( false );
+				if ( null != item.RollbackPath ) {
+					CommitTemporary( item.RollbackPath, item.Artifact.Path );
+					item.RollbackPath = null;
+					await this.failureInjector.OnStageAsync(
+						PatchTransactionStage.RestoreMetadata,
+						item.Artifact,
+						CancellationToken.None
+					).ConfigureAwait( false );
+					await this.RestoreObservedMetadataAsync(
+						item.Artifact,
+						CancellationToken.None
+					).ConfigureAwait( false );
+				} else {
+					File.Delete( item.Artifact.Path );
+				}
+				item.Committed = false;
+				recoveredAny = true;
+				diagnostics.Add( string.Concat( "rolled back ", item.Artifact.DisplayName ) );
+			} catch ( Exception exception ) {
+				succeeded = false;
+				diagnostics.Add(
+					string.Concat(
+						"rollback failed for ",
+						item.Artifact.DisplayName,
+						": ",
+						exception.Message
+					)
+				);
 			}
-			item.Committed = false;
-			diagnostics.Add( string.Concat( "rolled back ", item.Artifact.DisplayName ) );
 		}
+		if ( recoveredAny && succeeded ) {
+			rolledBackUnits.Add( unitId );
+		}
+		return succeeded;
 	}
 
-	private async Task CleanupAsync( CancellationToken cancellationToken, bool injectFailure ) {
-		if ( injectFailure ) {
-			foreach ( var item in this.staged ) {
-				await this.failureInjector.OnStageAsync(
-					PatchTransactionStage.Cleanup,
-					item.Artifact,
-					cancellationToken
-				).ConfigureAwait( false );
+	private async Task<bool> CleanupAsync(
+		IEnumerable<StagedArtifact> items,
+		ICollection<string> diagnostics,
+		bool injectFailure
+	) {
+		var succeeded = true;
+		foreach ( var item in items ) {
+			if ( injectFailure ) {
+				try {
+					await this.failureInjector.OnStageAsync(
+						PatchTransactionStage.Cleanup,
+						item.Artifact,
+						CancellationToken.None
+					).ConfigureAwait( false );
+				} catch ( Exception exception ) {
+					succeeded = false;
+					diagnostics.Add(
+						string.Concat(
+							"cleanup failed for ",
+							item.Artifact.DisplayName,
+							": ",
+							exception.Message
+						)
+					);
+				}
 			}
-		}
-		foreach ( var item in this.staged ) {
-			TryDelete( item.TemporaryPath );
-			TryDelete( item.RollbackPath );
+			if ( !TryDeleteTemporary( item.TemporaryPath, item.Artifact, diagnostics ) ) {
+				succeeded = false;
+			}
+			if ( !TryDeleteTemporary( item.RollbackPath, item.Artifact, diagnostics ) ) {
+				succeeded = false;
+			}
 			item.TemporaryPath = null;
 			item.RollbackPath = null;
 		}
+		return succeeded;
 	}
 
-	private async Task TryRollbackAndCleanupAsync( ICollection<string> diagnostics ) {
-		try {
-			await this.RollbackAsync( diagnostics, CancellationToken.None ).ConfigureAwait( false );
-		} catch ( Exception rollbackException ) {
-			diagnostics.Add( string.Concat( "rollback failed: ", rollbackException.Message ) );
+	private static bool TryDeleteTemporary(
+		string? path,
+		PatchArtifact artifact,
+		ICollection<string> diagnostics
+	) {
+		if ( string.IsNullOrEmpty( path ) ) {
+			return true;
 		}
 		try {
-			await this.CleanupAsync( CancellationToken.None, injectFailure: false ).ConfigureAwait( false );
-		} catch ( Exception cleanupException ) {
-			diagnostics.Add( string.Concat( "cleanup failed: ", cleanupException.Message ) );
+			File.Delete( path );
+			return true;
+		} catch ( Exception exception ) when ( exception is IOException or UnauthorizedAccessException ) {
+			diagnostics.Add(
+				string.Concat(
+					"cleanup failed for ",
+					artifact.DisplayName,
+					": ",
+					exception.Message
+				)
+			);
+			return false;
+		}
+	}
+
+	private async Task ApplyOwnershipAsync(
+		PatchArtifact artifact,
+		FileSystemMetadata current,
+		uint? requestedUserId,
+		uint? requestedGroupId,
+		FileSystemMutationPrecondition precondition,
+		string diagnosticPrefix,
+		CancellationToken cancellationToken
+	) {
+		if ( !requestedUserId.HasValue && !requestedGroupId.HasValue ) {
+			return;
+		}
+		var userId = requestedUserId;
+		if ( userId.HasValue
+			&& current.UserId.IsAvailable
+			&& userId.Value == current.UserId.GetRequiredValue() ) {
+			userId = null;
+		}
+		var groupId = requestedGroupId;
+		if ( groupId.HasValue
+			&& current.GroupId.IsAvailable
+			&& groupId.Value == current.GroupId.GetRequiredValue() ) {
+			groupId = null;
+		}
+		if ( !userId.HasValue && !groupId.HasValue ) {
+			return;
+		}
+		var ownershipResult = await this.mutationProvider.SetOwnershipAsync(
+			artifact.Path,
+			userId,
+			groupId,
+			PathDereferenceMode.NoFollow,
+			precondition,
+			cancellationToken
+		).ConfigureAwait( false );
+		if ( !ownershipResult.Succeeded ) {
+			throw new PatchApplicationException(
+				ownershipResult.Message ?? string.Concat( diagnosticPrefix, artifact.DisplayName )
+			);
 		}
 	}
 
@@ -692,12 +1050,31 @@ internal sealed class SystemPatchTransaction : IPatchTransaction {
 		if ( !observation.Exists ) {
 			return;
 		}
+		var current = await this.metadataProvider.GetMetadataAsync(
+			artifact.Path,
+			PathDereferenceMode.NoFollow,
+			cancellationToken
+		).ConfigureAwait( false );
+		var metadataPrecondition = FileSystemMutationPrecondition.FromObservation(
+			current.Kind,
+			current.EntryIdentity,
+			PathDereferenceMode.NoFollow
+		);
+		await this.ApplyOwnershipAsync(
+			artifact,
+			current,
+			observation.UserId,
+			observation.GroupId,
+			metadataPrecondition,
+			"cannot restore ownership of ",
+			cancellationToken
+		).ConfigureAwait( false );
 		if ( observation.Mode.HasValue && this.mutationProvider.Capabilities.CanSetModes ) {
 			var modeResult = await this.mutationProvider.SetModeAsync(
 				artifact.Path,
 				new PosixFileMode( observation.Mode.Value ),
 				PathDereferenceMode.NoFollow,
-				new FileSystemMutationPrecondition( FileSystemMutationExistence.MustExist ),
+				metadataPrecondition,
 				cancellationToken
 			).ConfigureAwait( false );
 			if ( !modeResult.Succeeded ) {
@@ -777,6 +1154,10 @@ internal sealed class SystemPatchTransaction : IPatchTransaction {
 			return;
 		}
 		this.disposed = true;
-		await this.CleanupAsync( CancellationToken.None, injectFailure: false ).ConfigureAwait( false );
+		await this.CleanupAsync(
+			this.staged,
+			new List<string>(),
+			injectFailure: false
+		).ConfigureAwait( false );
 	}
 }

@@ -4,7 +4,7 @@
 
 This document is the regenerated development roadmap for `Icod.Patch`.
 
-It is based on the state of the `main` branch reviewed on August 2, 2026:
+It is based on the state of the `main` branch reviewed on August 3, 2026:
 
 - [Icod.CoreUtils repository](https://github.com/uniblab/Icod.CoreUtils)
 - [Main audit and refactor roadmap](https://github.com/uniblab/Icod.CoreUtils/blob/main/Icod.CoreUtils-Audit-and-Refactor-Roadmap.md)
@@ -32,7 +32,7 @@ This roadmap is subordinate to the repository-wide conventions and engineering g
 | Public command class | `Icod.Patch.Command` |
 | Executable assembly name | `patch` |
 | Current repository project | `patch/Icod.Patch.csproj` |
-| Current implementation state | Waves A, B1, B2, and C implemented through P8 with P9 started: normalized async front end, byte-preserving parsers, pure indexed application/matching, secure canonical multi-file planning, explicit artifact policy, and provisional staged transaction commits |
+| Current implementation state | Waves A through D implemented through P10: normalized async front end, byte-preserving parsers, pure indexed application/matching, secure canonical multi-file planning, explicit artifact policy, per-file recoverable provisional transactions, E2–E4 conformance closure, and a frozen Patch-facing E6 contract |
 | Current dedicated test project | `tests/Patch.Tests/Icod.Patch.Tests.csproj` |
 | Required target framework | `net10.0` |
 | Required language version | C# 13 |
@@ -41,8 +41,8 @@ This roadmap is subordinate to the repository-wide conventions and engineering g
 | Additional platform goal | Best-effort BSD support |
 | Repository status | Co-resident in `Icod.CoreUtils.sln` until Completion Gate G |
 | Scheduling model | Dependency-aligned partial order with Completion Gates E2–E6 |
-| Completed scheduled waves | Wave A, P0–P4; Wave B1, P5–P6; Wave B2, P7; and Wave C, P8 plus the initial P9 boundary |
-| Detailed ordering status | P0–P8 implemented; P9 started over E3/E3R/E4 and remains provisional until the E6-facing contract is closed |
+| Completed scheduled waves | Wave A, P0–P4; Wave B1, P5–P6; Wave B2, P7; Wave C, P8 and initial P9; and Wave D, P9–P10 closure |
+| Detailed ordering status | P0–P10 implemented; the command-local transaction remains provisional until P11A migrates it to the shared Completion Gate E6 implementation |
 
 ---
 
@@ -72,9 +72,17 @@ Full-checkout Debug/Release and Windows, Ubuntu, and macOS CI validation remain 
 
 Wave C closes Phase P8 and starts Phase P9. The command now converts final P7 virtual state into immutable target, backup, reject, alternate-output, standard-output, and validation-only artifacts. GNU-visible policy includes simple and numbered backup naming, `PATCH_VERSION_CONTROL` and `VERSION_CONTROL` precedence, prefix and suffix interactions, automatic/context/unified rejects, `-o`, `-o -`, dry runs, quiet/verbose diagnostics, deterministic prompts, filename quoting, status aggregation, broken-output handling, normal replacement timestamps, requested local/UTC header timestamps including post-2038 values, and portable mode preservation through E3 and E4. Output, backup, and reject pathnames consume E2 final-indirection policy so GNU patch 2.8's `--follow-symlinks` rule applies to both input and output artifacts.
 
-The initial P9 boundary is implemented through injectable `IPatchFileSystem` and `IPatchTransaction` contracts. It observes E3 identity and metadata, stages complete owner-private sibling files through E4 exclusive creation, preserves rollback copies before mutation, revalidates every destination and validation-only source immediately before commit, applies mode and timestamp metadata, and performs deterministic rollback and cleanup after injected failure or cancellation. The adapter is explicitly provisional: it supplies concrete E6 requirements and adversarial tests but does not claim final atomic replacement, crash recovery, or completed P9 transaction conformance.
+The initial P9 boundary is implemented through injectable `IPatchFileSystem` and `IPatchTransaction` contracts. It observes E3 identity and metadata, stages complete owner-private sibling files through E4 exclusive creation, preserves rollback copies before mutation, revalidates every destination and validation-only source immediately before commit, applies mode and timestamp metadata, and performs deterministic rollback and cleanup after injected failure or cancellation. Wave D closes P9 by making per-file recovery units, multi-file partial-success behavior, transaction outcomes, failure stages, and the Patch-facing E6 requirements explicit while retaining this adapter as provisional scaffolding.
 
 Full-checkout Debug/Release and Windows, Ubuntu, and macOS CI validation remain pending after integration.
+
+## Wave D implementation status
+
+Wave D completes P9 and closes P10. Target, backup, per-target reject, and file-output artifacts now share an explicit patch-file recovery unit; shared destinations are modeled as independent units. The provisional transaction boundary distinguishes pre-commit failure, complete rollback, retained earlier-file commits, incomplete rollback, and incomplete cleanup. It flushes complete sibling temporaries before replacement, revalidates E3 observations immediately before commit, restores ownership, mode, and timestamps during recovery, continues rollback and cleanup after individual failures, and records committed and recovered units.
+
+`PatchE6TransactionContract` freezes the requirements that Completion Gate E6 must satisfy: exclusive secure sibling creation, content completion and flush before replacement, identity revalidation, no-follow defaults, patch-file recovery scope, GNU-visible multi-file partial success, metadata restoration, containment, cancellation recovery, deterministic cleanup, and explicit atomicity and durability capabilities. P10 coverage verifies that artifact selection continues to consume `Icod.Path`, E3 metadata, and E4 mutation contracts for lexical and physical containment, terminal links, `--follow-symlinks`, post-2038 timestamps, modes, ownership, and host capability profiles. The command-local adapter still does not claim shared E6, crash-recovery, or guaranteed atomic-replacement conformance.
+
+Full-checkout Debug/Release and Windows, Ubuntu, and macOS CI execution remain the integration merge gate.
 
 ---
 
@@ -82,7 +90,7 @@ Full-checkout Debug/Release and Windows, Ubuntu, and macOS CI validation remain 
 
 The historical Patch seed was not an incomplete GNU patch implementation in the ordinary sense. It consumed a private `+`/`-` line-command format associated with the repository's former simplified Diff output, decoded complete files as UTF-8 text, created a `.orig` backup, and rewrote the target directly.
 
-Waves A, B1, B2, and C, P0 through P8 with P9 started, have now replaced that seed with a GNU-oriented command boundary, byte-preserving source model, complete syntax parsers, a pure virtual application/matching engine, secure canonical multi-file planning, explicit artifact policy, and a provisional injected transaction boundary. The current implementation:
+Waves A through D, P0 through P10, have now replaced that seed with a GNU-oriented command boundary, byte-preserving source model, complete syntax parsers, a pure virtual application/matching engine, secure canonical multi-file planning, explicit artifact policy, per-file recoverable provisional transactions, E2–E4 conformance closure, and a frozen Patch-facing E6 contract. The current implementation:
 
 - uses asynchronous orchestration and the shared `CommandContext` and `OptionParser`;
 - accepts patch input from standard input, `-i`, or the GNU-style patch-file operand position;
@@ -94,7 +102,8 @@ Waves A, B1, B2, and C, P0 through P8 with P9 started, have now replaced that se
 - has a dedicated Patch test project and separated fixture provenance;
 - exposes pure exact/offset/fuzz/reverse/prerequisite/merge application over immutable virtual target content;
 - consumes `Icod.Path` for `-d`, platform-aware `-p`, roots, volumes, links, containment, missing components, explicit operands, quoted and `Index:` names, and multi-file state;
-- materializes target, backup, reject, output, standard-output, and validation-only artifacts, then commits filesystem changes through an injected provisional transaction boundary.
+- materializes target, backup, reject, output, standard-output, and validation-only artifacts, groups related filesystem artifacts into patch-file recovery units, and commits them through an injected provisional transaction boundary;
+- reports retained earlier-file commits separately from recovery of the currently failing file, and exposes the complete Patch-facing failure matrix and capability requirements that shared E6 must satisfy.
 
 The former private syntax remains only as characterized historical evidence and is not exposed as a compatibility mode.
 
@@ -1631,10 +1640,10 @@ This phase starts during the E4/E5 validator batches and proceeds concurrently w
 - [x] Model GNU-visible multi-file partial success separately from per-file recoverability.
 - [x] Keep parser and matcher independent from filesystem mutation.
 - [x] Mark command-local replacement code provisional.
-- [ ] Supply Patch requirements and adversarial cases to Completion Gate E6.
+- [x] Supply Patch requirements and adversarial cases to Completion Gate E6.
 - [x] Do not claim final transaction conformance.
 
-P9 has started. The checked items describe the implemented provisional boundary; supplying and freezing the complete E6 contract, atomicity profile, and remaining adversarial cases are closure work for Wave D.
+P9 is complete. `PatchE6TransactionContract` freezes the Patch-facing recovery scope, multi-file completion policy, secure-sibling and flush requirements, containment and metadata obligations, atomicity and durability reporting, deterministic cleanup, and the full failure-injection matrix. The command-local adapter remains explicitly provisional and must be replaced by shared E6 in P11A.
 
 ## Phase P10 — Close Completion Gates E2, E3, and E4 conformance
 
@@ -1642,18 +1651,22 @@ P9 has started. The checked items describe the implemented provisional boundary;
 
 This is a closure checkpoint, not the first integration pass.
 
-- [ ] Verify all path logic uses the shared canonical-path model.
-- [ ] Verify link and reparse-point inspection.
-- [ ] Verify roots, volumes, separators, and relative/contained paths.
-- [ ] Verify GNU-compatible containment decisions.
-- [ ] Verify timestamps, including post-2038 values.
-- [ ] Verify modes and metadata.
-- [ ] Verify race-aware single-path mutation.
-- [ ] Verify `--follow-symlinks` for input and output.
-- [ ] Verify target, backup, reject, and output artifact policy over the shared providers.
-- [ ] Add Windows, Linux, macOS, and best-effort BSD capability tests.
-- [ ] Remove any permanent Patch-local duplicate of E2–E4 facilities.
-- [ ] Freeze Patch's E6 requirements and failure matrix.
+- [x] Verify all path logic uses the shared canonical-path model.
+- [x] Verify link and reparse-point inspection.
+- [x] Verify roots, volumes, separators, and relative/contained paths.
+- [x] Verify GNU-compatible containment decisions.
+- [x] Verify timestamps, including post-2038 values.
+- [x] Verify modes and metadata.
+- [x] Verify race-aware single-path mutation.
+- [x] Verify `--follow-symlinks` for input and output.
+- [x] Verify target, backup, reject, and output artifact policy over the shared providers.
+- [x] Add Windows, Linux, macOS, and best-effort BSD capability tests.
+- [x] Remove any permanent Patch-local duplicate of E2–E4 facilities.
+- [x] Freeze Patch's E6 requirements and failure matrix.
+
+P10 is complete. Artifact destinations are rejected when lexical or physically resolved paths escape the canonical `-d` root; final links and reparse points remain no-follow by default and are followed only under explicit policy. Tests cover post-2038 timestamps, portable modes, Unix owner/group preservation, stable-identity revalidation, target/backup/reject/output recovery units, cancellation after replacement, every provisional transaction stage, and platform capability profiles. Path normalization and containment remain in `Icod.Path`; metadata and timestamps remain in E3; modes, ownership, creation, deletion, and preconditions remain in E4. No permanent Patch-local duplicate of those facilities was introduced.
+
+The remaining P11A work is deliberately different: it replaces the provisional adapter with the shared E6 implementation and validates the frozen contract rather than redesigning it inside Patch.
 
 ## Phase P11 — Integrate and validate Completion Gate E6
 

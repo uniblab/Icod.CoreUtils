@@ -42,8 +42,8 @@ public sealed class WaveCTransactionTests {
 			var firstObservation = await fileSystem.ObserveAsync( first, followPathIndirection: false );
 			var secondObservation = await fileSystem.ObserveAsync( second, followPathIndirection: false );
 			var artifacts = new[] {
-				CreateWriteArtifact( first, firstObservation, "first-new\n" ),
-				CreateWriteArtifact( second, secondObservation, "second-new\n" )
+				CreateWriteArtifact( first, firstObservation, "first-new\n", "operation" ),
+				CreateWriteArtifact( second, secondObservation, "second-new\n", "operation" )
 			};
 			var plan = new PatchArtifactPlan( artifacts, PatchExitStatus.Success, Array.Empty<string>() );
 			await using var transaction = await fileSystem.CreateTransactionAsync(
@@ -162,7 +162,8 @@ public sealed class WaveCTransactionTests {
 	private static PatchArtifact CreateWriteArtifact(
 		string target,
 		PatchFileObservation observation,
-		string value
+		string value,
+		string? transactionUnitId = null
 	) {
 		return new PatchArtifact(
 			PatchArtifactKind.Target,
@@ -171,7 +172,8 @@ public sealed class WaveCTransactionTests {
 			PatchArtifactContent.FromBytes( Encoding.UTF8.GetBytes( value ) ),
 			observation,
 			new PatchArtifactMetadata(),
-			target
+			target,
+			transactionUnitId
 		);
 	}
 

@@ -9,7 +9,7 @@ using Icod.CoreUtils.Shared.IO;
 
 /// <summary>Implements the GNU-compatible <c>patch</c> command front end.</summary>
 public static class Command {
-	private const string VersionText = "patch (Icod.Patch) 0.8";
+	private const string VersionText = "patch (Icod.Patch) 0.9";
 	private static readonly HashSet<string> ImplementedOptionKeys = new( StringComparer.Ordinal ) {
 		"backup",
 		"backup-if-mismatch",

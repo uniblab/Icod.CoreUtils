@@ -1,5 +1,4 @@
 # Icod.Patch.Tests source layout
-
 - `CommandTests.cs` covers asynchronous and synchronous invocation, source selection, format forcing, diagnostics, cancellation, seed-format retirement, status accumulation, and committed target application.
 - `PatchScannerTests.cs` covers byte offsets, LF/CRLF/CR/incomplete records, count-aware format detection, multiple sections, surrounding text, binary input, directive hardening, resource limits, cleanup, and deterministic fuzz input.
 - `PatchParserTests.cs` covers complete unified/context/normal/ed parsing, immutable normalization, exact raw-record retention, creation/deletion forms, count validation, context-copy consistency, ed ordering, binary records, interstitial text, and parser limits.
@@ -13,3 +12,5 @@
 - `GnuPatchDifferentialTests.cs` provides opt-in comparisons with an installed GNU patch 2.8 executable without making native patch a normal test dependency.
 - `PatchTestSupport.cs` provides byte-oriented parser, virtual-file, and result helpers.
 - `ProcessHostTests.cs` exercises the built executable through the `dotnet` process host.
+- `WaveDTransactionTests.cs` covers the frozen E6-facing requirement and failure matrix, per-file recovery units, retained earlier-file commits, cancellation recovery, incomplete rollback, incomplete cleanup, and complete-before-commit staging.
+- `WaveDConformanceTests.cs` verifies that containment and link resolution remain delegated to `Icod.Path`, timestamps and identity remain delegated to E3, mode and ownership mutation remain delegated to E4, and provisional atomicity and durability capabilities are reported without overstatement.
