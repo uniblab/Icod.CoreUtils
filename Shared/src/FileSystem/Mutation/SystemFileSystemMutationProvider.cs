@@ -780,7 +780,11 @@ public sealed class SystemFileSystemMutationProvider : IFileSystemMutationProvid
 		if ( physical is null ) {
 			return NotFound( normalized );
 		}
-		if ( physical.Kind == FileSystemEntryKind.Directory && !physical.IsPathIndirection ) {
+		if (
+			physical.Kind == FileSystemEntryKind.Directory
+				&& !physical.IsPathIndirection
+				&& !physical.IsReparsePoint
+		) {
 			return WrongKind( normalized, "The pathname names a physical directory." );
 		}
 		var revalidation = await RevalidateAsync(
