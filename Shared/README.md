@@ -14,6 +14,8 @@
 - `Temporary`: cryptographically secure base-62 name generation, exclusive temporary file/directory creation, collision retries, and deterministic cleanup support.
 - `FileSystem.Traversal`: segment-aware pathname expansion, injectable one-level filesystem observation, stable entry/filesystem identities, and iterative event-based read-only traversal.
 - `FileSystem.Metadata`: authoritative entry and filesystem metadata, explicit availability, E1 identity reuse, allocated-block accounting, and selective timestamp mutation.
+- `FileSystem.Mutation`: race-aware single-path creation, linking, removal, and mode mutation with explicit capability and identity preconditions.
+- `FileSystem.RecursiveMutation`: E1-based recursive mutation/copy planning, preserve-root and containment preflight, hard-link and sparse-file preservation, metadata policy, and rollback cleanup.
 - `Platform`: BCL-first capability reporting and controlled unsupported results.
 
 ## Text processing
@@ -122,3 +124,7 @@ The system provider obtains stable platform identities through Windows file IDs,
 Completion Gate E3 adds `Icod.CoreUtils.Shared.FileSystem.Metadata`. The model reports detailed file kinds, size, link count and link-object identity, native mode and ownership, access/modification/change/birth timestamps, device and inode-equivalent identity, allocated blocks, containing-filesystem information, and timestamp-mutation capabilities. Every platform-dependent field uses an explicit availability state rather than a sentinel value.
 
 `SystemFileSystemMetadataProvider` reuses the E1 `FileSystemEntryIdentity` and `FileSystemIdentity` contracts and supplies Windows, Linux, and macOS native adapters with a controlled managed fallback. See [`src/FileSystem/Metadata/README.md`](src/FileSystem/Metadata/README.md).
+
+## Recursive filesystem mutation and copying
+
+Completion Gate E5 adds `Icod.CoreUtils.Shared.FileSystem.RecursiveMutation`. The mutation-aware traversal engine wraps the E1 event stream, preserves its root provenance and traversal vocabulary, and attaches E4 identity-bearing preconditions to physical entries. Additional contracts cover preserve-root, one-filesystem delegation, destination containment, repeated hard links, sparse allocation, E3 metadata preservation, partial failure, and the rollback seam consumed by Completion Gate E6. See [`src/FileSystem/RecursiveMutation/README.md`](src/FileSystem/RecursiveMutation/README.md).
