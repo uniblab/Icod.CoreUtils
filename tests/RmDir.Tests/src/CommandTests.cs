@@ -12,9 +12,12 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task RemovesRequestedAbsoluteChainBeforeNonemptyAncestorFailure() {
 		using var temporary = new TemporaryDirectory();
-		var parent = Path.Combine( temporary.Path, "parent" );
+		var ancestor = Path.Combine( temporary.Path, "ancestor" );
+		var parent = Path.Combine( ancestor, "parent" );
 		var child = Path.Combine( parent, "child" );
 		Directory.CreateDirectory( child );
+		File.WriteAllText( Path.Combine( ancestor, "keep" ), "data" );
+		Assert.True( Path.IsPathFullyQualified( child ) );
 		var output = new StringWriter();
 		var error = new StringWriter();
 
@@ -26,10 +29,12 @@ public sealed class CommandTests {
 		Assert.Equal( CommandExitCodes.Failure, status );
 		Assert.False( Directory.Exists( child ) );
 		Assert.False( Directory.Exists( parent ) );
-		Assert.False( Directory.Exists( temporary.Path ) );
+		Assert.True( Directory.Exists( ancestor ) );
+		Assert.True( Directory.Exists( temporary.Path ) );
 		var text = output.ToString();
 		Assert.Contains( string.Concat( "rmdir: removing directory, '", child, "'" ), text );
 		Assert.Contains( string.Concat( "rmdir: removing directory, '", parent, "'" ), text );
+		Assert.Contains( string.Concat( "rmdir: removing directory, '", ancestor, "'" ), text );
 		Assert.Contains( "Directory not empty", error.ToString() );
 	}
 
