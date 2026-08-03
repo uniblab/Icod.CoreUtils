@@ -55,7 +55,7 @@ public sealed class RecursiveMutationTraversalEngineTests {
 				FileSystemBoundaryMode = FileSystemBoundaryMode.StayOnRootFileSystem
 			}
 		) );
-		var boundary = Assert.Single( events.Where( item => item.Kind == RecursiveMutationEventKind.FileSystemBoundary ) );
+		var boundary = Assert.Single( events, item => item.Kind == RecursiveMutationEventKind.FileSystemBoundary );
 		Assert.Equal( Path.Combine( source, "mounted" ), boundary.Entry!.TraversalEntry.AccessPath );
 	}
 
@@ -122,7 +122,7 @@ public sealed class RecursiveMutationTraversalEngineTests {
 			new RecursivePathSafety( StringComparison.Ordinal )
 		);
 		var events = await CollectAsync( engine.TraverseAsync( new[] { CreateRoot( source ) } ) );
-		var cycle = Assert.Single( events.Where( item => item.Kind == RecursiveMutationEventKind.Cycle ) );
+		var cycle = Assert.Single( events, item => item.Kind == RecursiveMutationEventKind.Cycle );
 		Assert.Equal( source, cycle.RelatedPath );
 		Assert.Equal( child, cycle.Entry!.TraversalEntry.AccessPath );
 	}
@@ -170,7 +170,7 @@ public sealed class RecursiveMutationTraversalEngineTests {
 			provider,
 			new RecursivePathSafety( StringComparison.Ordinal )
 		).TraverseAsync( new[] { CreateRoot( source ) } ) );
-		var error = Assert.Single( events.Where( item => item.Kind == RecursiveMutationEventKind.Error ) );
+		var error = Assert.Single( events, item => item.Kind == RecursiveMutationEventKind.Error );
 		Assert.Equal( RecursiveMutationErrorCode.TraversalFailed, error.Error!.Code );
 		Assert.Equal( PathTraversalErrorScope.Entry, error.Error.Scope );
 		Assert.NotNull( error.Error.TraversalError );
@@ -187,7 +187,7 @@ public sealed class RecursiveMutationTraversalEngineTests {
 			provider,
 			new RecursivePathSafety( StringComparison.Ordinal )
 		).TraverseAsync( new[] { CreateRoot( source ) } ) );
-		var error = Assert.Single( events.Where( item => item.Error?.Code == RecursiveMutationErrorCode.IdentityUnavailable ) );
+		var error = Assert.Single( events, item => item.Error?.Code == RecursiveMutationErrorCode.IdentityUnavailable );
 		Assert.Equal( RecursiveMutationStage.Traversal, error.Error!.Stage );
 	}
 
