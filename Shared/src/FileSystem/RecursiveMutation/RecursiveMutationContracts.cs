@@ -364,16 +364,20 @@ public sealed class RecursiveMutationEvent {
 public sealed class RecursiveMetadataPreservationPlan {
 	private RecursiveMetadataPreservationPlan(
 		RecursiveMetadataFields requested,
+		RecursiveMetadataFields required,
 		RecursiveMetadataFields available,
 		RecursiveMetadataFields missingRequired
 	) {
 		Requested = requested;
+		Required = required;
 		Available = available;
 		MissingRequired = missingRequired;
 	}
 
 	/// <summary>Gets requested metadata classes.</summary>
 	public RecursiveMetadataFields Requested { get; }
+	/// <summary>Gets requested metadata classes that are mandatory.</summary>
+	public RecursiveMetadataFields Required { get; }
 	/// <summary>Gets metadata classes represented by the observation.</summary>
 	public RecursiveMetadataFields Available { get; }
 	/// <summary>Gets mandatory metadata classes absent from the observation.</summary>
@@ -426,6 +430,6 @@ public sealed class RecursiveMetadataPreservationPlan {
 		if ( metadata.Size.IsAvailable && metadata.AllocatedBytes.IsAvailable ) {
 			available |= RecursiveMetadataFields.SparseLayout;
 		}
-		return new RecursiveMetadataPreservationPlan( requested, available, required & ~available );
+		return new RecursiveMetadataPreservationPlan( requested, required, available, required & ~available );
 	}
 }
