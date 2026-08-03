@@ -5,9 +5,9 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `43` |
-| Current engineering milestone | Patch Wave D — complete Phase P9 and close Phase P10 |
+| Current engineering milestone | Completion Gate E6 — shared transactional replacement |
 | Completed infrastructure milestone | Completion Gates E2 through E5 — canonical paths, authoritative metadata, pathname-indirection characterization, mode expressions, single-path mutation, and recursive mutation/copy planning |
-| Active infrastructure dependency | Patch Phase P10 and Completion Gate E6 before Batch 44 |
+| Active infrastructure dependency | Completion Gate E6 before Batch 44 |
 | Next command batch | Batch 44 — `cp` and `mv` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
@@ -1089,12 +1089,16 @@ Batch 43 replaces direct recursive BCL deletion with a GNU-compatible command ov
 
 By this checkpoint, E2 through E4 have been exercised by their Coreutils validators, and the E5 command batches have supplied additional evidence about identity, no-follow mutation, metadata preservation, containment, and cleanup. Patch now closes its pre-E6 filesystem work.
 
-- [ ] Complete **P9** against the proposed E6 transaction interface, including target, backup, reject, output, rollback, cleanup, cancellation, and partial-failure cases.
-- [ ] Complete **P10** as an E2–E4 conformance closure rather than a first integration pass.
-- [ ] Verify GNU-compatible filename selection, containment, `-d`, `-p`, timestamps including post-2038 values, modes, metadata, input/output symlink behavior, and `--follow-symlinks`.
-- [ ] Run Windows, Linux, macOS, and best-effort BSD capability tests.
-- [ ] Confirm that Patch has not copied canonical-path, metadata, mode, or basic mutation machinery into command-local permanent code.
-- [ ] Freeze the Patch-facing E6 requirements before the E6 implementation gate closes.
+- [x] Complete **P9** against the proposed E6 transaction interface, including target, backup, reject, output, rollback, cleanup, cancellation, and partial-failure cases.
+- [x] Complete **P10** as an E2–E4 conformance closure rather than a first integration pass.
+- [x] Verify GNU-compatible filename selection, containment, `-d`, `-p`, timestamps including post-2038 values, modes, metadata, input/output symlink behavior, and `--follow-symlinks`.
+- [x] Add Windows, Linux, macOS, and best-effort BSD capability coverage; full runner execution remains the merge gate.
+- [x] Confirm that Patch has not copied canonical-path, metadata, mode, or basic mutation machinery into command-local permanent code.
+- [x] Freeze the Patch-facing E6 requirements before the E6 implementation gate closes.
+
+Patch Wave D completes P9 and P10. Patch artifacts now carry explicit per-file recovery-unit identities; target, backup, per-target reject, and file-output artifacts recover together, while a shared explicit reject destination remains an independently reported unit. The provisional transaction boundary stages complete sibling files, flushes before commit, revalidates E3 identity, distinguishes failed-before-commit, fully rolled-back, partially committed, rollback-incomplete, and cleanup-incomplete outcomes, continues rollback and cleanup after individual failures, and retains GNU-visible multi-file partial success. `PatchE6TransactionContract` freezes secure sibling creation, per-file recovery, multi-file commit policy, containment, metadata restoration, cleanup, cancellation, atomicity reporting, durability reporting, and the complete failure-injection stage matrix without claiming E6 conformance.
+
+P10 tests close the shared-contract boundary for lexical and physical containment, final-link and `--follow-symlinks` behavior, post-2038 timestamps, Unix modes and ownership, destination revalidation, Windows/Linux/macOS capability behavior, and a best-effort BSD capability profile. Patch continues to consume `Icod.Path`, E3 metadata, and E4 mutation providers rather than carrying permanent private replacements. Full three-runner CI remains the merge gate.
 
 Completion of P10 is a hard predecessor of P11A.
 

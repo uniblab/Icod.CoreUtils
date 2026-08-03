@@ -84,6 +84,12 @@ internal enum PatchArtifactContentKind {
 
 /// <summary>Describes metadata to apply after an artifact is committed.</summary>
 internal sealed class PatchArtifactMetadata {
+	/// <summary>Gets or initializes the numeric owner identifier.</summary>
+	public uint? UserId { get; init; }
+
+	/// <summary>Gets or initializes the numeric group identifier.</summary>
+	public uint? GroupId { get; init; }
+
 	/// <summary>Gets or initializes the portable mode value.</summary>
 	public int? Mode { get; init; }
 
@@ -180,7 +186,8 @@ internal sealed class PatchArtifact {
 		PatchArtifactContent? content,
 		PatchFileObservation expectedDestination,
 		PatchArtifactMetadata metadata,
-		string displayName
+		string displayName,
+		string? transactionUnitId = null
 	) {
 		var requiresContent = PatchArtifactAction.Write == action
 			|| PatchArtifactAction.WriteStandardOutput == action;
@@ -197,6 +204,9 @@ internal sealed class PatchArtifact {
 		this.ExpectedDestination = expectedDestination ?? throw new ArgumentNullException( nameof( expectedDestination ) );
 		this.Metadata = metadata ?? throw new ArgumentNullException( nameof( metadata ) );
 		this.DisplayName = displayName ?? throw new ArgumentNullException( nameof( displayName ) );
+		this.TransactionUnitId = string.IsNullOrEmpty( transactionUnitId )
+			? path
+			: transactionUnitId;
 	}
 
 	/// <summary>Gets the artifact kind.</summary>
@@ -213,6 +223,8 @@ internal sealed class PatchArtifact {
 	public PatchArtifactMetadata Metadata { get; }
 	/// <summary>Gets the safely quoted user-facing pathname.</summary>
 	public string DisplayName { get; }
+	/// <summary>Gets the per-file recovery unit that owns this artifact.</summary>
+	public string TransactionUnitId { get; }
 }
 
 /// <summary>Contains all P8 artifacts derived from one P7 application plan.</summary>
@@ -299,6 +311,7 @@ internal sealed class PatchArtifactPlanner {
 				: backupEligible;
 		}
 		var rejectStreams = new Dictionary<string, MemoryStream>( pathComparer );
+		var rejectTransactionUnits = new Dictionary<string, string?>( pathComparer );
 		try {
 			foreach ( var file in usableFiles ) {
 				cancellationToken.ThrowIfCancellationRequested();
@@ -331,6 +344,10 @@ internal sealed class PatchArtifactPlanner {
 						if ( !rejectStreams.TryGetValue( rejectPath, out var rejectStream ) ) {
 							rejectStream = new MemoryStream();
 							rejectStreams.Add( rejectPath, rejectStream );
+							rejectTransactionUnits.Add( rejectPath, targetPath );
+						} else if ( rejectTransactionUnits.TryGetValue( rejectPath, out var priorUnit )
+							&& !pathComparer.Equals( priorUnit, targetPath ) ) {
+							rejectTransactionUnits[rejectPath] = null;
 						}
 						await rejectStream.WriteAsync( rejectBytes, cancellationToken ).ConfigureAwait( false );
 					}
@@ -426,7 +443,8 @@ internal sealed class PatchArtifactPlanner {
 								outputContent,
 								new PatchFileObservation( "-" ),
 								outputMetadata,
-								"standard output"
+								"standard output",
+								targetPath
 							)
 						);
 					} else {
@@ -470,7 +488,8 @@ internal sealed class PatchArtifactPlanner {
 								outputContent,
 								outputObservation,
 								outputMetadata,
-								PatchFileNameQuoter.Quote( outputPath, options.QuotingStyle )
+								PatchFileNameQuoter.Quote( outputPath, options.QuotingStyle ),
+								targetPath
 							)
 						);
 					}
@@ -503,7 +522,8 @@ internal sealed class PatchArtifactPlanner {
 						PatchArtifactContent.FromBytes( item.Value.ToArray() ),
 						rejectObservation,
 						new PatchArtifactMetadata { Mode = rejectObservation.Mode ?? 0x01a4 },
-						PatchFileNameQuoter.Quote( item.Key, options.QuotingStyle )
+						PatchFileNameQuoter.Quote( item.Key, options.QuotingStyle ),
+						rejectTransactionUnits[item.Key] ?? item.Key
 					)
 				);
 			}
@@ -551,7 +571,8 @@ internal sealed class PatchArtifactPlanner {
 			destinationObservation.Exists
 				? CreatePreservedMetadata( destinationObservation, requireTimestamps: false )
 				: new PatchArtifactMetadata { Mode = 0x01a4 },
-			PatchFileNameQuoter.Quote( backupPath, options.QuotingStyle )
+			PatchFileNameQuoter.Quote( backupPath, options.QuotingStyle ),
+			destinationPath
 		);
 	}
 
@@ -717,6 +738,8 @@ internal sealed class PatchArtifactPlanner {
 			}
 		}
 		return new PatchArtifactMetadata {
+			UserId = metadataSource.UserId ?? source.UserId,
+			GroupId = metadataSource.GroupId ?? source.GroupId,
 			Mode = mode,
 			AccessTime = accessTime,
 			ModificationTime = modificationTime,
@@ -729,6 +752,8 @@ internal sealed class PatchArtifactPlanner {
 		bool requireTimestamps
 	) {
 		return new PatchArtifactMetadata {
+			UserId = observation.UserId,
+			GroupId = observation.GroupId,
 			Mode = observation.Mode,
 			AccessTime = observation.AccessTime,
 			ModificationTime = observation.ModificationTime,

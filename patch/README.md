@@ -6,24 +6,27 @@ The authoritative behavioral baseline is GNU patch 2.8. Pinned release metadata 
 
 ## Current phase
 
-Patch Waves A, B1, and B2—Phases P0 through P7—are implemented.
+Patch Waves A through D—Phases P0 through P10—are implemented.
 
 The command now:
 
 - uses the shared asynchronous command framework and declarative GNU option inventory;
-- reads patch input from standard input, `-i`, or the second operand;
-- preserves patch bytes, offsets, line endings, incomplete records, and bounded spill storage;
+- preserves patch bytes, source offsets, line endings, incomplete records, and bounded spill storage;
 - parses unified, context, normal, and patch-compatible ed scripts into immutable common models;
 - applies exact, offset, fuzz, whitespace, reverse, prerequisite, and merge policy to immutable virtual targets;
 - consumes `Icod.Path` for lexical and physical path resolution, roots, volumes, links, reparse points, missing components, and containment;
 - implements explicit original-file operands, `-d`, component-aware `-p`, quoted names, `Index:` evidence, GNU/POSIX candidate ordering, `/dev/null` creation/deletion forms, multiple file patches, and per-file status aggregation;
-- models positive, disabled, and decision-gated `-g`/`PATCH_GET` revision-control retrieval through an injected provider boundary;
-- retains virtual state across multiple patches that select the same canonical target;
-- produces a multi-file application plan without creating, replacing, deleting, backing up, or rejecting live filesystem artifacts.
+- implements reject, backup, output, dry-run, prompt, quoting, status, mode, timestamp, and metadata policy above the shared filesystem contracts;
+- places all live mutation behind injected `IPatchFileSystem` and `IPatchTransaction` boundaries;
+- stages complete exclusive sibling temporary files and flushes them before any destination mutation;
+- revalidates E3 identity immediately before commit and applies E4 mode, ownership, deletion, and no-follow policy;
+- recovers target-related artifacts in per-file units while retaining completed earlier units for GNU-visible multi-file partial success;
+- distinguishes failed-before-commit, rolled-back, partially committed, rollback-incomplete, and cleanup-incomplete transaction outcomes; and
+- freezes Patch's E6-facing requirements and failure matrix without claiming final E6 atomicity.
 
-P7 deliberately uses a containment safety boundary: every selected target must remain within the physically canonical `-d` working root. Parent traversal, cross-volume targets, and link/reparse resolutions that escape that root are rejected even where historical `patch` implementations might accept an absolute or escaping name. Terminal links are rejected by default and followed only with `--follow-symlinks`; output-link behavior remains part of the later mutation phases.
+P10 intentionally enforces a containment safety boundary: every selected target, output, backup, and reject artifact must remain within the physically canonical `-d` working root. Parent traversal, cross-volume targets, and link/reparse resolutions that escape that root are rejected. Terminal links are rejected by default and followed only with `--follow-symlinks`.
 
-The executable still returns controlled trouble after a plan is built because P8 owns rejects, backups, output destinations, prompts, metadata/mode integration, and user-visible statuses, while P9 and P11 own safe committed replacement.
+The current command-local transaction is provisional. Completion Gate E6 owns the permanent secure replacement, atomicity, durability, backup retention, rollback, and cleanup implementation; Patch Phase P11A will migrate to that shared contract.
 
 ## Historical seed format
 
@@ -31,4 +34,4 @@ The former private line format, in which lines beginning with `+` and `-` direct
 
 ## Dependency boundary
 
-`Icod.Patch` consumes textual patch streams and the neutral `Icod.Path` contract. It does not reference `Icod.DiffUtils.Shared`, invoke native `patch`, invoke native `ed`, create a Patch-private canonical-path framework, or commit filesystem mutations during P0–P7.
+`Icod.Patch` consumes textual patch streams and the neutral `Icod.Path` contract. It does not reference `Icod.DiffUtils.Shared`, invoke native `patch`, invoke native `ed`, create Patch-private canonical-path, metadata, mode, ownership, or basic mutation frameworks, or claim final transactional replacement before Completion Gate E6.
