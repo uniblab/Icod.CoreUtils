@@ -17,6 +17,7 @@
 - `FileSystem.Ownership`: GNU/POSIX user and group resolution plus shared `chown`/`chgrp` recursive command policy.
 - `FileSystem.Mutation`: race-aware single-path creation, linking, removal, mode mutation, and UID/GID mutation with explicit capability and identity preconditions.
 - `FileSystem.RecursiveMutation`: E1-based recursive mutation/copy planning, preserve-root and containment preflight, hard-link and sparse-file preservation, metadata policy, and rollback cleanup.
+- `FileSystem.TransactionalReplacement`: secure sibling staging, E3/E4 revalidation, atomic publication, GNU backup naming, per-file recovery units, metadata restoration, rollback, durability reporting, and deterministic cleanup.
 - `Platform`: BCL-first capability reporting and controlled unsupported results.
 
 ## Text processing
@@ -129,6 +130,8 @@ Completion Gate E3 adds `Icod.CoreUtils.Shared.FileSystem.Metadata`. The model r
 ## Recursive filesystem mutation and copying
 
 Completion Gate E5 adds `Icod.CoreUtils.Shared.FileSystem.RecursiveMutation`. The mutation-aware traversal engine wraps the E1 event stream, preserves its root provenance and traversal vocabulary, and attaches E4 identity-bearing preconditions to physical entries. Additional contracts cover preserve-root, one-filesystem delegation, destination containment, repeated hard links, sparse allocation, E3 metadata preservation, partial failure, and the rollback seam consumed by Completion Gate E6. See [`src/FileSystem/RecursiveMutation/README.md`](src/FileSystem/RecursiveMutation/README.md).
+
+Completion Gate E6 adds `Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement`. It stages complete secure sibling files and rollback copies before mutation, revalidates stable E3 identity immediately before commit, publishes through explicit atomicity and durability contracts, supports GNU backup naming, groups artifacts by recovery unit, restores E5 metadata, and continues reverse-order rollback and cleanup after failures. See [`src/FileSystem/TransactionalReplacement/README.md`](src/FileSystem/TransactionalReplacement/README.md).
 
 ## Ownership mutation
 

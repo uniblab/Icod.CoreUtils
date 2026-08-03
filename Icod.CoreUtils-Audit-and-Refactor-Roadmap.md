@@ -5,9 +5,9 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `43` |
-| Current engineering milestone | Completion Gate E6 — shared transactional replacement |
-| Completed infrastructure milestone | Completion Gates E2 through E5 — canonical paths, authoritative metadata, pathname-indirection characterization, mode expressions, single-path mutation, and recursive mutation/copy planning |
-| Active infrastructure dependency | Completion Gate E6 before Batch 44 |
+| Current engineering milestone | Patch Phase P11A — initial E6 transaction integration |
+| Completed infrastructure milestone | Completion Gates E2 through E6 — canonical paths, authoritative metadata, pathname-indirection characterization, mode expressions, single-path mutation, recursive mutation/copy planning, and transactional replacement |
+| Active infrastructure dependency | Patch Phase P11A and Batch 44 consume Completion Gate E6 |
 | Next command batch | Batch 44 — `cp` and `mv` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
@@ -1104,16 +1104,18 @@ Completion of P10 is a hard predecessor of P11A.
 
 ### Completion Gate E6 — before Batch 44
 
-* [ ] Add shared transactional file-replacement infrastructure:
+* [x] Add shared transactional file-replacement infrastructure:
 
-  * [ ] secure sibling temporary files;
-  * [ ] atomic replacement where supported;
-  * [ ] backup-name generation and retention policy;
-  * [ ] rollback behavior after partial failure;
-  * [ ] pathname-containment and escape checks;
-  * [ ] deterministic cleanup after success, failure, and cancellation;
-  * [ ] explicit diagnostics where atomic replacement is unavailable;
-  * [ ] integration with the recursive traversal and metadata-preservation contracts established by Completion Gate E5.
+  * [x] secure sibling temporary files;
+  * [x] atomic replacement where supported;
+  * [x] backup-name generation and retention policy;
+  * [x] rollback behavior after partial failure;
+  * [x] pathname-containment and escape checks;
+  * [x] deterministic cleanup after success, failure, and cancellation;
+  * [x] explicit diagnostics where atomic replacement is unavailable;
+  * [x] integration with the recursive traversal and metadata-preservation contracts established by Completion Gate E5.
+
+Completion Gate E6 is implemented in `Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement`. Immutable artifacts carry explicit recovery-unit identities and no-follow E4 preconditions; complete sibling content, destination rollback copies, retained-backup content, and prior-backup recovery copies are securely staged and flushed before mutation. The transaction revalidates E3 identity immediately before each commit, exposes required/preferred atomicity and durability policy, implements GNU simple/numbered/existing backup names, restores requested E5 metadata, rejects containment escapes, continues reverse-order rollback and cleanup after individual failures, and reports failed-before-commit, fully rolled-back, partially committed, rollback-incomplete, cleanup-incomplete, and atomicity-unavailable outcomes. Shared tests exercise the provider seam and lifecycle failure injection; full three-runner CI remains the merge gate.
 
 This gate is placed immediately before the consumers that require the complete replacement, backup, and rollback model. Patch Phase P11A consumes it immediately and reports contract defects while the APIs are still inexpensive to revise; `cp`, `mv`, and `install` then provide independent Coreutils/Fileutils validation in Batches 44 and 45; Patch Phase P11B closes only after that validation. During incubation, the co-resident `Icod.Patch`, `Icod.LineEditor.Ed.Shared`, `Icod.LineEditor.Sed`, and `Icod.Tar` projects may consume these contracts through project references; their genuinely cross-suite portions are candidates for `Icod.CommandFramework`.
 
