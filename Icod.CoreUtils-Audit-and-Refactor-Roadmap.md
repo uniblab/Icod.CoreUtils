@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `39` |
-| Current engineering milestone | Batch 40 — special file creation |
+| Completed command batches | `0` through `40` |
+| Current engineering milestone | Completion Gate E5 — recursive mutation and copying |
 | Completed infrastructure milestone | Completion Gates E2, E3, E3R, and E4 — canonical paths, authoritative metadata, pathname-indirection characterization, mode expressions, and basic single-path mutation |
-| Next infrastructure dependency | Completion Gate E5 — recursive mutation and copying before Batch 41 |
-| Next command batch | Batch 40 — `mkfifo` and `mknod` |
+| Active infrastructure dependency | Completion Gate E5 — recursive mutation and copying before Batch 41 |
+| Next command batch | Batch 41 — `chmod` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1036,10 +1036,14 @@ Dedicated `Icod.CoreUtils.Link.Tests` and `Icod.CoreUtils.Ln.Tests` projects cov
 
 ### Batch 40 — Special file creation (2 tools)
 
-- [ ] `mkfifo`
-- [ ] `mknod`
+- [x] `mkfifo`
+- [x] `mknod`
 
 Add the missing GNU projects. Implement modes, FIFO creation, block/character device operands, major/minor validation, umask behavior, and controlled privilege/platform failure. Never emulate success by creating an ordinary file.
+
+Batch 40 is implemented over the Completion Gate E4 single-path mutation contracts. `mkfifo` supports multiple FIFO operands, GNU mode expressions from the `a=rw` baseline, explicit creation-mask handling, default and explicit security-context options, continuation after per-operand failure, and controlled unsupported-platform diagnostics. `mknod` supports FIFO, block-device, and character-device forms; the `p`, `b`, `c`, and `u` type designators; hexadecimal, octal, and decimal major/minor syntax; checked unsigned range validation; mode and umask behavior; and controlled privilege, representability, and platform failures. Neither command substitutes an ordinary file for an unsupported special file. The command surface and numeric syntax are audited against GNU Coreutils 9.11.
+
+Dedicated `Icod.CoreUtils.MkFifo.Tests` and `Icod.CoreUtils.MkNod.Tests` projects cover option and operand validation, mode and umask forwarding, special-bit rejection, type mapping, device-number bases and overflow, continuation, provider failures, and Windows no-emulation behavior. Full-checkout Debug, Staging, Release, and Windows/Ubuntu/macOS CI validation remain to be executed after integration.
 
 ### Completion Gate E5 — before Batch 41
 

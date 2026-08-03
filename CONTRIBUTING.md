@@ -8,7 +8,7 @@ Thank you for contributing to the Icod command-suite ports. The repository conta
 - Language version: C# 13, declared as `<LangVersion>13.0</LangVersion>` in every project.
 - Nullable reference types and implicit global usings remain enabled where the existing project enables them.
 - Supported CI runners are `windows-latest`, `ubuntu-latest`, and `macos-latest`; best-effort BSD portability remains a project goal.
-- Repository text files use UTF-8 with LF line endings. Local files may use whatever line ending you like.
+- Repository text files use UTF-8 with LF line endings. Configure editors and Git to preserve LF; do not commit CRLF-only churn.
 - Runtime command output should use `Environment.NewLine` unless the command contract requires a byte delimiter or preserves input record terminators.
 
 Do not change the target framework, language version, configuration policy, signing policy, or repository line-ending convention in an unrelated contribution.
@@ -69,6 +69,7 @@ Filesystem work must respect the current E-series completion gates in `Icod.Core
 - Preserve no-follow semantics where required and test symbolic links, reparse points, dangling links, loops, and containment escapes.
 - Do not claim atomic, transactional, metadata-preserving, or rollback behavior until the corresponding shared contract exists and the active provider can guarantee it.
 - Never remove the only recoverable original before a complete replacement is ready.
+- FIFO and device-node commands must use the E4 mutation provider. Unsupported or privilege-limited hosts must receive controlled failures, and special files must never be emulated with ordinary files.
 
 ## Tests
 

@@ -130,7 +130,14 @@ public static class Command {
 		string? targetDirectory = null; var noTargetDirectory = false; var operands = new List<string>(); var optionsDone = false;
 		for ( var i = 0; i < args.Length; i++ ) {
 			var arg = args[ i ];
-			if ( optionsDone || arg == "-" || !arg.StartsWith( '-', StringComparison.Ordinal ) ) { operands.Add( arg ); continue; }
+			if (
+				optionsDone
+				|| ( arg == "-" )
+				|| !arg.StartsWith( "-", StringComparison.Ordinal )
+			) {
+				operands.Add( arg );
+				continue;
+			}
 			if ( arg == "--" ) { optionsDone = true; continue; }
 			if ( arg == "--help" ) return ( default!, operands, null, true, false );
 			if ( arg == "--version" ) return ( default!, operands, null, false, true );
