@@ -1,6 +1,6 @@
 # Shared.FileSystem
 
-`Shared.FileSystem` contains injectable host-filesystem capabilities. The original operations layer supports flush, allocation, and sparse-file behavior. Completion Gate E1 adds a read-only pathname-expansion and traversal layer under [`Traversal`](Traversal/README.md), Completion Gate E3 adds authoritative metadata and timestamp mutation under [`Metadata`](Metadata/README.md), Completion Gate E4 adds race-aware single-path primitives under [`Mutation`](Mutation/README.md), and Completion Gate E5 adds recursive mutation/copy policy under [`RecursiveMutation`](RecursiveMutation/README.md).
+`Shared.FileSystem` contains injectable host-filesystem capabilities. The original operations layer supports flush, allocation, and sparse-file behavior. Completion Gate E1 adds a read-only pathname-expansion and traversal layer under [`Traversal`](Traversal/README.md), Completion Gate E3 adds authoritative metadata and timestamp mutation under [`Metadata`](Metadata/README.md), Completion Gate E4 adds race-aware single-path primitives under [`Mutation`](Mutation/README.md), and Completion Gate E5 adds recursive mutation/copy policy under [`RecursiveMutation`](RecursiveMutation/README.md), and Batch 42 adds shared ownership resolution and command policy under [`Ownership`](Ownership/README.md).
 
 The operations layer distinguishes operating-system API availability from the behavior of an individual filesystem or volume. Every operation therefore returns `PlatformOperationResult` rather than silently claiming unsupported semantics. The traversal layer yields caller-independent roots, entries, event phases, identities, boundaries, cycles, and structured errors. The metadata layer enriches those same identities with typed values whose availability is always explicit.
 
@@ -68,3 +68,7 @@ Every optional field uses `FileSystemMetadataValue<T>` to distinguish available,
 ## Recursive mutation and copying
 
 Completion Gate E5 lives in `Icod.CoreUtils.Shared.FileSystem.RecursiveMutation`. It consumes E1 events and E4 mutation preconditions instead of introducing another walker. It adds preserve-root and destination-containment preflight, root-relative destination mapping, hard-link identity tracking, sparse-range copying, requested-versus-required metadata policy, and deterministic reverse-order rollback. See [`RecursiveMutation/README.md`](RecursiveMutation/README.md).
+
+## Ownership mutation
+
+Batch 42 extends the E4 provider with explicit UID/GID mutation and ownership-aware `--from` preconditions, and adds `Icod.CoreUtils.Shared.FileSystem.Ownership` for GNU name/ID resolution plus the common `chown`/`chgrp` recursive policy. Recursive directory mutation is applied in postorder, and traversal-link policy remains independent of terminal dereferencing. Windows reports POSIX ownership mutation as unsupported rather than approximating it with ACLs or file attributes. See [`Ownership/README.md`](Ownership/README.md).

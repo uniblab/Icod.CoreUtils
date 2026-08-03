@@ -98,4 +98,23 @@ public interface IFileSystemMutationProvider {
 		FileSystemMutationPrecondition? precondition = null,
 		CancellationToken cancellationToken = default
 	);
+
+	/// <summary>Sets the numeric owner and/or group of one existing object under an explicit E3R dereference policy.</summary>
+	/// <param name="path">The pathname to mutate.</param>
+	/// <param name="userId">The replacement user ID, or <see langword="null"/> to retain it.</param>
+	/// <param name="groupId">The replacement group ID, or <see langword="null"/> to retain it.</param>
+	/// <param name="dereferenceMode">The terminal pathname-indirection policy.</param>
+	/// <param name="precondition">The optional E3/E3R observation to revalidate.</param>
+	/// <param name="cancellationToken">The cancellation token.</param>
+	/// <returns>The controlled mutation result.</returns>
+	ValueTask<FileSystemMutationResult> SetOwnershipAsync(
+		string path,
+		uint? userId,
+		uint? groupId,
+		PathDereferenceMode dereferenceMode,
+		FileSystemMutationPrecondition? precondition = null,
+		CancellationToken cancellationToken = default
+	) => ValueTask.FromResult(
+		FileSystemMutationResult.Unsupported( path, "POSIX ownership mutation is not supported by this provider." )
+	);
 }

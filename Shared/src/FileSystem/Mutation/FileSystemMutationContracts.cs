@@ -27,7 +27,9 @@ public enum FileSystemMutationOperation {
 	/// <summary>Set the mode of one existing entry.</summary>
 	SetMode = 8,
 	/// <summary>Create one Windows directory junction.</summary>
-	CreateJunction = 9
+	CreateJunction = 9,
+	/// <summary>Set the numeric owner and/or group of one existing entry.</summary>
+	SetOwnership = 10
 }
 
 /// <summary>
@@ -98,7 +100,9 @@ public sealed class FileSystemMutationCapabilities {
 		bool canRemoveDirectories,
 		bool canSetModes,
 		bool canSetModeWithoutFollowingPathIndirection,
-		bool canCreateJunctions = false
+		bool canCreateJunctions = false,
+		bool canSetOwnership = false,
+		bool canSetOwnershipWithoutFollowingPathIndirection = false
 	) {
 		CanCreateDirectories = canCreateDirectories;
 		CanCreateFiles = canCreateFiles;
@@ -111,6 +115,8 @@ public sealed class FileSystemMutationCapabilities {
 		CanSetModes = canSetModes;
 		CanSetModeWithoutFollowingPathIndirection = canSetModeWithoutFollowingPathIndirection;
 		CanCreateJunctions = canCreateJunctions;
+		CanSetOwnership = canSetOwnership;
+		CanSetOwnershipWithoutFollowingPathIndirection = canSetOwnershipWithoutFollowingPathIndirection;
 	}
 
 	/// <summary>Gets whether one directory can be created.</summary>
@@ -135,6 +141,10 @@ public sealed class FileSystemMutationCapabilities {
 	public bool CanSetModes { get; }
 	/// <summary>Gets whether a terminal path-indirection object's own mode can be changed.</summary>
 	public bool CanSetModeWithoutFollowingPathIndirection { get; }
+	/// <summary>Gets whether numeric owner and group identifiers can be changed.</summary>
+	public bool CanSetOwnership { get; }
+	/// <summary>Gets whether a terminal path-indirection object's own ownership can be changed.</summary>
+	public bool CanSetOwnershipWithoutFollowingPathIndirection { get; }
 }
 
 /// <summary>
@@ -149,12 +159,16 @@ public sealed class FileSystemMutationPrecondition {
 	/// <param name="expectedKind">An optional required effective object kind.</param>
 	/// <param name="expectedIdentity">An optional required stable identity.</param>
 	/// <param name="rejectUncharacterizedIndirection">Whether unknown reparse-point indirection must be rejected.</param>
+	/// <param name="expectedUserId">An optional required numeric user ID.</param>
+	/// <param name="expectedGroupId">An optional required numeric group ID.</param>
 	public FileSystemMutationPrecondition(
 		FileSystemMutationExistence existence,
 		PathDereferenceMode dereferenceMode = PathDereferenceMode.NoFollow,
 		FileSystemEntryKind? expectedKind = null,
 		FileSystemEntryIdentity? expectedIdentity = null,
-		bool rejectUncharacterizedIndirection = true
+		bool rejectUncharacterizedIndirection = true,
+		uint? expectedUserId = null,
+		uint? expectedGroupId = null
 	) {
 		if ( !Enum.IsDefined( typeof( FileSystemMutationExistence ), existence ) ) {
 			throw new ArgumentOutOfRangeException( nameof( existence ) );
@@ -170,6 +184,8 @@ public sealed class FileSystemMutationPrecondition {
 		ExpectedKind = expectedKind;
 		ExpectedIdentity = expectedIdentity;
 		RejectUncharacterizedIndirection = rejectUncharacterizedIndirection;
+		ExpectedUserId = expectedUserId;
+		ExpectedGroupId = expectedGroupId;
 	}
 
 	/// <summary>Gets the required existence state.</summary>
@@ -186,6 +202,31 @@ public sealed class FileSystemMutationPrecondition {
 
 	/// <summary>Gets whether uncharacterized pathname indirection must be rejected.</summary>
 	public bool RejectUncharacterizedIndirection { get; }
+
+	/// <summary>Gets an optional required numeric user ID.</summary>
+	public uint? ExpectedUserId { get; }
+
+	/// <summary>Gets an optional required numeric group ID.</summary>
+	public uint? ExpectedGroupId { get; }
+
+	/// <summary>Copies this precondition while requiring selected current ownership values.</summary>
+	/// <param name="expectedUserId">The required current user ID, or <see langword="null"/> when unrestricted.</param>
+	/// <param name="expectedGroupId">The required current group ID, or <see langword="null"/> when unrestricted.</param>
+	/// <returns>The ownership-aware precondition.</returns>
+	public FileSystemMutationPrecondition WithExpectedOwnership(
+		uint? expectedUserId,
+		uint? expectedGroupId
+	) {
+		return new FileSystemMutationPrecondition(
+			Existence,
+			DereferenceMode,
+			ExpectedKind,
+			ExpectedIdentity,
+			RejectUncharacterizedIndirection,
+			expectedUserId,
+			expectedGroupId
+		);
+	}
 
 	/// <summary>Creates a no-follow precondition requiring a missing destination.</summary>
 	public static FileSystemMutationPrecondition DestinationMustNotExist() {
@@ -207,6 +248,31 @@ public sealed class FileSystemMutationPrecondition {
 			dereferenceMode,
 			kind,
 			identity.IsAvailable ? identity : null
+		);
+	}
+
+	/// <summary>Creates a precondition from an ownership observation and optional current-owner filter.</summary>
+	/// <param name="kind">The previously observed effective kind.</param>
+	/// <param name="identity">The previously observed stable identity.</param>
+	/// <param name="dereferenceMode">The policy used to obtain the observation.</param>
+	/// <param name="expectedUserId">The required current user ID, or <see langword="null"/> when unrestricted.</param>
+	/// <param name="expectedGroupId">The required current group ID, or <see langword="null"/> when unrestricted.</param>
+	/// <returns>The ownership-aware identity precondition.</returns>
+	public static FileSystemMutationPrecondition FromOwnershipObservation(
+		FileSystemEntryKind kind,
+		FileSystemEntryIdentity identity,
+		PathDereferenceMode dereferenceMode,
+		uint? expectedUserId,
+		uint? expectedGroupId
+	) {
+		return new FileSystemMutationPrecondition(
+			FileSystemMutationExistence.MustExist,
+			dereferenceMode,
+			kind,
+			identity.IsAvailable ? identity : null,
+			true,
+			expectedUserId,
+			expectedGroupId
 		);
 	}
 }
