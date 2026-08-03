@@ -102,13 +102,9 @@ public sealed class WaveB2CommandTests {
 				stderr: error,
 				stdinStream: Stream.Null
 			);
-			Assert.Equal( 2, status );
-			Assert.Contains(
-				"filesystem artifacts and transactional replacement begin in phase P8",
-				error.ToString()
-			);
+			Assert.Equal( 0, status );
 			Assert.Equal(
-				"old\n",
+				"new\n",
 				await File.ReadAllTextAsync( System.IO.Path.Combine( directory, "target.txt" ) )
 			);
 		} finally {

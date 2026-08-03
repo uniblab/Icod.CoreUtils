@@ -9,12 +9,16 @@ using Icod.CoreUtils.Shared.IO;
 
 /// <summary>Implements the GNU-compatible <c>patch</c> command front end.</summary>
 public static class Command {
-	private const string VersionText = "patch (Icod.Patch) 0.7";
+	private const string VersionText = "patch (Icod.Patch) 0.8";
 	private static readonly HashSet<string> ImplementedOptionKeys = new( StringComparer.Ordinal ) {
+		"backup",
+		"backup-if-mismatch",
+		"basename-prefix",
 		"batch",
 		"binary",
 		"context",
 		"directory",
+		"dry-run",
 		"ed",
 		"follow-symlinks",
 		"force",
@@ -26,12 +30,25 @@ public static class Command {
 		"input",
 		"merge",
 		"merge-short",
+		"no-backup-if-mismatch",
 		"normal",
+		"output",
 		"posix",
+		"prefix",
+		"quiet",
+		"quoting-style",
+		"reject-file",
+		"reject-format",
+		"remove-empty-files",
 		"reverse",
+		"set-time",
+		"set-utc",
 		"strip",
+		"suffix",
 		"unified",
-		"version"
+		"verbose",
+		"version",
+		"version-control"
 	};
 
 	private sealed class PatchUsageException : Exception {
@@ -64,6 +81,7 @@ public static class Command {
 	/// <param name="stderr">The standard-error writer.</param>
 	/// <param name="cancellationToken">The cancellation token.</param>
 	/// <param name="stdinStream">The byte-preserving standard-input stream.</param>
+	/// <param name="stdoutStream">The byte-preserving standard-output stream.</param>
 	/// <returns>A task whose result is the process status.</returns>
 	public static async Task<int> RunAsync(
 		IReadOnlyList<string>? arguments,
@@ -71,7 +89,8 @@ public static class Command {
 		TextWriter? stdout = null,
 		TextWriter? stderr = null,
 		CancellationToken cancellationToken = default,
-		Stream? stdinStream = null
+		Stream? stdinStream = null,
+		Stream? stdoutStream = null
 	) {
 		stdin ??= TextReader.Null;
 		stdout ??= TextWriter.Null;
@@ -90,6 +109,7 @@ public static class Command {
 					stdout,
 					stderr,
 					stdinStream,
+					standardOutputStream: stdoutStream,
 					cancellationToken: cancellationToken
 				)
 			).ConfigureAwait( false );
@@ -285,6 +305,37 @@ public static class Command {
 			) ) {
 			throw new PatchUsageException( string.Concat( "invalid version-control retrieval policy '", getText, "'" ) );
 		}
+		if ( parsed.HasOption( "backup-if-mismatch" ) && parsed.HasOption( "no-backup-if-mismatch" ) ) {
+			throw new PatchUsageException( "--backup-if-mismatch and --no-backup-if-mismatch are mutually exclusive" );
+		}
+		if ( parsed.HasOption( "set-time" ) && parsed.HasOption( "set-utc" ) ) {
+			throw new PatchUsageException( "--set-time and --set-utc are mutually exclusive" );
+		}
+		if ( parsed.HasOption( "quiet" ) && parsed.HasOption( "verbose" ) ) {
+			throw new PatchUsageException( "--quiet and --verbose are mutually exclusive" );
+		}
+		var backupSuffix = parsed.GetLastValue( "suffix" )
+			?? environment( "SIMPLE_BACKUP_SUFFIX" )
+			?? ".orig";
+		var backupVersionControl = ParseBackupVersionControl(
+			parsed.GetLastValue( "version-control" )
+				?? environment( "PATCH_VERSION_CONTROL" )
+				?? environment( "VERSION_CONTROL" )
+		);
+		var rejectFormat = ParseRejectFormat( parsed.GetLastValue( "reject-format" ) );
+		var quotingStyle = ParseQuotingStyle(
+			parsed.GetLastValue( "quoting-style" ) ?? environment( "QUOTING_STYLE" )
+		);
+		var verbosity = parsed.HasOption( "quiet" )
+			? PatchVerbosity.Quiet
+			: parsed.HasOption( "verbose" )
+				? PatchVerbosity.Verbose
+				: PatchVerbosity.Normal;
+		bool? backupIfMismatch = parsed.HasOption( "backup-if-mismatch" )
+			? true
+			: parsed.HasOption( "no-backup-if-mismatch" )
+				? false
+				: null;
 		var mergeStyle = PatchMergeStyle.None;
 		if ( parsed.HasOption( "merge-short" ) ) {
 			mergeStyle = PatchMergeStyle.Merge;
@@ -315,7 +366,63 @@ public static class Command {
 			Batch = parsed.HasOption( "batch" ),
 			Fuzz = fuzz,
 			IgnoreWhitespace = parsed.HasOption( "ignore-whitespace" ),
-			MergeStyle = mergeStyle
+			MergeStyle = mergeStyle,
+			Backup = parsed.HasOption( "backup" ),
+			BackupIfMismatch = backupIfMismatch,
+			BackupPrefix = parsed.GetLastValue( "prefix" ),
+			BackupBasenamePrefix = parsed.GetLastValue( "basename-prefix" ),
+			BackupSuffix = backupSuffix,
+			BackupSuffixSpecified = parsed.HasOption( "suffix" ),
+			BackupVersionControl = backupVersionControl,
+			RejectFile = parsed.GetLastValue( "reject-file" ),
+			RejectFormat = rejectFormat,
+			OutputFile = parsed.GetLastValue( "output" ),
+			RemoveEmptyFiles = parsed.HasOption( "remove-empty-files" ),
+			DryRun = parsed.HasOption( "dry-run" ),
+			Verbosity = verbosity,
+			QuotingStyle = quotingStyle,
+			SetTime = parsed.HasOption( "set-time" ),
+			SetUtc = parsed.HasOption( "set-utc" )
+		};
+	}
+
+	private static PatchBackupVersionControl ParseBackupVersionControl( string? value ) {
+		if ( null == value ) {
+			return PatchBackupVersionControl.Existing;
+		}
+		var matches = new[] {
+			(Name: "existing", Value: PatchBackupVersionControl.Existing),
+			(Name: "nil", Value: PatchBackupVersionControl.Existing),
+			(Name: "numbered", Value: PatchBackupVersionControl.Numbered),
+			(Name: "t", Value: PatchBackupVersionControl.Numbered),
+			(Name: "simple", Value: PatchBackupVersionControl.Simple),
+			(Name: "never", Value: PatchBackupVersionControl.Simple)
+		}.Where( candidate => candidate.Name.StartsWith( value, StringComparison.Ordinal ) )
+			.Select( candidate => candidate.Value )
+			.Distinct()
+			.ToArray();
+		return 1 == matches.Length
+			? matches[0]
+			: throw new PatchUsageException( string.Concat( "invalid version control type '", value, "'" ) );
+	}
+
+	private static PatchRejectFormat ParseRejectFormat( string? value ) {
+		return value switch {
+			null => PatchRejectFormat.Automatic,
+			"context" => PatchRejectFormat.Context,
+			"unified" => PatchRejectFormat.Unified,
+			_ => throw new PatchUsageException( string.Concat( "invalid reject format '", value, "'" ) )
+		};
+	}
+
+	private static PatchQuotingStyle ParseQuotingStyle( string? value ) {
+		return value switch {
+			null or "shell" => PatchQuotingStyle.Shell,
+			"literal" => PatchQuotingStyle.Literal,
+			"shell-always" => PatchQuotingStyle.ShellAlways,
+			"c" => PatchQuotingStyle.C,
+			"escape" => PatchQuotingStyle.Escape,
+			_ => throw new PatchUsageException( string.Concat( "invalid quoting style '", value, "'" ) )
 		};
 	}
 
@@ -341,9 +448,12 @@ public static class Command {
 				"Usage: patch [OPTION]... [ORIGFILE [PATCHFILE]]",
 				"Apply a difference listing to an original file or files.",
 				string.Empty,
+				"  -b, --backup           make backup files",
+				"  -B, --prefix=PREFIX    prepend PREFIX to backup names",
 				"  -c, --context          interpret the patch as a context diff",
 				"  -d, --directory=DIR    change to DIR before resolving patch filenames",
 				"  -e, --ed               interpret the patch as an ed script",
+				"  -E, --remove-empty-files remove output files that become empty",
 				"  -f, --force            assume the patch is not reversed",
 				"  -F, --fuzz=NUM         set the maximum fuzz factor",
 				"  -g, --get=NUM          control version-control retrieval policy",
@@ -353,19 +463,32 @@ public static class Command {
 				"      --merge[=STYLE]    merge using STYLE 'merge' or 'diff3'",
 				"  -n, --normal           interpret the patch as a normal diff",
 				"  -N, --forward          ignore patches that seem reversed or applied",
+				"  -o, --output=FILE      send patched output to FILE instead of modifying input",
 				"  -p, --strip=NUM        strip NUM leading separator-delimited components",
+				"  -r, --reject-file=FILE write rejected hunks to FILE",
 				"  -R, --reverse          assume the patch was created in reverse",
+				"  -s, --quiet            suppress ordinary progress diagnostics",
 				"  -t, --batch            ask no questions; skip bad prerequisites",
+				"  -T, --set-time         set patched-file times from local header timestamps",
 				"  -u, --unified          interpret the patch as a unified diff",
+				"  -V, --version-control=STYLE select numbered or simple backups",
+				"  -Y, --basename-prefix=PREFIX prepend PREFIX to backup basenames",
+				"  -z, --suffix=SUFFIX    use SUFFIX for simple backup names",
+				"  -Z, --set-utc          set patched-file times from UTC header timestamps",
+				"      --backup-if-mismatch make backups for offset, fuzz, or rejected hunks",
+				"      --no-backup-if-mismatch suppress mismatch-triggered backups",
+				"      --dry-run          plan and apply in memory without changing files",
+				"      --quoting-style=STYLE select diagnostic filename quoting",
+				"      --reject-format=FORMAT write context or unified rejects",
+				"      --verbose          report artifact-policy details",
 				"      --binary           read and write data in binary mode",
-				"      --follow-symlinks  follow a target link after containment checks",
+				"      --follow-symlinks  follow input and output symbolic links",
 				"      --posix            use POSIX filename-selection and retrieval defaults",
 				"      --help             display this help and exit",
 				"  -v, --version          output version information and exit",
 				string.Empty,
-				"Wave B2 selects and canonicalizes targets, plans multiple file patches,",
-				"and applies hunks to immutable virtual results without committing changes.",
-				"Rejects, backups, output artifacts, and transactional replacement begin in P8."
+				"Wave C materializes explicit target, backup, reject, and output artifacts.",
+				"The initial P9 adapter stages complete sibling files and provides injectable rollback."
 			}
 		);
 		await output.WriteLineAsync( text.AsMemory(), cancellationToken ).ConfigureAwait( false );

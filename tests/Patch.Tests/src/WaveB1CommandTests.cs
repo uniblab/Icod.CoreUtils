@@ -20,8 +20,8 @@ public sealed class WaveB1CommandTests {
 			stderr: error,
 			stdinStream: input
 		);
-		Assert.Equal( 2, status );
-		Assert.Contains( "filesystem artifacts and transactional replacement begin in phase P8", error.ToString() );
+		Assert.Equal( 1, status );
+		Assert.Contains( "no usable file name", error.ToString() );
 	}
 
 	/// <summary>Verifies command options map without loss into pure application policy.</summary>
@@ -79,7 +79,7 @@ public sealed class WaveB1CommandTests {
 			stderr: error,
 			stdinStream: input
 		);
-		Assert.Equal( 2, status );
+		Assert.Equal( 1, status );
 		Assert.DoesNotContain( "invalid merge style", error.ToString() );
 	}
 
