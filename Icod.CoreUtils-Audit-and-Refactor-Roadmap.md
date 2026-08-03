@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `40` |
-| Current engineering milestone | Batch 41 — `chmod` |
+| Completed command batches | `0` through `41` |
+| Current engineering milestone | Batch 42 — `chown` and `chgrp` |
 | Completed infrastructure milestone | Completion Gates E2 through E5 — canonical paths, authoritative metadata, pathname-indirection characterization, mode expressions, single-path mutation, and recursive mutation/copy planning |
 | Active infrastructure dependency | Completion Gate E6 — transactional replacement before Batch 44 |
-| Next command batch | Batch 41 — `chmod` |
+| Next command batch | Batch 42 — `chown` and `chgrp` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1068,9 +1068,9 @@ Patch is not a recursive-copy consumer and does not wait for all of E5 merely to
 
 ### Batch 41 — Permission modes (1 tool)
 
-- [ ] `chmod`
+- [x] `chmod`
 
-Implement octal parsing correctly, symbolic clauses, omitted-who/umask behavior, recursive traversal, reference mode, symlink policy, preserve-root, verbose/change reporting, and Windows capability mapping without pretending that the read-only attribute is a complete Unix mode.
+Batch 41 replaces the former Windows read-only approximation with an asynchronous GNU-compatible command over the E3 metadata, E4 mutation, and E5 recursive-traversal contracts. It uses `FileModeParser` and `FileModeExpression` for absolute numeric, operator-numeric, and symbolic clauses; applies the process creation mask when symbolic clauses omit `who`; supports `--reference`, recursive traversal, command-line-versus-descendant link policy, `--dereference`, `--no-dereference`, opt-in `--preserve-root`, quiet, changes-only, and verbose reporting; and carries identity-bearing preconditions into every mode mutation. Native Windows reports POSIX mode observation or mutation as unsupported and never substitutes `FileAttributes.ReadOnly`. A dedicated `ChMod.Tests` project covers octal and symbolic modes, reference modes, recursive preconditions, preserve-root, reporting, quiet failures, and Windows non-emulation. Full Windows, Ubuntu, and macOS CI remains the repository merge gate.
 
 ### Batch 42 — Ownership and group mutation (2 tools)
 
