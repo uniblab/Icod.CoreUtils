@@ -218,12 +218,12 @@ public sealed class TransactionalFileReplacementTransaction : IAsyncDisposable {
 			throw;
 		} catch ( TransactionFailureException exception ) {
 			var cleanupSucceeded = await CleanupAsync( staged, injectFailure: false ).ConfigureAwait( false );
-			var outcome = !cleanupSucceeded
+			var o = !cleanupSucceeded
 				? TransactionalReplacementOutcome.FailedCleanupIncomplete
 				: TransactionalReplacementDiagnosticCode.AtomicityUnavailable == exception.Diagnostic.Code
 					? TransactionalReplacementOutcome.FailedAtomicityUnavailable
 					: TransactionalReplacementOutcome.FailedBeforeCommit;
-			return CreateResult( outcome, Array.Empty<string>(), Array.Empty<string>() );
+			return CreateResult( o, Array.Empty<string>(), Array.Empty<string>() );
 		} catch {
 			var cleanupSucceeded = await CleanupAsync( staged, injectFailure: false ).ConfigureAwait( false );
 			return CreateResult(
