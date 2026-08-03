@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `38` |
-| Current engineering milestone | Batch 39 — hard and symbolic links |
+| Completed command batches | `0` through `39` |
+| Current engineering milestone | Batch 40 — special file creation |
 | Completed infrastructure milestone | Completion Gates E2, E3, E3R, and E4 — canonical paths, authoritative metadata, pathname-indirection characterization, mode expressions, and basic single-path mutation |
 | Next infrastructure dependency | Completion Gate E5 — recursive mutation and copying before Batch 41 |
-| Next command batch | Batch 39 — `link` and `ln` |
+| Next command batch | Batch 40 — `mkfifo` and `mknod` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1025,10 +1025,14 @@ Batch 38 is implemented over the E3/E3R metadata and E4 single-path mutation con
 
 ### Batch 39 — Hard and symbolic links (2 tools)
 
-- [ ] `link`
-- [ ] `ln`
+- [x] `link`
+- [x] `ln`
 
 Make `link` the documented two-operand hard-link command. Build `ln` as a separate front end over shared link primitives, covering symbolic/physical/logical behavior, targets, directories, relative links, backups, force/interactive modes, and platform capability diagnostics. Do not invoke native `ln`.
+
+Batch 39 is implemented over the E3/E3R metadata and E4 single-path mutation contracts without invoking an external `ln`. `link` now enforces the exact two-operand interface and creates one physical hard link with source-identity revalidation and controlled cross-device, access, unsupported-platform, and existing-destination diagnostics. `ln` implements GNU operand forms, hard and symbolic links, `-L`/`-P` source policy, target-directory and no-target-directory forms, relative symbolic-link text, force/interactive precedence, simple/numbered/existing backup policy, suffix and environment controls, no-dereference destination-directory behavior, same-file protection, and verbose reporting.
+
+Dedicated `Icod.CoreUtils.Link.Tests` and `Icod.CoreUtils.Ln.Tests` projects cover hard-link identity, exact operands, existing destinations, dangling and relative symbolic links, multi-source target directories, logical and physical source behavior, replacement, backups, interactive refusal, and destination-directory symbolic links. Full-checkout Debug, Staging, Release, and Windows/Ubuntu/macOS CI validation remain to be executed after integration.
 
 ### Batch 40 — Special file creation (2 tools)
 
