@@ -5,9 +5,9 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `40` |
-| Current engineering milestone | Completion Gate E5 — recursive mutation and copying |
-| Completed infrastructure milestone | Completion Gates E2, E3, E3R, and E4 — canonical paths, authoritative metadata, pathname-indirection characterization, mode expressions, and basic single-path mutation |
-| Active infrastructure dependency | Completion Gate E5 — recursive mutation and copying before Batch 41 |
+| Current engineering milestone | Batch 41 — `chmod` |
+| Completed infrastructure milestone | Completion Gates E2 through E5 — canonical paths, authoritative metadata, pathname-indirection characterization, mode expressions, single-path mutation, and recursive mutation/copy planning |
+| Active infrastructure dependency | Completion Gate E6 — transactional replacement before Batch 44 |
 | Next command batch | Batch 41 — `chmod` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
@@ -1047,18 +1047,20 @@ Dedicated `Icod.CoreUtils.MkFifo.Tests` and `Icod.CoreUtils.MkNod.Tests` project
 
 ### Completion Gate E5 — before Batch 41
 
-* [ ] Extend Completion Gate E1's provenance, event, identity, cycle, boundary, and structured-error contracts for recursive mutation and copying:
+* [x] Extend Completion Gate E1's provenance, event, identity, cycle, boundary, and structured-error contracts for recursive mutation and copying:
 
-  * [ ] mutation-safe recursive traversal without replacing the E1 read-only provider and traversal model;
-  * [ ] preserve-root protection;
-  * [ ] enforce one-filesystem boundaries through the filesystem identities and root-relative boundary policy established by E1;
-  * [ ] race-aware no-follow operations;
-  * [ ] hard-link identity tracking;
-  * [ ] sparse-file detection and preservation;
-  * [ ] metadata-preservation policy;
-  * [ ] destination-inside-source detection;
-  * [ ] partial-failure and cleanup policy;
-  * [ ] integration points for the later transactional replacement and backup model.
+  * [x] mutation-safe recursive traversal without replacing the E1 read-only provider and traversal model;
+  * [x] preserve-root protection;
+  * [x] enforce one-filesystem boundaries through the filesystem identities and root-relative boundary policy established by E1;
+  * [x] race-aware no-follow operations;
+  * [x] hard-link identity tracking;
+  * [x] sparse-file detection and preservation;
+  * [x] metadata-preservation policy;
+  * [x] destination-inside-source detection;
+  * [x] partial-failure and cleanup policy;
+  * [x] integration points for the later transactional replacement and backup model.
+
+The Gate E5 implementation is supplied under `Icod.CoreUtils.Shared.FileSystem.RecursiveMutation`. `RecursiveMutationTraversalEngine` wraps the E1 event stream rather than introducing a second walker, preserves root and operand provenance, maps root-relative destinations, delegates selectors, depth and resource limits, one-filesystem, cycle, ordering, cancellation, structured-error scope, and error behavior to E1, and pairs every mutable entry with an E4 identity-bearing precondition. The gate also adds preserve-root and destination-containment preflight, repeated hard-link tracking, sparse-range copy behavior through `IFileSystemOperations`, explicit requested-versus-required E3 metadata policy, and deterministic reverse-order rollback through `RecursiveCleanupJournal`. Focused synthetic tests cover preflight, event mapping, identity reuse, sparse preservation, required-capability failure, and cleanup continuation. Full three-runner CI remains the repository merge gate.
 
 This gate extends rather than duplicates E1. It supports recursive `chmod`, `chown`, `chgrp`, `rm`, `cp`, `mv`, `install`, `du`, and `tar` while preserving one shared traversal vocabulary for read-only and mutation-aware consumers.
 

@@ -1,6 +1,6 @@
 # Shared.FileSystem
 
-`Shared.FileSystem` contains injectable host-filesystem capabilities. The original operations layer supports flush, allocation, and sparse-file behavior. Completion Gate E1 adds a read-only pathname-expansion and traversal layer under [`Traversal`](Traversal/README.md), and Completion Gate E3 adds authoritative metadata and timestamp mutation under [`Metadata`](Metadata/README.md).
+`Shared.FileSystem` contains injectable host-filesystem capabilities. The original operations layer supports flush, allocation, and sparse-file behavior. Completion Gate E1 adds a read-only pathname-expansion and traversal layer under [`Traversal`](Traversal/README.md), Completion Gate E3 adds authoritative metadata and timestamp mutation under [`Metadata`](Metadata/README.md), Completion Gate E4 adds race-aware single-path primitives under [`Mutation`](Mutation/README.md), and Completion Gate E5 adds recursive mutation/copy policy under [`RecursiveMutation`](RecursiveMutation/README.md).
 
 The operations layer distinguishes operating-system API availability from the behavior of an individual filesystem or volume. Every operation therefore returns `PlatformOperationResult` rather than silently claiming unsupported semantics. The traversal layer yields caller-independent roots, entries, event phases, identities, boundaries, cycles, and structured errors. The metadata layer enriches those same identities with typed values whose availability is always explicit.
 
@@ -64,3 +64,7 @@ See [`Traversal/README.md`](Traversal/README.md) for the API boundaries and plat
 Completion Gate E3 lives in `Icod.CoreUtils.Shared.FileSystem.Metadata`. `IFileSystemMetadataProvider` observes one entry or its containing filesystem and applies selective access, modification, and birth timestamp requests where supported. `SystemFileSystemMetadataProvider` combines the E1 identity provider with Windows handle APIs, Linux `statx`, macOS `stat`/`lstat`, POSIX `statvfs`, Windows volume APIs, and controlled BCL fallbacks.
 
 Every optional field uses `FileSystemMetadataValue<T>` to distinguish available, unavailable, unsupported, and not-applicable states. Commands must not invent zero values for missing modes, ownership, timestamps, allocation data, or identifiers. See [`Metadata/README.md`](Metadata/README.md) for the complete contract and platform profile.
+
+## Recursive mutation and copying
+
+Completion Gate E5 lives in `Icod.CoreUtils.Shared.FileSystem.RecursiveMutation`. It consumes E1 events and E4 mutation preconditions instead of introducing another walker. It adds preserve-root and destination-containment preflight, root-relative destination mapping, hard-link identity tracking, sparse-range copying, requested-versus-required metadata policy, and deterministic reverse-order rollback. See [`RecursiveMutation/README.md`](RecursiveMutation/README.md).
