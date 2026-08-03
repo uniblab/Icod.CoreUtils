@@ -81,9 +81,9 @@ public sealed class SystemCanonicalPathResolverTests {
 	[Fact]
 	public async Task DetectsHostLinkLoopWhenSupported() {
 		var root = CreateTemporaryDirectory();
+		var first = SystemPath.Combine( root, "first" );
+		var second = SystemPath.Combine( root, "second" );
 		try {
-			var first = SystemPath.Combine( root, "first" );
-			var second = SystemPath.Combine( root, "second" );
 			if (
 				!TryCreateFileLink( first, "second" )
 				|| !TryCreateFileLink( second, "first" )
@@ -96,7 +96,9 @@ public sealed class SystemCanonicalPathResolverTests {
 
 			Assert.Equal( CanonicalPathFailureCode.SymbolicLinkLoop, result.Failure!.Code );
 		} finally {
-			Directory.Delete( root, recursive: true );
+			File.Delete( first );
+			File.Delete( second );
+			Directory.Delete( root, recursive: false );
 		}
 	}
 
