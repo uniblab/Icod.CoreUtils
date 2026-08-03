@@ -7,6 +7,7 @@ using Icod.CoreUtils.Shared.FileSystem.Modes;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
 using Icod.CoreUtils.Shared.Platform;
+using System.IO;
 using Xunit;
 
 /// <summary>Exercises GNU-compatible <c>chmod</c> behavior.</summary>
