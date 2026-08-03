@@ -332,7 +332,7 @@ public sealed class TransactionalReplacementArtifact {
 			TransactionalReplacementAction.Replace,
 			entry.Precondition,
 			contentWriter,
-			entry.TraversalEntry.Path,
+			entry.TraversalEntry.DisplayPath,
 			sourceMetadata,
 			metadataPlan,
 			entry
