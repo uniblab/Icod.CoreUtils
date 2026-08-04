@@ -3,9 +3,10 @@ namespace Icod.Patch.Tests;
 using System.IO;
 using System.Text;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
+using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;
 using Xunit;
 
-/// <summary>Closes Patch Phase P10 against the shared E2, E3, and E4 contracts.</summary>
+/// <summary>Verifies Patch conformance against the stabilized shared E2 through E6 contracts.</summary>
 public sealed class WaveDConformanceTests {
 	/// <summary>Verifies terminal symbolic links are rejected unless explicitly followed.</summary>
 	[Fact]
@@ -264,19 +265,30 @@ public sealed class WaveDConformanceTests {
 		}
 	}
 
-	/// <summary>Verifies the host adapter exposes the single frozen Wave D contract.</summary>
+	/// <summary>Verifies the host adapter exposes the frozen contract and the stabilized shared E6 capability record.</summary>
 	[Fact]
-	public void HostAdapterExposesFrozenContract() {
+	public void HostAdapterExposesStabilizedE6Contract() {
 		IPatchFileSystem fileSystem = new SystemPatchFileSystem();
 		Assert.Same( PatchE6TransactionContract.Current, fileSystem.TransactionContract );
-		Assert.Equal(
-			PatchTransactionCapabilityLevel.Unknown,
-			fileSystem.TransactionCapabilities.AtomicReplacement
-		);
-		Assert.Equal(
-			PatchTransactionCapabilityLevel.Unavailable,
-			fileSystem.TransactionCapabilities.DirectoryDurability
-		);
+		var expected = SystemTransactionalReplacementFileSystem.Instance.Capabilities;
+		Assert.Equal( expected, fileSystem.TransactionCapabilities );
+		var native = OperatingSystem.IsWindows()
+			|| OperatingSystem.IsLinux()
+			|| OperatingSystem.IsMacOS()
+			|| OperatingSystem.IsFreeBSD();
+		Assert.Equal( native, fileSystem.TransactionCapabilities.SupportsAtomicReplaceExisting );
+		Assert.Equal( native, fileSystem.TransactionCapabilities.SupportsAtomicPublishNew );
+		Assert.Equal( native, fileSystem.TransactionCapabilities.SupportsAtomicDelete );
+		Assert.Equal( native, fileSystem.TransactionCapabilities.SupportsDirectoryDurability );
+	}
+
+	/// <summary>Verifies Phase P11B removed the unreachable provisional P9 implementation.</summary>
+	[Fact]
+	public void ProvisionalP9TransactionTypeIsAbsent() {
+		Assert.Null( typeof( Command ).Assembly.GetType(
+			"Icod.Patch.SystemPatchTransaction",
+			throwOnError: false
+		) );
 	}
 
 	private static void DeleteLinkIfPresent( string path ) {
