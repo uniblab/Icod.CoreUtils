@@ -5,9 +5,9 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `45` |
-| Current engineering milestone | LineEditor Phase LE1 complete; proceed to Phase LE2 — validate the Shared BRE/ERE foundation for LineEditor consumers |
+| Current engineering milestone | LineEditor Phase LE2 complete; proceed to Phase LE3 — migrate Sed to the Shared BRE/ERE provider |
 | Completed infrastructure milestone | Completion Gates E2 through E6 — canonical paths, authoritative metadata, pathname-indirection characterization, mode expressions, single-path mutation, recursive mutation/copy planning, and transactional replacement |
-| Active infrastructure dependency | LE1 preserved the Sed behavior baseline while exposing module ownership; LE2 now validates the stabilized Shared BRE/ERE contracts against Sed and Ed requirements |
+| Active infrastructure dependency | LE2 verified the stabilized Shared BRE/ERE contracts without broadening them; LE3 now introduces Sed-specific policy over that provider |
 | Next command batch | Completion Gate F1 and Batch 46 remain next after the contiguous LineEditor incubation sequence |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
@@ -1198,9 +1198,11 @@ Phase LE1 is complete. The original 4,604-line implementation is now a partial `
 
 Completion Gate R1 performs this phase before Batch 26 because Grep is the first remaining BRE/ERE consumer. When the LineEditor sequence reaches this point:
 
-- [ ] verify that the Gate R1 syntax, locale, byte/text mapping, match-offset, capture, diagnostic, cancellation, and resource-limit contracts satisfy GNU Sed and GNU Ed requirements;
-- [ ] extend the shared contract only where the pinned LineEditor baselines expose a genuine cross-suite gap;
-- [ ] keep Sed empty-pattern reuse, address/substitution context, match iteration, and replacement policy in `Icod.LineEditor.Sed` rather than broadening the framework contract unnecessarily.
+- [x] verify that the Gate R1 syntax, locale, byte/text mapping, match-offset, capture, diagnostic, cancellation, and resource-limit contracts satisfy GNU Sed and GNU Ed requirements;
+- [x] extend the shared contract only where the pinned LineEditor baselines expose a genuine cross-suite gap; no production extension was required by the audit;
+- [x] keep Sed empty-pattern reuse, address/substitution context, match iteration, and replacement policy in `Icod.LineEditor.Sed` rather than broadening the framework contract unnecessarily.
+
+Phase LE2 is complete. `LineEditorRegularExpressionContractTests` now exercises the Shared provider as a LineEditor consumer boundary, including BRE/ERE syntax separation, ERE composition, leftmost-longest selection, captures, locale injection, line-sensitive anchors, UTF-16 and exact source-byte coordinates, malformed-byte preservation, diagnostics, cancellation, and resource limits. The audit is recorded in `Icod.LineEditor-LE2-Regex-Contract-Audit.md`; it found no missing cross-suite production capability. Phase LE3 remains responsible for Sed-specific regex state and migration.
 
 #### Phase LE3 — Migrate Sed to the Shared regex provider
 
