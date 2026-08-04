@@ -16,11 +16,13 @@ targeted semantic corrections and shared-infrastructure adoption
 
 That sequence preserves working behavior while establishing a maintainable architecture for GNU Sed, Ed, and Red.
 
-## LE0 and LE1 completion notes
+## LE0 through LE2 completion notes
 
 Phase LE0 completed the identity and project-policy cleanup without changing command behavior. The repository now uses the final LineEditor project identities, treats `Icod.LineEditor.Ed.Shared` as the definite Ed/Red engine, keeps a general `Icod.LineEditor.Shared` optional, and records the exact pre-decomposition source and CI baseline in [`Icod.LineEditor-LE0-Baseline.md`](Icod.LineEditor-LE0-Baseline.md).
 
 Phase LE1 completed the behavior-preserving decomposition described by this rationale. The public `Icod.LineEditor.Sed.Command` boundary and both established entry-point signatures remain unchanged. Its former single-file implementation is now divided into focused partial-class modules for options, scripting, addresses, execution, records, regular expressions, substitution, processes, and files. The decomposition deliberately retains the temporary behaviors assigned to LE3, LE4, LE5, and LE10; characterization and structural tests make those boundaries explicit.
+
+Phase LE2 completed the Shared regular-expression contract audit. The managed Gate R1 foundation already satisfies the cross-suite GNU Sed and GNU Ed needs for BRE/ERE syntax, leftmost-longest matching, captures, locale injection, authoritative string and byte coordinates, invalid-input policy, diagnostics, cancellation, and resource limits. No production Shared extension was required. The audit deliberately leaves empty-pattern reuse, address/substitution context, match iteration, replacement grammar, output encoding, and Sed diagnostics in `Icod.LineEditor.Sed`; these become the adapter and migration responsibilities of LE3.
 
 ## 1. The current state is already beyond a raw rename
 
@@ -207,12 +209,12 @@ GNU/POSIX and .NET matching can differ in:
 - GNU extensions;
 - BRE versus ERE semantics.
 
-The current Shared project already contains a managed GNU/POSIX BRE foundation. Sed also needs ERE.
+Completion Gate R1 now provides the managed GNU/POSIX BRE and ERE foundation. Phase LE2 verified its syntax, selection, capture, locale, byte/text coordinate, diagnostic, cancellation, and resource contracts against the pinned Sed and Ed baselines. No additional cross-suite production API was required.
 
-The proper sequence is:
+The remaining sequence is:
 
 ```text
-extend Shared regex contracts for BRE and ERE
+Gate R1 Shared BRE/ERE contract (complete and LE2-validated)
         ↓
 build Sed-specific policy over those contracts
         ↓
@@ -596,11 +598,11 @@ Icod.LineEditor.Sed.InPlaceEditor
 - move implementation into internal modules;
 - preserve behavior.
 
-## Stage 3 — Complete Shared BRE and ERE infrastructure
+## Stage 3 — Complete Shared BRE and ERE infrastructure — completed
 
-- extend the current Shared regex engine;
-- add cross-suite tests;
-- avoid a duplicate Sed regex engine.
+- Completion Gate R1 extended the Shared regex engine;
+- Phase LE2 added LineEditor-oriented cross-suite acceptance tests;
+- the audit found no need for a duplicate Sed regex engine or another Shared contract.
 
 ## Stage 4 — Migrate Sed regular-expression behavior
 

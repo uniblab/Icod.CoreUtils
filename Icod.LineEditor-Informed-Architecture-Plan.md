@@ -32,11 +32,13 @@ Icod.LineEditor.Sed.Command
 
 No `EdCommand`, `RedCommand`, or `SedCommand` classes are proposed.
 
-## LE0 and LE1 implementation status
+## LE0 through LE2 implementation status
 
 Phase LE0 was completed on August 4, 2026. Project and solution identities now follow the architecture below, Ed and Red explicitly use C# 13, the Red project file follows the repository's UTF-8-without-BOM convention, and the pre-LE1 source and three-runner test state is recorded in [`Icod.LineEditor-LE0-Baseline.md`](Icod.LineEditor-LE0-Baseline.md). Because the inspected Red project contained only a placeholder entry point, LE0 also establishes the required public `Icod.LineEditor.Red.Command` facade while preserving that seed output; Phase LE8 remains responsible for actual restricted-editor behavior.
 
 Phase LE1 is now complete. The monolithic Sed implementation has been decomposed into responsibility-focused partial-class modules while preserving the public command signatures and the pre-LE1 regex, record, script-source, sandbox, process, and replacement semantics. New characterization and module-boundary tests make those temporary behaviors explicit for the later semantic phases.
+
+Phase LE2 is now complete. The Gate R1 BRE/ERE foundation has been revalidated as the LineEditor consumer boundary, with direct acceptance coverage for syntax profiles, leftmost-longest selection, captures, locale policy, string and exact-byte coordinates, malformed input, diagnostics, cancellation, and resource limits. The audit found no missing cross-suite production contract and leaves Sed-specific state and replacement policy for LE3.
 
 ---
 
@@ -350,7 +352,7 @@ It provides:
 - exact final-record termination metadata;
 - GNU range parsing;
 - delimiter and escape scanning;
-- a managed GNU BRE implementation;
+- a managed GNU BRE/ERE implementation;
 - shell-free child-process execution;
 - secure temporary workspaces;
 - platform capability reporting.
@@ -379,13 +381,13 @@ Sed-specific
 Command-local
 ```
 
-### Required Shared enhancements for the LineEditor work
+### Shared enhancements completed for the LineEditor work
 
-The most important new Shared work is not a LineEditor package. It is an extension of existing cross-suite contracts.
+The most important Shared work was not a LineEditor package. Completion Gate R1 extended the existing cross-suite contract, and Phase LE2 has now verified that contract against the pinned LineEditor baselines without requiring another production API.
 
 #### GNU ERE support
 
-Evolve the regular-expression API so one provider can explicitly compile:
+The regular-expression API now explicitly compiles:
 
 ```text
 GNU/POSIX basic regular expressions
@@ -1011,14 +1013,14 @@ Phase LE1 is complete and behavior-preserving. `Command.cs` now contains only th
 
 ## Phase LE2 — Extend the current Shared regex foundation
 
-- [ ] Add an explicit Basic-versus-Extended syntax profile.
-- [ ] Implement GNU/POSIX ERE in the managed parser and matcher.
-- [ ] Preserve existing BRE callers and default behavior.
-- [ ] Add leftmost-longest, capture, repetition, alternation, bracket, locale, cancellation, and diagnostic tests for ERE.
-- [ ] Update the Shared regular-expression README to identify Sed and Grep as consumers.
-- [ ] Define byte/text mapping requirements for future byte-preserving matches.
+- [x] Add an explicit Basic-versus-Extended syntax profile.
+- [x] Implement GNU/POSIX ERE in the managed parser and matcher.
+- [x] Preserve existing BRE callers and default behavior.
+- [x] Add leftmost-longest, capture, repetition, alternation, bracket, locale, cancellation, and diagnostic tests for ERE.
+- [x] Update the Shared regular-expression README to identify Sed and Grep as consumers.
+- [x] Define byte/text mapping requirements for future byte-preserving matches.
 
-This phase belongs in Shared because it is cross-suite infrastructure.
+This phase belongs in Shared because it is cross-suite infrastructure. Completion Gate R1 delivered the production foundation before Batch 26; Phase LE2 has now revalidated it against the pinned GNU Sed and GNU Ed baselines. The LineEditor acceptance suite covers syntax, ERE composition, leftmost-longest selection, captures, locale policy, string and byte coordinates, invalid input, diagnostics, cancellation, and resource limits. No production Shared extension was required. `Icod.LineEditor-LE2-Regex-Contract-Audit.md` records the boundary and the LE3 handoff.
 
 ## Phase LE3 — Migrate Sed to the shared regex provider
 

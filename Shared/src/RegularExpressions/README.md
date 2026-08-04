@@ -21,7 +21,7 @@ The immutable upstream identities and source links belong in `Icod.CoreUtils-Ups
 | Provider/profile | Operator spelling | Compatibility policy |
 |---|---|---|
 | `GnuBasicRegularExpressionProvider` | Escaped `\(`, `\)`, `\|`, `\+`, `\?`, and `\{m,n\}` | Strict GNU/POSIX Basic by default; `GnuExprCompatibility` enables the established Coreutils `expr` duplicate/reverse-range behavior |
-| `GnuExtendedRegularExpressionProvider` | Unescaped `(`, `)`, `|`, `+`, `?`, and `{m,n}` | Strict GNU/POSIX Extended by default; `GnuExtendedCompatibility` enables GNU search-consumer leading/duplicate-operator behavior while retaining invalid-range diagnostics |
+| `GnuExtendedRegularExpressionProvider` | Unescaped `(`, `)`, `|`, `+`, `?`, and `{m,n}` | GNU/POSIX Extended; `GnuExtendedCompatibility` retains the permissive invalid-duplicate policy required by search consumers |
 | `GnuEmacsRegularExpressionProvider` | Unescaped `+` and `?`; escaped grouping, alternation, and intervals | Uses the permissive Gnulib Emacs profile required by Coreutils `ptx` |
 
 ERE is parsed directly. Escaped ERE metacharacters are literals, unmatched opening parentheses are diagnosed, and an unmatched closing parenthesis is ordinary outside a subexpression in the GNU profile. GNU-compatible malformed ERE brace text such as `a{` or `a{word}` remains literal; a syntactically recognized interval with invalid bounds still produces `InvalidInterval`.
@@ -108,10 +108,16 @@ The BCL does not expose a locale's complete collating-element inventory. Single-
 2. POSIX/GNU requires leftmost-longest selection and observable capture-register behavior.
 3. GNU invalid-duplicate, interval, empty-range, word, and whole-input behavior is profile-driven.
 4. Classification and collation are delegated to an injectable locale policy.
-5. Matching coordinates may be UTF-16 indices or exact source-byte offsets.
+5. Matching coordinates may be UTF-16 indices or exact authoritative source-byte offsets.
 6. Malformed input policy is explicit and can preserve source bytes.
 7. Compile and match failures use stable diagnostics rather than `RegexParseException` or an exposed internal resource exception.
 8. Perl/.NET-only constructs such as lookaround, lazy quantifiers, inline options, named groups, and replacement syntax are not interpreted as GNU BRE/ERE features.
+
+## LineEditor Phase LE2 validation
+
+Phase LE2 audited this contract against the pinned GNU Sed 4.10 and GNU Ed 1.22.5 requirements. The dedicated `LineEditorRegularExpressionContractTests` acceptance suite verifies syntax separation, ERE operators, leftmost-longest selection, captures, locale injection, line-sensitive anchors, UTF-16 and exact-byte coordinates, malformed-byte preservation, deterministic diagnostics, cancellation, and resource limits.
+
+The audit found no missing cross-suite production contract. Sed-specific BRE/ERE option selection, empty-pattern reuse, address-versus-substitution context, repeated and zero-length match progression, replacement-template parsing, output encoding, and command diagnostics remain in `Icod.LineEditor.Sed`. Ed owns the analogous editor-session policies. See `Icod.LineEditor-LE2-Regex-Contract-Audit.md` for the handoff to Phase LE3.
 
 ## Resource, cancellation, and platform policy
 
