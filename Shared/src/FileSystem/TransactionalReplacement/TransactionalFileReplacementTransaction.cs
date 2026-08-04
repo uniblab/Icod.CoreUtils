@@ -680,6 +680,9 @@ public sealed class TransactionalFileReplacementTransaction : IAsyncDisposable {
 				artifact.ContentWriter!,
 				cancellationToken
 			).ConfigureAwait( false );
+			if ( artifact.StagedFileConfigurator is not null ) {
+				await artifact.StagedFileConfigurator( path, cancellationToken ).ConfigureAwait( false );
+			}
 			await FlushStagedAsync( artifact, path, cancellationToken ).ConfigureAwait( false );
 			return path;
 		} catch {

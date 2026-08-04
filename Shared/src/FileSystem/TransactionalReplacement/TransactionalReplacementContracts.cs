@@ -155,6 +155,15 @@ public delegate ValueTask TransactionalReplacementContentWriter(
 	CancellationToken cancellationToken
 );
 
+/// <summary>Configures a complete staged file before durability flushing and namespace publication.</summary>
+/// <param name="stagingPath">The securely created sibling staging pathname.</param>
+/// <param name="cancellationToken">The cancellation token.</param>
+/// <returns>A value task representing the configuration.</returns>
+public delegate ValueTask TransactionalReplacementStagedFileConfigurator(
+	string stagingPath,
+	CancellationToken cancellationToken
+);
+
 /// <summary>Configures GNU-compatible backup naming and retention.</summary>
 public sealed class TransactionalReplacementBackupPolicy {
 	/// <summary>Gets a policy that retains no public backup.</summary>
@@ -240,6 +249,7 @@ public sealed class TransactionalReplacementArtifact {
 	/// <param name="recursiveEntry">Optional E5 recursive mutation provenance.</param>
 	/// <param name="explicitBackupPath">An optional caller-selected backup pathname.</param>
 	/// <param name="retainBackup">Whether this artifact retains its recoverable original as a public backup.</param>
+	/// <param name="stagedFileConfigurator">An optional configurator invoked after content is complete and before it is flushed or published.</param>
 	public TransactionalReplacementArtifact(
 		string recoveryUnitId,
 		string path,
@@ -251,7 +261,8 @@ public sealed class TransactionalReplacementArtifact {
 		RecursiveMetadataPreservationPlan? metadataPlan = null,
 		RecursiveMutationEntry? recursiveEntry = null,
 		string? explicitBackupPath = null,
-		bool retainBackup = false
+		bool retainBackup = false,
+		TransactionalReplacementStagedFileConfigurator? stagedFileConfigurator = null
 	) {
 		ArgumentException.ThrowIfNullOrWhiteSpace( recoveryUnitId );
 		ArgumentException.ThrowIfNullOrWhiteSpace( path );
@@ -271,6 +282,9 @@ public sealed class TransactionalReplacementArtifact {
 		if ( TransactionalReplacementAction.Replace != action && contentWriter is not null ) {
 			throw new ArgumentException( "Only replacement artifacts may supply a content writer.", nameof( contentWriter ) );
 		}
+		if ( TransactionalReplacementAction.Replace != action && stagedFileConfigurator is not null ) {
+			throw new ArgumentException( "Only replacement artifacts may supply a staged-file configurator.", nameof( stagedFileConfigurator ) );
+		}
 		if ( metadataPlan is not null && sourceMetadata is null ) {
 			throw new ArgumentException( "An E5 metadata plan requires authoritative source metadata.", nameof( metadataPlan ) );
 		}
@@ -288,6 +302,7 @@ public sealed class TransactionalReplacementArtifact {
 		RecursiveEntry = recursiveEntry;
 		ExplicitBackupPath = explicitBackupPath;
 		RetainBackup = retainBackup;
+		StagedFileConfigurator = stagedFileConfigurator;
 	}
 
 	/// <summary>Gets the recovery-unit identity.</summary>
@@ -312,6 +327,8 @@ public sealed class TransactionalReplacementArtifact {
 	public string? ExplicitBackupPath { get; }
 	/// <summary>Gets whether this artifact retains its recoverable original as a public backup.</summary>
 	public bool RetainBackup { get; }
+	/// <summary>Gets the optional pre-publication staged-file configurator.</summary>
+	public TransactionalReplacementStagedFileConfigurator? StagedFileConfigurator { get; }
 
 	/// <summary>Creates an artifact directly from an E5 recursive mutation entry.</summary>
 	/// <param name="recoveryUnitId">The recovery-unit identity.</param>
