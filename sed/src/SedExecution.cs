@@ -23,20 +23,48 @@ public static partial class Command {
 
 	private sealed class DeferredOutputItem {
 
-		public string Value {
+		public DeferredOutputKind Kind {
 			get;
 		}
 
-		public DeferredOutputKind Kind {
+		public bool Terminate {
+			get;
+		}
+
+		public string Value {
 			get;
 		}
 
 		public DeferredOutputItem(
 			DeferredOutputKind kind,
-			string value
+			string value,
+			bool terminate
 		) {
 			this.Kind = kind;
 			this.Value = value;
+			this.Terminate = terminate;
+		}
+
+	}
+
+	private sealed class OutputFile : IDisposable {
+
+		public SedOutputWriter Writer {
+			get;
+		}
+
+		private readonly Stream myStream;
+
+		public OutputFile(
+			Stream stream,
+			SedOutputWriter writer
+		) {
+			this.myStream = stream;
+			this.Writer = writer;
+		}
+
+		public void Dispose() {
+			this.myStream.Dispose();
 		}
 
 	}
@@ -45,9 +73,13 @@ public static partial class Command {
 
 		private readonly List<DeferredOutputItem> myDeferredOutput;
 		private readonly Dictionary<string, AsyncRecordReader> myReadLineFiles;
-		private readonly Dictionary<string, StreamWriter> myWriteFiles;
+		private readonly Dictionary<string, OutputFile> myWriteFiles;
 
 		public bool Debug {
+			get;
+		}
+
+		public TextWriter Error {
 			get;
 		}
 
@@ -55,6 +87,11 @@ public static partial class Command {
 			get;
 			set;
 		} = string.Empty;
+
+		public bool HoldSpaceTerminated {
+			get;
+			set;
+		} = true;
 
 		public int ListWidth {
 			get;
@@ -64,7 +101,9 @@ public static partial class Command {
 			get;
 		}
 
-		public TextWriter Output {
+		public char PatternSeparator => this.NullData ? '\0' : '\n';
+
+		public SedOutputWriter Output {
 			get;
 		}
 
@@ -72,31 +111,51 @@ public static partial class Command {
 			get;
 		}
 
-		public TextWriter Error {
+		public SedTextCodec TextCodec {
 			get;
 		}
 
 		public ExecutionEnvironment(
-			TextWriter output,
+			Stream output,
+			SedTextCodec textCodec,
+			TextWriter error,
+			bool suppressAutomaticPrint,
+			bool nullData,
+			int listWidth,
+			bool debug,
+			bool unbuffered
+		) : this(
+			new SedOutputWriter( output, textCodec, nullData ) {
+				AutoFlush = unbuffered
+			},
+			textCodec,
+			error,
+			suppressAutomaticPrint,
+			nullData,
+			listWidth,
+			debug
+		) {
+		}
+
+		private ExecutionEnvironment(
+			SedOutputWriter output,
+			SedTextCodec textCodec,
 			TextWriter error,
 			bool suppressAutomaticPrint,
 			bool nullData,
 			int listWidth,
 			bool debug
 		) {
-			this.Output = output;
+			this.TextCodec = textCodec ?? throw new ArgumentNullException( nameof( textCodec ) );
+			this.Output = output ?? throw new ArgumentNullException( nameof( output ) );
 			this.Error = error;
 			this.SuppressAutomaticPrint = suppressAutomaticPrint;
 			this.Debug = debug;
 			this.NullData = nullData;
 			this.ListWidth = listWidth;
 			this.myDeferredOutput = new List<DeferredOutputItem>();
-			this.myReadLineFiles = new Dictionary<string, AsyncRecordReader>(
-				StringComparer.Ordinal
-			);
-			this.myWriteFiles = new Dictionary<string, StreamWriter>(
-				StringComparer.Ordinal
-			);
+			this.myReadLineFiles = new Dictionary<string, AsyncRecordReader>( StringComparer.Ordinal );
+			this.myWriteFiles = new Dictionary<string, OutputFile>( StringComparer.Ordinal );
 		}
 
 		public void ClearDeferredOutput() {
@@ -104,13 +163,11 @@ public static partial class Command {
 		}
 
 		public void Defer(
-			string value
+			string value,
+			bool terminate = true
 		) {
 			this.myDeferredOutput.Add(
-				new DeferredOutputItem(
-					DeferredOutputKind.Text,
-					value
-				)
+				new DeferredOutputItem( DeferredOutputKind.Text, value, terminate )
 			);
 		}
 
@@ -118,10 +175,7 @@ public static partial class Command {
 			string fileName
 		) {
 			this.myDeferredOutput.Add(
-				new DeferredOutputItem(
-					DeferredOutputKind.File,
-					fileName
-				)
+				new DeferredOutputItem( DeferredOutputKind.File, fileName, terminate: false )
 			);
 		}
 
@@ -130,48 +184,32 @@ public static partial class Command {
 			CancellationToken cancellationToken
 		) {
 			try {
-				if (
-					!this.myReadLineFiles.TryGetValue(
+				if ( !this.myReadLineFiles.TryGetValue( fileName, out var reader ) ) {
+					var stream = new FileStream(
 						fileName,
-						out var reader
-					)
-				) {
+						FileMode.Open,
+						FileAccess.Read,
+						FileShare.Read,
+						8192,
+						useAsync: true
+					);
 					reader = new AsyncRecordReader(
-						new StreamReader(
-							new FileStream(
-								fileName,
-								FileMode.Open,
-								FileAccess.Read,
-								FileShare.Read,
-								8192,
-								useAsync: true
-							),
-							Encoding.UTF8,
-							detectEncodingFromByteOrderMarks: true,
-							bufferSize: 8192,
-							leaveOpen: false
-						),
+						stream,
 						this.NullData,
-						ownsReader: true
+						ownsStream: true,
+						this.TextCodec,
+						new SedInputSourceIdentity( 0, fileName, isStandardInput: false )
 					);
-					this.myReadLineFiles.Add(
-						fileName,
-						reader
-					);
+					this.myReadLineFiles.Add( fileName, reader );
 				}
-
-				var line = await reader.ReadAsync(
-					cancellationToken
-				).ConfigureAwait( false );
+				var line = await reader.ReadAsync( 1, cancellationToken ).ConfigureAwait( false );
 				if ( null != line ) {
-					this.Defer(
-						line
-					);
+					this.Defer( line.Text, line.IsTerminated );
 				}
+			} catch ( OperationCanceledException ) {
+				throw;
 			} catch ( Exception ex ) {
-				await this.Error.WriteLineAsync(
-					$"sed: {fileName}: {ex.Message}"
-				).ConfigureAwait( false );
+				await this.Error.WriteLineAsync( $"sed: {fileName}: {ex.Message}" ).ConfigureAwait( false );
 			}
 		}
 
@@ -180,106 +218,73 @@ public static partial class Command {
 		) {
 			foreach ( var item in this.myDeferredOutput ) {
 				cancellationToken.ThrowIfCancellationRequested();
-
 				if ( DeferredOutputKind.Text == item.Kind ) {
-					await WriteRecordAsync(
-						this.Output,
-						item.Value,
-						this.NullData
-					).ConfigureAwait( false );
+					await this.Output.WriteRecordAsync( item.Value, item.Terminate, cancellationToken ).ConfigureAwait( false );
 					continue;
 				}
-
 				try {
-					using ( var reader = new AsyncRecordReader(
-						new StreamReader(
-							new FileStream(
-								item.Value,
-								FileMode.Open,
-								FileAccess.Read,
-								FileShare.Read,
-								8192,
-								useAsync: true
-							),
-							Encoding.UTF8,
-							detectEncodingFromByteOrderMarks: true,
-							bufferSize: 8192,
-							leaveOpen: false
-						),
+					await this.Output.BeginOutputAsync( cancellationToken ).ConfigureAwait( false );
+					using var stream = new FileStream(
+						item.Value,
+						FileMode.Open,
+						FileAccess.Read,
+						FileShare.Read,
+						8192,
+						useAsync: true
+					);
+					using var reader = new AsyncRecordReader(
+						stream,
 						this.NullData,
-						ownsReader: true
-					) ) {
-						string? line;
-						while (
-							null != (
-								line = await reader.ReadAsync(
-									cancellationToken
-								).ConfigureAwait( false )
-							)
-						) {
-							await WriteRecordAsync(
-								this.Output,
-								line,
-								this.NullData
-							).ConfigureAwait( false );
-						}
+						ownsStream: false,
+						this.TextCodec,
+						new SedInputSourceIdentity( 0, item.Value, isStandardInput: false )
+					);
+					long recordNumber = 0;
+					SedInputRecord? record;
+					while ( null != ( record = await reader.ReadAsync( ++recordNumber, cancellationToken ).ConfigureAwait( false ) ) ) {
+						await this.Output.WriteRecordAsync( record.Text, record.IsTerminated, cancellationToken ).ConfigureAwait( false );
 					}
+				} catch ( OperationCanceledException ) {
+					throw;
 				} catch ( Exception ex ) {
-					await this.Error.WriteLineAsync(
-						$"sed: {item.Value}: {ex.Message}"
-					).ConfigureAwait( false );
+					await this.Error.WriteLineAsync( $"sed: {item.Value}: {ex.Message}" ).ConfigureAwait( false );
 				}
 			}
-
 			this.myDeferredOutput.Clear();
 		}
 
 		public async Task WriteFileAsync(
 			string fileName,
 			string value,
+			bool terminate,
 			CancellationToken cancellationToken
 		) {
-			if (
-				!this.myWriteFiles.TryGetValue(
+			if ( !this.myWriteFiles.TryGetValue( fileName, out var outputFile ) ) {
+				var stream = new FileStream(
 					fileName,
-					out var writer
-				)
-			) {
-				writer = new StreamWriter(
-					new FileStream(
-						fileName,
-						FileMode.Create,
-						FileAccess.Write,
-						FileShare.Read,
-						8192,
-						useAsync: true
-					),
-					new UTF8Encoding(
-						encoderShouldEmitUTF8Identifier: false
-					),
+					FileMode.Create,
+					FileAccess.Write,
+					FileShare.Read,
 					8192,
-					leaveOpen: false
+					useAsync: true
 				);
-				this.myWriteFiles.Add(
-					fileName,
-					writer
+				outputFile = new OutputFile(
+					stream,
+					new SedOutputWriter( stream, this.TextCodec, this.NullData )
 				);
+				this.myWriteFiles.Add( fileName, outputFile );
 			}
-
-			cancellationToken.ThrowIfCancellationRequested();
-			await WriteRecordAsync(
-				writer,
-				value,
-				this.NullData
-			).ConfigureAwait( false );
-			await writer.FlushAsync().ConfigureAwait( false );
+			await outputFile.Writer.WriteRecordAsync( value, terminate, cancellationToken ).ConfigureAwait( false );
+			await outputFile.Writer.FlushAsync( cancellationToken ).ConfigureAwait( false );
 		}
 
-		public async Task DisposeAsync() {
-			foreach ( var writer in this.myWriteFiles.Values ) {
-				await writer.FlushAsync().ConfigureAwait( false );
+		public async Task DisposeAsync(
+			CancellationToken cancellationToken
+		) {
+			foreach ( var outputFile in this.myWriteFiles.Values ) {
+				await outputFile.Writer.FlushAsync( cancellationToken ).ConfigureAwait( false );
 			}
-			await this.Output.FlushAsync().ConfigureAwait( false );
+			await this.Output.FlushAsync( cancellationToken ).ConfigureAwait( false );
 			this.Dispose();
 		}
 
@@ -288,7 +293,6 @@ public static partial class Command {
 				reader.Dispose();
 			}
 			this.myReadLineFiles.Clear();
-
 			foreach ( var writer in this.myWriteFiles.Values ) {
 				writer.Dispose();
 			}
@@ -330,7 +334,8 @@ public static partial class Command {
 				cancellationToken
 			).ConfigureAwait( false )
 		) {
-			var patternSpace = input.Current;
+			var patternSpace = input.Current.Text;
+			var patternTerminated = input.Current.IsTerminated;
 			if ( environment.Debug ) {
 				await environment.Error.WriteLineAsync(
 					$"INPUT:   {input.LineNumber}"
@@ -397,15 +402,17 @@ public static partial class Command {
 							if ( instruction.Argument is bool ) {
 								environment.HoldSpace = string.Concat(
 									environment.HoldSpace,
-									"\n",
+									environment.PatternSeparator.ToString(),
 									patternSpace
 								);
+								environment.HoldSpaceTerminated = patternTerminated;
 							} else {
 								patternSpace = string.Concat(
 									patternSpace,
-									"\n",
+									environment.PatternSeparator.ToString(),
 									environment.HoldSpace
 								);
+								patternTerminated = environment.HoldSpaceTerminated;
 							}
 							programCounter++;
 							break;
@@ -417,16 +424,31 @@ public static partial class Command {
 									cancellationToken
 								).ConfigureAwait( false )
 							) {
+								if (
+									automaticPrint
+									&& !environment.SuppressAutomaticPrint
+								) {
+									await WriteRecordAsync(
+										environment.Output,
+										patternSpace,
+										patternTerminated,
+										cancellationToken
+									).ConfigureAwait( false );
+								}
+								await environment.FlushDeferredOutputAsync(
+									cancellationToken
+								).ConfigureAwait( false );
 								return new ExecutionResult(
-									quit: true,
+									quit: false,
 									exitCode: 0
 								);
 							}
 							patternSpace = string.Concat(
 								patternSpace,
-								"\n",
-								input.Current
+								environment.PatternSeparator.ToString(),
+								input.Current.Text
 							);
+							patternTerminated = input.Current.IsTerminated;
 							programCounter++;
 							break;
 						}
@@ -449,7 +471,8 @@ public static partial class Command {
 									environment.Output,
 									instruction.Argument as string
 										?? string.Empty,
-									environment.NullData
+									terminate: true,
+									cancellationToken
 								).ConfigureAwait( false );
 							}
 							automaticPrint = false;
@@ -465,7 +488,7 @@ public static partial class Command {
 
 					case InstructionKind.DeleteFirst: {
 							var newline = patternSpace.IndexOf(
-								'\n'
+								environment.PatternSeparator
 							);
 							if ( newline < 0 ) {
 								automaticPrint = false;
@@ -496,25 +519,24 @@ public static partial class Command {
 									$"sed: command exited with status {shellResult.ExitCode}"
 								).ConfigureAwait( false );
 							}
-							if ( 0 < shellResult.StandardOutput.Length ) {
-								await environment.Output.WriteAsync(
-									shellResult.StandardOutput
-								).ConfigureAwait( false );
-							}
 							programCounter++;
 							break;
 						}
 
 					case InstructionKind.Exchange: {
 							var value = patternSpace;
+							var valueTerminated = patternTerminated;
 							patternSpace = environment.HoldSpace;
+							patternTerminated = environment.HoldSpaceTerminated;
 							environment.HoldSpace = value;
+							environment.HoldSpaceTerminated = valueTerminated;
 							programCounter++;
 							break;
 						}
 
 					case InstructionKind.GetHold: {
 							patternSpace = environment.HoldSpace;
+							patternTerminated = environment.HoldSpaceTerminated;
 							programCounter++;
 							break;
 						}
@@ -525,7 +547,8 @@ public static partial class Command {
 								input.LineNumber.ToString(
 									CultureInfo.InvariantCulture
 								),
-								environment.NullData
+								terminate: true,
+								cancellationToken
 							).ConfigureAwait( false );
 							programCounter++;
 							break;
@@ -542,7 +565,8 @@ public static partial class Command {
 									patternSpace,
 									width
 								),
-								environment.NullData
+								terminate: true,
+								cancellationToken
 							).ConfigureAwait( false );
 							programCounter++;
 							break;
@@ -553,7 +577,8 @@ public static partial class Command {
 								await WriteRecordAsync(
 									environment.Output,
 									patternSpace,
-									environment.NullData
+									patternTerminated,
+									cancellationToken
 								).ConfigureAwait( false );
 							}
 							await environment.FlushDeferredOutputAsync(
@@ -565,11 +590,12 @@ public static partial class Command {
 								).ConfigureAwait( false )
 							) {
 								return new ExecutionResult(
-									quit: true,
+									quit: false,
 									exitCode: 0
 								);
 							}
-							patternSpace = input.Current;
+							patternSpace = input.Current.Text;
+							patternTerminated = input.Current.IsTerminated;
 							substitutionSucceeded = false;
 							programCounter++;
 							break;
@@ -580,13 +606,15 @@ public static partial class Command {
 								await WriteRecordAsync(
 									environment.Output,
 									insert.Text,
-									environment.NullData
+									terminate: true,
+									cancellationToken
 								).ConfigureAwait( false );
 							} else {
 								await WriteRecordAsync(
 									environment.Output,
 									patternSpace,
-									environment.NullData
+									patternTerminated,
+									cancellationToken
 								).ConfigureAwait( false );
 							}
 							programCounter++;
@@ -597,9 +625,11 @@ public static partial class Command {
 							await WriteRecordAsync(
 								environment.Output,
 								FirstPatternLine(
-									patternSpace
+									patternSpace,
+									environment.PatternSeparator
 								),
-								environment.NullData
+								0 <= patternSpace.IndexOf( environment.PatternSeparator ) || patternTerminated,
+								cancellationToken
 							).ConfigureAwait( false );
 							programCounter++;
 							break;
@@ -610,7 +640,8 @@ public static partial class Command {
 								await WriteRecordAsync(
 									environment.Output,
 									patternSpace,
-									environment.NullData
+									patternTerminated,
+									cancellationToken
 								).ConfigureAwait( false );
 							}
 							await environment.FlushDeferredOutputAsync(
@@ -654,6 +685,7 @@ public static partial class Command {
 
 					case InstructionKind.SetHold: {
 							environment.HoldSpace = patternSpace;
+							environment.HoldSpaceTerminated = patternTerminated;
 							programCounter++;
 							break;
 						}
@@ -695,13 +727,15 @@ public static partial class Command {
 									await WriteRecordAsync(
 										environment.Output,
 										patternSpace,
-										environment.NullData
+										patternTerminated,
+										cancellationToken
 									).ConfigureAwait( false );
 								}
 								if ( !string.IsNullOrEmpty( flags.WriteFile ) ) {
 									await environment.WriteFileAsync(
 										flags.WriteFile,
 										patternSpace,
+										patternTerminated,
 										cancellationToken
 									).ConfigureAwait( false );
 								}
@@ -749,6 +783,7 @@ public static partial class Command {
 								instruction.Argument as string
 									?? string.Empty,
 								patternSpace,
+								patternTerminated,
 								cancellationToken
 							).ConfigureAwait( false );
 							programCounter++;
@@ -760,8 +795,10 @@ public static partial class Command {
 								instruction.Argument as string
 									?? string.Empty,
 								FirstPatternLine(
-									patternSpace
+									patternSpace,
+									environment.PatternSeparator
 								),
+								0 <= patternSpace.IndexOf( environment.PatternSeparator ) || patternTerminated,
 								cancellationToken
 							).ConfigureAwait( false );
 							programCounter++;
@@ -782,7 +819,8 @@ public static partial class Command {
 				await WriteRecordAsync(
 					environment.Output,
 					patternSpace,
-					environment.NullData
+					patternTerminated,
+					cancellationToken
 				).ConfigureAwait( false );
 			}
 			await environment.FlushDeferredOutputAsync(
@@ -834,6 +872,11 @@ public static partial class Command {
 				case '\f':
 					escaped.Append(
 						"\\f"
+					);
+					break;
+				case '\0':
+					escaped.Append(
+						"\\000"
 					);
 					break;
 				case '\n':
@@ -904,10 +947,11 @@ public static partial class Command {
 	}
 
 	private static string FirstPatternLine(
-		string patternSpace
+		string patternSpace,
+		char separator
 	) {
 		var index = patternSpace.IndexOf(
-			'\n'
+			separator
 		);
 		return index < 0
 			? patternSpace

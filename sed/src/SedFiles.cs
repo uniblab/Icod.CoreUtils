@@ -20,52 +20,20 @@ public static partial class Command {
 		string path,
 		Options options,
 		SedProgram program,
+		SedTextCodec textCodec,
 		TextWriter stderr,
 		CancellationToken cancellationToken
 	) {
-		var editPath = ResolveInPlacePath(
-			path,
-			options.FollowSymlinks
-		);
-		var directory = Path.GetDirectoryName(
-			editPath
-		) ?? ".";
+		var editPath = ResolveInPlacePath( path, options.FollowSymlinks );
+		var directory = Path.GetDirectoryName( editPath ) ?? ".";
 		var temporaryPath = Path.Combine(
 			directory,
 			$".sed.{Path.GetRandomFileName()}.tmp"
 		);
-		var attributes = File.GetAttributes(
-			editPath
-		);
+		var attributes = File.GetAttributes( editPath );
 		UnixFileMode? unixMode = null;
 		if ( !OperatingSystem.IsWindows() ) {
-			unixMode = File.GetUnixFileMode(
-				editPath
-			);
-		}
-
-		Encoding encoding;
-		using ( var stream = new FileStream(
-			editPath,
-			FileMode.Open,
-			FileAccess.Read,
-			FileShare.Read,
-			8192,
-			useAsync: true
-		) )
-		using ( var reader = new StreamReader(
-			stream,
-			Encoding.UTF8,
-			detectEncodingFromByteOrderMarks: true,
-			bufferSize: 8192,
-			leaveOpen: false
-		) ) {
-			var probe = new char[ 1 ];
-			_ = await reader.ReadAsync(
-				probe.AsMemory(),
-				cancellationToken
-			).ConfigureAwait( false );
-			encoding = reader.CurrentEncoding;
+			unixMode = File.GetUnixFileMode( editPath );
 		}
 
 		try {
@@ -78,32 +46,21 @@ public static partial class Command {
 				8192,
 				useAsync: true
 			) )
-			using ( var output = new StreamWriter(
-				outputStream,
-				encoding,
-				8192,
-				leaveOpen: false
-			) )
 			using ( var input = new InputSequence(
-				new SourceSpec[ 1 ] {
-					new SourceSpec(
-						editPath
-					)
-				},
-				TextReader.Null,
-				options.NullData
+				new SourceSpec[] { new SourceSpec( editPath ) },
+				Stream.Null,
+				options.NullData,
+				textCodec
 			) ) {
-				if ( options.Unbuffered ) {
-					output.AutoFlush = true;
-				}
-
 				var environment = new ExecutionEnvironment(
-					output,
+					outputStream,
+					textCodec,
 					stderr,
 					options.SuppressAutomaticPrint,
 					options.NullData,
 					options.ListWidth,
-					options.Debug
+					options.Debug,
+					options.Unbuffered
 				);
 				try {
 					result = await ExecuteAsync(
@@ -112,68 +69,33 @@ public static partial class Command {
 						environment,
 						cancellationToken
 					).ConfigureAwait( false );
-					await output.FlushAsync().ConfigureAwait( false );
 				} finally {
-					await environment.DisposeAsync().ConfigureAwait( false );
+					await environment.DisposeAsync( cancellationToken ).ConfigureAwait( false );
 				}
 			}
 
-			if (
-				null != options.BackupSuffix
-				&& 0 < options.BackupSuffix.Length
-			) {
-				var backupPath = BuildBackupPath(
-					editPath,
-					options.BackupSuffix
-				);
+			if ( null != options.BackupSuffix && 0 < options.BackupSuffix.Length ) {
+				var backupPath = BuildBackupPath( editPath, options.BackupSuffix );
 				if ( File.Exists( backupPath ) ) {
-					File.Delete(
-						backupPath
-					);
+					File.Delete( backupPath );
 				}
-				File.Move(
-					editPath,
-					backupPath
-				);
+				File.Move( editPath, backupPath );
 			} else {
-				if (
-					0 != (
-						attributes & FileAttributes.ReadOnly
-					)
-				) {
-					File.SetAttributes(
-						editPath,
-						attributes & ~FileAttributes.ReadOnly
-					);
+				if ( 0 != ( attributes & FileAttributes.ReadOnly ) ) {
+					File.SetAttributes( editPath, attributes & ~FileAttributes.ReadOnly );
 				}
-				File.Delete(
-					editPath
-				);
+				File.Delete( editPath );
 			}
 
-			File.Move(
-				temporaryPath,
-				editPath
-			);
-			File.SetAttributes(
-				editPath,
-				attributes & ~FileAttributes.ReparsePoint
-			);
-			if (
-				!OperatingSystem.IsWindows()
-				&& unixMode.HasValue
-			) {
-				File.SetUnixFileMode(
-					editPath,
-					unixMode.Value
-				);
+			File.Move( temporaryPath, editPath );
+			File.SetAttributes( editPath, attributes & ~FileAttributes.ReparsePoint );
+			if ( !OperatingSystem.IsWindows() && unixMode.HasValue ) {
+				File.SetUnixFileMode( editPath, unixMode.Value );
 			}
 			return result;
 		} catch {
 			if ( File.Exists( temporaryPath ) ) {
-				File.Delete(
-					temporaryPath
-				);
+				File.Delete( temporaryPath );
 			}
 			throw;
 		}

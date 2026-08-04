@@ -33,8 +33,9 @@ ERE is parsed directly. Escaped ERE metacharacters are literals, unmatched openi
 - `RegularExpressionCompileResult`, `RegularExpressionMatchResult`, and `RegularExpressionByteMatchResult` distinguish successful no-match results from controlled errors.
 - `RegularExpressionDiagnostic` exposes a stable code, message, and UTF-16 pattern index where applicable.
 - `IRegularExpressionCharacterClassProvider` isolates classification, scalar comparison, collation, and case-equivalence policy.
-- `RegularExpressionOptions` controls syntax, case, line sensitivity, compatibility policy, nesting limits, and match-state limits.
-- `RegularExpressionMatchOptions` addresses .NET strings by UTF-16 index.
+- `RegularExpressionOptions` controls syntax, case, line sensitivity, the logical line-separator scalar, explicit NUL-dot policy, compatibility policy, nesting limits, and match-state limits.
+- - `RegularExpressionMatchOptions` addresses .NET strings by UTF-16 index.
+- `RegularExpressionOptions.LineSeparator` defaults to LF and selects the logical separator used by line-sensitive anchors, dot, and negated bracket expressions. `DotMatchesNull` is an explicit opt-in for consumers such as GNU Sed `--null-data`; multiline mode still excludes NUL when NUL is the selected separator.
 - `RegularExpressionInputOptions` selects byte-valued or UTF-8 decoding and an explicit malformed-input policy.
 - `RegularExpressionByteMatchOptions` addresses authoritative byte input by source-byte offset.
 
@@ -45,7 +46,7 @@ The CPU-bound asynchronous members do not call `Task.Run`. They preserve a consi
 | Area | Supported behavior |
 |---|---|
 | Ordinary atoms | Unicode scalars and literal escaped characters |
-| Any-character operator | Basic and Extended exclude NUL and optionally newline; GNU Emacs includes NUL and excludes newline |
+| Any-character operator | Basic and Extended exclude NUL by default and exclude the configured logical separator when line-sensitive; consumers may explicitly allow NUL for byte-record modes. GNU Emacs includes NUL by default and always excludes its configured logical separator. |
 | Bracket expressions | Matching and nonmatching lists, literal first `]`, literal first/last `-`, ranges, the 12 standard POSIX named classes, single-scalar collating symbols, and single-scalar equivalence classes; the Emacs profile treats backslash as an ordinary list character |
 | Repetition | BRE `*`, `\+`, `\?`, `\{m,n\}`; ERE `*`, `+`, `?`, `{m,n}`; Emacs hybrid forms; GNU interval limit 32,767; profile-controlled adjacent operators |
 | Grouping and alternation | BRE/Emacs escaped forms and ERE unescaped forms, with opening-order capture numbering |

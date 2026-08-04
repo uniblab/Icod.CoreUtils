@@ -73,3 +73,12 @@ Phase LE3 may now introduce a Sed-specific adapter over the Shared provider. The
 
 1. a genuine cross-suite regex defect, which belongs in Shared; or
 2. Sed-specific orchestration or replacement policy, which remains in `Icod.LineEditor.Sed`.
+
+## LE4 consumer-evidence follow-up
+
+The LE2 conclusion was correct for the LF-oriented consumers and fixtures available at that phase. Phase LE4 supplied the first concrete GNU Sed `--null-data` multiline consumer and exposed one narrow cross-suite gap: line-sensitive matching had hard-coded LF, while GNU Sed `-z` uses NUL as the pattern-space line separator. LE4 therefore adds two command-neutral options to the existing Shared contract:
+
+- `RegularExpressionOptions.LineSeparator`, defaulting to LF;
+- `RegularExpressionOptions.DotMatchesNull`, defaulting to `false`.
+
+The defaults preserve every pre-LE4 consumer. Sed selects NUL and enables NUL dot matching only for `-z`; when the `M` modifier enables line sensitivity, the configured NUL separator is again excluded by dot and negated bracket expressions and is used by `^` and `$`. This extension is general regex matching policy backed by real consumer evidence. Sed still owns `-z`, pattern-space construction, modifier syntax, and empty-expression state.

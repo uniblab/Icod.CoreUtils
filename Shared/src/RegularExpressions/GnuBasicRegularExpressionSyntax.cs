@@ -77,9 +77,14 @@ internal sealed class DotRegexNode : RegexNode {
 			yield break;
 		}
 		var value = context.Input[ state.Position ];
+		var lineSeparator = context.Options.LineSeparator.Value;
 		if (
-			( GnuRegularExpressionSyntax.Emacs != context.Options.Syntax && 0 == value.Value )
-			|| ( '\n' == value.Value
+			(
+				GnuRegularExpressionSyntax.Emacs != context.Options.Syntax
+				&& !context.Options.DotMatchesNull
+				&& 0 == value.Value
+			)
+			|| ( lineSeparator == value.Value
 				&& ( GnuRegularExpressionSyntax.Emacs == context.Options.Syntax
 					|| context.Options.NewLineSensitive ) )
 		) {
@@ -144,9 +149,11 @@ internal sealed class AssertionRegexNode( RegexAssertionKind kind ) : RegexNode 
 			&& context.CharacterClassProvider.IsWordCharacter( context.Input[ state.Position ] );
 		var matches = kind switch {
 			RegexAssertionKind.BeginLine => 0 == state.Position
-				|| ( context.Options.NewLineSensitive && '\n' == context.Input[ state.Position - 1 ].Value ),
+				|| ( context.Options.NewLineSensitive
+				&& context.Options.LineSeparator.Value == context.Input[ state.Position - 1 ].Value ),
 			RegexAssertionKind.EndLine => context.Input.Length == state.Position
-				|| ( context.Options.NewLineSensitive && '\n' == context.Input[ state.Position ].Value ),
+				|| ( context.Options.NewLineSensitive
+				&& context.Options.LineSeparator.Value == context.Input[ state.Position ].Value ),
 			RegexAssertionKind.BeginInput => 0 == state.Position,
 			RegexAssertionKind.EndInput => context.Input.Length == state.Position,
 			RegexAssertionKind.WordBoundary => previousIsWord != currentIsWord,
@@ -300,7 +307,9 @@ internal sealed class BracketRegexNode(
 			}
 		}
 		var matches = isNegated ? !any : any;
-		if ( isNegated && context.Options.NewLineSensitive && '\n' == value.Value ) {
+		if ( isNegated
+			&& context.Options.NewLineSensitive
+			&& context.Options.LineSeparator.Value == value.Value ) {
 			matches = false;
 		}
 		if ( matches ) {

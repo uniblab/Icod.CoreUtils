@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
 using Icod.CoreUtils.Shared.RegularExpressions;
+using Icod.CoreUtils.Shared.Text;
 
 // Responsibility: Sed-specific regular-expression policy over the Shared GNU provider.
 public static partial class Command {
@@ -150,6 +151,7 @@ public static partial class Command {
 
 		private readonly CancellationToken myCancellationToken;
 		private readonly IRegularExpressionProvider myProvider;
+		private readonly bool myNullData;
 		private readonly bool myPosix;
 		private readonly bool myExtendedRegularExpressions;
 		private SedCompiledRegularExpression? myLastExpression;
@@ -157,12 +159,15 @@ public static partial class Command {
 		public SedRegularExpressionCompiler(
 			bool extendedRegularExpressions,
 			bool posix,
+			bool nullData,
+			ITextLocaleProvider textLocale,
 			CancellationToken cancellationToken
 		) {
 			this.myExtendedRegularExpressions = extendedRegularExpressions;
 			this.myPosix = posix;
+			this.myNullData = nullData;
 			this.myCancellationToken = cancellationToken;
-			var characterClasses = CreateSedCharacterClassProvider();
+			var characterClasses = CreateSedCharacterClassProvider( textLocale );
 			this.myProvider = extendedRegularExpressions
 				? new GnuExtendedRegularExpressionProvider(
 					characterClasses
@@ -213,7 +218,9 @@ public static partial class Command {
 						? GnuRegularExpressionSyntax.Extended
 						: GnuRegularExpressionSyntax.Basic,
 					IgnoreCase = ignoreCase,
-					NewLineSensitive = multiline
+					NewLineSensitive = multiline,
+					LineSeparator = new System.Text.Rune( this.myNullData ? '\0' : '\n' ),
+					DotMatchesNull = this.myNullData
 				},
 				this.myCancellationToken
 			);
@@ -243,10 +250,11 @@ public static partial class Command {
 			return output;
 		}
 
-		private static IRegularExpressionCharacterClassProvider CreateSedCharacterClassProvider() {
-			return string.IsNullOrEmpty(
-				CultureInfo.CurrentCulture.Name
-			)
+		private static IRegularExpressionCharacterClassProvider CreateSedCharacterClassProvider(
+			ITextLocaleProvider textLocale
+		) {
+			ArgumentNullException.ThrowIfNull( textLocale );
+			return TextDecodingMode.Bytes == textLocale.DecodingMode
 				? PosixCLocaleRegularExpressionCharacterClassProvider.Instance
 				: new UnicodeRegularExpressionCharacterClassProvider(
 					CultureInfo.CurrentCulture

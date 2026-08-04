@@ -1000,7 +1000,7 @@ Phase LE1 is complete and behavior-preserving. `Command.cs` now contains only th
 - [x] Update the Shared regular-expression README to identify Sed and Grep as consumers.
 - [x] Define byte/text mapping requirements for future byte-preserving matches.
 
-This phase belongs in Shared because it is cross-suite infrastructure. Completion Gate R1 delivered the production foundation before Batch 26; Phase LE2 has now revalidated it against the pinned GNU Sed and GNU Ed baselines. The LineEditor acceptance suite covers syntax, ERE composition, leftmost-longest selection, captures, locale policy, string and byte coordinates, invalid input, diagnostics, cancellation, and resource limits. No production Shared extension was required. `Icod.LineEditor-LE2-Regex-Contract-Audit.md` records the boundary and the LE3 handoff.
+This phase belongs in Shared because it is cross-suite infrastructure. Completion Gate R1 delivered the production foundation before Batch 26; Phase LE2 has now revalidated it against the pinned GNU Sed and GNU Ed baselines. The LineEditor acceptance suite covers syntax, ERE composition, leftmost-longest selection, captures, locale policy, string and byte coordinates, invalid input, diagnostics, cancellation, and resource limits. No production Shared extension was required for the LF-oriented evidence available during LE2. LE4 later supplied concrete `-z` multiline evidence for a narrow command-neutral separator option; the follow-up is recorded in `Icod.LineEditor-LE2-Regex-Contract-Audit.md`.
 
 ## Phase LE3 — Migrate Sed to the shared regex provider
 
@@ -1011,21 +1011,21 @@ This phase belongs in Shared because it is cross-suite infrastructure. Completio
 - [x] Add GNU Sed differential tests for BRE and ERE.
 - [x] Add locale and leftmost-longest cases that .NET regex translation handled incorrectly.
 
-Phase LE3 is complete. The Sed adapter now consumes the Shared managed GNU provider without moving Sed state into Shared. It retains the exact last compiled expression across address and substitution contexts, owns `I`/`M` modifiers, GNU escape preprocessing, POSIX-mode interpretation, controlled diagnostic presentation, and GNU zero-length global-substitution progression. The previous `System.Text.RegularExpressions` translation path is gone, and the migration suite includes GNU sed 4.10 cases for BRE, ERE, captures, locale classes, empty-expression reuse, multiline anchors, control and numeric escapes, strict-POSIX bracket behavior, repeated empty matches, and leftmost-longest selection. Phase LE4 is now active.
+Phase LE3 is complete. The Sed adapter now consumes the Shared managed GNU provider without moving Sed state into Shared. It retains the exact last compiled expression across address and substitution contexts, owns `I`/`M` modifiers, GNU escape preprocessing, POSIX-mode interpretation, controlled diagnostic presentation, and GNU zero-length global-substitution progression. The previous `System.Text.RegularExpressions` translation path is gone, and the migration suite includes GNU sed 4.10 cases for BRE, ERE, captures, locale classes, empty-expression reuse, multiline anchors, control and numeric escapes, strict-POSIX bracket behavior, repeated empty matches, and leftmost-longest selection. Phase LE4 has now completed the byte-preserving record and text migration.
 
 ## Phase LE4 — Correct Sed record and text semantics
 
-- [ ] Introduce byte-preserving `SedInputRecord`.
-- [ ] Use Shared record framing for LF and NUL modes.
-- [ ] Preserve CR as data.
-- [ ] Preserve explicit final-record termination.
-- [ ] Define C/POSIX byte-locale matching and UTF-8 decoding behavior.
-- [ ] Preserve invalid source bytes according to the selected profile.
-- [ ] Write output separators explicitly as Sed data.
-- [ ] Add CRLF, lone CR, invalid UTF-8, NUL, huge-record, and unterminated-record tests.
-- [ ] Document that current pattern and hold spaces may grow according to Sed semantics.
+- [x] Introduce byte-preserving `SedInputRecord`.
+- [x] Use Shared record framing for LF and NUL modes.
+- [x] Preserve CR as data.
+- [x] Preserve explicit final-record termination.
+- [x] Define C/POSIX byte-locale matching and UTF-8 decoding behavior.
+- [x] Preserve invalid source bytes according to the selected profile.
+- [x] Write output separators explicitly as Sed data.
+- [x] Add CRLF, lone CR, invalid UTF-8, NUL, huge-record, and unterminated-record tests.
+- [x] Document that current pattern and hold spaces may grow according to Sed semantics.
 
-This is a semantic change and should be separate from the file decomposition.
+Phase LE4 is complete as a semantic change separate from the LE1 decomposition. The CLI now consumes raw byte streams, LF and NUL framing comes from Shared records, CR remains data, final termination is explicit, malformed UTF-8 is preserved deterministically, and output separators are never selected from the host newline. Internal pattern/hold-space line operations select LF or NUL consistently, and Shared line-sensitive regex matching now accepts a caller-selected logical separator plus explicit NUL-dot policy for `-z`. The detailed contract and test matrix are recorded in `Icod.LineEditor-LE4-Record-and-Text-Semantics.md`. Phase LE5 is active.
 
 ## Phase LE5 — Harden Sed capabilities
 

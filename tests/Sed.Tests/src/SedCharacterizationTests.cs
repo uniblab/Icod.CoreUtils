@@ -89,17 +89,17 @@ public sealed class SedCharacterizationTests {
 	}
 
 	/// <summary>
-	/// Records the current LE1 behavior that an unterminated final input record is serialized with a line terminator.
+	/// Verifies the LE4 contract that an unterminated final input record remains unterminated.
 	/// </summary>
 	[Fact]
-	public async Task UnterminatedFinalRecordIsCurrentlyTerminatedOnOutput() {
+	public async Task UnterminatedFinalRecordRemainsUnterminatedOnOutput() {
 		var result = await RunAsync(
 			new string[] { "s/alpha/beta/" },
 			"alpha"
 		);
 
 		Assert.Equal( 0, result.ExitCode );
-		Assert.Equal( "beta\n", result.Output );
+		Assert.Equal( "beta", result.Output );
 	}
 
 	/// <summary>

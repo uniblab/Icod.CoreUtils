@@ -18,7 +18,7 @@ public static partial class Command {
 
 	private readonly struct AddressContext {
 
-		public int LineNumber {
+		public long LineNumber {
 			get;
 		}
 
@@ -35,7 +35,7 @@ public static partial class Command {
 		}
 
 		public AddressContext(
-			int lineNumber,
+			long lineNumber,
 			bool isLastLine,
 			string patternSpace,
 			CancellationToken cancellationToken
@@ -199,7 +199,7 @@ public static partial class Command {
 
 		public abstract bool IsEnd(
 			in AddressContext context,
-			int rangeStartLine,
+			long rangeStartLine,
 			bool isStartLine
 		);
 
@@ -219,7 +219,7 @@ public static partial class Command {
 
 		public override bool IsEnd(
 			in AddressContext context,
-			int rangeStartLine,
+			long rangeStartLine,
 			bool isStartLine
 		) {
 			if (
@@ -253,7 +253,7 @@ public static partial class Command {
 
 		public override bool IsEnd(
 			in AddressContext context,
-			int rangeStartLine,
+			long rangeStartLine,
 			bool isStartLine
 		) {
 			return context.LineNumber >= rangeStartLine + this.myAdditionalLines;
@@ -278,7 +278,7 @@ public static partial class Command {
 
 		public override bool IsEnd(
 			in AddressContext context,
-			int rangeStartLine,
+			long rangeStartLine,
 			bool isStartLine
 		) {
 			return (
@@ -318,7 +318,7 @@ public static partial class Command {
 	private sealed class AddressSelector {
 
 		private bool myRangeActive;
-		private int myRangeStartLine;
+		private long myRangeStartLine;
 
 		public Address? First {
 			get;
