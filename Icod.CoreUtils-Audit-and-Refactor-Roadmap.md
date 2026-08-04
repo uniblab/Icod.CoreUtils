@@ -5,10 +5,10 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `45` |
-| Current engineering milestone | Patch Phases P11B–P12 complete; proceed to Completion Gate F1 and Batch 46 |
+| Current engineering milestone | LineEditor Phase LE0 complete; proceed to Phase LE1 — characterize and decompose `Icod.LineEditor.Sed` |
 | Completed infrastructure milestone | Completion Gates E2 through E6 — canonical paths, authoritative metadata, pathname-indirection characterization, mode expressions, single-path mutation, recursive mutation/copy planning, and transactional replacement |
-| Active infrastructure dependency | Patch P0–P12 is closed against stabilized E2–E6 contracts; final three-runner Debug/Release execution remains the integration merge gate |
-| Next command batch | Completion Gate F1, then Batch 46 — `dircolors`, `ls`, `dir`, and `vdir` |
+| Active infrastructure dependency | LineEditor now consumes the stabilized regex, record, process, filesystem, and E6 transaction foundations; Phase LE1 must remain behavior-preserving |
+| Next command batch | Completion Gate F1 and Batch 46 remain next after the contiguous LineEditor incubation sequence |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1176,11 +1176,13 @@ The sequence follows the Diffutils and Patch milestones so textual ed-script and
 #### Phase LE0 — Correct LineEditor policy and capture the baseline
 
 - [x] Retain `Icod.LineEditor.Sed` with lowercase assembly name `sed`, root namespace `Icod.LineEditor.Sed`, and public `Icod.LineEditor.Sed.Command`.
-- [ ] Rename the stale Sed test project filename to `Icod.LineEditor.Sed.Tests.csproj` and normalize solution display names and suite folders.
-- [ ] Retain `Icod.LineEditor.Ed` and `Icod.LineEditor.Red` as the command-project identities, with public `Icod.LineEditor.Ed.Command` and `Icod.LineEditor.Red.Command` and lowercase assembly names `ed` and `red`.
-- [ ] Add or verify C# 13, `net10.0`, Debug/Staging/Release, UTF-8/LF, XML documentation, output-path, solution, local-build, and CI policy for every LineEditor project.
-- [ ] Record GNU sed 4.10 and GNU ed 1.22.5 as the authoritative baselines.
-- [ ] Capture the full-solution and current Sed test baseline before structural refactoring.
+- [x] Rename the stale Sed test project filename to `Icod.LineEditor.Sed.Tests.csproj` and normalize the solution display name and project path while retaining the centralized `tests` solution folder.
+- [x] Retain `Icod.LineEditor.Ed` and `Icod.LineEditor.Red` as the command-project identities, with public `Icod.LineEditor.Ed.Command` and `Icod.LineEditor.Red.Command` facades and lowercase assembly names `ed` and `red`; the LE0 Red facade preserves seed behavior until LE8 implements the restricted editor.
+- [x] Add or verify C# 13, `net10.0`, Debug/Staging/Release, UTF-8/LF, XML documentation, output-path, solution, local-build, and CI policy for every applicable LineEditor command and test project.
+- [x] Record GNU sed 4.10 and GNU ed 1.22.5 as the authoritative baselines.
+- [x] Capture the full-solution and current Sed test baseline before structural refactoring in [`Icod.LineEditor-LE0-Baseline.md`](Icod.LineEditor-LE0-Baseline.md).
+
+Phase LE0 is complete. It changes project identity and policy metadata only; command behavior remains frozen at the recorded three-runner baseline for Phase LE1.
 
 #### Phase LE1 — Characterize and decompose `Icod.LineEditor.Sed`
 
