@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `44` |
-| Current engineering milestone | Batch 45 — `install` |
+| Completed command batches | `0` through `45` |
+| Current engineering milestone | Patch Phase P11B and Phase P12 — transaction validation and final closure |
 | Completed infrastructure milestone | Completion Gates E2 through E6 — canonical paths, authoritative metadata, pathname-indirection characterization, mode expressions, single-path mutation, recursive mutation/copy planning, and transactional replacement |
-| Active infrastructure dependency | Batch 45 completes independent Coreutils validation of Completion Gate E6 before Patch Phase P11B |
-| Next command batch | Batch 45 — `install` |
+| Active infrastructure dependency | Batch 45 has completed independent Coreutils validation of Completion Gate E6; Patch now consumes the stabilized staged-file configuration contract |
+| Next command batch | Completion Gate F1, then Batch 46 — `dircolors`, `ls`, `dir`, and `vdir` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1144,9 +1144,13 @@ Batch 44 is implemented through `Icod.CoreUtils.Shared.FileSystem.CopyMove`. The
 
 ### Batch 45 — Installation engine (1 tool)
 
-- [ ] `install`
+- [x] `install`
 
 Build on `mkdir`, `cp`, `chmod`, and `chown` primitives rather than invoking external utilities. Implement directory creation, modes, owners/groups, stripping policy, backups, compare mode, timestamps, SELinux-context policy, and atomic destination replacement.
+
+Batch 45 is implemented through the E3 metadata, E4 mutation and ownership, GNU mode-expression, and E6 transactional-replacement contracts. Directory operands and `-D` leading components are created one physical component at a time without delegating to host `mkdir`, `chmod`, or `chown` utilities. File content is written to a secure sibling stage; stripping, numeric ownership, mode, timestamps, and SELinux context are completed on that private stage before durability flush and atomic publication. E6 now exposes a narrow staged-file configurator callback for command-specific pre-publication policy while retaining transaction ownership of creation, rollback, backups, commit, and cleanup.
+
+The command supports GNU target-directory interpretation (including explicitly named directory indirection), `-T`, retained simple/numbered/existing backups, suffix selection, compare mode, source timestamp preservation, explicit strip programs without shell invocation, source-context preservation, destination-default SELinux labeling, explicit SELinux contexts for newly created objects, verbose diagnostics, help, and version output. Terminal destination symlinks and reparse objects are rejected rather than dereferenced or removed outside the E6 ordinary-file transaction contract; their targets remain unchanged. Dedicated `Install.Tests` coverage and an independent Shared E6 configurator test are registered under the solution `tests` folder. Full Windows, Linux, and macOS CI remains the merge gate.
 
 #### Patch Phase P11B and Phase P12 — Transaction validation and final closure
 

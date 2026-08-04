@@ -1,9 +1,9 @@
 namespace Icod.CoreUtils.Install;
 
-using System;
-
+/// <summary>Provides the <c>install</c> executable entry point.</summary>
 public static class Program {
-	public static int Main( string[] args ) {
-		return Command.Run( args, Console.In, Console.Out, Console.Error );
-	}
+	/// <summary>Runs the command.</summary>
+	/// <param name="args">The command-line arguments.</param>
+	/// <returns>The command exit status.</returns>
+	public static Task<int> Main( string[] args ) => Command.RunAsync( args ).AsTask();
 }
