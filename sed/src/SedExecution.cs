@@ -137,7 +137,7 @@ public static partial class Command {
 		) {
 		}
 
-		private ExecutionEnvironment(
+		public ExecutionEnvironment(
 			SedOutputWriter output,
 			SedTextCodec textCodec,
 			TextWriter error,
