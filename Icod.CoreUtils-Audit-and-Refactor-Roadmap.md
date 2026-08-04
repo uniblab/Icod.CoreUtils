@@ -5,9 +5,9 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `45` |
-| Current engineering milestone | Patch Phase P11B and Phase P12 — transaction validation and final closure |
+| Current engineering milestone | Patch Phase P12 — final conformance and extraction readiness |
 | Completed infrastructure milestone | Completion Gates E2 through E6 — canonical paths, authoritative metadata, pathname-indirection characterization, mode expressions, single-path mutation, recursive mutation/copy planning, and transactional replacement |
-| Active infrastructure dependency | Batch 45 has completed independent Coreutils validation of Completion Gate E6; Patch now consumes the stabilized staged-file configuration contract |
+| Active infrastructure dependency | Patch Phase P11B has closed against the stabilized Completion Gate E6 contract; Phase P12 performs final suite conformance |
 | Next command batch | Completion Gate F1, then Batch 46 — `dircolors`, `ls`, `dir`, and `vdir` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
@@ -1129,9 +1129,11 @@ Patch is an immediate co-validator of Completion Gate E6 rather than a consumer 
 - [x] Keep Patch's GNU-visible partial-application and artifact policy above the general transaction mechanism.
 - [x] Record any E6 contract defects before Batches 44 and 45 complete their independent validation.
 
-Patch Phase P11A is implemented. `PatchE6Transaction` preserves Patch's per-file recovery units and GNU-visible independent-file continuation policy while delegating secure staging, flush, revalidation, atomic publication, rollback, metadata restoration, containment, cleanup, cancellation, and structured outcomes to `Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement`. Target, creation, deletion, retained backup, reject, alternate-output, stale-identity, same-unit rollback, independent-unit partial-success, and cancellation tests exercise the adapter. P11A exposed one E6 contract defect: Patch requires backup retention per target, including caller-selected backup pathnames, rather than transaction-wide retention. `TransactionalReplacementArtifact` therefore now supports an explicit per-artifact retention request; E6 stages and restores any previous backup before publishing the retained original. The provisional P9 transaction is no longer selected and remains only for deliberate removal in P11B after Batches 44 and 45 complete independent validation.
+Patch Phase P11A is implemented. `PatchE6Transaction` preserves Patch's per-file recovery units and GNU-visible independent-file continuation policy while delegating secure staging, flush, revalidation, atomic publication, rollback, metadata restoration, containment, cleanup, cancellation, and structured outcomes to `Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement`. Target, creation, deletion, retained backup, reject, alternate-output, stale-identity, same-unit rollback, independent-unit partial-success, and cancellation tests exercise the adapter. P11A exposed one E6 contract defect: Patch requires backup retention per target, including caller-selected backup pathnames, rather than transaction-wide retention. `TransactionalReplacementArtifact` therefore now supports an explicit per-artifact retention request; E6 stages and restores any previous backup before publishing the retained original. The provisional P9 transaction ceased to be selected in P11A and was removed in P11B after Batches 44 and 45 completed independent validation.
 
-P11A does not close Patch. The transaction foundation must also survive the different copy, move, and installation policies in Batches 44 and 45.
+Patch Phase P11B is implemented. The unreachable `SystemPatchTransaction` and Patch-local provisional capability model are removed. `SystemPatchFileSystem` now creates only `PatchE6Transaction` and forwards the shared provider's `TransactionalReplacementCapabilities` unchanged. Wave C and Wave D failure-injection coverage continues to verify target, retained backup, reject, alternate output, metadata, link policy, rollback, cleanup, and cancellation behavior; dedicated P11B tests verify factory selection, legacy-type removal, capability forwarding, preferred-atomic non-atomic fallback reporting, final content, and E6 temporary cleanup.
+
+P11A did not close Patch by itself. Batches 44 and 45 supplied the required independent copy, move, and installation validation before this P11B closure.
 
 ### Batch 44 — Copy and move engine (2 tools)
 
@@ -1156,7 +1158,7 @@ The command supports GNU target-directory interpretation (including explicitly n
 
 After `cp`, `mv`, and `install` have independently validated E6, Patch repeats its transaction and conformance suites against the stabilized shared contract.
 
-- [ ] **P11B:** resolve contract changes exposed by Batches 44 and 45; remove all provisional Patch-local replacement code; verify target, backup, reject, output, metadata, symlink, rollback, cleanup, and non-atomic fallback consistency.
+- [x] **P11B:** resolve contract changes exposed by Batches 44 and 45; remove all provisional Patch-local replacement code; verify target, backup, reject, output, metadata, symlink, rollback, cleanup, and non-atomic fallback consistency.
 - [ ] **P12:** complete the GNU patch 2.8 option matrix, parser corpora, differential tests, Diffutils interoperability, security and resource tests, signal and cancellation behavior, POSIX mode, all three required CI platforms, Debug and Release builds, XML documentation, directory README files, UTF-8/LF policy, and final public-surface audit.
 - [ ] Classify every Shared dependency for Completion Gate G.
 - [ ] Document deliberate divergences, unsupported capabilities, and platform limitations.

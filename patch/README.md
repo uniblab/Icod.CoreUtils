@@ -6,7 +6,7 @@ The authoritative behavioral baseline is GNU patch 2.8. Pinned release metadata 
 
 ## Current phase
 
-Patch Waves A through D—Phases P0 through P10—are implemented.
+Patch Waves A through D and Phases P11A–P11B—Phases P0 through P11B—are implemented. Phase P12 is now the active final-conformance phase.
 
 The command now:
 
@@ -22,11 +22,11 @@ The command now:
 - revalidates E3 identity immediately before commit and applies E4 mode, ownership, deletion, and no-follow policy;
 - recovers target-related artifacts in per-file units while retaining completed earlier units for GNU-visible multi-file partial success;
 - distinguishes failed-before-commit, rolled-back, partially committed, rollback-incomplete, and cleanup-incomplete transaction outcomes; and
-- freezes Patch's E6-facing requirements and failure matrix without claiming final E6 atomicity.
+- freezes Patch's E6-facing requirements and failure matrix while consuming the stabilized provider capability and result contracts directly.
 
 P10 intentionally enforces a containment safety boundary: every selected target, output, backup, and reject artifact must remain within the physically canonical `-d` working root. Parent traversal, cross-volume targets, and link/reparse resolutions that escape that root are rejected. Terminal links are rejected by default and followed only with `--follow-symlinks`.
 
-The current command-local transaction is provisional. Completion Gate E6 owns the permanent secure replacement, atomicity, durability, backup retention, rollback, and cleanup implementation; Patch Phase P11A will migrate to that shared contract.
+Completion Gate E6 owns secure replacement, atomicity, durability, backup retention, rollback, and cleanup. Phase P11B removed the unreachable command-local P9 transaction and the provisional Patch-only capability model; production mutation now has one path through the shared E6 adapter.
 
 ## Historical seed format
 

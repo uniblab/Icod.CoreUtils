@@ -13,4 +13,5 @@
 - `PatchTestSupport.cs` provides byte-oriented parser, virtual-file, and result helpers.
 - `ProcessHostTests.cs` exercises the built executable through the `dotnet` process host.
 - `WaveDTransactionTests.cs` covers the frozen E6-facing requirement and failure matrix, per-file recovery units, retained earlier-file commits, cancellation recovery, incomplete rollback, incomplete cleanup, and complete-before-commit staging.
-- `WaveDConformanceTests.cs` verifies that containment and link resolution remain delegated to `Icod.Path`, timestamps and identity remain delegated to E3, mode and ownership mutation remain delegated to E4, and provisional atomicity and durability capabilities are reported without overstatement.
+- `WaveDConformanceTests.cs` verifies that containment and link resolution remain delegated to `Icod.Path`, timestamps and identity remain delegated to E3, mode and ownership mutation remain delegated to E4, stabilized E6 capabilities are forwarded unchanged, and the provisional P9 transaction type is absent.
+- `PhaseP11BTransactionTests.cs` verifies that the production factory creates only the shared-E6 adapter and that Patch accepts, reports, and cleans up a provider-declared non-atomic fallback under its preferred-atomic policy.

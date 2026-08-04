@@ -20,46 +20,6 @@ internal enum PatchMultiFileCommitPolicy {
 	PreserveCompletedUnits
 }
 
-
-/// <summary>Identifies the confidence level of one provisional replacement capability.</summary>
-internal enum PatchTransactionCapabilityLevel {
-	/// <summary>The capability is not provided.</summary>
-	Unavailable,
-	/// <summary>The operation is attempted, but the platform contract does not guarantee it.</summary>
-	BestEffort,
-	/// <summary>The capability is guaranteed by the active provider.</summary>
-	Guaranteed,
-	/// <summary>The active provider cannot determine the capability in advance.</summary>
-	Unknown
-}
-
-/// <summary>Reports the capabilities of the provisional P9 adapter without overstating E6 conformance.</summary>
-internal sealed class PatchTransactionCapabilities {
-	/// <summary>Gets the capability profile of the provisional host adapter.</summary>
-	public static PatchTransactionCapabilities ProvisionalHost { get; } = new();
-
-	private PatchTransactionCapabilities() {
-	}
-
-	/// <summary>Gets secure sibling temporary-file support.</summary>
-	public PatchTransactionCapabilityLevel SecureSiblingTemporaries => PatchTransactionCapabilityLevel.Guaranteed;
-
-	/// <summary>Gets exclusive temporary-file creation support.</summary>
-	public PatchTransactionCapabilityLevel ExclusiveTemporaryCreation => PatchTransactionCapabilityLevel.Guaranteed;
-
-	/// <summary>Gets complete-content flush support.</summary>
-	public PatchTransactionCapabilityLevel ContentFlush => PatchTransactionCapabilityLevel.BestEffort;
-
-	/// <summary>Gets replacement atomicity support.</summary>
-	public PatchTransactionCapabilityLevel AtomicReplacement => PatchTransactionCapabilityLevel.Unknown;
-
-	/// <summary>Gets rollback support.</summary>
-	public PatchTransactionCapabilityLevel Rollback => PatchTransactionCapabilityLevel.BestEffort;
-
-	/// <summary>Gets containing-directory durability support.</summary>
-	public PatchTransactionCapabilityLevel DirectoryDurability => PatchTransactionCapabilityLevel.Unavailable;
-}
-
 /// <summary>Describes one Patch-visible requirement for the shared E6 replacement contract.</summary>
 internal sealed class PatchE6Requirement {
 	/// <summary>Initializes a requirement.</summary>
@@ -151,7 +111,7 @@ internal sealed class PatchE6TransactionContract {
 		);
 	}
 
-	/// <summary>Gets the frozen Wave D contract.</summary>
+	/// <summary>Gets the frozen Patch-facing E6 contract.</summary>
 	public static PatchE6TransactionContract Current { get; } = new();
 
 	/// <summary>Gets the required recoverability scope.</summary>

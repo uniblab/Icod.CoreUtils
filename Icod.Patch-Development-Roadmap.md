@@ -32,7 +32,7 @@ This roadmap is subordinate to the repository-wide conventions and engineering g
 | Public command class | `Icod.Patch.Command` |
 | Executable assembly name | `patch` |
 | Current repository project | `patch/Icod.Patch.csproj` |
-| Current implementation state | Waves A through D and Phase P11A implemented: normalized async front end, byte-preserving parsers, pure indexed application/matching, secure canonical multi-file planning, explicit artifact policy, E2–E4 conformance closure, and per-file transactions delegated to shared Completion Gate E6 |
+| Current implementation state | Waves A through D and Phases P11A–P11B implemented: normalized async front end, byte-preserving parsers, pure indexed application/matching, secure canonical multi-file planning, explicit artifact policy, E2–E4 conformance closure, and per-file transactions delegated to shared Completion Gate E6 |
 | Current dedicated test project | `tests/Patch.Tests/Icod.Patch.Tests.csproj` |
 | Required target framework | `net10.0` |
 | Required language version | C# 13 |
@@ -41,8 +41,8 @@ This roadmap is subordinate to the repository-wide conventions and engineering g
 | Additional platform goal | Best-effort BSD support |
 | Repository status | Co-resident in `Icod.CoreUtils.sln` until Completion Gate G |
 | Scheduling model | Dependency-aligned partial order with Completion Gates E2–E6 |
-| Completed scheduled waves | Wave A, P0–P4; Wave B1, P5–P6; Wave B2, P7; Wave C, P8 and initial P9; Wave D, P9–P10 closure; and Phase P11A initial E6 integration |
-| Detailed ordering status | P0–P11A implemented; P11B waits for independent E6 validation by `cp`, `mv`, and `install` in Batches 44 and 45 |
+| Completed scheduled waves | Wave A, P0–P4; Wave B1, P5–P6; Wave B2, P7; Wave C, P8 and initial P9; Wave D, P9–P10 closure; and Phases P11A–P11B stabilized E6 integration |
+| Detailed ordering status | P0–P11B implemented; P12 is the current final conformance and extraction-readiness phase |
 
 ---
 
@@ -80,7 +80,7 @@ Full-checkout Debug/Release and Windows, Ubuntu, and macOS CI validation remain 
 
 Wave D completes P9 and closes P10. Target, backup, per-target reject, and file-output artifacts now share an explicit patch-file recovery unit; shared destinations are modeled as independent units. The provisional transaction boundary distinguishes pre-commit failure, complete rollback, retained earlier-file commits, incomplete rollback, and incomplete cleanup. It flushes complete sibling temporaries before replacement, revalidates E3 observations immediately before commit, restores ownership, mode, and timestamps during recovery, continues rollback and cleanup after individual failures, and records committed and recovered units.
 
-`PatchE6TransactionContract` freezes the requirements that Completion Gate E6 must satisfy: exclusive secure sibling creation, content completion and flush before replacement, identity revalidation, no-follow defaults, patch-file recovery scope, GNU-visible multi-file partial success, metadata restoration, containment, cancellation recovery, deterministic cleanup, and explicit atomicity and durability capabilities. P10 coverage verifies that artifact selection continues to consume `Icod.Path`, E3 metadata, and E4 mutation contracts for lexical and physical containment, terminal links, `--follow-symlinks`, post-2038 timestamps, modes, ownership, and host capability profiles. Phase P11A now adapts those Patch artifacts to shared E6; crash-recovery guarantees remain outside the current contract, and the unreachable command-local implementation is retained only until P11B removes it.
+`PatchE6TransactionContract` freezes the requirements that Completion Gate E6 must satisfy: exclusive secure sibling creation, content completion and flush before replacement, identity revalidation, no-follow defaults, patch-file recovery scope, GNU-visible multi-file partial success, metadata restoration, containment, cancellation recovery, deterministic cleanup, and explicit atomicity and durability capabilities. P10 coverage verifies that artifact selection continues to consume `Icod.Path`, E3 metadata, and E4 mutation contracts for lexical and physical containment, terminal links, `--follow-symlinks`, post-2038 timestamps, modes, ownership, and host capability profiles. Phase P11A adapted those Patch artifacts to shared E6; Phase P11B removed the unreachable command-local implementation and now forwards the stabilized provider capability record directly. Crash-recovery guarantees remain outside the current contract.
 
 Full-checkout Debug/Release and Windows, Ubuntu, and macOS CI execution remain the integration merge gate.
 
@@ -90,7 +90,7 @@ Full-checkout Debug/Release and Windows, Ubuntu, and macOS CI execution remain t
 
 The historical Patch seed was not an incomplete GNU patch implementation in the ordinary sense. It consumed a private `+`/`-` line-command format associated with the repository's former simplified Diff output, decoded complete files as UTF-8 text, created a `.orig` backup, and rewrote the target directly.
 
-Waves A through D and Phase P11A, P0 through P11A, have now replaced that seed with a GNU-oriented command boundary, byte-preserving source model, complete syntax parsers, a pure virtual application/matching engine, secure canonical multi-file planning, explicit artifact policy, E2–E4 conformance closure, a frozen Patch-facing E6 contract, and per-file recovery units implemented through shared Completion Gate E6. The current implementation:
+Waves A through D and Phases P11A–P11B, P0 through P11B, have now replaced that seed with a GNU-oriented command boundary, byte-preserving source model, complete syntax parsers, a pure virtual application/matching engine, secure canonical multi-file planning, explicit artifact policy, E2–E4 conformance closure, a frozen Patch-facing E6 contract, and per-file recovery units implemented through shared Completion Gate E6. The current implementation:
 
 - uses asynchronous orchestration and the shared `CommandContext` and `OptionParser`;
 - accepts patch input from standard input, `-i`, or the GNU-style patch-file operand position;
@@ -1267,12 +1267,14 @@ E6 is not considered stable solely because Patch uses it.
 
 `cp`, `mv`, and `install` exercise different replacement, copying, cross-filesystem, ownership, mode, and installation policies. Their validation may reveal contract changes.
 
-P11B occurs after Batches 44 and 45:
+P11B completed after Batches 44 and 45:
 
-- adopt any stabilized E6 changes;
-- remove all provisional Patch-local replacement code;
-- rerun target, backup, reject, output, metadata, link, rollback, cleanup, cancellation, and non-atomic fallback tests;
-- verify that no data-loss window remains.
+- [x] adopt the stabilized E6 provider capability and result contracts directly;
+- [x] remove all provisional Patch-local replacement code;
+- [x] rerun target, backup, reject, output, metadata, link, rollback, cleanup, cancellation, and non-atomic fallback tests;
+- [x] verify that no data-loss window remains.
+
+The unreachable `SystemPatchTransaction` implementation and Patch-only provisional capability levels are removed. `SystemPatchFileSystem` now constructs `PatchE6Transaction` exclusively and exposes `ITransactionalReplacementFileSystem.Capabilities` unchanged. Existing Wave C and Wave D failure-injection suites continue to cover target, retained backup, reject, alternate output, metadata, link policy, rollback, cleanup, and cancellation. Dedicated P11B coverage verifies factory selection, removal of the legacy type, provider capability forwarding, preferred-atomic fallback reporting, final content, and E6 temporary cleanup.
 
 Multi-file application requires an explicit transaction policy. GNU patch does not necessarily promise one all-or-nothing transaction for the entire stream. The implementation must preserve GNU-visible partial-application behavior while ensuring that each individual file transition is recoverable and accurately reported.
 
@@ -1643,7 +1645,7 @@ This phase starts during the E4/E5 validator batches and proceeds concurrently w
 - [x] Supply Patch requirements and adversarial cases to Completion Gate E6.
 - [x] Do not claim final transaction conformance.
 
-P9 is complete. `PatchE6TransactionContract` freezes the Patch-facing recovery scope, multi-file completion policy, secure-sibling and flush requirements, containment and metadata obligations, atomicity and durability reporting, deterministic cleanup, and the full failure-injection matrix. Its provisional command-local implementation was replaced by shared E6 in P11A; removal of the now-unreachable legacy implementation remains intentionally deferred to P11B.
+P9 is complete. `PatchE6TransactionContract` freezes the Patch-facing recovery scope, multi-file completion policy, secure-sibling and flush requirements, containment and metadata obligations, atomicity and durability reporting, deterministic cleanup, and the full failure-injection matrix. Its provisional command-local implementation was replaced by shared E6 in P11A and removed in P11B after the independent validators completed.
 
 ## Phase P10 — Close Completion Gates E2, E3, and E4 conformance
 
@@ -1687,18 +1689,20 @@ P11A replaces the provisional adapter with the shared E6 implementation and vali
 - [x] Verify no data-loss window.
 - [x] Report contract defects before Batches 44 and 45 close.
 
-P11A is complete. `PatchE6Transaction` translates immutable Patch artifacts into shared `TransactionalReplacementArtifact` values, preserving one recovery unit per patched file and continuing independent units to retain GNU-visible multi-file partial success. Secure sibling staging, durable file flush, E3 revalidation, atomic publication where available, rollback, containment, metadata restoration, cancellation cleanup, and structured outcomes now come from E6. Patch continues to own when backups, rejects, and alternate outputs exist and how their diagnostics and exit status are reported. P11A identified one shared-contract defect: backup retention had only a transaction-wide switch, while Patch selects backups per target and may supply an explicit prefix-derived pathname. E6 now accepts a per-artifact retained-backup request with an explicit pathname and stages any preexisting backup before commit. The former P9 implementation is unreachable and remains only for P11B removal after Batches 44 and 45 validate the shared contract independently.
+P11A is complete. `PatchE6Transaction` translates immutable Patch artifacts into shared `TransactionalReplacementArtifact` values, preserving one recovery unit per patched file and continuing independent units to retain GNU-visible multi-file partial success. Secure sibling staging, durable file flush, E3 revalidation, atomic publication where available, rollback, containment, metadata restoration, cancellation cleanup, and structured outcomes now come from E6. Patch continues to own when backups, rejects, and alternate outputs exist and how their diagnostics and exit status are reported. P11A identified one shared-contract defect: backup retention had only a transaction-wide switch, while Patch selects backups per target and may supply an explicit prefix-derived pathname. E6 now accepts a per-artifact retained-backup request with an explicit pathname and stages any preexisting backup before commit. The former P9 implementation was removed in P11B after Batches 44 and 45 validated the shared contract independently.
 
 ### Phase P11B — Post-validator closure
 
-After `cp`, `mv`, and `install` have independently exercised E6:
+After `cp`, `mv`, and `install` independently exercised E6:
 
-- [ ] Adopt stabilized E6 contract changes.
-- [ ] Remove provisional command-local replacement code.
-- [ ] Rerun transaction failure-injection tests.
-- [ ] Verify target, backup, reject, and output artifact consistency.
-- [ ] Verify metadata, symlink/reparse-point, rollback, cancellation, cleanup, and non-atomic fallback behavior.
-- [ ] Confirm that GNU-visible partial-application behavior remains command-specific and correct.
+- [x] Adopt stabilized E6 contract changes.
+- [x] Remove provisional command-local replacement code.
+- [x] Rerun transaction failure-injection tests.
+- [x] Verify target, backup, reject, and output artifact consistency.
+- [x] Verify metadata, symlink/reparse-point, rollback, cancellation, cleanup, and non-atomic fallback behavior.
+- [x] Confirm that GNU-visible partial-application behavior remains command-specific and correct.
+
+P11B is complete. Patch now forwards the shared `TransactionalReplacementCapabilities` record directly, creates only `PatchE6Transaction`, and retains GNU-visible artifact selection, diagnostics, exit status, and independent-file partial application above E6.
 
 ## Phase P12 — Conformance, hardening, and extraction readiness
 
