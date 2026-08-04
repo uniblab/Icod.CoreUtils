@@ -77,7 +77,16 @@ public sealed class SystemTransactionalReplacementFileSystem : ITransactionalRep
 				dereferenceMode,
 				cancellationToken
 			).ConfigureAwait( false );
-			return new TransactionalReplacementObservation( path, true, metadata );
+			var length = FileSystemEntryKind.File == metadata.Kind
+				? new FileInfo( path ).Length
+				: (long?)null;
+			var modificationTime = metadata.ModificationTime.IsAvailable
+				? metadata.ModificationTime.GetRequiredValue()
+				: (DateTimeOffset?)null;
+			return new TransactionalReplacementObservation( path, true, metadata ) {
+				Length = length,
+				ModificationTime = modificationTime
+			};
 		} catch ( FileNotFoundException ) {
 			return new TransactionalReplacementObservation( path, false, null );
 		} catch ( DirectoryNotFoundException ) {

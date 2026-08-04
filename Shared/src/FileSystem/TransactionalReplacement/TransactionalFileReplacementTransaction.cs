@@ -1029,6 +1029,20 @@ public sealed class TransactionalFileReplacementTransaction : IAsyncDisposable {
 				"The destination identity changed after staging."
 			);
 		}
+		if ((expected.Length.HasValue
+				&& current.Length.HasValue
+				&& expected.Length.Value != current.Length.Value)
+			|| (expected.ModificationTime.HasValue
+				&& current.ModificationTime.HasValue
+				&& expected.ModificationTime.Value != current.ModificationTime.Value)) {
+			throw CreateFailure(
+				TransactionalReplacementDiagnosticCode.PreconditionFailed,
+				TransactionalReplacementStage.Revalidate,
+				artifact,
+				path,
+				"The destination changed after staging."
+			);
+		}
 		if ( diagnosticPath is not null ) {
 			return;
 		}

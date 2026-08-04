@@ -76,8 +76,15 @@ internal sealed class PatchE6Transaction : IPatchTransaction {
 			);
 		}
 		var result = await this.transaction.CommitAsync( cancellationToken ).ConfigureAwait( false );
+		var outcome = MapOutcome( result.Outcome );
+		if ( PatchTransactionOutcome.Succeeded == outcome
+			&& result.Diagnostics.Any(
+				diagnostic => TransactionalReplacementDiagnosticCode.CleanupFailed == diagnostic.Code
+			) ) {
+			outcome = PatchTransactionOutcome.FailedCleanupIncomplete;
+		}
 		return new PatchTransactionResult(
-			MapOutcome( result.Outcome ),
+			outcome,
 			result.Diagnostics.Select( this.FormatDiagnostic ).ToArray(),
 			result.CommittedRecoveryUnitIds,
 			result.RolledBackRecoveryUnitIds,
@@ -97,7 +104,11 @@ internal sealed class PatchE6Transaction : IPatchTransaction {
 		var displayName = this.diagnosticArtifacts.TryGetValue( normalized, out var artifact )
 			? artifact.DisplayName
 			: diagnostic.Path;
-		return string.Concat( displayName, ": ", diagnostic.Message );
+		var message = TransactionalReplacementDiagnosticCode.RollbackFailed == diagnostic.Code
+			&& !diagnostic.Message.Contains( "rollback failed", StringComparison.Ordinal )
+				? string.Concat( "rollback failed: ", diagnostic.Message )
+				: diagnostic.Message;
+		return string.Concat( displayName, ": ", message );
 	}
 
 	private static Projection CreateProjection( PatchArtifactPlan plan ) {
@@ -303,6 +314,7 @@ internal sealed class PatchE6Transaction : IPatchTransaction {
 		private readonly IPatchTransactionFailureInjector injector;
 		private readonly IReadOnlyDictionary<TransactionalReplacementArtifact, PatchArtifact> patchArtifacts;
 		private readonly IReadOnlyDictionary<TransactionalReplacementArtifact, PatchArtifact> retainedBackups;
+		private readonly HashSet<TransactionalReplacementArtifact> metadataStages = new();
 
 		/// <summary>Initializes a Patch-to-E6 failure-injection adapter.</summary>
 		public FailureInjectorAdapter(
@@ -316,16 +328,38 @@ internal sealed class PatchE6Transaction : IPatchTransaction {
 		}
 
 		/// <inheritdoc/>
-		public ValueTask OnStageAsync(
+		public async ValueTask OnStageAsync(
 			TransactionalReplacementStage stage,
 			TransactionalReplacementArtifact artifact,
 			CancellationToken cancellationToken = default
 		) {
-			var patchArtifact = TransactionalReplacementStage.PublishBackup == stage
-				&& this.retainedBackups.TryGetValue( artifact, out var backup )
-					? backup
-					: this.patchArtifacts[artifact];
-			return this.injector.OnStageAsync( MapStage( stage ), patchArtifact, cancellationToken );
+			var patchArtifact = this.patchArtifacts[artifact];
+			if ( TransactionalReplacementStage.ApplyMetadata == stage ) {
+				this.metadataStages.Add( artifact );
+			}
+			if ( TransactionalReplacementStage.FlushDirectory == stage
+				&& PatchArtifactAction.Write == patchArtifact.Action
+				&& this.metadataStages.Add( artifact ) ) {
+				await this.injector.OnStageAsync(
+					PatchTransactionStage.ApplyMetadata,
+					patchArtifact,
+					cancellationToken
+				).ConfigureAwait( false );
+			}
+			if ( TransactionalReplacementStage.PublishBackup == stage
+				&& this.retainedBackups.TryGetValue( artifact, out var backup ) ) {
+				await this.injector.OnStageAsync(
+					PatchTransactionStage.Commit,
+					backup,
+					cancellationToken
+				).ConfigureAwait( false );
+				patchArtifact = backup;
+			}
+			await this.injector.OnStageAsync(
+				MapStage( stage ),
+				patchArtifact,
+				cancellationToken
+			).ConfigureAwait( false );
 		}
 
 		private static PatchTransactionStage MapStage( TransactionalReplacementStage stage ) {

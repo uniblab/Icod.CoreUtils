@@ -353,7 +353,12 @@ public sealed record TransactionalReplacementObservation(
 	string Path,
 	bool Exists,
 	FileSystemMetadata? Metadata
-);
+) {
+	/// <summary>Gets or initializes the ordinary-file length when it was observable.</summary>
+	public long? Length { get; init; }
+	/// <summary>Gets or initializes the last-write time when it was observable.</summary>
+	public DateTimeOffset? ModificationTime { get; init; }
+}
 
 /// <summary>Describes provider-level transactional replacement capabilities.</summary>
 /// <param name="SupportsAtomicReplaceExisting">Whether replacement of an existing sibling file is atomic.</param>
