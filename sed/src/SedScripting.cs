@@ -6,7 +6,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Icod.CoreUtils.Shared.CommandLine;
@@ -187,10 +186,9 @@ public static partial class Command {
 
 	private sealed class ScriptParser {
 
-		private readonly bool myExtendedRegularExpressions;
 		private readonly List<Instruction> myInstructions;
 		private readonly bool myPosix;
-		private string? myLastRegularExpression;
+		private readonly SedRegularExpressionCompiler myRegularExpressions;
 		private readonly bool mySandbox;
 		private readonly string myText;
 		private int myIndex;
@@ -199,14 +197,19 @@ public static partial class Command {
 			string text,
 			bool extendedRegularExpressions,
 			bool sandbox,
-			bool posix
+			bool posix,
+			CancellationToken cancellationToken
 		) {
 			this.myText = text ?? throw new ArgumentNullException(
 				nameof( text )
 			);
-			this.myExtendedRegularExpressions = extendedRegularExpressions;
 			this.mySandbox = sandbox;
 			this.myPosix = posix;
+			this.myRegularExpressions = new SedRegularExpressionCompiler(
+				extendedRegularExpressions,
+				posix,
+				cancellationToken
+			);
 			this.myInstructions = new List<Instruction>();
 		}
 
@@ -797,11 +800,14 @@ public static partial class Command {
 				var pattern = this.ReadDelimited(
 					'/'
 				);
-				pattern = this.ResolveRegularExpression(
-					pattern
+				this.ReadAddressRegularExpressionModifiers(
+					out var ignoreCase,
+					out var multiline
 				);
 				return this.CreateRegexAddress(
-					pattern
+					pattern,
+					ignoreCase,
+					multiline
 				);
 			}
 
@@ -815,11 +821,14 @@ public static partial class Command {
 				var pattern = this.ReadDelimited(
 					delimiter
 				);
-				pattern = this.ResolveRegularExpression(
-					pattern
+				this.ReadAddressRegularExpressionModifiers(
+					out var ignoreCase,
+					out var multiline
 				);
 				return this.CreateRegexAddress(
-					pattern
+					pattern,
+					ignoreCase,
+					multiline
 				);
 			}
 
@@ -885,12 +894,6 @@ public static partial class Command {
 			var pattern = this.ReadDelimited(
 				delimiter
 			);
-			pattern = this.ResolveRegularExpression(
-				pattern
-			);
-			this.ValidateRegularExpression(
-				pattern
-			);
 			var replacement = this.ReadDelimited(
 				delimiter
 			);
@@ -914,12 +917,20 @@ public static partial class Command {
 			this.ValidateSubstitutionFlags(
 				flags
 			);
+			var parsedFlags = ParseSubstitutionFlags(
+				flags
+			);
+			var regularExpression = this.CompileRegularExpression(
+				pattern,
+				SedRegularExpressionContext.Substitution,
+				parsedFlags.IgnoreCase,
+				parsedFlags.Multiline
+			);
 
 			return new Substitution(
-				pattern,
+				regularExpression,
 				replacement,
-				flags,
-				this.myExtendedRegularExpressions
+				flags
 			);
 		}
 
@@ -997,21 +1008,6 @@ public static partial class Command {
 			throw this.Error(
 				$"unterminated expression using delimiter '{delimiter}'"
 			);
-		}
-
-		private string ResolveRegularExpression(
-			string pattern
-		) {
-			if ( 0 == pattern.Length ) {
-				return this.myLastRegularExpression
-					?? throw this.Error(
-						"no previous regular expression"
-					)
-				;
-			}
-
-			this.myLastRegularExpression = pattern;
-			return pattern;
 		}
 
 		private string ReadTextArgument() {
@@ -1146,31 +1142,68 @@ public static partial class Command {
 			return output;
 		}
 
-		private RegexAddress CreateRegexAddress(
-			string pattern
+		private SedCompiledRegularExpression CompileRegularExpression(
+			string pattern,
+			SedRegularExpressionContext context,
+			bool ignoreCase,
+			bool multiline
 		) {
-			this.ValidateRegularExpression(
-				pattern
-			);
+			try {
+				return this.myRegularExpressions.Compile(
+					pattern,
+					context,
+					ignoreCase,
+					multiline
+				);
+			} catch ( ScriptParseException ex ) {
+				throw this.Error(
+					ex.Message
+				);
+			}
+		}
+
+		private RegexAddress CreateRegexAddress(
+			string pattern,
+			bool ignoreCase,
+			bool multiline
+		) {
 			return new RegexAddress(
-				pattern,
-				this.myExtendedRegularExpressions
+				this.CompileRegularExpression(
+					pattern,
+					SedRegularExpressionContext.Address,
+					ignoreCase,
+					multiline
+				)
 			);
 		}
 
-		private void ValidateRegularExpression(
-			string pattern
+		private void ReadAddressRegularExpressionModifiers(
+			out bool ignoreCase,
+			out bool multiline
 		) {
-			try {
-				_ = CreateRegex(
-					pattern,
-					this.myExtendedRegularExpressions,
-					RegexOptions.None
-				);
-			} catch ( ArgumentException ex ) {
-				throw this.Error(
-					$"invalid regular expression: {ex.Message}"
-				);
+			ignoreCase = false;
+			multiline = false;
+			while ( this.myIndex < this.myText.Length ) {
+				var modifier = this.myText[ this.myIndex ];
+				if ( 'I' == modifier ) {
+					if ( this.myPosix ) {
+						throw this.Error(
+							"regular-expression address modifiers are not available in POSIX mode"
+						);
+					}
+					ignoreCase = true;
+					this.myIndex++;
+				} else if ( 'M' == modifier ) {
+					if ( this.myPosix ) {
+						throw this.Error(
+							"regular-expression address modifiers are not available in POSIX mode"
+						);
+					}
+					multiline = true;
+					this.myIndex++;
+				} else {
+					break;
+				}
 			}
 		}
 

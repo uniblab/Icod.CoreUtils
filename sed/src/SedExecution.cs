@@ -6,7 +6,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Icod.CoreUtils.Shared.CommandLine;
@@ -360,7 +359,8 @@ public static partial class Command {
 				var context = new AddressContext(
 					input.LineNumber,
 					input.IsLast,
-					patternSpace
+					patternSpace,
+					cancellationToken
 				);
 				var selection = instruction.Address?.Evaluate(
 					context
@@ -665,7 +665,8 @@ public static partial class Command {
 							var result = ApplySubstitution(
 								patternSpace,
 								substitution,
-								out var replaced
+								out var replaced,
+								cancellationToken
 							);
 							if ( replaced ) {
 								patternSpace = result;

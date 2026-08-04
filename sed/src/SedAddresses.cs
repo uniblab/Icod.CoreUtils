@@ -6,7 +6,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Icod.CoreUtils.Shared.CommandLine;
@@ -31,14 +30,20 @@ public static partial class Command {
 			get;
 		}
 
+		public CancellationToken CancellationToken {
+			get;
+		}
+
 		public AddressContext(
 			int lineNumber,
 			bool isLastLine,
-			string patternSpace
+			string patternSpace,
+			CancellationToken cancellationToken
 		) {
 			this.LineNumber = lineNumber;
 			this.IsLastLine = isLastLine;
 			this.PatternSpace = patternSpace;
+			this.CancellationToken = cancellationToken;
 		}
 
 	}
@@ -161,7 +166,7 @@ public static partial class Command {
 
 	private sealed class RegexAddress : Address {
 
-		private readonly Regex myRegex;
+		private readonly SedCompiledRegularExpression myRegularExpression;
 
 		public override bool IsRegularExpression {
 			get {
@@ -170,21 +175,21 @@ public static partial class Command {
 		}
 
 		public RegexAddress(
-			string pattern,
-			bool extendedRegularExpressions
+			SedCompiledRegularExpression regularExpression
 		) {
-			this.myRegex = CreateRegex(
-				pattern,
-				extendedRegularExpressions,
-				RegexOptions.None
-			);
+			this.myRegularExpression = regularExpression
+				?? throw new ArgumentNullException(
+					nameof( regularExpression )
+				)
+			;
 		}
 
 		public override bool Matches(
 			in AddressContext context
 		) {
-			return this.myRegex.IsMatch(
-				context.PatternSpace
+			return this.myRegularExpression.IsMatch(
+				context.PatternSpace,
+				context.CancellationToken
 			);
 		}
 

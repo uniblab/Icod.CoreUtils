@@ -5,9 +5,9 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `45` |
-| Current engineering milestone | LineEditor Phase LE2 complete; proceed to Phase LE3 — migrate Sed to the Shared BRE/ERE provider |
+| Current engineering milestone | LineEditor Phase LE3 complete; proceed to Phase LE4 — correct Sed record and text semantics |
 | Completed infrastructure milestone | Completion Gates E2 through E6 — canonical paths, authoritative metadata, pathname-indirection characterization, mode expressions, single-path mutation, recursive mutation/copy planning, and transactional replacement |
-| Active infrastructure dependency | LE2 verified the stabilized Shared BRE/ERE contracts without broadening them; LE3 now introduces Sed-specific policy over that provider |
+| Active infrastructure dependency | LE3 now consumes the stabilized Shared BRE/ERE provider through Sed-specific compilation, reuse, iteration, locale, and diagnostic policy; LE4 applies the Shared record and byte/text contracts |
 | Next command batch | Completion Gate F1 and Batch 46 remain next after the contiguous LineEditor incubation sequence |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
@@ -253,8 +253,8 @@ Man7 pages are useful synopses and secondary references, but they must not repla
 7. **Injected standard streams are not consistently respected or owned correctly.**
    A command must use the supplied `stdin`, `stdout`, and `stderr`, and must never dispose a caller-owned standard stream.
 
-8. **The current Sed implementation has not yet exposed its final internal boundaries.**
-   `Icod.LineEditor.Sed.Command` presently contains a large monolithic interpreter with nested option, parser, address, instruction, execution, record, substitution, process, and in-place-editing types. It also translates GNU BRE syntax into `System.Text.RegularExpressions`, uses a decoded record reader that may normalize CR before LF, combines script fragments with a host-generated line ending, and performs in-place replacement through command-local file moves. The LineEditor sequence must first characterize and decompose this implementation, then migrate regex, record, security, and replacement mechanics to the applicable shared contracts without moving Sed's pattern-space and command-cycle state into a general library.
+8. **Sed's remaining risks are record fidelity, capability enforcement, and replacement safety.**
+   LE1 exposed the implementation as responsibility-focused partial modules, and LE3 replaced the private .NET regex translator with Sed-specific policy over the Shared managed GNU BRE/ERE provider. The command still uses a decoded record reader that may normalize CR before LF, combines script fragments with a host-generated line ending, and performs in-place replacement through command-local file moves. LE4 and the later LineEditor phases must migrate record, security, process-capability, and replacement mechanics to the applicable shared contracts without moving Sed's pattern-space and command-cycle state into a general library.
 
 ## Project conventions
 
@@ -1206,10 +1206,12 @@ Phase LE2 is complete. `LineEditorRegularExpressionContractTests` now exercises 
 
 #### Phase LE3 — Migrate Sed to the Shared regex provider
 
-- [ ] Add a Sed-specific adapter that owns BRE/ERE selection, empty-pattern reuse, address-versus-substitution context, GNU/POSIX mode, match iteration, and Sed diagnostics.
-- [ ] Route address and substitution compilation through the Shared provider.
-- [ ] Remove the private BRE/POSIX-class-to-.NET-regex translation only after equivalence and differential tests pass.
-- [ ] Add GNU sed differential cases for BRE, ERE, locale behavior, captures, repeated zero-length matches, and leftmost-longest results that differ from .NET's default engine.
+- [x] Add a Sed-specific adapter that owns BRE/ERE selection, empty-pattern reuse, address-versus-substitution context, GNU escape preprocessing, GNU/POSIX mode, match iteration, and Sed diagnostics.
+- [x] Route address and substitution compilation through the Shared provider.
+- [x] Remove the private BRE/POSIX-class-to-.NET-regex translation only after equivalence and differential tests pass.
+- [x] Add GNU sed differential cases for BRE, ERE, locale behavior, captures, repeated zero-length matches, and leftmost-longest results that differ from .NET's default engine.
+
+Phase LE3 is complete. `SedRegularExpressionCompiler` now selects the Shared GNU Basic or Extended provider, retains Sed's exact compiled-expression reuse state across addresses and substitutions, owns address/substitution modifiers, GNU escape preprocessing, and GNU/POSIX policy, maps Shared diagnostics into Sed diagnostics, and implements GNU empty-match iteration above Shared leftmost-longest matching. The private `System.Text.RegularExpressions` translator and POSIX-class replacement table have been removed. `SedRegularExpressionMigrationTests` records GNU sed 4.10 differential behavior, including captures, locale classes, control and numeric escapes, strict-POSIX bracket behavior, repeated zero-length matches, and an ERE alternation whose leftmost-longest result differs from .NET's default engine. LE4 remains responsible for byte-preserving records and explicit encoding policy.
 
 #### Phase LE4 — Correct Sed record and text semantics
 
