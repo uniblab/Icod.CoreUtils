@@ -81,13 +81,23 @@ public sealed class PhaseP12ClosureTests {
 			"icod-diffutils",
 			fixture
 		);
-		await File.WriteAllTextAsync( target, "same\nleft\n" );
+		var fixtureText = await File.ReadAllTextAsync( fixturePath );
+		var lineEnding = fixtureText.Contains( "\r\n", StringComparison.Ordinal )
+			? "\r\n"
+			: "\n";
+		await File.WriteAllTextAsync(
+			target,
+			string.Concat( "same", lineEnding, "left", lineEnding )
+		);
 		try {
 			var result = await RunAsync(
 				new[] { "-d", directory, option, "target.txt", fixturePath }
 			);
 			Assert.Equal( 0, result.Status );
-			Assert.Equal( "same\nright\n", await File.ReadAllTextAsync( target ) );
+			Assert.Equal(
+				string.Concat( "same", lineEnding, "right", lineEnding ),
+				await File.ReadAllTextAsync( target )
+			);
 		} finally {
 			Directory.Delete( directory, recursive: true );
 		}
@@ -107,7 +117,7 @@ public sealed class PhaseP12ClosureTests {
 		);
 		try {
 			var result = await RunAsync(
-				new[] { "-d", root, "-i", "change.patch", "--batch" }
+				new[] { "-d", root, "-u", "-i", "change.patch", "--batch" }
 			);
 			Assert.Equal( 1, result.Status );
 			Assert.Equal( "old\n", await File.ReadAllTextAsync( outside ) );
