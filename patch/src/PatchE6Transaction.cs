@@ -5,6 +5,7 @@ using Icod.CoreUtils.Shared.FileSystem.Mutation;
 using Icod.CoreUtils.Shared.FileSystem.RecursiveMutation;
 using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
+using System.IO;
 
 /// <summary>Adapts immutable Patch artifacts to the shared Completion Gate E6 transaction engine.</summary>
 internal sealed class PatchE6Transaction : IPatchTransaction {
