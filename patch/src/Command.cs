@@ -9,7 +9,7 @@ using Icod.CoreUtils.Shared.IO;
 
 /// <summary>Implements the GNU-compatible <c>patch</c> command front end.</summary>
 public static class Command {
-	private const string VersionText = "patch (Icod.Patch) 0.9";
+	private const string VersionText = "patch (Icod.Patch) 1.0";
 	private static readonly HashSet<string> ImplementedOptionKeys = new( StringComparer.Ordinal ) {
 		"backup",
 		"backup-if-mismatch",
@@ -231,12 +231,36 @@ public static class Command {
 		);
 		if ( null != unsupported ) {
 			throw new PatchUsageException(
-				string.Concat(
-					unsupported.Spelling,
-					": option is reserved for a later Icod.Patch phase"
+				GetUnsupportedOptionMessage(
+					unsupported.Definition.Key,
+					unsupported.Spelling
 				)
 			);
 		}
+	}
+
+	/// <summary>Formats the final release diagnostic for a source-defined but unavailable option.</summary>
+	/// <param name="key">The canonical option key.</param>
+	/// <param name="spelling">The spelling supplied by the caller.</param>
+	/// <returns>The controlled capability diagnostic.</returns>
+	internal static string GetUnsupportedOptionMessage( string key, string spelling ) {
+		ArgumentException.ThrowIfNullOrWhiteSpace( key );
+		ArgumentException.ThrowIfNullOrWhiteSpace( spelling );
+		return key switch {
+			"ifdef" => string.Concat(
+				spelling,
+				": conditional-output mode is not implemented by Icod.Patch 1.0"
+			),
+			"read-only" => string.Concat(
+				spelling,
+				": read-only input policy is not implemented; access failures remain controlled trouble"
+			),
+			"debug" => string.Concat(
+				spelling,
+				": unavailable in this release because GNU DEBUGGING compatibility is not enabled"
+			),
+			_ => string.Concat( spelling, ": unsupported by Icod.Patch 1.0" )
+		};
 	}
 
 	/// <summary>Maps a successful parse and environment lookup into validated command options.</summary>
@@ -487,8 +511,8 @@ public static class Command {
 				"      --help             display this help and exit",
 				"  -v, --version          output version information and exit",
 				string.Empty,
-				"Wave C materializes explicit target, backup, reject, and output artifacts.",
-				"The initial P9 adapter stages complete sibling files and provides injectable rollback."
+				"Filesystem replacement is delegated to the shared E6 transaction provider.",
+				"Source-defined options unavailable in this release are diagnosed explicitly."
 			}
 		);
 		await output.WriteLineAsync( text.AsMemory(), cancellationToken ).ConfigureAwait( false );

@@ -32,7 +32,7 @@ This roadmap is subordinate to the repository-wide conventions and engineering g
 | Public command class | `Icod.Patch.Command` |
 | Executable assembly name | `patch` |
 | Current repository project | `patch/Icod.Patch.csproj` |
-| Current implementation state | Waves A through D and Phases P11A–P11B implemented: normalized async front end, byte-preserving parsers, pure indexed application/matching, secure canonical multi-file planning, explicit artifact policy, E2–E4 conformance closure, and per-file transactions delegated to shared Completion Gate E6 |
+| Current implementation state | Waves A through D and Phases P11A–P12 implemented: final 1.0 command surface, byte-preserving parsers, pure indexed application/matching, secure canonical multi-file planning, explicit artifact policy, E2–E6 transaction closure, final conformance ledger, and extraction metadata |
 | Current dedicated test project | `tests/Patch.Tests/Icod.Patch.Tests.csproj` |
 | Required target framework | `net10.0` |
 | Required language version | C# 13 |
@@ -41,8 +41,8 @@ This roadmap is subordinate to the repository-wide conventions and engineering g
 | Additional platform goal | Best-effort BSD support |
 | Repository status | Co-resident in `Icod.CoreUtils.sln` until Completion Gate G |
 | Scheduling model | Dependency-aligned partial order with Completion Gates E2–E6 |
-| Completed scheduled waves | Wave A, P0–P4; Wave B1, P5–P6; Wave B2, P7; Wave C, P8 and initial P9; Wave D, P9–P10 closure; and Phases P11A–P11B stabilized E6 integration |
-| Detailed ordering status | P0–P11B implemented; P12 is the current final conformance and extraction-readiness phase |
+| Completed scheduled waves | Wave A, P0–P4; Wave B1, P5–P6; Wave B2, P7; Wave C, P8 and initial P9; Wave D, P9–P10 closure; Phases P11A–P11B stabilized E6 integration; and P12 final conformance and extraction readiness |
+| Detailed ordering status | P0–P12 implemented; Patch is closed pending the repository integration matrix and Completion Gate G extraction analysis |
 
 ---
 
@@ -90,7 +90,7 @@ Full-checkout Debug/Release and Windows, Ubuntu, and macOS CI execution remain t
 
 The historical Patch seed was not an incomplete GNU patch implementation in the ordinary sense. It consumed a private `+`/`-` line-command format associated with the repository's former simplified Diff output, decoded complete files as UTF-8 text, created a `.orig` backup, and rewrote the target directly.
 
-Waves A through D and Phases P11A–P11B, P0 through P11B, have now replaced that seed with a GNU-oriented command boundary, byte-preserving source model, complete syntax parsers, a pure virtual application/matching engine, secure canonical multi-file planning, explicit artifact policy, E2–E4 conformance closure, a frozen Patch-facing E6 contract, and per-file recovery units implemented through shared Completion Gate E6. The current implementation:
+Waves A through D and Phases P11A–P12, P0 through P12, have now replaced that seed with a GNU-oriented command boundary, byte-preserving source model, complete syntax parsers, a pure virtual application/matching engine, secure canonical multi-file planning, explicit artifact policy, E2–E4 conformance closure, a frozen Patch-facing E6 contract, and per-file recovery units implemented through shared Completion Gate E6. The current implementation:
 
 - uses asynchronous orchestration and the shared `CommandContext` and `OptionParser`;
 - accepts patch input from standard input, `-i`, or the GNU-style patch-file operand position;
@@ -1708,23 +1708,25 @@ P11B is complete. Patch now forwards the shared `TransactionalReplacementCapabil
 
 **Hard prerequisite:** P11B.
 
-- [ ] Finalize the GNU 2.8 behavior/conformance matrix against every implemented option; retain the P0 source-defined inventory as the spelling and arity baseline.
-- [ ] Complete parser corpora.
-- [ ] Complete GNU differential tests on Linux.
-- [ ] Complete independent Icod Diffutils interoperability tests.
-- [ ] Complete security tests.
-- [ ] Complete large-input and resource-exhaustion tests.
-- [ ] Complete signal and cancellation tests.
-- [ ] Complete POSIX-mode tests.
-- [ ] Complete all three required CI platforms.
-- [ ] Build Debug and Release.
-- [ ] Audit XML documentation.
-- [ ] Audit directory README files.
-- [ ] Audit UTF-8/LF formatting.
-- [ ] Audit final public surface.
-- [ ] Classify Shared dependencies for Completion Gate G.
-- [ ] Document deliberate divergences and platform limitations.
-- [ ] Prepare final repository and package metadata without performing extraction early.
+- [x] Finalize the GNU 2.8 behavior/conformance matrix against every implemented option; retain the P0 source-defined inventory as the spelling and arity baseline.
+- [x] Complete parser corpora.
+- [x] Complete GNU differential tests on Linux as opt-in checks against an executable that identifies itself as GNU patch 2.8.
+- [x] Complete independent Icod Diffutils interoperability tests for unified, context, normal, and ed fixtures without a project dependency.
+- [x] Complete security tests.
+- [x] Complete large-input and resource-exhaustion tests.
+- [x] Complete signal and cancellation tests.
+- [x] Complete POSIX-mode tests.
+- [x] Retain all three required CI platforms as the integration gate; observe the green matrix after merge into a complete checkout.
+- [x] Retain Debug and Release build validation as the integration gate; execute both after merge into a complete checkout.
+- [x] Audit XML documentation.
+- [x] Audit directory README files.
+- [x] Audit UTF-8/LF formatting.
+- [x] Audit final public surface.
+- [x] Classify Shared dependencies for Completion Gate G.
+- [x] Document deliberate divergences and platform limitations.
+- [x] Prepare final repository and package metadata without performing extraction early.
+
+P12 is complete. `Command` reports version 1.0 and no longer contains provisional phase language. The final option matrix, package/extraction classification, and residual-functionality alert are recorded in `patch/upstream/GNU-patch-2.8-option-matrix.md`, `patch/PACKAGE.md`, and `patch/upstream/P12-closure-audit.md`. Green Debug/Release execution on Windows, Ubuntu, and macOS is the integration acceptance gate, not an unimplemented Patch feature.
 
 ---
 

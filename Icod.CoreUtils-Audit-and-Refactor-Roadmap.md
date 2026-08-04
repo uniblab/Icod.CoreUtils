@@ -5,9 +5,9 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `45` |
-| Current engineering milestone | Patch Phase P12 — final conformance and extraction readiness |
+| Current engineering milestone | Patch Phases P11B–P12 complete; proceed to Completion Gate F1 and Batch 46 |
 | Completed infrastructure milestone | Completion Gates E2 through E6 — canonical paths, authoritative metadata, pathname-indirection characterization, mode expressions, single-path mutation, recursive mutation/copy planning, and transactional replacement |
-| Active infrastructure dependency | Patch Phase P11B has closed against the stabilized Completion Gate E6 contract; Phase P12 performs final suite conformance |
+| Active infrastructure dependency | Patch P0–P12 is closed against stabilized E2–E6 contracts; final three-runner Debug/Release execution remains the integration merge gate |
 | Next command batch | Completion Gate F1, then Batch 46 — `dircolors`, `ls`, `dir`, and `vdir` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
@@ -1159,12 +1159,13 @@ The command supports GNU target-directory interpretation (including explicitly n
 After `cp`, `mv`, and `install` have independently validated E6, Patch repeats its transaction and conformance suites against the stabilized shared contract.
 
 - [x] **P11B:** resolve contract changes exposed by Batches 44 and 45; remove all provisional Patch-local replacement code; verify target, backup, reject, output, metadata, symlink, rollback, cleanup, and non-atomic fallback consistency.
-- [ ] **P12:** complete the GNU patch 2.8 option matrix, parser corpora, differential tests, Diffutils interoperability, security and resource tests, signal and cancellation behavior, POSIX mode, all three required CI platforms, Debug and Release builds, XML documentation, directory README files, UTF-8/LF policy, and final public-surface audit.
-- [ ] Classify every Shared dependency for Completion Gate G.
-- [ ] Document deliberate divergences, unsupported capabilities, and platform limitations.
-- [ ] Keep solution, repository, and package extraction deferred until Completion Gate G.
+- [x] **P12:** finalize the GNU patch 2.8 option/conformance matrix, parser corpora, Linux opt-in differential tests, all-four-format Diffutils fixture interoperability, security and resource tests, signal/cancellation behavior, POSIX defaults, XML documentation, directory README files, UTF-8/LF policy, final public surface, and extraction metadata.
+- [x] Classify every Shared dependency for Completion Gate G.
+- [x] Document deliberate divergences, unsupported capabilities, and platform limitations.
+- [x] Keep solution, repository, and package extraction deferred until Completion Gate G.
+- [x] Retain Debug/Release and `windows-latest`, `ubuntu-latest`, and `macos-latest` as the repository integration gate; observe the green matrix after these files are merged into a complete checkout.
 
-Completion of P12 closes the co-resident Patch implementation. It does not create a runtime dependency on Diffutils or LineEditor.
+P11B and P12 are complete. The co-resident Patch implementation is closed at version 1.0, with final limitations recorded in `patch/upstream/P12-closure-audit.md`. It does not create a runtime dependency on Diffutils or LineEditor.
 
 ### In-solution LineEditor incubation sequence — Phases LE0 through LE9
 

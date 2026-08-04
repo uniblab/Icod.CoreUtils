@@ -3,7 +3,7 @@ namespace Icod.Patch;
 using Icod.CoreUtils.Shared.Diagnostics;
 
 /// <summary>Provides the process entry point for <c>patch</c>.</summary>
-public static class Program {
+internal static class Program {
 	/// <summary>Runs <c>patch [OPTION]... [ORIGFILE [PATCHFILE]]</c>.</summary>
 	/// <param name="args">The command-line arguments.</param>
 	/// <returns>A task whose result is the process status.</returns>
