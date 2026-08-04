@@ -119,8 +119,19 @@ public sealed class TransactionalFileReplacementTransaction : IAsyncDisposable {
 						cancellationToken
 					).ConfigureAwait( false );
 				}
-				if ( item.OriginalObservation!.Exists
-					&& TransactionalReplacementBackupRetention.RetainAfterSuccess == options.BackupPolicy.Retention ) {
+				var retainBackup = artifact.RetainBackup
+					|| TransactionalReplacementBackupRetention.RetainAfterSuccess == options.BackupPolicy.Retention;
+				if ( item.OriginalObservation!.Exists && retainBackup ) {
+					if ( artifact.ExplicitBackupPath is null
+						&& TransactionalReplacementBackupRetention.RetainAfterSuccess != options.BackupPolicy.Retention ) {
+						throw CreateFailure(
+							TransactionalReplacementDiagnosticCode.BackupFailed,
+							TransactionalReplacementStage.Validate,
+							artifact,
+							artifact.Path,
+							"Per-artifact backup retention requires an explicit backup pathname or a transaction backup policy."
+						);
+					}
 					item.BackupPath = artifact.ExplicitBackupPath
 						?? await backupNameGenerator.GenerateAsync(
 							artifact.Path,

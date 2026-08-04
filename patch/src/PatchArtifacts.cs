@@ -233,13 +233,15 @@ internal sealed class PatchArtifactPlan {
 	public PatchArtifactPlan(
 		IReadOnlyList<PatchArtifact> artifacts,
 		PatchExitStatus status,
-		IReadOnlyList<string> diagnostics
+		IReadOnlyList<string> diagnostics,
+		string? containmentRootPath = null
 	) {
 		ArgumentNullException.ThrowIfNull( artifacts );
 		ArgumentNullException.ThrowIfNull( diagnostics );
 		this.Artifacts = new ReadOnlyCollection<PatchArtifact>( artifacts.ToArray() );
 		this.Status = status;
 		this.Diagnostics = new ReadOnlyCollection<string>( diagnostics.ToArray() );
+		this.ContainmentRootPath = containmentRootPath;
 	}
 
 	/// <summary>Gets artifacts in deterministic commit order.</summary>
@@ -248,6 +250,8 @@ internal sealed class PatchArtifactPlan {
 	public PatchExitStatus Status { get; }
 	/// <summary>Gets deterministic artifact-policy diagnostics.</summary>
 	public IReadOnlyList<string> Diagnostics { get; }
+	/// <summary>Gets the E2-resolved working-directory containment root.</summary>
+	public string? ContainmentRootPath { get; }
 }
 
 /// <summary>Builds explicit target, backup, reject, and output artifacts from P7 virtual results.</summary>
@@ -528,7 +532,7 @@ internal sealed class PatchArtifactPlanner {
 				);
 			}
 			ValidateDistinctDestinations( artifacts, pathComparer );
-			return new PatchArtifactPlan( OrderArtifacts( artifacts, pathComparer ), status.Status, diagnostics );
+			return new PatchArtifactPlan( OrderArtifacts( artifacts, pathComparer ), status.Status, diagnostics, applicationPlan.WorkingDirectory );
 		} finally {
 			foreach ( var stream in rejectStreams.Values ) {
 				stream.Dispose();

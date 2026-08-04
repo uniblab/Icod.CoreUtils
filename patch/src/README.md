@@ -1,12 +1,13 @@
 # Icod.Patch source layout
 
-The source directory contains complete Wave A parsers, the Wave B1 pure application engine, the Wave B2 path-planning layer, Phase P8 artifact policy, and the completed Wave D P9/P10 pre-E6 boundary:
+The source directory contains complete Wave A parsers, the Wave B1 pure application engine, the Wave B2 path-planning layer, Phase P8 artifact policy, and the completed Phase P11A adapter over shared E6:
 
 - `Command.cs` owns public invocation, shared option parsing, environment policy, diagnostics, compatibility wrappers, help, version, cancellation, and GNU option validation.
-- `PatchApplication.cs` acquires the byte-oriented patch source, coordinates scanning and parsing, invokes P7 planning and P8 artifact planning, handles dry runs and byte-oriented standard output, and commits through the injected P9 boundary.
+- `PatchApplication.cs` acquires the byte-oriented patch source, coordinates scanning and parsing, invokes P7 planning and P8 artifact planning, handles dry runs and byte-oriented standard output, and commits through the injected E6-backed boundary.
 - `PatchArtifacts.cs` derives explicit target, backup, reject, and output artifacts from final P7 virtual state; implements GNU backup/reject/output naming and metadata policy; assigns per-file recovery units; quotes hostile pathnames; and consolidates repeated patches to one canonical target.
-- `PatchFileSystem.cs` defines `IPatchFileSystem` and `IPatchTransaction`, consumes E2/E3/E4 path, metadata, and mutation providers, enforces lexical and physical artifact containment, applies final-link policy to every artifact pathname, stages and flushes complete sibling temporary files, revalidates destination and validation-only input identity, applies mode/ownership/timestamp metadata, commits per-file units, and reports rollback, partial-commit, cancellation, and cleanup outcomes pending E6.
-- `PatchE6Contract.cs` freezes Patch's required recovery scope, multi-file policy, capability reporting, containment, metadata, cancellation, cleanup, and failure-injection matrix for Completion Gate E6.
+- `PatchFileSystem.cs` defines `IPatchFileSystem` and `IPatchTransaction`, consumes E2/E3/E4 path, metadata, and mutation providers, enforces lexical and physical artifact containment, applies final-link policy to every artifact pathname, and constructs the shared E6 provider.
+- `PatchE6Transaction.cs` adapts immutable Patch artifacts and per-file recovery units to `TransactionalFileReplacementTransaction`; it delegates secure sibling staging, flush, E3 revalidation, atomic publication, retained backups, rollback, metadata restoration, containment, cancellation, diagnostics, and cleanup to E6.
+- `PatchE6Contract.cs` retains the frozen Patch requirement matrix used by P10 and P11 validation.
 - `PatchInteraction.cs` supplies deterministic command-line answers for reversal, prerequisite, and version-control questions without allowing the patch source to compete for standard input.
 - `PatchSource.cs` streams patch input into an owner-private temporary spool while retaining bounded line metadata and exact record terminators.
 - `PatchScanner.cs` classifies structural records and finds count-aware unified, context, normal, and ed-script sections without splitting header-looking hunk or ed data.
@@ -25,4 +26,4 @@ The source directory contains complete Wave A parsers, the Wave B1 pure applicat
 - `PatchTemporaryFile.cs` creates exclusive owner-private temporary files shared by source, target, and result storage.
 - `AssemblyInfo.cs` exposes internals only to the dedicated test assembly.
 
-P8 consumes the P7 plan and does not repeat filename selection or matching. Wave D closes P9 and P10 while keeping the adapter intentionally replaceable: it establishes explicit artifact units, staging, flush, revalidation, failure, rollback, partial-success, capability, and cleanup contracts but does not claim final E6 atomicity or durability semantics.
+P8 consumes the P7 plan and does not repeat filename selection or matching. P11A keeps GNU-visible backup, reject, output, and multi-file partial-success policy in Patch while delegating transaction mechanics to shared E6. The provisional P9 implementation remains compiled but unreachable until P11B removes it after `cp`, `mv`, and `install` independently validate the stabilized E6 contract.

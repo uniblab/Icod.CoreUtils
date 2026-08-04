@@ -106,7 +106,7 @@ internal sealed class PatchOptions {
 	public bool PromptInputAvailable => null != this.PatchFile && "-" != this.PatchFile;
 }
 
-/// <summary>Coordinates source acquisition, P7 planning, P8 artifacts, and the initial P9 transaction.</summary>
+/// <summary>Coordinates source acquisition, P7 planning, P8 artifacts, and the E6-backed P11A transaction.</summary>
 internal static class PatchApplication {
 	/// <summary>Parses the selected patch source without mutating target files.</summary>
 	/// <param name="options">The validated invocation options.</param>
@@ -249,13 +249,13 @@ internal static class PatchApplication {
 			var transactionResult = await transaction.CommitAsync(
 				context.CancellationToken
 			).ConfigureAwait( false );
+			foreach ( var diagnostic in transactionResult.Diagnostics ) {
+				await context.Diagnostics.ErrorAsync(
+					diagnostic,
+					CancellationToken.None
+				).ConfigureAwait( false );
+			}
 			if ( !transactionResult.Succeeded ) {
-				foreach ( var diagnostic in transactionResult.Diagnostics ) {
-					await context.Diagnostics.ErrorAsync(
-						diagnostic,
-						CancellationToken.None
-					).ConfigureAwait( false );
-				}
 				return (int)PatchExitStatus.Trouble;
 			}
 			if ( PatchVerbosity.Quiet != options.Verbosity ) {

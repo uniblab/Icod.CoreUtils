@@ -1,10 +1,13 @@
 namespace Icod.Patch;
 
 using System.Collections.ObjectModel;
+using Icod.CoreUtils.Shared.FileSystem;
 using Icod.CoreUtils.Shared.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Modes;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
+using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;
+using Icod.CoreUtils.Shared.Temporary;
 using Icod.Path;
 
 /// <summary>Contains the E3 state observed for one potential artifact destination.</summary>
@@ -72,15 +75,19 @@ internal enum PatchTransactionStage {
 	Commit,
 	/// <summary>Before applying mode or timestamp metadata.</summary>
 	ApplyMetadata,
+	/// <summary>Before publishing a retained backup.</summary>
+	PublishBackup,
 	/// <summary>Before restoring metadata during rollback.</summary>
 	RestoreMetadata,
 	/// <summary>Before rolling back a committed artifact.</summary>
 	Rollback,
 	/// <summary>Before deleting temporary files.</summary>
-	Cleanup
+	Cleanup,
+	/// <summary>Before flushing a containing directory.</summary>
+	FlushDirectory
 }
 
-/// <summary>Injects deterministic failures into the initial P9 transaction boundary.</summary>
+/// <summary>Injects deterministic failures into the Patch-facing E6 transaction boundary.</summary>
 internal interface IPatchTransactionFailureInjector {
 	/// <summary>Observes one lifecycle stage and may throw a test exception.</summary>
 	ValueTask OnStageAsync(
@@ -122,7 +129,9 @@ internal enum PatchTransactionOutcome {
 	/// <summary>Rollback did not completely recover the failing transaction unit.</summary>
 	FailedRollbackIncomplete,
 	/// <summary>Commit completed but deterministic temporary cleanup was incomplete.</summary>
-	FailedCleanupIncomplete
+	FailedCleanupIncomplete,
+	/// <summary>Atomic publication was mandatory but unavailable.</summary>
+	FailedAtomicityUnavailable
 }
 
 /// <summary>Contains the result of one Patch artifact transaction.</summary>
@@ -189,7 +198,7 @@ internal interface IPatchFileSystem {
 	/// <summary>Gets the frozen Patch-facing Completion Gate E6 requirements.</summary>
 	PatchE6TransactionContract TransactionContract => PatchE6TransactionContract.Current;
 
-	/// <summary>Gets the explicitly limited capabilities of the provisional P9 adapter.</summary>
+	/// <summary>Gets the Patch-facing transaction capability profile.</summary>
 	PatchTransactionCapabilities TransactionCapabilities => PatchTransactionCapabilities.ProvisionalHost;
 
 	/// <summary>Observes one artifact path using explicit terminal-indirection policy.</summary>
@@ -218,7 +227,7 @@ internal interface IPatchFileSystem {
 /// <summary>Uses Completion Gates E3 and E4 for Patch observations, mutation, modes, and timestamps.</summary>
 internal sealed class SystemPatchFileSystem : IPatchFileSystem {
 	private readonly IFileSystemMetadataProvider metadataProvider;
-	private readonly IFileSystemMutationProvider mutationProvider;
+	private readonly ITransactionalReplacementFileSystem replacementFileSystem;
 	private readonly CanonicalPathResolver pathResolver;
 
 	/// <inheritdoc/>
@@ -236,9 +245,27 @@ internal sealed class SystemPatchFileSystem : IPatchFileSystem {
 	public SystemPatchFileSystem(
 		IFileSystemMetadataProvider metadataProvider,
 		IFileSystemMutationProvider mutationProvider
+	) : this(
+		metadataProvider,
+		mutationProvider,
+		new SystemTransactionalReplacementFileSystem(
+			metadataProvider,
+			mutationProvider,
+			SystemFileSystemOperations.Instance,
+			SecureTemporaryObjectCreator.System
+		)
+	) {
+	}
+
+	/// <summary>Initializes an adapter over injected E3, E4, and E6 providers.</summary>
+	public SystemPatchFileSystem(
+		IFileSystemMetadataProvider metadataProvider,
+		IFileSystemMutationProvider mutationProvider,
+		ITransactionalReplacementFileSystem replacementFileSystem
 	) {
 		this.metadataProvider = metadataProvider ?? throw new ArgumentNullException( nameof( metadataProvider ) );
-		this.mutationProvider = mutationProvider ?? throw new ArgumentNullException( nameof( mutationProvider ) );
+		ArgumentNullException.ThrowIfNull( mutationProvider );
+		this.replacementFileSystem = replacementFileSystem ?? throw new ArgumentNullException( nameof( replacementFileSystem ) );
 		this.pathResolver = new CanonicalPathResolver( SystemCanonicalPathFileSystemProvider.Instance );
 	}
 
@@ -364,17 +391,16 @@ internal sealed class SystemPatchFileSystem : IPatchFileSystem {
 	) {
 		ArgumentNullException.ThrowIfNull( plan );
 		cancellationToken.ThrowIfCancellationRequested();
-		IPatchTransaction transaction = new SystemPatchTransaction(
+		IPatchTransaction transaction = new PatchE6Transaction(
 			plan,
-			this.metadataProvider,
-			this.mutationProvider,
+			this.replacementFileSystem,
 			failureInjector ?? NullPatchTransactionFailureInjector.Instance
 		);
 		return ValueTask.FromResult( transaction );
 	}
 }
 
-/// <summary>Stages sibling temporary files and provides provisional rollback pending Completion Gate E6.</summary>
+/// <summary>Retains the unreachable P9 implementation for deliberate removal during Phase P11B.</summary>
 internal sealed class SystemPatchTransaction : IPatchTransaction {
 	private sealed class StagedArtifact {
 		/// <summary>Initializes staged state.</summary>
