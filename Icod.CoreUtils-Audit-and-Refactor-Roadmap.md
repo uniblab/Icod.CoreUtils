@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `43` |
-| Current engineering milestone | Batch 44 — `cp` and `mv` |
+| Completed command batches | `0` through `44` |
+| Current engineering milestone | Batch 45 — `install` |
 | Completed infrastructure milestone | Completion Gates E2 through E6 — canonical paths, authoritative metadata, pathname-indirection characterization, mode expressions, single-path mutation, recursive mutation/copy planning, and transactional replacement |
-| Active infrastructure dependency | Batches 44 and 45 independently validate Completion Gate E6 before Patch Phase P11B |
-| Next command batch | Batch 44 — `cp` and `mv` |
+| Active infrastructure dependency | Batch 45 completes independent Coreutils validation of Completion Gate E6 before Patch Phase P11B |
+| Next command batch | Batch 45 — `install` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1135,10 +1135,12 @@ P11A does not close Patch. The transaction foundation must also survive the diff
 
 ### Batch 44 — Copy and move engine (2 tools)
 
-- [ ] `cp`
-- [ ] `mv`
+- [x] `cp`
+- [x] `mv`
 
 Implement source/destination classification, recursive copy, symlink and hard-link policy, metadata preservation, sparse files, reflink/copy-file-range opportunities, backup and overwrite modes, update rules, atomic replacement, cross-filesystem moves, destination-inside-source prevention, and partial-failure cleanup.
+
+Batch 44 is implemented through `Icod.CoreUtils.Shared.FileSystem.CopyMove`. The shared engine consumes E5 recursive traversal for containment, stable entry identity, hard-link provenance, metadata planning, sparse-file policy, and filesystem-boundary control. Ordinary-file replacement and retained GNU backups are committed through E6; Linux clone and `copy_file_range` opportunities fall back to the E5 sparse copier. `mv` prefers a direct rename and performs copy-then-remove only when rename fails and `--no-copy` is not active. The command projects retain GNU-facing option precedence, prompts, diagnostics, target-directory interpretation, update rules, and partial source-by-source outcomes. Dedicated `Cp.Tests` and `Mv.Tests` projects are registered under the solution `tests` folder; full Windows, Linux, and macOS CI remains the merge gate.
 
 ### Batch 45 — Installation engine (1 tool)
 

@@ -806,6 +806,14 @@ public sealed class SystemFileSystemMutationProvider : IFileSystemMutationProvid
 			} else if ( OperatingSystem.IsWindows() ) {
 				var attributes = File.GetAttributes( normalized );
 				if ( (attributes & FileAttributes.Directory) != 0 ) {
+					if ( physical.IsVolumeMountPoint ) {
+						var mountPath = Path.EndsInDirectorySeparator( normalized )
+							? normalized
+							: string.Concat( normalized, Path.DirectorySeparatorChar );
+						if ( !NativeDeleteVolumeMountPointWindows( mountPath ) ) {
+							return FromWindowsFailure( normalized, "remove volume mount point" );
+						}
+					}
 					if ( !NativeRemoveDirectoryWindows( normalized ) ) {
 						return FromWindowsFailure( normalized, "remove directory link" );
 					}
@@ -1679,6 +1687,10 @@ public sealed class SystemFileSystemMutationProvider : IFileSystemMutationProvid
 		out uint bytesReturned,
 		IntPtr overlapped
 	);
+
+	[DllImport( "kernel32.dll", EntryPoint = "DeleteVolumeMountPointW", SetLastError = true, CharSet = CharSet.Unicode )]
+	[return: MarshalAs( UnmanagedType.Bool )]
+	private static extern bool NativeDeleteVolumeMountPointWindows( string volumeMountPoint );
 
 	[DllImport( "kernel32.dll", EntryPoint = "RemoveDirectoryW", SetLastError = true, CharSet = CharSet.Unicode )]
 	[return: MarshalAs( UnmanagedType.Bool )]
