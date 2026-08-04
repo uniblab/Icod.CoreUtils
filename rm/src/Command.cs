@@ -155,7 +155,7 @@ public static class Command {
 				eligibleOperands,
 				new PathnameExpansionOptions {
 					UnmatchedPatternBehavior = UnmatchedPathnamePatternBehavior.PreserveAsLiteral,
-					SymbolicLinkMode = SymbolicLinkTraversalMode.RootsOnly,
+					SymbolicLinkMode = SymbolicLinkTraversalMode.Never,
 					ErrorMode = PathTraversalErrorMode.Continue
 				},
 				context.CancellationToken
@@ -268,11 +268,15 @@ public static class Command {
 			await WriteCannotRemoveAsync( context, root.DisplayPath, exception.Message ).ConfigureAwait( false );
 			return false;
 		}
-		if ( HasTrailingDirectorySeparator( root.OriginalOperand ) && observation.Kind != FileSystemEntryKind.Directory ) {
+		if ( HasTrailingDirectorySeparator( root.OriginalOperand )
+			&& (observation.Kind != FileSystemEntryKind.Directory || observation.IsReparsePoint || observation.IsPathIndirection) ) {
 			await WriteCannotRemoveAsync( context, root.DisplayPath, "Not a directory" ).ConfigureAwait( false );
 			return false;
 		}
-		if ( observation.Kind == FileSystemEntryKind.Directory && !policy.RemoveEmptyDirectories ) {
+		if ( observation.Kind == FileSystemEntryKind.Directory
+			&& !observation.IsReparsePoint
+			&& !observation.IsPathIndirection
+			&& !policy.RemoveEmptyDirectories ) {
 			await WriteCannotRemoveAsync( context, root.DisplayPath, "Is a directory" ).ConfigureAwait( false );
 			return false;
 		}
@@ -286,22 +290,15 @@ public static class Command {
 			standardInputIsTerminal,
 			accessPath
 		).ConfigureAwait( false ) ) return true;
-		var precondition = FileSystemMutationPrecondition.FromObservation(
+		var mutation = await RemovePhysicalEntryAsync(
+			observation.AccessPath,
 			observation.Kind,
 			observation.EntryIdentity,
-			PathDereferenceMode.NoFollow
-		);
-		var mutation = observation.Kind == FileSystemEntryKind.Directory
-			? await mutationProvider.RemoveDirectoryAsync(
-				accessPath,
-				precondition,
-				context.CancellationToken
-			).ConfigureAwait( false )
-			: await mutationProvider.RemoveFileAsync(
-				accessPath,
-				precondition,
-				context.CancellationToken
-			).ConfigureAwait( false );
+			observation.IsReparsePoint,
+			observation.IsPathIndirection,
+			mutationProvider,
+			context.CancellationToken
+		).ConfigureAwait( false );
 		return await ReportMutationAsync( root.DisplayPath, observation.Kind, mutation, policy, context ).ConfigureAwait( false );
 	}
 
@@ -318,13 +315,15 @@ public static class Command {
 		var rootAccessPath = HasTrailingDirectorySeparator( root.OriginalOperand )
 			? TrimTrailingDirectorySeparatorsPreservingRoot( root.AccessPath )
 			: root.AccessPath;
+		ReadOnlyFileSystemEntry rootObservation;
 		try {
-			var rootObservation = await readOnlyProvider.ObserveAsync(
+			rootObservation = await readOnlyProvider.ObserveAsync(
 				rootAccessPath,
 				PathDereferenceMode.NoFollow,
 				context.CancellationToken
 			).ConfigureAwait( false );
-			if ( HasTrailingDirectorySeparator( root.OriginalOperand ) && rootObservation.Kind != FileSystemEntryKind.Directory ) {
+			if ( HasTrailingDirectorySeparator( root.OriginalOperand )
+				&& (rootObservation.Kind != FileSystemEntryKind.Directory || rootObservation.IsReparsePoint || rootObservation.IsPathIndirection) ) {
 				await WriteCannotRemoveAsync( context, root.DisplayPath, "Not a directory" ).ConfigureAwait( false );
 				return false;
 			}
@@ -335,6 +334,35 @@ public static class Command {
 		} catch ( Exception exception ) when ( IsFileSystemException( exception ) ) {
 			await WriteCannotRemoveAsync( context, root.DisplayPath, exception.Message ).ConfigureAwait( false );
 			return false;
+		}
+
+		if ( rootObservation.IsReparsePoint || rootObservation.IsPathIndirection ) {
+			if ( !await ConfirmRemovalAsync(
+				root.DisplayPath,
+				rootObservation.Kind,
+				policy,
+				context,
+				metadataProvider,
+				processIdentity,
+				standardInputIsTerminal,
+				rootObservation.AccessPath
+			).ConfigureAwait( false ) ) return true;
+			var rootMutation = await RemovePhysicalEntryAsync(
+				rootObservation.AccessPath,
+				rootObservation.Kind,
+				rootObservation.EntryIdentity,
+				rootObservation.IsReparsePoint,
+				rootObservation.IsPathIndirection,
+				mutationProvider,
+				context.CancellationToken
+			).ConfigureAwait( false );
+			return await ReportMutationAsync(
+				root.DisplayPath,
+				rootObservation.Kind,
+				rootMutation,
+				policy,
+				context
+			).ConfigureAwait( false );
 		}
 
 		if ( policy.PreserveAllFileSystemRoots && !await ValidatePreserveAllAsync(
@@ -354,7 +382,8 @@ public static class Command {
 				FileSystemBoundaryMode = policy.OneFileSystem
 					? FileSystemBoundaryMode.StayOnRootFileSystem
 					: FileSystemBoundaryMode.CrossFileSystems,
-				ErrorMode = PathTraversalErrorMode.Continue
+				ErrorMode = PathTraversalErrorMode.Continue,
+				Selector = PhysicalReparsePointTraversalSelector.Instance
 			},
 			context.CancellationToken
 		).ConfigureAwait( false ) ) {
@@ -388,6 +417,7 @@ public static class Command {
 					);
 					directoryStates.Push( state );
 					if ( state.SkipSubtree ) break;
+					if ( entry.IsReparsePoint && !entry.WasDereferenced ) break;
 					if ( policy.Interaction == InteractionMode.Always ) {
 						var descend = await PromptAsync(
 							context,
@@ -426,9 +456,13 @@ public static class Command {
 						MarkCurrentDirectoryRetained( directoryStates );
 						break;
 					}
-					var fileResult = await mutationProvider.RemoveFileAsync(
+					var fileResult = await RemovePhysicalEntryAsync(
 						entry.AccessPath,
-						item.Entry.Precondition,
+						entry.Kind,
+						entry.EntryIdentity,
+						entry.IsReparsePoint,
+						entry.IsPathIndirection,
+						mutationProvider,
 						context.CancellationToken
 					).ConfigureAwait( false );
 					var fileSucceeded = await ReportMutationAsync(
@@ -451,7 +485,7 @@ public static class Command {
 					}
 					if ( !await ConfirmRemovalAsync(
 						displayPath,
-						FileSystemEntryKind.Directory,
+						entry.Kind,
 						policy,
 						context,
 						metadataProvider,
@@ -462,14 +496,18 @@ public static class Command {
 						MarkCurrentDirectoryRetained( directoryStates );
 						break;
 					}
-					var directoryResult = await mutationProvider.RemoveDirectoryAsync(
+					var directoryResult = await RemovePhysicalEntryAsync(
 						entry.AccessPath,
-						item.Entry.Precondition,
+						entry.Kind,
+						entry.EntryIdentity,
+						entry.IsReparsePoint,
+						entry.IsPathIndirection,
+						mutationProvider,
 						context.CancellationToken
 					).ConfigureAwait( false );
 					var directorySucceeded = await ReportMutationAsync(
 						displayPath,
-						FileSystemEntryKind.Directory,
+						entry.Kind,
 						directoryResult,
 						policy,
 						context
@@ -501,6 +539,27 @@ public static class Command {
 		}
 
 		return succeeded;
+	}
+
+	private static async ValueTask<FileSystemMutationResult> RemovePhysicalEntryAsync(
+		string path,
+		FileSystemEntryKind kind,
+		FileSystemEntryIdentity identity,
+		bool isReparsePoint,
+		bool isPathIndirection,
+		IFileSystemMutationProvider mutationProvider,
+		CancellationToken cancellationToken
+	) {
+		var precondition = new FileSystemMutationPrecondition(
+			FileSystemMutationExistence.MustExist,
+			PathDereferenceMode.NoFollow,
+			kind,
+			identity.IsAvailable ? identity : null,
+			rejectUncharacterizedIndirection: !isReparsePoint
+		);
+		return kind == FileSystemEntryKind.Directory && !isReparsePoint && !isPathIndirection
+			? await mutationProvider.RemoveDirectoryAsync( path, precondition, cancellationToken ).ConfigureAwait( false )
+			: await mutationProvider.RemoveFileAsync( path, precondition, cancellationToken ).ConfigureAwait( false );
 	}
 
 	private static async ValueTask<bool> ConfirmRemovalAsync(

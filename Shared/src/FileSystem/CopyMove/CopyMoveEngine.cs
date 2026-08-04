@@ -1,4 +1,8 @@
+extern alias IcodPath;
+
 using System.Runtime.InteropServices;
+using PathIndirectionInfo = IcodPath::Icod.Path.PathIndirectionInfo;
+using PathIndirectionKind = IcodPath::Icod.Path.PathIndirectionKind;
 using Icod.CoreUtils.Shared.FileSystem;
 using Icod.CoreUtils.Shared.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
@@ -136,7 +140,10 @@ public sealed class CopyMoveEngine {
 			return new CopyMoveItemResult( sourcePath, destinationPath, CopyMoveItemOutcome.Failed, "The source and destination identify the same filesystem entry." );
 		}
 
-		if ( source.Kind == FileSystemEntryKind.Directory && !options.Recursive && options.Operation == CopyMoveOperationKind.Copy ) {
+		if ( source.Kind == FileSystemEntryKind.Directory
+			&& !(source.IsReparsePoint && !source.WasDereferenced)
+			&& !options.Recursive
+			&& options.Operation == CopyMoveOperationKind.Copy ) {
 			return new CopyMoveItemResult( sourcePath, destinationPath, CopyMoveItemOutcome.Failed, "Recursive mode was not specified for a directory operand." );
 		}
 
@@ -149,7 +156,12 @@ public sealed class CopyMoveEngine {
 				return new CopyMoveItemResult( sourcePath, destinationPath, CopyMoveItemOutcome.Skipped, approvedOverwrite.Value.Message );
 			}
 			try {
-				DirectRename( sourcePath, destinationPath, source.Kind, approvedOverwrite.Value.DestinationExists );
+				DirectRename(
+					sourcePath,
+					destinationPath,
+					IsPhysicalDirectoryObject( source ),
+					approvedOverwrite.Value.DestinationExists
+				);
 				return new CopyMoveItemResult( sourcePath, destinationPath, CopyMoveItemOutcome.Completed );
 			} catch ( IOException ) when ( !options.NoCopyFallback ) {
 				// Continue with an E5/E6 copy and remove the source only after complete success.
@@ -162,7 +174,14 @@ public sealed class CopyMoveEngine {
 			if ( !overwrite.Proceed ) {
 				return new CopyMoveItemResult( sourcePath, destinationPath, CopyMoveItemOutcome.Skipped, overwrite.Message );
 			}
-			await CreateRequestedLinkAsync( sourcePath, destinationPath, source.Kind, options, overwrite.DestinationExists, cancellationToken ).ConfigureAwait( false );
+			await CreateRequestedLinkAsync(
+				sourcePath,
+				destinationPath,
+				source,
+				options,
+				overwrite,
+				cancellationToken
+			).ConfigureAwait( false );
 			return new CopyMoveItemResult( sourcePath, destinationPath, CopyMoveItemOutcome.Completed );
 		}
 
@@ -181,21 +200,23 @@ public sealed class CopyMoveEngine {
 
 		if ( options.Operation == CopyMoveOperationKind.Move
 			&& source.Kind == FileSystemEntryKind.Directory
+			&& !(source.IsReparsePoint && !source.WasDereferenced)
 			&& initialDestination.Exists
 			&& Directory.Exists( destinationPath )
 			&& Directory.EnumerateFileSystemEntries( destinationPath ).Any() ) {
 			return new CopyMoveItemResult( sourcePath, destinationPath, CopyMoveItemOutcome.Failed, "The destination directory is not empty." );
 		}
 
-		var copied = source.Kind == FileSystemEntryKind.Directory
+		var copyAsDirectory = source.Kind == FileSystemEntryKind.Directory
+			&& !(source.IsReparsePoint && !source.WasDereferenced);
+		var copied = copyAsDirectory
 			? await CopyDirectoryAsync( sourcePath, destinationPath, options, cancellationToken ).ConfigureAwait( false )
 			: await CopySingleEntryAsync(
 				sourcePath,
 				destinationPath,
 				source.Kind,
 				source.WasDereferenced,
-				source.IsPathIndirection,
-				source.LinkTarget,
+				source.Indirection,
 				null,
 				approvedOverwrite,
 				options,
@@ -206,7 +227,19 @@ public sealed class CopyMoveEngine {
 		}
 
 		if ( options.Operation == CopyMoveOperationKind.Move ) {
-			RemoveSourceAfterCopy( sourcePath, source.Kind );
+			var removal = await RemoveSourceAfterCopyAsync(
+				sourcePath,
+				source,
+				cancellationToken
+			).ConfigureAwait( false );
+			if ( !removal.Succeeded ) {
+				return new CopyMoveItemResult(
+					sourcePath,
+					destinationPath,
+					CopyMoveItemOutcome.Failed,
+					removal.Message
+				);
+			}
 		}
 		return new CopyMoveItemResult( sourcePath, destinationPath, CopyMoveItemOutcome.Completed );
 	}
@@ -227,7 +260,8 @@ public sealed class CopyMoveEngine {
 			ErrorMode = PathTraversalErrorMode.Stop,
 			MetadataFields = options.MetadataFields,
 			RequiredMetadataFields = options.RequiredMetadataFields,
-			SparseFilePolicy = options.SparseFilePolicy
+			SparseFilePolicy = options.SparseFilePolicy,
+			Selector = PhysicalReparsePointTraversalSelector.Instance
 		};
 		var createdDirectories = new List<string>();
 		var completed = false;
@@ -239,6 +273,21 @@ public sealed class CopyMoveEngine {
 						break;
 					case RecursiveMutationEventKind.EnterDirectory: {
 						var entry = item.Entry!;
+						if ( entry.TraversalEntry.IsReparsePoint && !entry.TraversalEntry.WasDereferenced ) {
+							var reparseResult = await CopySingleEntryAsync(
+								entry.TraversalEntry.AccessPath,
+								entry.DestinationPath!,
+								entry.TraversalEntry.Kind,
+								false,
+								entry.TraversalEntry.Indirection,
+								entry,
+								null,
+								options,
+								cancellationToken
+							).ConfigureAwait( false );
+							if ( !reparseResult.Succeeded ) return reparseResult;
+							break;
+						}
 						var target = entry.DestinationPath!;
 						if ( PathExistsNoFollow( target ) ) {
 							if ( !Directory.Exists( target ) ) return (false, string.Concat( "The destination is not a directory: ", target ));
@@ -255,8 +304,7 @@ public sealed class CopyMoveEngine {
 							entry.DestinationPath!,
 							entry.TraversalEntry.Kind,
 							entry.TraversalEntry.WasDereferenced,
-							entry.TraversalEntry.IsPathIndirection,
-							entry.TraversalEntry.LinkTarget,
+							entry.TraversalEntry.Indirection,
 							entry,
 							null,
 							options,
@@ -266,7 +314,9 @@ public sealed class CopyMoveEngine {
 						break;
 					}
 					case RecursiveMutationEventKind.LeaveDirectory:
-						ApplyDirectoryMetadataBestEffort( item.Entry!, options );
+						if ( !(item.Entry!.TraversalEntry.IsReparsePoint && !item.Entry.TraversalEntry.WasDereferenced) ) {
+							ApplyDirectoryMetadataBestEffort( item.Entry!, options );
+						}
 						break;
 					case RecursiveMutationEventKind.FileSystemBoundary:
 						return (false, string.Concat( "The operation would cross a filesystem boundary at ", item.Entry!.TraversalEntry.DisplayPath, "." ));
@@ -300,13 +350,22 @@ public sealed class CopyMoveEngine {
 		string destinationPath,
 		FileSystemEntryKind sourceKind,
 		bool sourceWasDereferenced,
-		bool sourceIsPathIndirection,
-		string? sourceLinkTarget,
+		PathIndirectionInfo sourceIndirection,
 		RecursiveMutationEntry? recursiveEntry,
 		OverwriteDecision? approvedOverwrite,
 		CopyMoveOptions options,
 		CancellationToken cancellationToken
 	) {
+		if ( !sourceWasDereferenced && sourceIndirection.Kind != PathIndirectionKind.None ) {
+			return await CopyPhysicalIndirectionAsync(
+				sourcePath,
+				destinationPath,
+				sourceIndirection,
+				approvedOverwrite,
+				options,
+				cancellationToken
+			).ConfigureAwait( false );
+		}
 		if ( sourceKind == FileSystemEntryKind.File ) {
 			if ( options.PreserveHardLinks && recursiveEntry?.IsRepeatedHardLink == true && recursiveEntry.FirstHardLinkDestinationPath is not null ) {
 				return await CreatePreservedHardLinkAsync(
@@ -317,9 +376,6 @@ public sealed class CopyMoveEngine {
 				).ConfigureAwait( false );
 			}
 			return await CopyRegularFileAsync( sourcePath, destinationPath, sourceWasDereferenced, recursiveEntry, approvedOverwrite, options, cancellationToken ).ConfigureAwait( false );
-		}
-		if ( sourceIsPathIndirection && !sourceWasDereferenced ) {
-			return await CopyPathIndirectionAsync( sourcePath, destinationPath, sourceLinkTarget, approvedOverwrite, options, cancellationToken ).ConfigureAwait( false );
 		}
 		return (false, string.Concat( "Unsupported file type: ", sourcePath ));
 	}
@@ -337,7 +393,12 @@ public sealed class CopyMoveEngine {
 			?? await EvaluateOverwriteAsync( sourcePath, destinationPath, options, cancellationToken ).ConfigureAwait( false );
 		if ( !overwrite.Proceed ) return (true, overwrite.Message);
 		if ( overwrite.DestinationExists && options.RemoveDestination && options.BackupMode == TransactionalReplacementBackupMode.None ) {
-			RemovePath( destinationPath );
+			var removal = await RemoveExistingDestinationAsync(
+				destinationPath,
+				overwrite.Observation,
+				cancellationToken
+			).ConfigureAwait( false );
+			if ( !removal.Succeeded ) return removal;
 			var removedObservation = await replacementFileSystem.ObserveAsync(
 				destinationPath,
 				PathDereferenceMode.NoFollow,
@@ -428,41 +489,122 @@ public sealed class CopyMoveEngine {
 		CopyMoveOptions options,
 		CancellationToken cancellationToken
 	) {
-		if ( options.ReflinkPolicy != CopyMoveReflinkPolicy.Never ) {
-			if ( TryCloneFile( source, destination ) ) return (true, null);
-			if ( options.ReflinkPolicy == CopyMoveReflinkPolicy.Always ) return (false, "A reflink was required but the host did not create one." );
+		if ( options.ReflinkPolicy == CopyMoveReflinkPolicy.Always ) {
+			return TryCloneFile( source, destination )
+				? (true, null)
+				: (false, "A reflink was required but the host did not create one.");
 		}
-		if ( TryCopyFileRange( source, destination, cancellationToken ) ) return (true, null);
-		var sparse = await sparseCopier.CopyAsync( source, destination, options.SparseFilePolicy, CopyBufferSize, cancellationToken ).ConfigureAwait( false );
-		return (sparse.Succeeded, sparse.Message);
+		if ( options.SparseFilePolicy == RecursiveSparseFilePolicy.Require ) {
+			var requiredSparse = await sparseCopier.CopyAsync(
+				source,
+				destination,
+				RecursiveSparseFilePolicy.Require,
+				CopyBufferSize,
+				cancellationToken
+			).ConfigureAwait( false );
+			return (requiredSparse.Succeeded, requiredSparse.Message);
+		}
+		if ( options.SparseFilePolicy == RecursiveSparseFilePolicy.WhenSupported ) {
+			if ( options.ReflinkPolicy == CopyMoveReflinkPolicy.Auto && TryCloneFile( source, destination ) ) {
+				return (true, null);
+			}
+			var sparse = await sparseCopier.CopyAsync(
+				source,
+				destination,
+				RecursiveSparseFilePolicy.WhenSupported,
+				CopyBufferSize,
+				cancellationToken
+			).ConfigureAwait( false );
+			return (sparse.Succeeded, sparse.Message);
+		}
+		var dense = await sparseCopier.CopyAsync(
+			source,
+			destination,
+			RecursiveSparseFilePolicy.Never,
+			CopyBufferSize,
+			cancellationToken
+		).ConfigureAwait( false );
+		return (dense.Succeeded, dense.Message);
 	}
 
-	private async ValueTask<(bool Succeeded, string? Message)> CopyPathIndirectionAsync(
+	private async ValueTask<(bool Succeeded, string? Message)> CopyPhysicalIndirectionAsync(
 		string sourcePath,
 		string destinationPath,
-		string? sourceLinkTarget,
+		PathIndirectionInfo indirection,
 		OverwriteDecision? approvedOverwrite,
 		CopyMoveOptions options,
 		CancellationToken cancellationToken
 	) {
 		cancellationToken.ThrowIfCancellationRequested();
+		var target = indirection.Target;
+		if ( (indirection.Kind is PathIndirectionKind.PosixSymbolicLink or PathIndirectionKind.WindowsSymbolicLink)
+			&& string.IsNullOrEmpty( target ) ) {
+			target = new FileInfo( sourcePath ).LinkTarget ?? new DirectoryInfo( sourcePath ).LinkTarget;
+		}
+		switch ( indirection.Kind ) {
+			case PathIndirectionKind.PosixSymbolicLink:
+			case PathIndirectionKind.WindowsSymbolicLink:
+				if ( string.IsNullOrEmpty( target ) ) {
+					return (false, string.Concat( "The symbolic-link target is unavailable: ", sourcePath ));
+				}
+				break;
+			case PathIndirectionKind.WindowsJunction:
+				if ( string.IsNullOrEmpty( target ) ) {
+					return (false, string.Concat( "The junction target is unavailable: ", sourcePath ));
+				}
+				break;
+			case PathIndirectionKind.WindowsVolumeMountPoint:
+				return (false, string.Concat(
+					"Refusing to recreate a mounted volume at ", sourcePath,
+					". Use a dereferencing option to copy the mounted contents instead."
+				));
+			case PathIndirectionKind.WindowsOtherNameSurrogate:
+				return (false, DescribeUnsupportedReparsePoint( sourcePath, "unknown name-surrogate", indirection ));
+			case PathIndirectionKind.WindowsCloudPlaceholder:
+				return (false, DescribeUnsupportedReparsePoint( sourcePath, "Cloud Files placeholder", indirection ));
+			case PathIndirectionKind.WindowsOpaqueReparsePoint:
+				return (false, DescribeUnsupportedReparsePoint( sourcePath, "opaque reparse point", indirection ));
+			case PathIndirectionKind.Unknown:
+				return (false, DescribeUnsupportedReparsePoint( sourcePath, "uncharacterized reparse point", indirection ));
+			default:
+				return (false, string.Concat( "Unsupported pathname indirection: ", sourcePath ));
+		}
+
 		var overwrite = approvedOverwrite
 			?? await EvaluateOverwriteAsync( sourcePath, destinationPath, options, cancellationToken ).ConfigureAwait( false );
 		if ( !overwrite.Proceed ) return (true, overwrite.Message);
-		if ( overwrite.DestinationExists ) RemovePath( destinationPath );
-		var target = sourceLinkTarget;
-		if ( string.IsNullOrEmpty( target ) ) {
-			target = new FileInfo( sourcePath ).LinkTarget ?? new DirectoryInfo( sourcePath ).LinkTarget;
+		if ( overwrite.DestinationExists && options.BackupMode != TransactionalReplacementBackupMode.None ) {
+			return (false, "Backup replacement of links and reparse points is not supported; the existing destination was retained.");
 		}
-		if ( string.IsNullOrEmpty( target ) ) return (false, string.Concat( "The symbolic-link target is unavailable: ", sourcePath ));
-		try {
-			var attributes = File.GetAttributes( sourcePath );
-			if ( (attributes & FileAttributes.Directory) != 0 ) Directory.CreateSymbolicLink( destinationPath, target );
-			else File.CreateSymbolicLink( destinationPath, target );
-			return (true, null);
-		} catch ( Exception exception ) when ( IsControlledException( exception ) ) {
-			return (false, exception.Message);
+		if ( overwrite.DestinationExists ) {
+			var removal = await RemoveExistingDestinationAsync(
+				destinationPath,
+				overwrite.Observation,
+				cancellationToken
+			).ConfigureAwait( false );
+			if ( !removal.Succeeded ) return removal;
 		}
+
+		FileSystemMutationResult mutation;
+		if ( indirection.Kind is PathIndirectionKind.PosixSymbolicLink or PathIndirectionKind.WindowsSymbolicLink ) {
+			mutation = await mutationProvider.CreateSymbolicLinkAsync(
+				destinationPath,
+				target!,
+				indirection.IsDirectory,
+				FileSystemMutationPrecondition.DestinationMustNotExist(),
+				cancellationToken
+			).ConfigureAwait( false );
+		} else {
+			mutation = await mutationProvider.CreateJunctionAsync(
+				destinationPath,
+				target!,
+				FileSystemMutationPrecondition.DestinationMustNotExist(),
+				cancellationToken: cancellationToken
+			).ConfigureAwait( false );
+		}
+		if ( mutation.Succeeded ) return (true, null);
+		cancellationToken.ThrowIfCancellationRequested();
+		return (false, mutation.Message ?? "The pathname-indirection object could not be created.");
 	}
 
 	private async ValueTask<(bool Succeeded, string? Message)> CreatePreservedHardLinkAsync(
@@ -475,7 +617,14 @@ public sealed class CopyMoveEngine {
 		var overwrite = await EvaluateOverwriteAsync( firstDestinationPath, destinationPath, options, cancellationToken ).ConfigureAwait( false );
 		if ( !overwrite.Proceed ) return (true, overwrite.Message);
 		try {
-			if ( overwrite.DestinationExists ) RemovePath( destinationPath );
+			if ( overwrite.DestinationExists ) {
+				var removal = await RemoveExistingDestinationAsync(
+					destinationPath,
+					overwrite.Observation,
+					cancellationToken
+				).ConfigureAwait( false );
+				if ( !removal.Succeeded ) return removal;
+			}
 			var result = await mutationProvider.CreateHardLinkAsync(
 				destinationPath,
 				firstDestinationPath,
@@ -494,33 +643,44 @@ public sealed class CopyMoveEngine {
 	private async ValueTask CreateRequestedLinkAsync(
 		string sourcePath,
 		string destinationPath,
-		FileSystemEntryKind sourceKind,
+		ReadOnlyFileSystemEntry source,
 		CopyMoveOptions options,
-		bool destinationExists,
+		OverwriteDecision overwrite,
 		CancellationToken cancellationToken
 	) {
 		cancellationToken.ThrowIfCancellationRequested();
-		if ( destinationExists ) RemovePath( destinationPath );
+		if ( overwrite.DestinationExists ) {
+			var removal = await RemoveExistingDestinationAsync(
+				destinationPath,
+				overwrite.Observation,
+				cancellationToken
+			).ConfigureAwait( false );
+			if ( !removal.Succeeded ) throw new IOException( removal.Message ?? "The existing destination could not be removed." );
+		}
+		FileSystemMutationResult result;
 		if ( options.CopyAsHardLink ) {
-			var result = await mutationProvider.CreateHardLinkAsync(
+			result = await mutationProvider.CreateHardLinkAsync(
 				destinationPath,
 				sourcePath,
-				sourceKind is FileSystemEntryKind.SymbolicLink or FileSystemEntryKind.NameSurrogate
+				source.Kind is FileSystemEntryKind.SymbolicLink or FileSystemEntryKind.NameSurrogate
 					? PathDereferenceMode.NoFollow
 					: PathDereferenceMode.FollowEligiblePathIndirection,
 				FileSystemMutationPrecondition.DestinationMustNotExist(),
 				cancellationToken: cancellationToken
 			).ConfigureAwait( false );
-			if ( !result.Succeeded ) {
-				cancellationToken.ThrowIfCancellationRequested();
-				if ( !result.Supported ) throw new NotSupportedException( result.Message ?? "Hard-link creation is unsupported." );
-				throw new IOException( result.Message ?? "The hard link could not be created." );
-			}
-		} else if ( sourceKind == FileSystemEntryKind.Directory ) {
-			Directory.CreateSymbolicLink( destinationPath, sourcePath );
 		} else {
-			File.CreateSymbolicLink( destinationPath, sourcePath );
+			result = await mutationProvider.CreateSymbolicLinkAsync(
+				destinationPath,
+				sourcePath,
+				IsPhysicalDirectoryObject( source ),
+				FileSystemMutationPrecondition.DestinationMustNotExist(),
+				cancellationToken
+			).ConfigureAwait( false );
 		}
+		if ( result.Succeeded ) return;
+		cancellationToken.ThrowIfCancellationRequested();
+		if ( !result.Supported ) throw new NotSupportedException( result.Message ?? "The requested link operation is unsupported." );
+		throw new IOException( result.Message ?? "The requested link could not be created." );
 	}
 
 	private async ValueTask<OverwriteDecision> EvaluateOverwriteAsync(
@@ -598,10 +758,10 @@ public sealed class CopyMoveEngine {
 	private static void DirectRename(
 		string sourcePath,
 		string destinationPath,
-		FileSystemEntryKind sourceKind,
+		bool sourceIsDirectoryObject,
 		bool destinationExists
 	) {
-		if ( sourceKind == FileSystemEntryKind.Directory ) {
+		if ( sourceIsDirectoryObject ) {
 			if ( destinationExists ) throw new IOException( "A directory destination already exists." );
 			Directory.Move( sourcePath, destinationPath );
 			return;
@@ -609,15 +769,124 @@ public sealed class CopyMoveEngine {
 		File.Move( sourcePath, destinationPath, destinationExists );
 	}
 
-	private static void RemoveSourceAfterCopy( string sourcePath, FileSystemEntryKind sourceKind ) {
-		if ( sourceKind == FileSystemEntryKind.Directory ) Directory.Delete( sourcePath, recursive: true );
-		else RemovePath( sourcePath );
+	private async ValueTask<(bool Succeeded, string? Message)> RemoveSourceAfterCopyAsync(
+		string sourcePath,
+		ReadOnlyFileSystemEntry source,
+		CancellationToken cancellationToken
+	) {
+		if ( source.Kind == FileSystemEntryKind.Directory && !(source.IsReparsePoint && !source.WasDereferenced) ) {
+			var root = new PathTraversalRoot( sourcePath, 0, 0, sourcePath, sourcePath, PathTraversalRootKind.Literal );
+			await foreach ( var item in traversal.TraverseAsync(
+				new[] { root },
+				new RecursiveMutationOptions {
+					PreserveRoot = true,
+					RequireStableEntryIdentity = true,
+					SymbolicLinkMode = SymbolicLinkTraversalMode.Never,
+					FileSystemBoundaryMode = FileSystemBoundaryMode.CrossFileSystems,
+					ErrorMode = PathTraversalErrorMode.Stop,
+					Selector = PhysicalReparsePointTraversalSelector.Instance
+				},
+				cancellationToken
+			).ConfigureAwait( false ) ) {
+				cancellationToken.ThrowIfCancellationRequested();
+				if ( item.Kind is RecursiveMutationEventKind.Root or RecursiveMutationEventKind.EnterDirectory ) continue;
+				if ( item.Kind == RecursiveMutationEventKind.Error ) return (false, item.Error!.Message);
+				if ( item.Kind == RecursiveMutationEventKind.Cycle ) {
+					return (false, string.Concat( "A directory cycle was detected while removing ", item.Entry!.TraversalEntry.DisplayPath, "." ));
+				}
+				if ( item.Kind == RecursiveMutationEventKind.FileSystemBoundary ) {
+					return (false, string.Concat( "A filesystem boundary prevented source cleanup at ", item.Entry!.TraversalEntry.DisplayPath, "." ));
+				}
+				var entry = item.Entry!.TraversalEntry;
+				var removal = await RemoveObservedEntryAsync(
+					entry.AccessPath,
+					entry.Kind,
+					entry.EntryIdentity,
+					entry.IsReparsePoint,
+					entry.IsPathIndirection,
+					cancellationToken
+				).ConfigureAwait( false );
+				if ( !removal.Succeeded ) return removal;
+			}
+			return (true, null);
+		}
+		var observation = await readOnlyProvider.ObserveAsync(
+			sourcePath,
+			PathDereferenceMode.NoFollow,
+			cancellationToken
+		).ConfigureAwait( false );
+		return await RemoveObservedEntryAsync(
+			sourcePath,
+			observation.Kind,
+			observation.EntryIdentity,
+			observation.IsReparsePoint,
+			observation.IsPathIndirection,
+			cancellationToken
+		).ConfigureAwait( false );
 	}
 
-	private static void RemovePath( string path ) {
-		var attributes = File.GetAttributes( path );
-		if ( (attributes & FileAttributes.Directory) != 0 ) Directory.Delete( path, recursive: false );
-		else File.Delete( path );
+	private async ValueTask<(bool Succeeded, string? Message)> RemoveExistingDestinationAsync(
+		string path,
+		TransactionalReplacementObservation observation,
+		CancellationToken cancellationToken
+	) {
+		if ( !observation.Exists || observation.Metadata is null ) return (true, null);
+		var metadata = observation.Metadata;
+		return await RemoveObservedEntryAsync(
+			path,
+			metadata.Kind,
+			metadata.EntryIdentity,
+			metadata.IsReparsePoint,
+			metadata.IsPathIndirection,
+			cancellationToken
+		).ConfigureAwait( false );
+	}
+
+	private async ValueTask<(bool Succeeded, string? Message)> RemoveObservedEntryAsync(
+		string path,
+		FileSystemEntryKind kind,
+		FileSystemEntryIdentity identity,
+		bool isReparsePoint,
+		bool isPathIndirection,
+		CancellationToken cancellationToken
+	) {
+		var precondition = CreatePhysicalRemovalPrecondition( kind, identity, isReparsePoint );
+		var result = kind == FileSystemEntryKind.Directory && !isReparsePoint && !isPathIndirection
+			? await mutationProvider.RemoveDirectoryAsync( path, precondition, cancellationToken ).ConfigureAwait( false )
+			: await mutationProvider.RemoveFileAsync( path, precondition, cancellationToken ).ConfigureAwait( false );
+		if ( result.Succeeded ) return (true, null);
+		cancellationToken.ThrowIfCancellationRequested();
+		return (false, result.Message ?? string.Concat( "The pathname could not be removed: ", path ));
+	}
+
+	private static FileSystemMutationPrecondition CreatePhysicalRemovalPrecondition(
+		FileSystemEntryKind kind,
+		FileSystemEntryIdentity identity,
+		bool isReparsePoint
+	) => new(
+		FileSystemMutationExistence.MustExist,
+		PathDereferenceMode.NoFollow,
+		kind,
+		identity.IsAvailable ? identity : null,
+		rejectUncharacterizedIndirection: !isReparsePoint
+	);
+
+	private static bool IsPhysicalDirectoryObject( ReadOnlyFileSystemEntry source ) =>
+		source.Kind == FileSystemEntryKind.Directory
+		|| (!source.WasDereferenced && source.Indirection.IsDirectory);
+
+	private static string DescribeUnsupportedReparsePoint(
+		string sourcePath,
+		string kind,
+		PathIndirectionInfo indirection
+	) {
+		var tag = indirection.ReparseTag.HasValue
+			? string.Concat( "0x", indirection.ReparseTag.Value.ToString( "X8" ) )
+			: "unknown";
+		return string.Concat(
+			"Cannot safely recreate ", kind, " ", sourcePath,
+			" (reparse tag ", tag, "). The source was retained."
+		);
 	}
 
 	private static bool PathExistsNoFollow( string path ) {
