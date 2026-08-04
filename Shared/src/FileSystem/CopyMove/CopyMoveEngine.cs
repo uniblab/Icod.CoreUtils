@@ -17,6 +17,7 @@ public sealed class CopyMoveEngine {
 	private readonly IReadOnlyFileSystemProvider readOnlyProvider;
 	private readonly IFileSystemMetadataProvider metadataProvider;
 	private readonly ITransactionalReplacementFileSystem replacementFileSystem;
+	private readonly IFileSystemMutationProvider mutationProvider;
 	private readonly RecursiveMutationTraversalEngine traversal;
 	private readonly SparseFileCopier sparseCopier;
 
@@ -40,10 +41,32 @@ public sealed class CopyMoveEngine {
 		IFileSystemMetadataProvider metadataProvider,
 		ITransactionalReplacementFileSystem replacementFileSystem,
 		IFileSystemOperations fileSystemOperations
+	) : this(
+		readOnlyProvider,
+		metadataProvider,
+		replacementFileSystem,
+		fileSystemOperations,
+		new SystemFileSystemMutationProvider( metadataProvider )
+	) {
+	}
+
+	/// <summary>Initializes the engine over fully injectable filesystem boundaries.</summary>
+	/// <param name="readOnlyProvider">The E1 observation provider.</param>
+	/// <param name="metadataProvider">The E3 metadata provider.</param>
+	/// <param name="replacementFileSystem">The E6 transactional filesystem boundary.</param>
+	/// <param name="fileSystemOperations">The sparse-file operation provider.</param>
+	/// <param name="mutationProvider">The E4 single-path mutation provider.</param>
+	public CopyMoveEngine(
+		IReadOnlyFileSystemProvider readOnlyProvider,
+		IFileSystemMetadataProvider metadataProvider,
+		ITransactionalReplacementFileSystem replacementFileSystem,
+		IFileSystemOperations fileSystemOperations,
+		IFileSystemMutationProvider mutationProvider
 	) {
 		this.readOnlyProvider = readOnlyProvider ?? throw new ArgumentNullException( nameof( readOnlyProvider ) );
 		this.metadataProvider = metadataProvider ?? throw new ArgumentNullException( nameof( metadataProvider ) );
 		this.replacementFileSystem = replacementFileSystem ?? throw new ArgumentNullException( nameof( replacementFileSystem ) );
+		this.mutationProvider = mutationProvider ?? throw new ArgumentNullException( nameof( mutationProvider ) );
 		ArgumentNullException.ThrowIfNull( fileSystemOperations );
 		traversal = new RecursiveMutationTraversalEngine( readOnlyProvider );
 		sparseCopier = new SparseFileCopier( fileSystemOperations );
@@ -453,8 +476,16 @@ public sealed class CopyMoveEngine {
 		if ( !overwrite.Proceed ) return (true, overwrite.Message);
 		try {
 			if ( overwrite.DestinationExists ) RemovePath( destinationPath );
-			File.CreateHardLink( destinationPath, firstDestinationPath );
-			return (true, null);
+			var result = await mutationProvider.CreateHardLinkAsync(
+				destinationPath,
+				firstDestinationPath,
+				PathDereferenceMode.NoFollow,
+				FileSystemMutationPrecondition.DestinationMustNotExist(),
+				cancellationToken: cancellationToken
+			).ConfigureAwait( false );
+			if ( result.Succeeded ) return (true, null);
+			cancellationToken.ThrowIfCancellationRequested();
+			return (false, result.Message ?? "The preserved hard link could not be created.");
 		} catch ( Exception exception ) when ( IsControlledException( exception ) ) {
 			return (false, exception.Message);
 		}
@@ -470,10 +501,26 @@ public sealed class CopyMoveEngine {
 	) {
 		cancellationToken.ThrowIfCancellationRequested();
 		if ( destinationExists ) RemovePath( destinationPath );
-		if ( options.CopyAsHardLink ) File.CreateHardLink( destinationPath, sourcePath );
-		else if ( sourceKind == FileSystemEntryKind.Directory ) Directory.CreateSymbolicLink( destinationPath, sourcePath );
-		else File.CreateSymbolicLink( destinationPath, sourcePath );
-		await ValueTask.CompletedTask;
+		if ( options.CopyAsHardLink ) {
+			var result = await mutationProvider.CreateHardLinkAsync(
+				destinationPath,
+				sourcePath,
+				sourceKind is FileSystemEntryKind.SymbolicLink or FileSystemEntryKind.NameSurrogate
+					? PathDereferenceMode.NoFollow
+					: PathDereferenceMode.FollowEligiblePathIndirection,
+				FileSystemMutationPrecondition.DestinationMustNotExist(),
+				cancellationToken: cancellationToken
+			).ConfigureAwait( false );
+			if ( !result.Succeeded ) {
+				cancellationToken.ThrowIfCancellationRequested();
+				if ( !result.Supported ) throw new NotSupportedException( result.Message ?? "Hard-link creation is unsupported." );
+				throw new IOException( result.Message ?? "The hard link could not be created." );
+			}
+		} else if ( sourceKind == FileSystemEntryKind.Directory ) {
+			Directory.CreateSymbolicLink( destinationPath, sourcePath );
+		} else {
+			File.CreateSymbolicLink( destinationPath, sourcePath );
+		}
 	}
 
 	private async ValueTask<OverwriteDecision> EvaluateOverwriteAsync(
@@ -519,7 +566,7 @@ public sealed class CopyMoveEngine {
 	) => sourceIdentity.IsAvailable
 		&& destination.Exists
 		&& destination.Metadata!.EntryIdentity.IsAvailable
-		&& sourceIdentity == destination.Metadata.EntryIdentity.GetRequiredValue();
+		&& sourceIdentity == destination.Metadata.EntryIdentity;
 
 	private static bool ResolveDestinationDirectoryMode(
 		int sourceCount,
