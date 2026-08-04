@@ -61,6 +61,45 @@ public sealed class GnuPatchDifferentialTests {
 		);
 	}
 
+	/// <summary>Compares context, normal, and ed input application with GNU patch 2.8.</summary>
+	[Fact]
+	public async Task AllSupportedTextFormatsMatchInstalledGnuPatch28() {
+		if ( !OperatingSystem.IsLinux() || !await IsGnuPatch28AvailableAsync() ) {
+			return;
+		}
+		await AssertMatchesGnuAsync(
+			string.Concat(
+				"*** target.txt\n",
+				"--- target.txt\n",
+				"***************\n",
+				"*** 1,2 ****\n",
+				"  same\n",
+				"! left\n",
+				"--- 1,2 ----\n",
+				"  same\n",
+				"! right\n"
+			),
+			"same\nleft\n",
+			new PatchEngineOptions { Batch = true },
+			new[] { "--context" },
+			0
+		);
+		await AssertMatchesGnuAsync(
+			"2c2\n< left\n---\n> right\n",
+			"same\nleft\n",
+			new PatchEngineOptions { Batch = true },
+			new[] { "--normal" },
+			0
+		);
+		await AssertMatchesGnuAsync(
+			"2c\nright\n.\n",
+			"same\nleft\n",
+			new PatchEngineOptions { Batch = true },
+			new[] { "--ed" },
+			0
+		);
+	}
+
 	/// <summary>Compares context-anchored diff3 conflict output with GNU patch 2.8.</summary>
 	[Fact]
 	public async Task Diff3MergeMatchesInstalledGnuPatch28() {

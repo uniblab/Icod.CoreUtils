@@ -1,104 +1,111 @@
-# GNU patch 2.8 option and invocation matrix
+# GNU patch 2.8 final option and invocation matrix
 
-This file is the pinned option inventory for the co-resident `Icod.Patch` implementation.
-It was generated from GNU patch 2.8's `src/patch.c`, installed help text, and upstream test inventory.
-It prevents later phases from silently adopting spellings or behavior from a different GNU patch release.
-
-The inventory is complete for the options declared by the 2.8 source. The implementation-status column is intentionally progressive: P1 accepts only the source-selection and informational options owned by that phase; later options remain rejected until their owning phase implements their behavior and tests.
+This is the final Phase P12 conformance inventory for the co-resident `Icod.Patch`
+implementation. GNU patch 2.8 source remains the spelling, arity, alias, and status
+baseline. The table distinguishes supported release behavior from deliberate,
+controlled limitations; unsupported source-defined options remain in the parser so
+long-option abbreviation and ambiguity are resolved against the complete GNU 2.8
+surface.
 
 ## Source evidence
 
 - GNU release archive: `patch-2.8.tar.xz`
 - Release tag: `v2.8`
-- Source option declarations: `src/patch.c`, `shortopts`, `longopts`, `option_help`, and `get_some_switches`
+- Source declarations: `src/patch.c`, `shortopts`, `longopts`, `option_help`, and
+  `get_some_switches`
 - Source browser: <https://sources.debian.org/src/patch/2.8-2/src/patch.c/>
-- Upstream test inventory: <https://sources.debian.org/src/patch/2.8-2/tests/>
+- Upstream tests: <https://sources.debian.org/src/patch/2.8-2/tests/>
 - Installed manual source: <https://sources.debian.org/src/patch/2.8-2/patch.man/>
 
-The Debian source browser is used only as a navigable rendering of the pinned 2.8 source. The signed GNU release archive recorded in [`GNU-patch-2.8.md`](GNU-patch-2.8.md) remains authoritative.
+The signed GNU release archive and checksum recorded in
+[`GNU-patch-2.8.md`](GNU-patch-2.8.md) remain authoritative.
 
-## Invocation contract
+## Invocation and status contract
 
 ```text
 patch [OPTION]... [ORIGFILE [PATCHFILE]]
 ```
 
-- With no `PATCHFILE`, patch text is read from standard input.
-- `-i PATCHFILE` / `--input=PATCHFILE` selects the patch stream and conflicts with the second operand.
-- `ORIGFILE` supplies an explicit target filename candidate; complete filename behavior belongs to P7.
-- More than two operands are usage trouble.
-- GNU status classes are `0` success, `1` rejected/conflicted work, and `2` serious trouble.
+- Without `PATCHFILE`, patch text is read as bytes from standard input.
+- `-i PATCHFILE` conflicts with a patch-file operand; `-` means standard input.
+- More than two operands is usage trouble.
+- Exit status is `0` for success, `1` for rejected, conflicted, skipped, or otherwise
+  partially applied work, and `2` for usage, malformed input, containment, I/O, or
+  transaction trouble.
+- Cancellation uses the repository-wide canceled status rather than collapsing into
+  GNU status `2`.
 
-## Complete option inventory
+## Final option matrix
 
-| Short form | Long form | Argument | GNU patch 2.8 behavior | Planned owner | Current state after Wave B2 |
-|---|---|---|---|---|---|
-| `-b` | `--backup` | none | Back up each original file. GNU 2.8 also retains a narrowly triggered obsolete `-b SUFFIX ORIGFILE PATCHFILE` compatibility form and warns in favor of `-b -z SUFFIX`. | P8 | Reserved; rejected until P8. |
-| `-B PREFIX` | `--prefix=PREFIX` | required, nonempty | Prefix backup filenames. | P8 | Reserved; rejected until P8. |
-| `-c` | `--context` | none | Force interpretation as context diff. | P3 | Implemented; selects the complete context parser. |
-| `-d DIR` | `--directory=DIR` | required | Change working directory before processing. | P7 | Implemented for target names and relative patch-source arguments through the canonical P7 working root. |
-| `-D NAME` | `--ifdef=NAME` | required | Emit merged if/then/else output using `NAME`. | P8 | Reserved; rejected until P8. |
-| `-e` | `--ed` | none | Force interpretation as an ed script. | P4 | Implemented; selects the internal GNU-compatible ed parser. |
-| `-E` | `--remove-empty-files` | none | Remove output files left empty after patching. | P8/P9 | Reserved; rejected until filesystem policy exists. |
-| `-f` | `--force` | none | Noninteractive policy that ignores bad prerequisites and assumes unreversed input. | P6 | Implemented in the pure engine, accepted by the command, and consumed by the P7 virtual multi-file planner; committed application remains deferred. |
-| `-F LINES` | `--fuzz=LINES` | required, nonnegative integer | Set maximum context fuzz. | P6 | Implemented in the pure matcher and accepted by the command. |
-| `-g NUM` | `--get=NUM` | required, signed integer | Retrieve files from version control when positive; ask when negative. | P7 | Implemented as disabled/decision-gated/enabled policy over an injected provider; `PATCH_GET` and POSIX defaults are honored without shell interpolation. |
-| `-i PATCHFILE` | `--input=PATCHFILE` | required | Read patch text from `PATCHFILE` instead of standard input. `-` denotes standard input. | P1 | Implemented. |
-| `-l` | `--ignore-whitespace` | none | Canonicalize whitespace while matching patch context to input. | P6 | Implemented for nonempty horizontal blank runs in the pure matcher. |
-| `-m` | `--merge[=STYLE]` | short form has no argument; long argument optional | Merge conflicts instead of producing rejects. Supported styles are `merge` and `diff3`; no style selects `merge`. Present when GNU patch is built with merge support. | P6/P8 | Pure `merge` and `diff3` conflict construction is implemented and accepted; P8 still owns live output and artifact policy. |
-| `-n` | `--normal` | none | Force interpretation as normal diff. | P4 | Implemented; selects the complete normal-diff parser. |
-| `-N` | `--forward` | none | Ignore input that appears reversed or already applied. | P6 | Implemented in the pure direction policy and accepted by the command. |
-| `-o FILE` | `--output=FILE` | required | Write patched output to `FILE`. | P8 | Reserved; rejected until P8. |
-| `-p NUM` | `--strip=NUM` | required, nonnegative integer | Strip `NUM` leading pathname components. | P7 | Implemented with adjacent-separator-run counting and platform-aware POSIX/Windows separator semantics. |
-| `-r FILE` | `--reject-file=FILE` | required | Write rejected hunks to `FILE`. | P8 | Reserved; rejected until P8. |
-| `-R` | `--reverse` | none | Assume old and new sides were swapped. | P6 | Implemented for formats with both old and new models; ed scripts reject reverse application explicitly. |
-| `-s` | `--quiet`, `--silent` | none | Suppress normal output while retaining errors. | P8 | Reserved; rejected until P8. |
-| `-t` | `--batch` | none | Ask no questions, skip bad prerequisites, and assume reversed input when needed. | P6/P8 | Pure prerequisite and reverse defaults are implemented and accepted; P8 still owns live prompt/output orchestration. |
-| `-T` | `--set-time` | none | Set output timestamps, interpreting diff timestamps as local time. | P8/E3 | Reserved; rejected until P8/E3. |
-| `-u` | `--unified` | none | Force interpretation as unified diff. | P3 | Implemented; selects the complete unified parser. |
-| `-v` | `--version` | none | Print version information and exit successfully. | P1 | Implemented. |
-| `-V STYLE` | `--version-control=STYLE` | required | Select backup version control. Help names `simple`, `numbered`, and `existing`. | P8 | Reserved; rejected until P8. |
-| `-x NUM` | `--debug=NUM` | required, signed integer | Internal debugging flags. The option is declared in the source table, but handling is compiled only with `DEBUGGING`; normal help omits it. | P12 | Not part of the normal release surface unless a deliberate debug-build policy is adopted. |
-| `-Y PREFIX` | `--basename-prefix=PREFIX` | required, nonempty | Prefix only backup basenames. | P8 | Reserved; rejected until P8. |
-| `-z SUFFIX` | `--suffix=SUFFIX` | required, nonempty | Append a suffix to backup filenames. | P8 | Reserved; rejected until P8. |
-| `-Z` | `--set-utc` | none | Set output timestamps, interpreting diff timestamps as UTC. | P8/E3 | Reserved; rejected until P8/E3. |
-| — | `--dry-run` | none | Report what would happen without changing files. | P8 | Reserved; rejected until P8. |
-| — | `--verbose` | none | Emit additional progress information. | P8 | Reserved; rejected until P8. |
-| — | `--binary` | none | Preserve binary transfer behavior and do not strip trailing carriage returns from input records. | P1/P2 | Accepted; P2 is byte-preserving on every platform. |
-| — | `--help` | none | Print help and exit successfully. | P1 | Implemented. |
-| — | `--backup-if-mismatch` | none | Back up when a patch is not an exact match. | P8 | Reserved; rejected until P8. |
-| — | `--no-backup-if-mismatch` | none | Do not create mismatch backups unless another option requests backups. | P8 | Reserved; rejected until P8. |
-| — | `--posix` | none | Select GNU patch's POSIX-conformance policy. | P7/P12 | Implemented for P7 filename ordering and version-control defaults; remaining command-wide POSIX differences close in P12. |
-| — | `--quoting-style=WORD` | required | Select filename diagnostic quoting: `literal`, `shell`, `shell-always`, `c`, or `escape`. | P7/P8 | Reserved; rejected until filename and diagnostic policy are complete. |
-| — | `--reject-format=FORMAT` | required | Select `context` or `unified` reject output. | P8 | Reserved; rejected until P8. |
-| — | `--read-only=BEHAVIOR` | required | Handle read-only inputs using `ignore`, `warn`, or `fail`. | P8/P9 | Reserved; rejected until E3/E4-backed mutation policy exists. |
-| — | `--follow-symlinks` | none | Follow symbolic links when opening targets. It is source-defined but omitted from GNU 2.8's ordinary help array. | P7/P9/P10 | Implemented for P7 input-target selection after containment checks; output links and committed mutation remain P9/P10 work. |
+| Short | Long | Argument | Final Icod.Patch 1.0 state |
+|---|---|---|---|
+| `-b` | `--backup` | none | **Implemented.** Retains the original according to selected backup naming. The obsolete GNU compatibility form `-b SUFFIX ORIGFILE PATCHFILE` is not implemented. |
+| `-B` | `--prefix` | required | **Implemented.** Prefixes the complete backup pathname; containment still applies. |
+| `-c` | `--context` | none | **Implemented.** Forces complete context-diff parsing. |
+| `-d` | `--directory` | required | **Implemented.** Establishes the canonical working root for source resolution, target selection, and artifact containment. |
+| `-D` | `--ifdef` | required | **Not implemented.** Conditional if/then/else output is diagnosed as a controlled unsupported capability. |
+| `-e` | `--ed` | none | **Implemented.** Uses the managed patch-compatible ed parser and applier; native `ed` is never invoked. |
+| `-E` | `--remove-empty-files` | none | **Implemented.** Deletes successfully patched files that become empty through the artifact transaction. |
+| `-f` | `--force` | none | **Implemented.** Suppresses automatic reversal and prerequisite refusal policy. |
+| `-F` | `--fuzz` | nonnegative integer | **Implemented.** Bounded context-fuzz matching. |
+| `-g` | `--get` | signed integer | **Implemented through an injected retrieval boundary.** No shell interpolation or implicit host VCS command is performed. `PATCH_GET` and POSIX defaults are honored. |
+| `-i` | `--input` | required | **Implemented.** Reads an explicit file or standard input for `-`. |
+| `-l` | `--ignore-whitespace` | none | **Implemented.** Canonicalizes nonempty horizontal blank runs during matching. |
+| `-m` | `--merge[=STYLE]` | optional on long form | **Implemented.** Supports `merge` and `diff3`; short `-m` selects `merge`. |
+| `-n` | `--normal` | none | **Implemented.** Forces complete normal-diff parsing. |
+| `-N` | `--forward` | none | **Implemented.** Skips patches that appear reversed or already applied. |
+| `-o` | `--output` | required | **Implemented.** Writes an alternate transactional output or byte output for `-`. |
+| `-p` | `--strip` | nonnegative integer | **Implemented.** Uses platform-aware separator-run component counting. |
+| `-r` | `--reject-file` | required | **Implemented.** Writes explicit reject output; `-` discards rejects. |
+| `-R` | `--reverse` | none | **Implemented.** Reverses formats with old/new models; reverse ed scripts are rejected explicitly. |
+| `-s` | `--quiet`, `--silent` | none | **Implemented.** Suppresses ordinary progress while retaining errors. |
+| `-t` | `--batch` | none | **Implemented.** Applies noninteractive defaults for prerequisites and reversal decisions. |
+| `-T` | `--set-time` | none | **Implemented.** Applies local-time patch-header timestamps through E3/E4 metadata policy. |
+| `-u` | `--unified` | none | **Implemented.** Forces complete unified-diff parsing. |
+| `-v` | `--version` | none | **Implemented.** Reports `patch (Icod.Patch) 1.0`. |
+| `-V` | `--version-control` | required | **Implemented.** Supports GNU-compatible unique abbreviations for existing/nil, numbered/t, and simple/never. |
+| `-x` | `--debug` | signed integer | **Unavailable in the normal release.** GNU handles it only under its `DEBUGGING` build; Icod.Patch diagnoses that release capability explicitly. |
+| `-Y` | `--basename-prefix` | required | **Implemented.** Prefixes only the backup basename. |
+| `-z` | `--suffix` | required | **Implemented.** Selects simple backup suffix naming. |
+| `-Z` | `--set-utc` | none | **Implemented.** Applies UTC patch-header timestamps, including post-2038 values where the host supports them. |
+| — | `--dry-run` | none | **Implemented.** Completes parse, selection, matching, and artifact planning without mutation. |
+| — | `--verbose` | none | **Implemented.** Emits artifact-policy diagnostics. |
+| — | `--binary` | none | **Implemented.** Patch input, target content, output, line endings, incomplete records, and invalid byte values remain byte-oriented. |
+| — | `--help` | none | **Implemented.** Final help contains no provisional phase language. |
+| — | `--backup-if-mismatch` | none | **Implemented.** Requests mismatch-triggered backup policy. |
+| — | `--no-backup-if-mismatch` | none | **Implemented.** Suppresses mismatch-triggered backups unless another option requires one. |
+| — | `--posix` | none | **Implemented for the command policies owned by this port:** filename evidence ordering, retrieval default, and backup-policy defaults. Exact GNU locale text and every interactive transcript are not claimed byte-for-byte. |
+| — | `--quoting-style` | required | **Implemented.** Supports `literal`, `shell`, `shell-always`, `c`, and `escape`. |
+| — | `--reject-format` | required | **Implemented.** Supports `context` and `unified`. |
+| — | `--read-only` | required | **Not implemented.** `ignore`, `warn`, and `fail` policy selection is diagnosed explicitly; ordinary access failures remain controlled status `2`. |
+| — | `--follow-symlinks` | none | **Implemented.** Terminal target/output links are rejected by default and followed only after canonical containment checks when requested. |
 
-## Aliases, conditional surface, and compatibility traps
+## Aliases, conditional surface, and compatibility decisions
 
-1. `-b` means **backup**. Binary mode is the long-only `--binary` option.
-2. `--quiet` and `--silent` are aliases for `-s`.
-3. `--merge` and `-m` are conditional on GNU patch's merge build feature; only the long form can carry the optional style argument.
-4. `-x` / `--debug` is declared by the source but is useful only when the `DEBUGGING` case is compiled. It is not advertised by normal help.
-5. `--follow-symlinks` is accepted by the source but not advertised by normal help. Icod.Patch must not expose it before the shared link/path policy is available.
-6. Long-option abbreviations are accepted by GNU `getopt_long` when unambiguous. P1 resolves abbreviations against the complete GNU 2.8 option-name inventory; an option owned by a later phase is then rejected explicitly rather than disappearing from the ambiguity set.
-7. Exact GNU option conflicts, repetition behavior, environment-variable interactions, prompts, diagnostics, and platform-dependent effects remain conformance work for each owning phase and final P12 closure.
+1. `-b` always means backup. Binary mode is long-only `--binary`.
+2. `--quiet` and `--silent` alias `-s`.
+3. Only the long `--merge` spelling carries an optional style.
+4. `-x`/`--debug` remains in the source-defined inventory but is unavailable in the
+   normal release, matching GNU's conditional build intent rather than inventing an
+   unrelated debug contract.
+5. `--follow-symlinks` is accepted even though GNU's ordinary help omits it.
+6. Unambiguous long abbreviations are resolved against the complete inventory,
+   including controlled unsupported options.
+7. The obsolete three-operand `-b SUFFIX ORIGFILE PATCHFILE` compatibility path is a
+   documented divergence rather than an ambiguous parser special case.
 
-## Upstream test map
+## P12 differential and corpus closure
 
-The complete 2.8 test inventory is retained as research evidence. The most directly relevant upstream tests are:
+- Managed parser/application corpora cover unified, context, normal, and ed syntax;
+  LF, CRLF, CR, incomplete records, invalid bytes, malformed ranges, quoted names,
+  multi-file mail envelopes, creation/deletion, and deterministic resource limits.
+- Captured `Icod.DiffUtils` fixtures for all four syntaxes are applied through the
+  public command without adding a production or test project reference to Diffutils.
+- Linux-only opt-in tests compare exact, offset, fuzz, whitespace, reverse, merge,
+  context, normal, and ed results with an installed executable that identifies itself
+  as GNU patch 2.8.
+- Transaction suites independently cover target, backup, reject, output, metadata,
+  links, rollback, partial success, cancellation, cleanup, and non-atomic fallback.
 
-| Contract area | GNU 2.8 tests |
-|---|---|
-| Invocation and operands | `bad-usage`, `inname`, `need-filename` |
-| Source scanning and garbage | `garbage`, `corrupt-patch`, `mixed-patch-types`, `unusual-blanks` |
-| Line endings and incomplete records | `crlf-handling`, `no-newline-triggers-assert` |
-| Numeric hardening | `line-numbers`, `mangled-numbers-abort` |
-| Filename parsing and safety | `bad-filenames`, `filename-choice`, `quoted-filenames`, `deep-directories` |
-| Context, normal, and ed syntax | `context-format`, `munged-context-format`, `ed-style`, `mixed-patch-types` |
-| Backups and rejects | `backup-prefix-suffix`, `no-backup`, `remember-backup-files`, `global-reject-files`, `reject-format`, `corrupt-reject-files` |
-| Merge and direction | `merge`, `false-match`, `criss-cross` |
-| Creation, deletion, modes, and timestamps | `create-delete`, `empty-files`, `file-create-modes`, `file-modes`, `preserve-mode-and-timestamp`, `unmodified-files` |
-| Links and special files | `symlinks`, `hardlinks`, `fifo` |
-
-Wave A, P0-P4, uses a provenance-separated corpus to establish the source model and all four complete syntax parsers. Wave B1, P5-P6, adds pure exact and heuristic application plus opt-in GNU 2.8 differential checks. Wave B2, P7, adds canonical filename selection, secure multi-file planning, and retrieval policy. P8-P12 progressively add artifacts, metadata, transactions, and conformance behavior without shelling out to a locally installed GNU `patch` during ordinary tests.
+See [`P12-closure-audit.md`](P12-closure-audit.md) for residual functionality and
+platform limitations.

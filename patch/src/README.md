@@ -1,8 +1,8 @@
 # Icod.Patch source layout
 
-The source directory contains complete Wave A parsers, the Wave B1 pure application engine, the Wave B2 path-planning layer, Phase P8 artifact policy, and the completed Phase P11A adapter over shared E6:
+The source directory contains the closed P0–P12 implementation: complete Wave A parsers, the Wave B1 pure application engine, the Wave B2 path-planning layer, Phase P8 artifact policy, and the stabilized P11A/P11B adapter over shared E6:
 
-- `Command.cs` owns public invocation, shared option parsing, environment policy, diagnostics, compatibility wrappers, help, version, cancellation, and GNU option validation.
+- `Command.cs` owns public invocation, shared option parsing, environment policy, final 1.0 capability diagnostics, compatibility wrappers, help, version, cancellation, and GNU option validation.
 - `PatchApplication.cs` acquires the byte-oriented patch source, coordinates scanning and parsing, invokes P7 planning and P8 artifact planning, handles dry runs and byte-oriented standard output, and commits through the injected E6-backed boundary.
 - `PatchArtifacts.cs` derives explicit target, backup, reject, and output artifacts from final P7 virtual state; implements GNU backup/reject/output naming and metadata policy; assigns per-file recovery units; quotes hostile pathnames; and consolidates repeated patches to one canonical target.
 - `PatchFileSystem.cs` defines `IPatchFileSystem` and `IPatchTransaction`, consumes E2/E3/E4 path, metadata, and mutation providers, enforces lexical and physical artifact containment, constructs the shared E6 provider, and forwards its stabilized atomicity and durability capability record without a Patch-local translation layer.
@@ -27,3 +27,10 @@ The source directory contains complete Wave A parsers, the Wave B1 pure applicat
 - `AssemblyInfo.cs` exposes internals only to the dedicated test assembly.
 
 P8 consumes the P7 plan and does not repeat filename selection or matching. P11A keeps GNU-visible backup, reject, output, and multi-file partial-success policy in Patch while delegating transaction mechanics to shared E6. P11B removed the unreachable P9 implementation after `cp`, `mv`, and `install` independently validated the stabilized contract; no command-local replacement engine remains.
+
+P12 leaves no provisional phase diagnostics in production. The source-defined
+`ifdef`, `read-only`, and conditional GNU debugging options remain present in the
+complete parser inventory but produce final capability diagnostics rather than
+promising a later phase. The final behavior and residual-gap ledgers live under
+`patch/upstream`.
+

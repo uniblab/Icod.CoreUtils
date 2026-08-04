@@ -5,7 +5,7 @@ using Icod.CoreUtils.Shared.Diagnostics;
 using System.IO;
 using Xunit;
 
-/// <summary>Exercises the Wave A command boundary.</summary>
+/// <summary>Exercises the final public command boundary and historical compatibility contracts.</summary>
 public sealed class CommandTests {
 	/// <summary>Verifies help and version short-circuit source acquisition.</summary>
 	/// <param name="option">The standard information option.</param>
@@ -55,7 +55,7 @@ public sealed class CommandTests {
 		var result = await RunAsync( new[] { "-b" } );
 		Assert.Equal( 2, result.Status );
 		Assert.Contains( "Only garbage was found", result.Error );
-		Assert.DoesNotContain( "reserved for a later Icod.Patch phase", result.Error );
+		Assert.DoesNotContain( "reserved for a later", result.Error, StringComparison.OrdinalIgnoreCase );
 	}
 
 	/// <summary>Verifies abbreviations are resolved against the complete GNU 2.8 option inventory.</summary>
@@ -155,7 +155,7 @@ public sealed class CommandTests {
 		Assert.Contains( "Only garbage was found", result.Error );
 	}
 
-	/// <summary>Verifies Wave C commits a successfully applied target artifact.</summary>
+	/// <summary>Verifies the final command commits a successfully applied target artifact.</summary>
 	[Fact]
 	public async Task RecognizedPatchMutatesTarget() {
 		var directory = CreateTemporaryDirectory();
