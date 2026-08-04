@@ -117,7 +117,7 @@ public sealed class PhaseP12ClosureTests {
 		);
 		try {
 			var result = await RunAsync(
-				new[] { "-d", root, "-u", "-i", "change.patch", "--batch" }
+				new[] { "-d", root, "-u", "-p", "0", "-i", "change.patch", "--batch" }
 			);
 			Assert.Equal( 1, result.Status );
 			Assert.Equal( "old\n", await File.ReadAllTextAsync( outside ) );
