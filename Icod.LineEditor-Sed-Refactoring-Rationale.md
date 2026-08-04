@@ -16,6 +16,10 @@ targeted semantic corrections and shared-infrastructure adoption
 
 That sequence preserves working behavior while establishing a maintainable architecture for GNU Sed, Ed, and Red.
 
+## LE0 completion note
+
+Phase LE0 completed the identity and project-policy cleanup without changing command behavior. The repository now uses the final LineEditor project identities, treats `Icod.LineEditor.Ed.Shared` as the definite Ed/Red engine, keeps a general `Icod.LineEditor.Shared` optional, and records the exact pre-decomposition source and CI baseline in [`Icod.LineEditor-LE0-Baseline.md`](Icod.LineEditor-LE0-Baseline.md). Phase LE1 can therefore begin with a fixed behavioral reference.
+
 ## 1. The current state is already beyond a raw rename
 
 The Sed project already uses:

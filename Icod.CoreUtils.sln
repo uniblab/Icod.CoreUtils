@@ -456,7 +456,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Head.Tests",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Tail.Tests", "tests\Tail.Tests\Icod.CoreUtils.Tail.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0005}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Sed.Tests", "tests\Sed.Tests\Icod.CoreUtils.Sed.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0006}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.LineEditor.Sed.Tests", "tests\Sed.Tests\Icod.LineEditor.Sed.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0006}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Cat.Tests", "tests\Cat.Tests\Icod.CoreUtils.Cat.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0007}"
 EndProject

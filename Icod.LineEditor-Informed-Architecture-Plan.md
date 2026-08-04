@@ -32,6 +32,10 @@ Icod.LineEditor.Sed.Command
 
 No `EdCommand`, `RedCommand`, or `SedCommand` classes are proposed.
 
+## LE0 implementation status
+
+Phase LE0 was completed on August 4, 2026. Project and solution identities now follow the architecture below, Ed and Red explicitly use C# 13, the Red project file follows the repository's UTF-8-without-BOM convention, and the pre-LE1 source and three-runner test state is recorded in [`Icod.LineEditor-LE0-Baseline.md`](Icod.LineEditor-LE0-Baseline.md). Because the inspected Red project contained only a placeholder entry point, LE0 also establishes the required public `Icod.LineEditor.Red.Command` facade while preserving that seed output; Phase LE8 remains responsible for actual restricted-editor behavior.
+
 ---
 
 ## Executive decision
@@ -978,17 +982,19 @@ When the LineEditor milestone is undertaken, use the following sequence.
 
 ## Phase LE0 — Correct documentation and project-policy drift
 
-- [ ] Replace stale roadmap references to `Icod.Ed.Shared`, `Icod.Ed.Ed`, and `Icod.Ed.Red`.
-- [ ] Use `Icod.LineEditor.Ed.Shared`, `Icod.LineEditor.Ed`, and `Icod.LineEditor.Red`.
-- [ ] Replace stale roadmap references to project `Icod.Sed` with `Icod.LineEditor.Sed`.
-- [ ] Correct the roadmap statement that currently assigns the Ed engine to `Icod.LineEditor.Shared`; assign it to `Icod.LineEditor.Ed.Shared`.
-- [ ] Remove `Icod.LineEditor.Shared` from the required initial project list or mark it explicitly optional and evidence-based.
-- [ ] Rename `Icod.CoreUtils.Sed.Tests.csproj` to `Icod.LineEditor.Sed.Tests.csproj`.
-- [ ] Confirm matching solution-project names and suite solution folders.
-- [ ] Add `<LangVersion>13.0</LangVersion>` to the current Ed and Red projects.
-- [ ] Remove the UTF-8 BOM from the Red project file to follow repository text conventions.
-- [ ] Record GNU Sed 4.10 and GNU Ed 1.22.5 in the authoritative ledger.
-- [ ] Capture the current full solution and Sed test baseline before refactoring.
+- [x] Replace stale roadmap references to `Icod.Ed.Shared`, `Icod.Ed.Ed`, and `Icod.Ed.Red`.
+- [x] Use `Icod.LineEditor.Ed.Shared`, `Icod.LineEditor.Ed`, and `Icod.LineEditor.Red`.
+- [x] Replace stale roadmap references to project `Icod.Sed` with `Icod.LineEditor.Sed`.
+- [x] Assign the Ed engine to `Icod.LineEditor.Ed.Shared`, not `Icod.LineEditor.Shared`.
+- [x] Keep `Icod.LineEditor.Shared` explicitly optional and evidence-based rather than part of the required initial project list.
+- [x] Rename `Icod.CoreUtils.Sed.Tests.csproj` to `Icod.LineEditor.Sed.Tests.csproj`.
+- [x] Confirm matching solution-project names and retain all test projects under the centralized `tests` solution folder.
+- [x] Add `<LangVersion>13.0</LangVersion>` to the current Ed and Red projects.
+- [x] Remove the UTF-8 BOM from the Red project file to follow repository text conventions.
+- [x] Record GNU sed 4.10 and GNU ed 1.22.5 in the authoritative ledger.
+- [x] Capture the current full solution and Sed test baseline before refactoring in [`Icod.LineEditor-LE0-Baseline.md`](Icod.LineEditor-LE0-Baseline.md).
+
+LE0 is complete. The historical “Change/Replace” examples later in this document remain as rationale showing what was corrected; they are not active project names or ownership policy.
 
 ## Phase LE1 — Characterize and decompose the current Sed implementation
 
