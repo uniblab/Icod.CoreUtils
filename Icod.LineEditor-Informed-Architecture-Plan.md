@@ -32,9 +32,11 @@ Icod.LineEditor.Sed.Command
 
 No `EdCommand`, `RedCommand`, or `SedCommand` classes are proposed.
 
-## LE0 implementation status
+## LE0 and LE1 implementation status
 
 Phase LE0 was completed on August 4, 2026. Project and solution identities now follow the architecture below, Ed and Red explicitly use C# 13, the Red project file follows the repository's UTF-8-without-BOM convention, and the pre-LE1 source and three-runner test state is recorded in [`Icod.LineEditor-LE0-Baseline.md`](Icod.LineEditor-LE0-Baseline.md). Because the inspected Red project contained only a placeholder entry point, LE0 also establishes the required public `Icod.LineEditor.Red.Command` facade while preserving that seed output; Phase LE8 remains responsible for actual restricted-editor behavior.
+
+Phase LE1 is now complete. The monolithic Sed implementation has been decomposed into responsibility-focused partial-class modules while preserving the public command signatures and the pre-LE1 regex, record, script-source, sandbox, process, and replacement semantics. New characterization and module-boundary tests make those temporary behaviors explicit for the later semantic phases.
 
 ---
 
@@ -63,7 +65,7 @@ The revised recommendation is:
    It already has the correct project name, root namespace, executable assembly name, public command class, asynchronous entry point, dedicated test project identity, and direct reference to the current Shared project.
 
 4. **Refactor Sed internally before attempting to extract an Ed/Sed family library.**
-   The current Sed implementation is a large monolithic `Command.cs`. Its internal boundaries must first become visible.
+   The pre-LE1 Sed implementation was a large monolithic `Command.cs`. Phase LE1 has now made its internal boundaries visible without changing behavior.
 
 5. **Implement `Icod.LineEditor.Ed.Shared`, then Ed and Red.**
    After both the decomposed Sed engine and complete Ed engine exist, perform a consumer audit.
@@ -998,14 +1000,14 @@ LE0 is complete. The historical “Change/Replace” examples later in this docu
 
 ## Phase LE1 — Characterize and decompose the current Sed implementation
 
-- [ ] Add missing characterization tests before moving private types.
-- [ ] Split options, parser, program model, addresses, execution, records, substitution, files, and processes into focused internal modules.
-- [ ] Keep public behavior and `Icod.LineEditor.Sed.Command` signatures stable.
-- [ ] Add directory `README.md` files and XML documentation as required.
-- [ ] Add focused internal tests without deleting the command-level tests.
-- [ ] Keep the current regex and record behavior temporarily if needed to make the structural refactor reviewable.
+- [x] Add missing characterization tests before moving private types.
+- [x] Split options, parser, program model, addresses, execution, records, substitution, files, and processes into focused internal modules.
+- [x] Keep public behavior and `Icod.LineEditor.Sed.Command` signatures stable.
+- [x] Add directory `README.md` files and XML documentation as required.
+- [x] Add focused internal tests without deleting the command-level tests.
+- [x] Keep the current regex and record behavior temporarily so the structural refactor remains reviewable.
 
-This phase should be behavior-preserving. It exposes ownership before semantic changes.
+Phase LE1 is complete and behavior-preserving. `Command.cs` now contains only the public facade and orchestration path, while nine partial-class modules make the existing private responsibilities explicit. Characterization tests freeze the current option, script-source, diagnostic, record, sandbox, and in-place-edit behavior until their scheduled semantic phases.
 
 ## Phase LE2 — Extend the current Shared regex foundation
 

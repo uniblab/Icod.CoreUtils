@@ -5,9 +5,9 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `45` |
-| Current engineering milestone | LineEditor Phase LE0 complete; proceed to Phase LE1 — characterize and decompose `Icod.LineEditor.Sed` |
+| Current engineering milestone | LineEditor Phase LE1 complete; proceed to Phase LE2 — validate the Shared BRE/ERE foundation for LineEditor consumers |
 | Completed infrastructure milestone | Completion Gates E2 through E6 — canonical paths, authoritative metadata, pathname-indirection characterization, mode expressions, single-path mutation, recursive mutation/copy planning, and transactional replacement |
-| Active infrastructure dependency | LineEditor now consumes the stabilized regex, record, process, filesystem, and E6 transaction foundations; Phase LE1 must remain behavior-preserving |
+| Active infrastructure dependency | LE1 preserved the Sed behavior baseline while exposing module ownership; LE2 now validates the stabilized Shared BRE/ERE contracts against Sed and Ed requirements |
 | Next command batch | Completion Gate F1 and Batch 46 remain next after the contiguous LineEditor incubation sequence |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
@@ -1186,11 +1186,13 @@ Phase LE0 is complete. It changes project identity and policy metadata only; com
 
 #### Phase LE1 — Characterize and decompose `Icod.LineEditor.Sed`
 
-- [ ] Add characterization tests for option ordering, multiple script sources, diagnostics, script mode, record termination, sandboxing, in-place editing, and current command behavior before moving private types.
-- [ ] Keep `Icod.LineEditor.Sed.Command` as the public orchestration boundary while splitting the monolithic implementation into focused internal options, scripting, address, execution, record, regular-expression, substitution, process, and file modules.
-- [ ] Keep public behavior stable during decomposition; do not combine structural movement with regex, record, or replacement semantic changes.
-- [ ] Add substantive XML documentation for every public, protected, and internal type and member and a `README.md` in every multi-file source directory.
-- [ ] Add focused internal tests where useful without deleting the command-level conformance tests.
+- [x] Add characterization tests for option ordering, multiple script sources, diagnostics, script mode, record termination, sandboxing, in-place editing, and current command behavior before moving private types.
+- [x] Keep `Icod.LineEditor.Sed.Command` as the public orchestration boundary while splitting the monolithic implementation into focused internal options, scripting, address, execution, record, regular-expression, substitution, process, and file modules.
+- [x] Keep public behavior stable during decomposition; do not combine structural movement with regex, record, or replacement semantic changes.
+- [x] Add substantive XML documentation for every public, protected, and internal type and member and a `README.md` in every multi-file source directory.
+- [x] Add focused internal tests where useful without deleting the command-level conformance tests.
+
+Phase LE1 is complete. The original 4,604-line implementation is now a partial `Command` facade over responsibility-focused source modules. The existing command suite remains intact, and the new characterization and module-boundary tests freeze the temporary pre-LE3 regex, pre-LE4 record, pre-LE5 script-source, and pre-LE10 replacement behavior.
 
 #### Phase LE2 — Shared BRE/ERE foundation, scheduled earlier as Completion Gate R1
 
