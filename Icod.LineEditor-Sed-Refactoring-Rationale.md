@@ -16,9 +16,11 @@ targeted semantic corrections and shared-infrastructure adoption
 
 That sequence preserves working behavior while establishing a maintainable architecture for GNU Sed, Ed, and Red.
 
-## LE0 completion note
+## LE0 and LE1 completion notes
 
-Phase LE0 completed the identity and project-policy cleanup without changing command behavior. The repository now uses the final LineEditor project identities, treats `Icod.LineEditor.Ed.Shared` as the definite Ed/Red engine, keeps a general `Icod.LineEditor.Shared` optional, and records the exact pre-decomposition source and CI baseline in [`Icod.LineEditor-LE0-Baseline.md`](Icod.LineEditor-LE0-Baseline.md). Phase LE1 can therefore begin with a fixed behavioral reference.
+Phase LE0 completed the identity and project-policy cleanup without changing command behavior. The repository now uses the final LineEditor project identities, treats `Icod.LineEditor.Ed.Shared` as the definite Ed/Red engine, keeps a general `Icod.LineEditor.Shared` optional, and records the exact pre-decomposition source and CI baseline in [`Icod.LineEditor-LE0-Baseline.md`](Icod.LineEditor-LE0-Baseline.md).
+
+Phase LE1 completed the behavior-preserving decomposition described by this rationale. The public `Icod.LineEditor.Sed.Command` boundary and both established entry-point signatures remain unchanged. Its former single-file implementation is now divided into focused partial-class modules for options, scripting, addresses, execution, records, regular expressions, substitution, processes, and files. The decomposition deliberately retains the temporary behaviors assigned to LE3, LE4, LE5, and LE10; characterization and structural tests make those boundaries explicit.
 
 ## 1. The current state is already beyond a raw rename
 
@@ -39,9 +41,9 @@ Historical Batch 2 should remain complete. The later LineEditor work is a re-aud
 
 # Principal areas of concern
 
-## 2. `Command.cs` currently owns almost everything
+## 2. Before LE1, `Command.cs` owned almost everything
 
-The present Sed implementation is concentrated in one very large `Command.cs`. It contains:
+The pre-LE1 Sed implementation was concentrated in one very large `Command.cs`. It contains:
 
 - command orchestration;
 - options;
@@ -70,9 +72,9 @@ Command-level tests are useful, but they do not make it easy to isolate parser f
 
 When Ed is implemented, it would be easy to move a Sed helper into common code merely because it looks reusable. Similar command syntax does not necessarily imply shared semantics.
 
-### Recommended first step
+### Completed first step
 
-Decompose Sed without changing public behavior:
+LE1 decomposed Sed without changing public behavior:
 
 ```text
 Command
