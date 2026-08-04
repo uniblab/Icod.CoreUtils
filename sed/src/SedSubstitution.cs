@@ -6,7 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
+using Icod.CoreUtils.Shared.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Icod.CoreUtils.Shared.CommandLine;
@@ -19,15 +19,11 @@ public static partial class Command {
 
 	private sealed class Substitution {
 
-		public bool ExtendedRegularExpressions {
-			get;
-		}
-
 		public string Flags {
 			get;
 		}
 
-		public string Pattern {
+		public SedCompiledRegularExpression RegularExpression {
 			get;
 		}
 
@@ -36,15 +32,17 @@ public static partial class Command {
 		}
 
 		public Substitution(
-			string pattern,
+			SedCompiledRegularExpression regularExpression,
 			string replacement,
-			string flags,
-			bool extendedRegularExpressions
+			string flags
 		) {
-			this.Pattern = pattern;
+			this.RegularExpression = regularExpression
+				?? throw new ArgumentNullException(
+					nameof( regularExpression )
+				)
+			;
 			this.Replacement = replacement;
 			this.Flags = flags;
-			this.ExtendedRegularExpressions = extendedRegularExpressions;
 		}
 
 	}
@@ -182,26 +180,15 @@ public static partial class Command {
 	private static string ApplySubstitution(
 		string input,
 		Substitution substitution,
-		out bool replaced
+		out bool replaced,
+		CancellationToken cancellationToken
 	) {
 		var flags = ParseSubstitutionFlags(
 			substitution.Flags
 		);
-		var options = RegexOptions.None;
-		if ( flags.IgnoreCase ) {
-			options |= RegexOptions.IgnoreCase;
-		}
-		if ( flags.Multiline ) {
-			options |= RegexOptions.Multiline;
-		}
-
-		var regex = CreateRegex(
-			substitution.Pattern,
-			substitution.ExtendedRegularExpressions,
-			options
-		);
-		var matches = regex.Matches(
-			input
+		var matches = substitution.RegularExpression.FindMatches(
+			input,
+			cancellationToken
 		);
 		if ( 0 == matches.Count ) {
 			replaced = false;
@@ -223,11 +210,8 @@ public static partial class Command {
 		var cursor = 0;
 		var replacementCount = 0;
 
-		for (
-			var index = 0;
-			index < matches.Count;
-			index++
-		) {
+		for ( var index = 0; index < matches.Count; index++ ) {
+			cancellationToken.ThrowIfCancellationRequested();
 			var matchNumber = index + 1;
 			var shouldReplace = flags.Global
 				? first <= matchNumber
@@ -273,7 +257,7 @@ public static partial class Command {
 
 	private static string ExpandReplacement(
 		string replacement,
-		Match match
+		RegularExpressionMatch match
 	) {
 		var output = new StringBuilder();
 
@@ -298,10 +282,17 @@ public static partial class Command {
 					&& escaped <= '9'
 				) {
 					var groupNumber = escaped - '0';
-					if ( groupNumber < match.Groups.Count ) {
+					if ( 0 == groupNumber ) {
 						output.Append(
-							match.Groups[ groupNumber ].Value
+							match.Value
 						);
+					} else if ( groupNumber <= match.Captures.Count ) {
+						var capture = match.Captures[ groupNumber - 1 ];
+						if ( capture.Success ) {
+							output.Append(
+								capture.Value
+							);
+						}
 					}
 				} else {
 					switch ( escaped ) {

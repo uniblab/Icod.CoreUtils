@@ -195,9 +195,9 @@ They should not share:
 
 Only lower-level mechanics should be considered for sharing, such as source spans, delimiter scanning, replacement-template tokenization, and adapters over the common regex engine.
 
-## 5. The current regular-expression approach is a major concern
+## 5. The former regular-expression approach was a major concern
 
-The present Sed implementation translates GNU-style expressions into .NET regex syntax and invokes `System.Text.RegularExpressions`.
+Before LE3, Sed translated GNU-style expressions into .NET regex syntax and invoked `System.Text.RegularExpressions`. LE3 removed that path and now consumes the Shared managed GNU provider through a Sed-specific adapter.
 
 GNU/POSIX and .NET matching can differ in:
 
@@ -211,14 +211,14 @@ GNU/POSIX and .NET matching can differ in:
 
 Completion Gate R1 now provides the managed GNU/POSIX BRE and ERE foundation. Phase LE2 verified its syntax, selection, capture, locale, byte/text coordinate, diagnostic, cancellation, and resource contracts against the pinned Sed and Ed baselines. No additional cross-suite production API was required.
 
-The remaining sequence is:
+The completed sequence is:
 
 ```text
 Gate R1 Shared BRE/ERE contract (complete and LE2-validated)
         ↓
-build Sed-specific policy over those contracts
+SedRegularExpressionCompiler owns Sed-specific policy
         ↓
-remove the private .NET translation layer
+private .NET translation layer removed in LE3
 ```
 
 Shared should own:
@@ -604,10 +604,11 @@ Icod.LineEditor.Sed.InPlaceEditor
 - Phase LE2 added LineEditor-oriented cross-suite acceptance tests;
 - the audit found no need for a duplicate Sed regex engine or another Shared contract.
 
-## Stage 4 — Migrate Sed regular-expression behavior
+## Stage 4 — Migrate Sed regular-expression behavior — completed
 
-- replace the .NET translation layer;
-- preserve Sed-specific state and diagnostics.
+- replaced the .NET translation layer with `SedRegularExpressionCompiler` over the Shared managed GNU BRE/ERE provider;
+- preserved Sed-specific empty-expression state, modifiers, GNU escape preprocessing, GNU/POSIX policy, match iteration, replacement context, and diagnostics;
+- added GNU sed 4.10 differential coverage for BRE, ERE, captures, locale classes, control and numeric escapes, strict-POSIX bracket behavior, repeated zero-length matches, and leftmost-longest behavior.
 
 ## Stage 5 — Correct record and encoding semantics
 

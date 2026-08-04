@@ -9,7 +9,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Icod.CoreUtils.Shared.CommandLine;
@@ -18,8 +17,8 @@ using Icod.CoreUtils.Shared.IO;
 using Icod.CoreUtils.Shared.Processes;
 
 /// <summary>
-/// Implements a portable, BSD-style <c>sed</c> stream editor using the .NET
-/// text and regular-expression APIs.
+/// Implements a portable GNU-compatible <c>sed</c> stream editor using the Shared
+/// managed GNU regular-expression provider and asynchronous text processing.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -53,12 +52,10 @@ using Icod.CoreUtils.Shared.Processes;
 /// with <c>#</c>, and grouped commands enclosed in braces.
 /// </para>
 /// <para>
-/// Regular expressions are executed by <see cref="Regex"/>. In basic mode,
-/// common sed BRE constructs such as <c>\(...\)</c>, <c>\{m,n\}</c>,
-/// <c>\+</c>, <c>\?</c>, and <c>\|</c> are translated to their .NET
-/// equivalents. This is source-compatible with common sed scripts, but it
-/// is not a byte-for-byte implementation of every locale-sensitive POSIX
-/// regular-expression rule.
+/// Regular expressions are compiled through the Shared managed GNU BRE/ERE
+/// provider. Sed retains command-local policy for empty-expression reuse,
+/// address and substitution modifiers, occurrence selection, zero-length
+/// match iteration, replacement expansion, and diagnostic presentation.
 /// </para>
 /// </remarks>
 public static partial class Command {
@@ -183,7 +180,8 @@ public static partial class Command {
 				scriptText,
 				options.ExtendedRegularExpressions,
 				options.Sandbox,
-				options.Posix
+				options.Posix,
+				cancellationToken
 			).Parse();
 
 			if ( options.Debug ) {

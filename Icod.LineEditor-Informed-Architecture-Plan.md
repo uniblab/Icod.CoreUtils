@@ -235,33 +235,13 @@ RegularExpressionOptions
 
 and implements GNU/POSIX basic regular-expression behavior with leftmost-longest matching and injectable locale/classification policy.
 
-The current Sed implementation instead contains private methods that:
+Before LE3, Sed contained private methods that translated common BRE syntax and selected POSIX character classes into `System.Text.RegularExpressions.Regex`. That was the clearest immediate example of code that should not move into `Icod.LineEditor.Shared`.
 
-1. translate common BRE syntax into .NET syntax;
-2. translate selected POSIX character classes;
-3. construct `System.Text.RegularExpressions.Regex` directly.
+Completion Gate R1 supplied direct managed GNU Basic and Extended providers, and LE2 confirmed that their syntax, locale, capture, coordinate, diagnostic, cancellation, and resource contracts satisfy the LineEditor consumers. LE3 now consumes those providers through `SedRegularExpressionCompiler`; the private translator is removed.
 
-The command's own XML documentation acknowledges that this is not a complete locale-sensitive POSIX implementation.
+### The Shared regular-expression API is sufficient for Sed selection mechanics
 
-This is the clearest immediate example of code that should not be extracted into `Icod.LineEditor.Shared`. Sed should consume and extend the already shared regular-expression foundation.
-
-### The current Shared regular-expression API is not yet sufficient for Sed
-
-The existing `IRegularExpressionProvider` compiles GNU basic regular expressions only.
-
-Sed also supports:
-
-```text
--E
--r
---regexp-extended
-```
-
-and its current tests exercise extended regular expressions.
-
-Therefore, Sed cannot simply switch to the existing provider without first extending the cross-suite regular-expression contract to support GNU extended regular expressions.
-
-That extension belongs in the current Shared incubation project because future Grep also requires both BRE and ERE. It should not be hidden inside a line-editor-only library.
+`IRegularExpressionProvider` now supports the GNU Basic and Extended profiles required by `-E`, `-r`, and `--regexp-extended`. Sed layers its own empty-expression reuse, address/substitution modifiers, GNU escape preprocessing, POSIX mode, occurrence selection, empty-match iteration, replacement expansion, and diagnostic presentation above the command-neutral Shared matcher. No line-editor-only regex library is required.
 
 ### The current Shared project has a better record model than Sed currently uses
 
@@ -1024,12 +1004,14 @@ This phase belongs in Shared because it is cross-suite infrastructure. Completio
 
 ## Phase LE3 — Migrate Sed to the shared regex provider
 
-- [ ] Introduce `SedRegularExpressionCompiler`.
-- [ ] Preserve Sed's empty-pattern reuse and command-context semantics.
-- [ ] Route both address and substitution regex compilation through the shared provider.
-- [ ] Remove the private .NET regex translator only after equivalence tests pass.
-- [ ] Add GNU Sed differential tests for BRE and ERE.
-- [ ] Add locale and leftmost-longest cases that .NET regex translation handled incorrectly.
+- [x] Introduce `SedRegularExpressionCompiler`.
+- [x] Preserve Sed's empty-pattern reuse, GNU escape preprocessing, and command-context semantics.
+- [x] Route both address and substitution regex compilation through the shared provider.
+- [x] Remove the private .NET regex translator only after equivalence tests pass.
+- [x] Add GNU Sed differential tests for BRE and ERE.
+- [x] Add locale and leftmost-longest cases that .NET regex translation handled incorrectly.
+
+Phase LE3 is complete. The Sed adapter now consumes the Shared managed GNU provider without moving Sed state into Shared. It retains the exact last compiled expression across address and substitution contexts, owns `I`/`M` modifiers, GNU escape preprocessing, POSIX-mode interpretation, controlled diagnostic presentation, and GNU zero-length global-substitution progression. The previous `System.Text.RegularExpressions` translation path is gone, and the migration suite includes GNU sed 4.10 cases for BRE, ERE, captures, locale classes, empty-expression reuse, multiline anchors, control and numeric escapes, strict-POSIX bracket behavior, repeated empty matches, and leftmost-longest selection. Phase LE4 is now active.
 
 ## Phase LE4 — Correct Sed record and text semantics
 

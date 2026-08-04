@@ -58,6 +58,8 @@ public sealed class SedModuleBoundaryTests {
 	[InlineData( "InputSequence" )]
 	[InlineData( "ExecutionEnvironment" )]
 	[InlineData( "SubstitutionFlags" )]
+	[InlineData( "SedRegularExpressionCompiler" )]
+	[InlineData( "SedCompiledRegularExpression" )]
 	[InlineData( "TextWriterStream" )]
 	public void DecomposedImplementationTypesRemainPrivate(
 		string nestedTypeName
