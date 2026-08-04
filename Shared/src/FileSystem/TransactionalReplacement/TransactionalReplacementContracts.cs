@@ -239,6 +239,7 @@ public sealed class TransactionalReplacementArtifact {
 	/// <param name="metadataPlan">Optional E5 requested-versus-required metadata plan.</param>
 	/// <param name="recursiveEntry">Optional E5 recursive mutation provenance.</param>
 	/// <param name="explicitBackupPath">An optional caller-selected backup pathname.</param>
+	/// <param name="retainBackup">Whether this artifact retains its recoverable original as a public backup.</param>
 	public TransactionalReplacementArtifact(
 		string recoveryUnitId,
 		string path,
@@ -249,7 +250,8 @@ public sealed class TransactionalReplacementArtifact {
 		FileSystemMetadata? sourceMetadata = null,
 		RecursiveMetadataPreservationPlan? metadataPlan = null,
 		RecursiveMutationEntry? recursiveEntry = null,
-		string? explicitBackupPath = null
+		string? explicitBackupPath = null,
+		bool retainBackup = false
 	) {
 		ArgumentException.ThrowIfNullOrWhiteSpace( recoveryUnitId );
 		ArgumentException.ThrowIfNullOrWhiteSpace( path );
@@ -285,6 +287,7 @@ public sealed class TransactionalReplacementArtifact {
 		MetadataPlan = metadataPlan;
 		RecursiveEntry = recursiveEntry;
 		ExplicitBackupPath = explicitBackupPath;
+		RetainBackup = retainBackup;
 	}
 
 	/// <summary>Gets the recovery-unit identity.</summary>
@@ -307,6 +310,8 @@ public sealed class TransactionalReplacementArtifact {
 	public RecursiveMutationEntry? RecursiveEntry { get; }
 	/// <summary>Gets an optional caller-selected backup pathname.</summary>
 	public string? ExplicitBackupPath { get; }
+	/// <summary>Gets whether this artifact retains its recoverable original as a public backup.</summary>
+	public bool RetainBackup { get; }
 
 	/// <summary>Creates an artifact directly from an E5 recursive mutation entry.</summary>
 	/// <param name="recoveryUnitId">The recovery-unit identity.</param>
@@ -348,7 +353,12 @@ public sealed record TransactionalReplacementObservation(
 	string Path,
 	bool Exists,
 	FileSystemMetadata? Metadata
-);
+) {
+	/// <summary>Gets or initializes the ordinary-file length when it was observable.</summary>
+	public long? Length { get; init; }
+	/// <summary>Gets or initializes the last-write time when it was observable.</summary>
+	public DateTimeOffset? ModificationTime { get; init; }
+}
 
 /// <summary>Describes provider-level transactional replacement capabilities.</summary>
 /// <param name="SupportsAtomicReplaceExisting">Whether replacement of an existing sibling file is atomic.</param>

@@ -5,9 +5,9 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `43` |
-| Current engineering milestone | Patch Phase P11A — initial E6 transaction integration |
+| Current engineering milestone | Batch 44 — `cp` and `mv` |
 | Completed infrastructure milestone | Completion Gates E2 through E6 — canonical paths, authoritative metadata, pathname-indirection characterization, mode expressions, single-path mutation, recursive mutation/copy planning, and transactional replacement |
-| Active infrastructure dependency | Patch Phase P11A and Batch 44 consume Completion Gate E6 |
+| Active infrastructure dependency | Batches 44 and 45 independently validate Completion Gate E6 before Patch Phase P11B |
 | Next command batch | Batch 44 — `cp` and `mv` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
@@ -1123,11 +1123,13 @@ This gate is placed immediately before the consumers that require the complete r
 
 Patch is an immediate co-validator of Completion Gate E6 rather than a consumer that waits until every Coreutils command is finished.
 
-- [ ] Replace the provisional P9 mutation internals with secure sibling temporary files, shared containment checks, backup-name and retention contracts, rollback, metadata restoration, deterministic cleanup, and explicit non-atomic capability results.
-- [ ] Exercise target replacement, file creation and deletion, backups, rejects, output files, partial hunk failure, multi-file partial success, symlink policy, cancellation, and every commit-stage failure.
-- [ ] Verify that no failure window removes the only recoverable copy of the original.
-- [ ] Keep Patch's GNU-visible partial-application and artifact policy above the general transaction mechanism.
-- [ ] Record any E6 contract defects before Batches 44 and 45 complete their independent validation.
+- [x] Replace the provisional P9 mutation internals with secure sibling temporary files, shared containment checks, backup-name and retention contracts, rollback, metadata restoration, deterministic cleanup, and explicit non-atomic capability results.
+- [x] Exercise target replacement, file creation and deletion, backups, rejects, output files, partial hunk failure, multi-file partial success, symlink policy, cancellation, and every commit-stage failure.
+- [x] Verify that no failure window removes the only recoverable copy of the original.
+- [x] Keep Patch's GNU-visible partial-application and artifact policy above the general transaction mechanism.
+- [x] Record any E6 contract defects before Batches 44 and 45 complete their independent validation.
+
+Patch Phase P11A is implemented. `PatchE6Transaction` preserves Patch's per-file recovery units and GNU-visible independent-file continuation policy while delegating secure staging, flush, revalidation, atomic publication, rollback, metadata restoration, containment, cleanup, cancellation, and structured outcomes to `Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement`. Target, creation, deletion, retained backup, reject, alternate-output, stale-identity, same-unit rollback, independent-unit partial-success, and cancellation tests exercise the adapter. P11A exposed one E6 contract defect: Patch requires backup retention per target, including caller-selected backup pathnames, rather than transaction-wide retention. `TransactionalReplacementArtifact` therefore now supports an explicit per-artifact retention request; E6 stages and restores any previous backup before publishing the retained original. The provisional P9 transaction is no longer selected and remains only for deliberate removal in P11B after Batches 44 and 45 complete independent validation.
 
 P11A does not close Patch. The transaction foundation must also survive the different copy, move, and installation policies in Batches 44 and 45.
 

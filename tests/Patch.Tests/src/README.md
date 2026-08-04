@@ -8,7 +8,7 @@
 - `WaveB1CommandTests.cs` covers P6 option validation and command-to-engine policy mapping.
 - `WaveB2CommandTests.cs` covers P7 option/environment mapping, invalid numeric policies, and `-d` interpretation of a relative patch source.
 - `WaveCCommandTests.cs` covers P8 backup naming and environment precedence, version-control abbreviations, output-file and standard-output modes, output-link policy, rejects, dry runs, prompts, quoting, current and post-2038 timestamps, Unix mode preservation, unsafe artifact names, broken pipes, and GNU-visible statuses.
-- `WaveCTransactionTests.cs` covers the initial P9 staging, destination and validation-only input revalidation, injected commit and metadata failures, multi-artifact rollback, cancellation cleanup, and temporary-file removal.
+- `WaveCTransactionTests.cs` covers the P11A adapter over shared E6: replacement, creation, deletion, destination and validation-only input revalidation, successful retained-backup publication, backup-publication recovery, retained backup/reject/output recovery, same-unit rollback, independent-unit partial success, cancellation cleanup, and E6 temporary-file removal.
 - `GnuPatchDifferentialTests.cs` provides opt-in comparisons with an installed GNU patch 2.8 executable without making native patch a normal test dependency.
 - `PatchTestSupport.cs` provides byte-oriented parser, virtual-file, and result helpers.
 - `ProcessHostTests.cs` exercises the built executable through the `dotnet` process host.

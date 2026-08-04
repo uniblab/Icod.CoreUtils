@@ -4,7 +4,7 @@ using System.IO;
 using System.Text;
 using Xunit;
 
-/// <summary>Exercises the provisional Phase P9 transaction and failure-injection boundary.</summary>
+/// <summary>Exercises the Phase P11A adapter over the shared E6 transaction boundary.</summary>
 public sealed class WaveCTransactionTests {
 	/// <summary>Verifies a post-replacement metadata failure restores the original file.</summary>
 	[Fact]
@@ -45,7 +45,7 @@ public sealed class WaveCTransactionTests {
 				CreateWriteArtifact( first, firstObservation, "first-new\n", "operation" ),
 				CreateWriteArtifact( second, secondObservation, "second-new\n", "operation" )
 			};
-			var plan = new PatchArtifactPlan( artifacts, PatchExitStatus.Success, Array.Empty<string>() );
+			var plan = new PatchArtifactPlan( artifacts, PatchExitStatus.Success, Array.Empty<string>(), directory );
 			await using var transaction = await fileSystem.CreateTransactionAsync(
 				plan,
 				new ThrowingFailureInjector( PatchTransactionStage.Commit, occurrence: 2 )
@@ -74,7 +74,7 @@ public sealed class WaveCTransactionTests {
 			await File.WriteAllTextAsync( target, "external-change-with-different-size\n" );
 			var result = await transaction.CommitAsync();
 			Assert.False( result.Succeeded );
-			Assert.Contains( "changed after planning", string.Join( "\n", result.Diagnostics ) );
+			Assert.Contains( "changed after staging", string.Join( "\n", result.Diagnostics ) );
 			Assert.Equal( "external-change-with-different-size\n", await File.ReadAllTextAsync( target ) );
 			AssertNoTemporaryFiles( directory );
 		} finally {
@@ -104,10 +104,11 @@ public sealed class WaveCTransactionTests {
 						new PatchArtifactMetadata(),
 						input
 					),
-					CreateWriteArtifact( output, outputObservation, "new\n" )
+					CreateWriteArtifact( output, outputObservation, "new\n", input )
 				},
 				PatchExitStatus.Success,
-				Array.Empty<string>()
+				Array.Empty<string>(),
+				directory
 			);
 			await using var transaction = await fileSystem.CreateTransactionAsync( plan );
 			await transaction.StageAsync();
@@ -146,6 +147,224 @@ public sealed class WaveCTransactionTests {
 		}
 	}
 
+	/// <summary>Verifies creation and deletion are both delegated to E6.</summary>
+	[Fact]
+	public async Task CommitsCreationAndDeletionThroughE6() {
+		var directory = CreateTemporaryDirectory();
+		var created = Path.Combine( directory, "created.txt" );
+		var deleted = Path.Combine( directory, "deleted.txt" );
+		await File.WriteAllTextAsync( deleted, "delete-me\n" );
+		try {
+			var fileSystem = new SystemPatchFileSystem();
+			var createdObservation = await fileSystem.ObserveAsync( created, followPathIndirection: false );
+			var deletedObservation = await fileSystem.ObserveAsync( deleted, followPathIndirection: false );
+			var artifacts = new[] {
+				CreateWriteArtifact( created, createdObservation, "created\n", "create" ),
+				new PatchArtifact(
+					PatchArtifactKind.Target,
+					PatchArtifactAction.Delete,
+					deleted,
+					null,
+					deletedObservation,
+					new PatchArtifactMetadata(),
+					deleted,
+					"delete"
+				)
+			};
+			var plan = new PatchArtifactPlan(
+				artifacts,
+				PatchExitStatus.Success,
+				Array.Empty<string>(),
+				directory
+			);
+			await using var transaction = await fileSystem.CreateTransactionAsync( plan );
+			var result = await transaction.CommitAsync();
+			Assert.Equal( PatchTransactionOutcome.Succeeded, result.Outcome );
+			Assert.Equal( "created\n", await File.ReadAllTextAsync( created ) );
+			Assert.False( File.Exists( deleted ) );
+			AssertNoTemporaryFiles( directory );
+		} finally {
+			Directory.Delete( directory, recursive: true );
+		}
+	}
+
+	/// <summary>Verifies a successful replacement retains the original at Patch's selected backup pathname.</summary>
+	[Fact]
+	public async Task RetainsBackupOnSuccessfulReplacement() {
+		var directory = CreateTemporaryDirectory();
+		var target = Path.Combine( directory, "target.txt" );
+		var backup = Path.Combine( directory, "target.txt.orig" );
+		await File.WriteAllTextAsync( target, "target-old\n" );
+		await File.WriteAllTextAsync( backup, "backup-old\n" );
+		try {
+			var fileSystem = new SystemPatchFileSystem();
+			var targetObservation = await fileSystem.ObserveAsync( target, followPathIndirection: false );
+			var backupObservation = await fileSystem.ObserveAsync( backup, followPathIndirection: false );
+			const string unit = "file";
+			var plan = new PatchArtifactPlan(
+				new[] {
+					CreateWriteArtifact( target, targetObservation, "target-new\n", unit ),
+					new PatchArtifact(
+						PatchArtifactKind.Backup,
+						PatchArtifactAction.Write,
+						backup,
+						PatchArtifactContent.FromExistingFile( target ),
+						backupObservation,
+						new PatchArtifactMetadata(),
+						backup,
+						unit
+					)
+				},
+				PatchExitStatus.Success,
+				Array.Empty<string>(),
+				directory
+			);
+			await using var transaction = await fileSystem.CreateTransactionAsync( plan );
+			var result = await transaction.CommitAsync();
+			Assert.Equal( PatchTransactionOutcome.Succeeded, result.Outcome );
+			Assert.Equal( "target-new\n", await File.ReadAllTextAsync( target ) );
+			Assert.Equal( "target-old\n", await File.ReadAllTextAsync( backup ) );
+			AssertNoTemporaryFiles( directory );
+		} finally {
+			Directory.Delete( directory, recursive: true );
+		}
+	}
+
+	/// <summary>Verifies backup-publication failure restores both the target and the previous backup.</summary>
+	[Fact]
+	public async Task BackupPublicationFailureRollsBackTargetAndBackup() {
+		var directory = CreateTemporaryDirectory();
+		var target = Path.Combine( directory, "target.txt" );
+		var backup = Path.Combine( directory, "target.txt.orig" );
+		await File.WriteAllTextAsync( target, "target-old\n" );
+		await File.WriteAllTextAsync( backup, "backup-old\n" );
+		try {
+			var fileSystem = new SystemPatchFileSystem();
+			var targetObservation = await fileSystem.ObserveAsync( target, followPathIndirection: false );
+			var backupObservation = await fileSystem.ObserveAsync( backup, followPathIndirection: false );
+			const string unit = "file";
+			var plan = new PatchArtifactPlan(
+				new[] {
+					CreateWriteArtifact( target, targetObservation, "target-new\n", unit ),
+					new PatchArtifact(
+						PatchArtifactKind.Backup,
+						PatchArtifactAction.Write,
+						backup,
+						PatchArtifactContent.FromExistingFile( target ),
+						backupObservation,
+						new PatchArtifactMetadata(),
+						backup,
+						unit
+					)
+				},
+				PatchExitStatus.Success,
+				Array.Empty<string>(),
+				directory
+			);
+			await using var transaction = await fileSystem.CreateTransactionAsync(
+				plan,
+				new ThrowingFailureInjector( PatchTransactionStage.PublishBackup )
+			);
+			var result = await transaction.CommitAsync();
+			Assert.Equal( PatchTransactionOutcome.FailedRolledBack, result.Outcome );
+			Assert.Equal( "target-old\n", await File.ReadAllTextAsync( target ) );
+			Assert.Equal( "backup-old\n", await File.ReadAllTextAsync( backup ) );
+			AssertNoTemporaryFiles( directory );
+		} finally {
+			Directory.Delete( directory, recursive: true );
+		}
+	}
+
+	/// <summary>Verifies retained backup, reject, output, and target recover together.</summary>
+	[Fact]
+	public async Task BackupRejectAndOutputRollbackWithTarget() {
+		var directory = CreateTemporaryDirectory();
+		var target = Path.Combine( directory, "target.txt" );
+		var backup = Path.Combine( directory, "target.txt.orig" );
+		var reject = Path.Combine( directory, "target.txt.rej" );
+		var output = Path.Combine( directory, "output.txt" );
+		await File.WriteAllTextAsync( target, "target-old\n" );
+		await File.WriteAllTextAsync( backup, "backup-old\n" );
+		try {
+			var fileSystem = new SystemPatchFileSystem();
+			var targetObservation = await fileSystem.ObserveAsync( target, followPathIndirection: false );
+			var backupObservation = await fileSystem.ObserveAsync( backup, followPathIndirection: false );
+			var rejectObservation = await fileSystem.ObserveAsync( reject, followPathIndirection: false );
+			var outputObservation = await fileSystem.ObserveAsync( output, followPathIndirection: false );
+			const string unit = "file";
+			var artifacts = new[] {
+				CreateWriteArtifact( target, targetObservation, "target-new\n", unit ),
+				new PatchArtifact(
+					PatchArtifactKind.Backup,
+					PatchArtifactAction.Write,
+					backup,
+					PatchArtifactContent.FromExistingFile( target ),
+					backupObservation,
+					new PatchArtifactMetadata(),
+					backup,
+					unit
+				),
+				CreateWriteArtifact( reject, rejectObservation, "reject\n", unit, PatchArtifactKind.Reject ),
+				CreateWriteArtifact( output, outputObservation, "output\n", unit, PatchArtifactKind.Output )
+			};
+			var plan = new PatchArtifactPlan(
+				artifacts,
+				PatchExitStatus.Success,
+				Array.Empty<string>(),
+				directory
+			);
+			await using var transaction = await fileSystem.CreateTransactionAsync(
+				plan,
+				new ThrowingFailureInjector( PatchTransactionStage.ApplyMetadata, occurrence: 3 )
+			);
+			var result = await transaction.CommitAsync();
+			Assert.Equal( PatchTransactionOutcome.FailedRolledBack, result.Outcome );
+			Assert.Equal( "target-old\n", await File.ReadAllTextAsync( target ) );
+			Assert.Equal( "backup-old\n", await File.ReadAllTextAsync( backup ) );
+			Assert.False( File.Exists( reject ) );
+			Assert.False( File.Exists( output ) );
+			AssertNoTemporaryFiles( directory );
+		} finally {
+			Directory.Delete( directory, recursive: true );
+		}
+	}
+
+	/// <summary>Verifies an independent file can remain committed after a later unit fails.</summary>
+	[Fact]
+	public async Task IndependentFileFailureReportsPartialSuccess() {
+		var directory = CreateTemporaryDirectory();
+		var first = Path.Combine( directory, "first.txt" );
+		var second = Path.Combine( directory, "second.txt" );
+		await File.WriteAllTextAsync( first, "first-old\n" );
+		await File.WriteAllTextAsync( second, "second-old\n" );
+		try {
+			var fileSystem = new SystemPatchFileSystem();
+			var firstObservation = await fileSystem.ObserveAsync( first, followPathIndirection: false );
+			var secondObservation = await fileSystem.ObserveAsync( second, followPathIndirection: false );
+			var plan = new PatchArtifactPlan(
+				new[] {
+					CreateWriteArtifact( first, firstObservation, "first-new\n", "first" ),
+					CreateWriteArtifact( second, secondObservation, "second-new\n", "second" )
+				},
+				PatchExitStatus.Success,
+				Array.Empty<string>(),
+				directory
+			);
+			await using var transaction = await fileSystem.CreateTransactionAsync(
+				plan,
+				new ThrowingFailureInjector( PatchTransactionStage.Commit, occurrence: 2 )
+			);
+			var result = await transaction.CommitAsync();
+			Assert.Equal( PatchTransactionOutcome.FailedPartiallyCommitted, result.Outcome );
+			Assert.Equal( new[] { "first" }, result.CommittedUnitIds );
+			Assert.Equal( "first-new\n", await File.ReadAllTextAsync( first ) );
+			Assert.Equal( "second-old\n", await File.ReadAllTextAsync( second ) );
+			AssertNoTemporaryFiles( directory );
+		} finally {
+			Directory.Delete( directory, recursive: true );
+		}
+	}
+
 	private static async Task<PatchArtifactPlan> CreateWritePlanAsync(
 		SystemPatchFileSystem fileSystem,
 		string target,
@@ -155,7 +374,8 @@ public sealed class WaveCTransactionTests {
 		return new PatchArtifactPlan(
 			new[] { CreateWriteArtifact( target, observation, value ) },
 			PatchExitStatus.Success,
-			Array.Empty<string>()
+			Array.Empty<string>(),
+			Path.GetDirectoryName( target )
 		);
 	}
 
@@ -163,15 +383,18 @@ public sealed class WaveCTransactionTests {
 		string target,
 		PatchFileObservation observation,
 		string value,
-		string? transactionUnitId = null
+		string? transactionUnitId = null,
+		PatchArtifactKind kind = PatchArtifactKind.Target
 	) {
 		return new PatchArtifact(
-			PatchArtifactKind.Target,
+			kind,
 			PatchArtifactAction.Write,
 			target,
 			PatchArtifactContent.FromBytes( Encoding.UTF8.GetBytes( value ) ),
 			observation,
-			new PatchArtifactMetadata(),
+			new PatchArtifactMetadata {
+				Mode = observation.Mode ?? 0x01a4
+			},
 			target,
 			transactionUnitId
 		);
@@ -180,7 +403,7 @@ public sealed class WaveCTransactionTests {
 	private static string CreateTemporaryDirectory() {
 		var path = Path.Combine(
 			Path.GetTempPath(),
-			string.Concat( "icod-patch-p9-", Guid.NewGuid().ToString( "N" ) )
+			string.Concat( "icod-patch-p11a-", Guid.NewGuid().ToString( "N" ) )
 		);
 		Directory.CreateDirectory( path );
 		return path;
@@ -189,7 +412,11 @@ public sealed class WaveCTransactionTests {
 	private static void AssertNoTemporaryFiles( string directory ) {
 		Assert.DoesNotContain(
 			Directory.EnumerateFiles( directory ),
-			path => Path.GetFileName( path ).Contains( ".patch-", StringComparison.Ordinal )
+			path => {
+				var name = Path.GetFileName( path );
+				return name.Contains( ".patch-", StringComparison.Ordinal )
+					|| name.Contains( ".icod-e6-", StringComparison.Ordinal );
+			}
 		);
 	}
 

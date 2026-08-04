@@ -35,6 +35,50 @@ public sealed class TransactionalFileReplacementTransactionTests {
 		Assert.Equal( 0, fileSystem.TemporaryCount );
 	}
 
+	/// <summary>Verifies a caller can retain one explicit backup without enabling transaction-wide backups.</summary>
+	[Fact]
+	public async Task RetainsOnlyExplicitPerArtifactBackup() {
+		var fileSystem = new FakeTransactionalReplacementFileSystem();
+		var retained = Path.GetFullPath( "retained" );
+		var ordinary = Path.GetFullPath( "ordinary" );
+		var backup = Path.GetFullPath( "retained.orig" );
+		fileSystem.Seed( retained, "retained-old" );
+		fileSystem.Seed( ordinary, "ordinary-old" );
+		var observation = fileSystem.Observe( retained );
+		var bytes = Encoding.UTF8.GetBytes( "retained-new" );
+		var retainedArtifact = new TransactionalReplacementArtifact(
+			"retained-unit",
+			retained,
+			TransactionalReplacementAction.Replace,
+			FileSystemMutationPrecondition.FromObservation(
+				observation.Metadata!.Kind,
+				observation.Metadata.EntryIdentity,
+				PathDereferenceMode.NoFollow
+			),
+			(destination, cancellationToken) => destination.WriteAsync( bytes.AsMemory(), cancellationToken ),
+			retained,
+			explicitBackupPath: backup,
+			retainBackup: true
+		);
+		await using var transaction = new TransactionalFileReplacementTransaction(
+			new[] {
+				retainedArtifact,
+				CreateReplacement( fileSystem, "ordinary-unit", ordinary, "ordinary-new" )
+			},
+			fileSystem,
+			new TransactionalReplacementOptions {
+				CommitPolicy = TransactionalReplacementCommitPolicy.ContinueIndependentUnits
+			}
+		);
+		var result = await transaction.CommitAsync();
+		Assert.Equal( TransactionalReplacementOutcome.Succeeded, result.Outcome );
+		Assert.Equal( "retained-new", fileSystem.Read( retained ) );
+		Assert.Equal( "retained-old", fileSystem.Read( backup ) );
+		Assert.Equal( "ordinary-new", fileSystem.Read( ordinary ) );
+		Assert.False( fileSystem.Exists( string.Concat( ordinary, "~" ) ) );
+		Assert.Equal( 0, fileSystem.TemporaryCount );
+	}
+
 	/// <summary>Verifies that one recovery unit restores every earlier artifact after a later commit failure.</summary>
 	[Fact]
 	public async Task RollsBackWholeRecoveryUnitAfterLaterCommitFailure() {

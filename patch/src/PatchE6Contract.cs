@@ -90,9 +90,11 @@ internal sealed class PatchE6TransactionContract {
 				PatchTransactionStage.Revalidate,
 				PatchTransactionStage.Commit,
 				PatchTransactionStage.ApplyMetadata,
+				PatchTransactionStage.PublishBackup,
 				PatchTransactionStage.RestoreMetadata,
 				PatchTransactionStage.Rollback,
-				PatchTransactionStage.Cleanup
+				PatchTransactionStage.Cleanup,
+				PatchTransactionStage.FlushDirectory
 			}
 		);
 		this.Requirements = new ReadOnlyCollection<PatchE6Requirement>(
