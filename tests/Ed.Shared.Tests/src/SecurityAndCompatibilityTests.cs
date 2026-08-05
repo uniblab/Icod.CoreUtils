@@ -161,8 +161,9 @@ public sealed class SecurityAndCompatibilityTests {
 	private static async Task<IReadOnlyList<ReadOnlyMemory<byte>>> ReadLfLinesAsync(
 		string path
 	) {
-		var text = await File.ReadAllTextAsync( path );
-		return text.Split( '\n', StringSplitOptions.RemoveEmptyEntries )
+		var lines = await File.ReadAllLinesAsync( path );
+		return lines
+			.Where( value => 0 != value.Length )
 			.Select( value => new ReadOnlyMemory<byte>( Encoding.UTF8.GetBytes( value ) ) )
 			.ToArray();
 	}
