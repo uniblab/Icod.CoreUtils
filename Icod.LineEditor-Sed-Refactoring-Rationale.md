@@ -28,6 +28,8 @@ Phase LE3 completed that migration through a private Sed adapter over the Shared
 
 Phase LE4 completed the record and text-semantic correction. Sed now consumes Shared byte-record framing, preserves CR and explicit final termination, selects C/POSIX byte or UTF-8 decoding from the Shared locale environment, round-trips malformed UTF-8 deterministically, and emits LF or NUL separators explicitly. Pattern and hold spaces remain Sed-owned mutable text states and may grow according to command semantics; unrelated completed records are not retained beyond the one-record lookahead required for `$`.
 
+Phase LE5 completed the orchestration and side-effect hardening. `CommandContext` is the primary entry path, script inputs retain source identity and LF-only composition, shell and auxiliary-file operations are injectable, sandbox denial exists at compile and runtime layers, Shared `ProcessRunner` remains the host process mechanism, and current in-place replacement is isolated behind `IInPlaceEditor` with secure temporary-object cleanup characterization. Final publication through E6 remains assigned to LE10.
+
 ## 1. The current state is already beyond a raw rename
 
 The Sed project already uses:
@@ -625,11 +627,12 @@ Icod.LineEditor.Sed.InPlaceEditor
 - the Shared regex contract gained only the consumer-proven configurable line separator and NUL-dot options, with source-compatible defaults;
 - CRLF, lone CR, invalid UTF-8, NUL, empty, huge, multiline, hold-space, and unterminated inputs are covered.
 
-## Stage 6 — Harden process, sandbox, and file effects
+## Stage 6 — Harden process, sandbox, and file effects — completed
 
-- add runtime denial capabilities;
-- isolate in-place editing;
-- preserve Shared `ProcessRunner`.
+- added compile-time and runtime sandbox denial capabilities;
+- isolated in-place editing behind `IInPlaceEditor`;
+- preserved Shared `ProcessRunner`;
+- added source-aware script composition, injectable auxiliary files, failure injection, and temporary cleanup coverage.
 
 ## Stage 7 — Implement `Icod.LineEditor.Ed.Shared`
 

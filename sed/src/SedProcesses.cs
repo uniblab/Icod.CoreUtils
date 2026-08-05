@@ -16,7 +16,8 @@ using Icod.CoreUtils.Shared.Processes;
 // Responsibility: shell execution and stream adaptation.
 public static partial class Command {
 
-	private sealed record ShellResult(
+	/// <summary>Captures one shell process exit status and optional standard output.</summary>
+	internal sealed record ShellResult(
 		int ExitCode,
 		string StandardOutput
 	);
@@ -196,58 +197,83 @@ public static partial class Command {
 		if ( !captureStandardOutput ) {
 			await environment.Output.BeginOutputAsync( cancellationToken ).ConfigureAwait( false );
 		}
-		await using var outputStream = captureStandardOutput
-			? null
-			: new TextWriterStream(
-				new SedOutputTextWriter( environment.Output ),
-				Encoding.UTF8
-			)
-		;
-		await using var errorStream = new TextWriterStream(
+		return await environment.Shell.ExecuteAsync(
+			command,
+			new SedOutputTextWriter( environment.Output ),
 			environment.Error,
-			Encoding.UTF8
-		);
-		var options = new ProcessRunOptions(
-			OperatingSystem.IsWindows()
-				? Environment.GetEnvironmentVariable( "COMSPEC" ) ?? "cmd.exe"
-				: "/bin/sh"
-		) {
-			CaptureStandardOutput = captureStandardOutput,
-			OutputEncoding = Encoding.UTF8,
-			StandardError = errorStream,
-			StandardOutput = outputStream
-		};
-		if ( OperatingSystem.IsWindows() ) {
-			options.Arguments.Add( "/d" );
-			options.Arguments.Add( "/s" );
-			options.Arguments.Add( "/c" );
-		} else {
-			options.Arguments.Add( "-c" );
-		}
-		options.Arguments.Add(
-			command
-		);
-		var result = await ProcessRunner.RunAsync(
-			options,
+			captureStandardOutput,
 			cancellationToken
 		).ConfigureAwait( false );
-		if ( result.WasCanceled ) {
-			throw new OperationCanceledException(
-				cancellationToken
-			);
+	}
+
+	/// <summary>Executes Sed shell commands through the Shared process runner.</summary>
+	internal sealed class SystemSedShellCapability : ISedShellCapability {
+
+		/// <summary>Gets the singleton host-backed shell capability.</summary>
+		public static SystemSedShellCapability Instance { get; } = new();
+
+		private SystemSedShellCapability() {
 		}
-		if ( null != outputStream ) {
-			await outputStream.FlushAsync(
+
+		/// <inheritdoc />
+		public async Task<ShellResult> ExecuteAsync(
+			string command,
+			TextWriter output,
+			TextWriter error,
+			bool captureStandardOutput,
+			CancellationToken cancellationToken
+		) {
+			ArgumentNullException.ThrowIfNull( command );
+			ArgumentNullException.ThrowIfNull( output );
+			ArgumentNullException.ThrowIfNull( error );
+			cancellationToken.ThrowIfCancellationRequested();
+
+			await using var outputStream = captureStandardOutput
+				? null
+				: new TextWriterStream(
+					output,
+					Encoding.UTF8
+				)
+			;
+			await using var errorStream = new TextWriterStream(
+				error,
+				Encoding.UTF8
+			);
+			var options = new ProcessRunOptions(
+				OperatingSystem.IsWindows()
+					? Environment.GetEnvironmentVariable( "COMSPEC" ) ?? "cmd.exe"
+					: "/bin/sh"
+			) {
+				CaptureStandardOutput = captureStandardOutput,
+				OutputEncoding = Encoding.UTF8,
+				StandardError = errorStream,
+				StandardOutput = outputStream
+			};
+			if ( OperatingSystem.IsWindows() ) {
+				options.Arguments.Add( "/d" );
+				options.Arguments.Add( "/s" );
+				options.Arguments.Add( "/c" );
+			} else {
+				options.Arguments.Add( "-c" );
+			}
+			options.Arguments.Add( command );
+			var result = await ProcessRunner.RunAsync(
+				options,
 				cancellationToken
 			).ConfigureAwait( false );
+			if ( result.WasCanceled ) {
+				throw new OperationCanceledException( cancellationToken );
+			}
+			if ( null != outputStream ) {
+				await outputStream.FlushAsync( cancellationToken ).ConfigureAwait( false );
+			}
+			await errorStream.FlushAsync( cancellationToken ).ConfigureAwait( false );
+			return new ShellResult(
+				result.ExitCode ?? ErrorExitCode,
+				result.StandardOutput ?? string.Empty
+			);
 		}
-		await errorStream.FlushAsync(
-			cancellationToken
-		).ConfigureAwait( false );
-		return new ShellResult(
-			result.ExitCode ?? ErrorExitCode,
-			result.StandardOutput ?? string.Empty
-		);
+
 	}
 
 

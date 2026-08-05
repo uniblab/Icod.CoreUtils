@@ -83,7 +83,7 @@ public static partial class Command {
 	private static async Task<int?> ParseArgumentsAsync(
 		string[] args,
 		Options options,
-		ICollection<string> scripts,
+		ICollection<SedScriptSource> scripts,
 		ICollection<string> files,
 		TextWriter stdout,
 		TextWriter stderr,
@@ -137,19 +137,34 @@ public static partial class Command {
 				case "debug":
 					options.Debug = true;
 					break;
-				case "expression":
-					scripts.Add(
-						occurrence.Value ?? string.Empty
-					);
-					break;
-				case "file":
-					scripts.Add(
-						await ReadScriptFileAsync(
-							occurrence.Value ?? string.Empty,
-							cancellationToken
-						).ConfigureAwait( false )
-					);
-					break;
+				case "expression": {
+						var order = scripts.Count;
+						scripts.Add(
+							new SedScriptSource(
+								SedScriptSourceKind.Expression,
+								$"-e expression #{order + 1}",
+								occurrence.Value ?? string.Empty,
+								order
+							)
+						);
+						break;
+					}
+				case "file": {
+						var path = occurrence.Value ?? string.Empty;
+						var order = scripts.Count;
+						scripts.Add(
+							new SedScriptSource(
+								SedScriptSourceKind.File,
+								path,
+								await ReadScriptFileAsync(
+									path,
+									cancellationToken
+								).ConfigureAwait( false ),
+								order
+							)
+						);
+						break;
+					}
 				case "follow-symlinks":
 					options.FollowSymlinks = true;
 					break;

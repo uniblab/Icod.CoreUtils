@@ -79,6 +79,10 @@ public static partial class Command {
 			get;
 		}
 
+		public ISedAuxiliaryFileCapability AuxiliaryFiles {
+			get;
+		}
+
 		public TextWriter Error {
 			get;
 		}
@@ -111,6 +115,10 @@ public static partial class Command {
 			get;
 		}
 
+		public ISedShellCapability Shell {
+			get;
+		}
+
 		public SedTextCodec TextCodec {
 			get;
 		}
@@ -123,7 +131,9 @@ public static partial class Command {
 			bool nullData,
 			int listWidth,
 			bool debug,
-			bool unbuffered
+			bool unbuffered,
+			ISedShellCapability shell,
+			ISedAuxiliaryFileCapability auxiliaryFiles
 		) : this(
 			new SedOutputWriter( output, textCodec, nullData ) {
 				AutoFlush = unbuffered
@@ -133,7 +143,9 @@ public static partial class Command {
 			suppressAutomaticPrint,
 			nullData,
 			listWidth,
-			debug
+			debug,
+			shell,
+			auxiliaryFiles
 		) {
 		}
 
@@ -144,11 +156,15 @@ public static partial class Command {
 			bool suppressAutomaticPrint,
 			bool nullData,
 			int listWidth,
-			bool debug
+			bool debug,
+			ISedShellCapability shell,
+			ISedAuxiliaryFileCapability auxiliaryFiles
 		) {
 			this.TextCodec = textCodec ?? throw new ArgumentNullException( nameof( textCodec ) );
 			this.Output = output ?? throw new ArgumentNullException( nameof( output ) );
-			this.Error = error;
+			this.Error = error ?? throw new ArgumentNullException( nameof( error ) );
+			this.Shell = shell ?? throw new ArgumentNullException( nameof( shell ) );
+			this.AuxiliaryFiles = auxiliaryFiles ?? throw new ArgumentNullException( nameof( auxiliaryFiles ) );
 			this.SuppressAutomaticPrint = suppressAutomaticPrint;
 			this.Debug = debug;
 			this.NullData = nullData;
@@ -185,14 +201,10 @@ public static partial class Command {
 		) {
 			try {
 				if ( !this.myReadLineFiles.TryGetValue( fileName, out var reader ) ) {
-					var stream = new FileStream(
+					var stream = await this.AuxiliaryFiles.OpenReadAsync(
 						fileName,
-						FileMode.Open,
-						FileAccess.Read,
-						FileShare.Read,
-						8192,
-						useAsync: true
-					);
+						cancellationToken
+					).ConfigureAwait( false );
 					reader = new AsyncRecordReader(
 						stream,
 						this.NullData,
@@ -207,6 +219,8 @@ public static partial class Command {
 					this.Defer( line.Text, line.IsTerminated );
 				}
 			} catch ( OperationCanceledException ) {
+				throw;
+			} catch ( SedCapabilityDeniedException ) {
 				throw;
 			} catch ( Exception ex ) {
 				await this.Error.WriteLineAsync( $"sed: {fileName}: {ex.Message}" ).ConfigureAwait( false );
@@ -224,14 +238,10 @@ public static partial class Command {
 				}
 				try {
 					await this.Output.BeginOutputAsync( cancellationToken ).ConfigureAwait( false );
-					using var stream = new FileStream(
+					using var stream = await this.AuxiliaryFiles.OpenReadAsync(
 						item.Value,
-						FileMode.Open,
-						FileAccess.Read,
-						FileShare.Read,
-						8192,
-						useAsync: true
-					);
+						cancellationToken
+					).ConfigureAwait( false );
 					using var reader = new AsyncRecordReader(
 						stream,
 						this.NullData,
@@ -245,6 +255,8 @@ public static partial class Command {
 						await this.Output.WriteRecordAsync( record.Text, record.IsTerminated, cancellationToken ).ConfigureAwait( false );
 					}
 				} catch ( OperationCanceledException ) {
+					throw;
+				} catch ( SedCapabilityDeniedException ) {
 					throw;
 				} catch ( Exception ex ) {
 					await this.Error.WriteLineAsync( $"sed: {item.Value}: {ex.Message}" ).ConfigureAwait( false );
@@ -260,14 +272,10 @@ public static partial class Command {
 			CancellationToken cancellationToken
 		) {
 			if ( !this.myWriteFiles.TryGetValue( fileName, out var outputFile ) ) {
-				var stream = new FileStream(
+				var stream = await this.AuxiliaryFiles.OpenWriteAsync(
 					fileName,
-					FileMode.Create,
-					FileAccess.Write,
-					FileShare.Read,
-					8192,
-					useAsync: true
-				);
+					cancellationToken
+				).ConfigureAwait( false );
 				outputFile = new OutputFile(
 					stream,
 					new SedOutputWriter( stream, this.TextCodec, this.NullData )
@@ -301,16 +309,20 @@ public static partial class Command {
 
 	}
 
-	private sealed class ExecutionResult {
+	/// <summary>Reports whether execution requested termination and its exit status.</summary>
+	internal sealed class ExecutionResult {
 
+		/// <summary>Gets the requested process exit status.</summary>
 		public int ExitCode {
 			get;
 		}
 
+		/// <summary>Gets whether execution requested command termination.</summary>
 		public bool Quit {
 			get;
 		}
 
+		/// <summary>Initializes one execution result.</summary>
 		public ExecutionResult(
 			bool quit,
 			int exitCode

@@ -1,30 +1,32 @@
 # Icod.LineEditor.Sed source layout
 
-Phase LE1 decomposed the original single-file Sed implementation without changing its public API. Phase LE3 migrated regular-expression execution to the Shared managed GNU BRE/ERE provider, and Phase LE4 now supplies byte-preserving record framing, explicit termination, and locale-selected byte/text semantics while preserving Sed-specific state and policy inside the command. `Icod.LineEditor.Sed.Command` remains one public partial class so every previously private implementation type remains private to the command boundary while source ownership becomes reviewable.
+Phase LE1 decomposed the original single-file Sed implementation without changing its public API. Phase LE3 migrated regular-expression execution to the Shared managed GNU BRE/ERE provider, Phase LE4 supplied byte-preserving record framing and locale-selected text semantics, and Phase LE5 now routes orchestration and host effects through `CommandContext` and injectable capabilities while preserving Sed-specific state and policy inside the command. `Icod.LineEditor.Sed.Command` remains one public partial class so every previously private implementation type remains private to the command boundary while source ownership becomes reviewable.
 
 ## Modules
 
 | File | Responsibility |
 |---|---|
-| `Command.cs` | Public text-stream `Run` and `RunAsync` compatibility orchestration, internal byte-stream core, stable exit-status boundary, and command constants. |
+| `Command.cs` | Public `CommandContext` core, text-stream compatibility overloads, internal byte-stream facade, stable exit-status boundary, and command constants. |
 | `SedOptions.cs` | Command-line options, shared option-parser integration, help text, and version handling. |
-| `SedScripting.cs` | Instruction kinds, program model, script parser, text/file arguments, and current script-file loading. |
+| `SedScriptSources.cs` | Ordered `-e`, `-f`, and implicit script-source identity, LF-only composition, and source line/column mapping. |
+| `SedScripting.cs` | Instruction kinds, program model, source-aware script parser, and text/file arguments. |
 | `SedAddresses.cs` | Single addresses, GNU range extensions, range state, negation, and selection evaluation. |
 | `SedExecution.cs` | Pattern/hold-space command cycle, explicit termination propagation, deferred output, execution state, debug presentation, and list formatting. |
 | `SedRecords.cs` | `SedInputRecord`, Shared LF/NUL byte framing, source and record identity, C/POSIX and UTF-8 codecs, invalid-byte preservation, one-record lookahead, explicit output serialization, and text-stream compatibility adapters. |
 | `SedRegularExpressions.cs` | `SedRegularExpressionCompiler`, GNU Sed escape preprocessing, Shared BRE/ERE provider selection, empty-expression reuse, GNU/POSIX policy, locale selection, controlled diagnostics, and GNU zero-length match iteration. |
 | `SedSubstitution.cs` | Substitution flags, replacement expansion, transliteration, and character-set expansion. |
-| `SedProcesses.cs` | Shell execution through the shared process runner and text-writer stream adaptation. |
-| `SedFiles.cs` | Current command-local in-place editing, backup naming, and symlink-path selection; LE10 later migrates replacement to E6. |
+| `SedCapabilities.cs` | Injectable shell, auxiliary-file, and in-place-edit contracts plus system and denied sandbox profiles. |
+| `SedProcesses.cs` | System shell capability through Shared `ProcessRunner` and text-writer stream adaptation. |
+| `SedFiles.cs` | `IInPlaceEditor` orchestration and the provisional command-local replacement implementation; LE10 later migrates publication to E6. |
 
 ## LE1 invariants
 
 - `Command.Run` and `Command.RunAsync` retain their signatures and caller-owned stream behavior.
 - All implementation types remain non-public details of `Command`.
-- Script fragments continue to be combined with `Environment.NewLine`; LE5 changes script-source representation deliberately.
-- Record reading and writing now follow the LE4 byte-preserving record and explicit final-termination contract; script-source joining remains scheduled for LE5.
+- Script expressions, files, and the implicit operand now retain stable source identity and are composed with LF rather than `Environment.NewLine`.
+- Record reading and writing follow the LE4 byte-preserving record and explicit final-termination contract.
 - Regular expressions compile through the Shared managed GNU provider; Sed continues to own empty-expression reuse, address/substitution modifiers, occurrence selection, zero-length iteration, replacement expansion, and diagnostics.
-- In-place editing retains the existing command-local replacement path; LE10 performs the E6 migration.
+- In-place editing retains the existing command-local replacement mechanics behind `IInPlaceEditor`; LE10 performs the E6 migration.
 
 The characterization tests in `tests/Sed.Tests/src/SedCharacterizationTests.cs` record these temporary semantics so later phases can distinguish intentional semantic work from accidental refactoring regressions.
 
@@ -49,3 +51,14 @@ The characterization tests in `tests/Sed.Tests/src/SedCharacterizationTests.cs` 
 - The current record and one lookahead record are retained. Pattern and hold spaces may grow without a fixed bound because that growth is required by Sed commands.
 
 See `Icod.LineEditor-LE4-Record-and-Text-Semantics.md` for the complete contract and deferred LE5 boundary.
+
+## LE5 orchestration and capability boundary
+
+- `RunAsync(string[] args, CommandContext context)` is the primary command path and uses binary context streams when present.
+- `SedScriptSource` and `SedScriptDocument` preserve source identity, order, and source-relative diagnostics without host-newline joining.
+- Shell execution, auxiliary file access, and in-place editing are injectable command capabilities.
+- `SystemSedShellCapability` continues to use Shared `ProcessRunner`.
+- Sandbox compilation rejects prohibited commands, and denied runtime capabilities provide a second enforcement layer.
+- `SystemInPlaceEditor` uses Shared secure temporary objects and cleans failed stages; LE10 remains responsible for final E6 publication.
+
+See `Icod.LineEditor-LE5-Orchestration-and-Capabilities.md` for the complete contract and acceptance coverage.

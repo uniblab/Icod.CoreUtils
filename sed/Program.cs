@@ -28,12 +28,9 @@ public static class Program {
 			"sed",
 			cancellation.Token
 		);
-		return await Command.RunStreamAsync(
+		return await Command.RunAsync(
 			args,
-			Console.OpenStandardInput(),
-			Console.OpenStandardOutput(),
-			context.StandardError,
-			context.CancellationToken
+			context
 		).ConfigureAwait( false );
 	}
 

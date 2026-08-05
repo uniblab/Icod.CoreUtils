@@ -5,9 +5,9 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `45` |
-| Current engineering milestone | LineEditor Phase LE4 complete; proceed to Phase LE5 — harden Sed capabilities |
+| Current engineering milestone | LineEditor Phase LE5 complete; proceed to Phase LE6 — create `Icod.LineEditor.Ed.Shared` |
 | Completed infrastructure milestone | Completion Gates E2 through E6 — canonical paths, authoritative metadata, pathname-indirection characterization, mode expressions, single-path mutation, recursive mutation/copy planning, and transactional replacement |
-| Active infrastructure dependency | LE4 now consumes the Shared byte-record and text-locale contracts while preserving Sed-specific pattern/hold-space state; LE5 hardens script, process, sandbox, and external-file capabilities |
+| Active infrastructure dependency | LE5 now consumes `CommandContext`, Shared `ProcessRunner`, secure temporary objects, and injectable side-effect capabilities while preserving Sed-specific orchestration; LE6 builds the Ed/Red engine over the proven Shared foundations |
 | Next command batch | Completion Gate F1 and Batch 46 remain next after the contiguous LineEditor incubation sequence |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
@@ -1222,16 +1222,18 @@ Phase LE3 is complete. `SedRegularExpressionCompiler` now selects the Shared GNU
 - [x] Add CRLF, lone-CR, invalid-UTF-8, NUL, empty-record, huge-record, multiline-pattern-space, hold-space-growth, and unterminated-final-record tests.
 - [x] Document the correct memory invariant: Sed streams unrelated completed input records, while pattern and hold spaces may grow according to Sed semantics.
 
-Phase LE4 is complete. Sed now frames input through Shared `ByteRecordReader` in LF or NUL mode, carries source and termination metadata in `SedInputRecord`, selects C/POSIX byte or UTF-8 text policy through `TextLocaleEnvironment`, preserves malformed UTF-8 through deterministic placeholders, and writes separators explicitly through `DelimitedByteRecordWriter`. The CLI uses raw console streams while the established `TextReader`/`TextWriter` facade remains available through compatibility adapters. Pattern and hold spaces retain both termination and the active LF/NUL internal separator needed by multiline, hold, print, list, and file-write commands. Real `-z` consumer evidence also extends Shared line-sensitive regex options with a caller-selected separator and explicit NUL-dot policy while preserving prior defaults. The implementation and acceptance record are documented in `Icod.LineEditor-LE4-Record-and-Text-Semantics.md`; Phase LE5 is now active.
+Phase LE4 is complete. Sed now frames input through Shared `ByteRecordReader` in LF or NUL mode, carries source and termination metadata in `SedInputRecord`, selects C/POSIX byte or UTF-8 text policy through `TextLocaleEnvironment`, preserves malformed UTF-8 through deterministic placeholders, and writes separators explicitly through `DelimitedByteRecordWriter`. The CLI uses raw console streams while the established `TextReader`/`TextWriter` facade remains available through compatibility adapters. Pattern and hold spaces retain both termination and the active LF/NUL internal separator needed by multiline, hold, print, list, and file-write commands. Real `-z` consumer evidence also extends Shared line-sensitive regex options with a caller-selected separator and explicit NUL-dot policy while preserving prior defaults. The implementation and acceptance record are documented in `Icod.LineEditor-LE4-Record-and-Text-Semantics.md`; this established the input boundary consumed by the now-complete Phase LE5.
 
 #### Phase LE5 — Harden Sed orchestration, script sources, and capabilities
 
-- [ ] Add a `RunAsync(string[] args, CommandContext context)` core path while retaining established compatibility overloads.
-- [ ] Preserve command-line expression, script-file, and implicit script operands as distinct source objects with stable source names, locations, and ordering; do not combine them with `Environment.NewLine`.
-- [ ] Introduce injectable shell, auxiliary-file, and in-place-edit capabilities over the current Shared process, filesystem, and temporary-object mechanics.
-- [ ] Enforce GNU Sed sandbox restrictions both during compilation and through denied runtime capabilities.
-- [ ] Isolate current in-place editing behind an internal `InPlaceEditor` boundary and add failure-injection and cleanup characterization tests.
-- [ ] Keep the current implementation behind that boundary until Completion Gate E6 supplies the final shared transaction model.
+- [x] Add a `RunAsync(string[] args, CommandContext context)` core path while retaining established compatibility overloads.
+- [x] Preserve command-line expression, script-file, and implicit script operands as distinct source objects with stable source names, locations, and ordering; do not combine them with `Environment.NewLine`.
+- [x] Introduce injectable shell, auxiliary-file, and in-place-edit capabilities over the current Shared process, filesystem, and temporary-object mechanics.
+- [x] Enforce GNU Sed sandbox restrictions both during compilation and through denied runtime capabilities.
+- [x] Isolate current in-place editing behind an internal `InPlaceEditor` boundary and add failure-injection and cleanup characterization tests.
+- [x] Keep the current implementation behind that boundary until Completion Gate E6 supplies the final shared transaction model.
+
+Phase LE5 is complete. `Command.RunAsync(string[] args, CommandContext context)` is now the primary entry path and preserves LE4's byte-stream contract when binary context streams are available. `SedScriptSource` and `SedScriptDocument` retain ordered `-e`, `-f`, and implicit script identity, join sources with literal LF rather than `Environment.NewLine`, and map parser diagnostics to stable source line and column locations. Shell execution remains on Shared `ProcessRunner`; auxiliary reads/writes and in-place editing are injectable capabilities; sandbox policy is enforced both during script compilation and through denied runtime profiles. The existing replacement mechanics are isolated in `SystemInPlaceEditor`, use Shared secure temporary objects, and are covered by failure-injection and cleanup tests while the final E6 migration remains scheduled for LE10. The contract is documented in `Icod.LineEditor-LE5-Orchestration-and-Capabilities.md`; Phase LE6 is now active.
 
 #### Phase LE6 — Create `Icod.LineEditor.Ed.Shared`
 
