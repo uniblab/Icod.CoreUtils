@@ -105,26 +105,80 @@ public static partial class Command {
 	/// <param name="stderr">The text writer to use as standard error, or <see langword="null"/> to use <see cref="Console.Error"/>.</param>
 	/// <param name="cancellationToken">The token used to cancel parsing, platform queries, and asynchronous I/O.</param>
 	/// <returns>The GNU-compatible process exit status: zero for successful command execution and nonzero for a usage or operational failure.</returns>
-	public static async Task<int> RunAsync(
+	public static Task<int> RunAsync(
 		string[] args,
 		TextReader? stdin = null,
 		TextWriter? stdout = null,
 		TextWriter? stderr = null,
 		CancellationToken cancellationToken = default
 	) {
-		stdin ??= Console.In;
-		stdout ??= Console.Out;
-		stderr ??= Console.Error;
-		using var inputStream = new TextReaderInputStream( stdin );
-		using var outputStream = new TextWriterOutputStream( stdout );
-		return await RunCoreAsync(
+		return RunAsync(
 			args,
-			inputStream,
-			outputStream,
-			stdout,
-			stderr,
-			cancellationToken
-		).ConfigureAwait( false );
+			new CommandContext(
+				"sed",
+				stdin ?? Console.In,
+				stdout ?? Console.Out,
+				stderr ?? Console.Error,
+				cancellationToken: cancellationToken
+			)
+		);
+	}
+
+	/// <summary>Executes Sed through the repository-standard command context.</summary>
+	/// <param name="args">The command-line arguments, excluding the executable name.</param>
+	/// <param name="context">The caller-owned standard streams, diagnostics, identity, and cancellation context.</param>
+	/// <returns>The GNU-compatible process exit status.</returns>
+	public static Task<int> RunAsync(
+		string[] args,
+		CommandContext context
+	) {
+		return RunAsync( args, context, SedRuntimeCapabilities.System );
+	}
+
+	/// <summary>Executes Sed through an injectable capability profile.</summary>
+	internal static async Task<int> RunAsync(
+		string[] args,
+		CommandContext context,
+		SedRuntimeCapabilities capabilities
+	) {
+		ArgumentNullException.ThrowIfNull( context );
+		ArgumentNullException.ThrowIfNull( capabilities );
+
+		using var inputAdapter = null == context.StandardInputStream
+			? new TextReaderInputStream( context.StandardInput )
+			: null
+		;
+		using var outputAdapter = null == context.StandardOutputStream
+			? new TextWriterOutputStream( context.StandardOutput )
+			: null
+		;
+		using var presentationAdapter = null != context.StandardOutputStream
+			? new StreamWriter(
+				context.StandardOutputStream,
+				new UTF8Encoding( encoderShouldEmitUTF8Identifier: false ),
+				8192,
+				leaveOpen: true
+			) {
+				NewLine = "\n"
+			}
+			: null
+		;
+
+		try {
+			return await RunCoreAsync(
+				args,
+				context.StandardInputStream ?? inputAdapter!,
+				context.StandardOutputStream ?? outputAdapter!,
+				presentationAdapter ?? context.StandardOutput,
+				context.StandardError,
+				capabilities,
+				context.CancellationToken
+			).ConfigureAwait( false );
+		} finally {
+			if ( null != presentationAdapter ) {
+				await presentationAdapter.FlushAsync().ConfigureAwait( false );
+			}
+		}
 	}
 
 	/// <summary>Executes Sed against caller-owned byte streams.</summary>
@@ -159,6 +213,7 @@ public static partial class Command {
 				stdout,
 				presentationOutput,
 				stderr,
+				SedRuntimeCapabilities.System,
 				cancellationToken
 			).ConfigureAwait( false );
 		} finally {
@@ -172,17 +227,18 @@ public static partial class Command {
 		Stream stdout,
 		TextWriter presentationOutput,
 		TextWriter stderr,
+		SedRuntimeCapabilities capabilities,
 		CancellationToken cancellationToken
 	) {
 		args ??= Array.Empty<string>();
 		try {
 			var options = new Options();
-			var scriptFragments = new List<string>();
+			var scriptSources = new List<SedScriptSource>();
 			var files = new List<string>();
 			var argumentResult = await ParseArgumentsAsync(
 				args,
 				options,
-				scriptFragments,
+				scriptSources,
 				files,
 				presentationOutput,
 				stderr,
@@ -193,12 +249,19 @@ public static partial class Command {
 				return argumentResult.Value;
 			}
 
-			if ( 0 == scriptFragments.Count ) {
+			if ( 0 == scriptSources.Count ) {
 				if ( 0 == files.Count ) {
 					await stderr.WriteLineAsync( "sed: no script was provided" ).ConfigureAwait( false );
 					return UsageExitCode;
 				}
-				scriptFragments.Add( files[ 0 ] );
+				scriptSources.Add(
+					new SedScriptSource(
+						SedScriptSourceKind.ImplicitOperand,
+						"command-line script",
+						files[ 0 ],
+						0
+					)
+				);
 				files.RemoveAt( 0 );
 			}
 			if ( 0 == files.Count ) {
@@ -213,9 +276,10 @@ public static partial class Command {
 			}
 
 			var textCodec = SedTextCodec.CreateCurrent();
-			var scriptText = string.Join( Environment.NewLine, scriptFragments );
+			var scriptDocument = SedScriptDocument.Create( scriptSources );
+			var scriptText = scriptDocument.Text;
 			var program = new ScriptParser(
-				scriptText,
+				scriptDocument,
 				options.ExtendedRegularExpressions,
 				options.Sandbox,
 				options.Posix,
@@ -223,6 +287,10 @@ public static partial class Command {
 				textCodec.Locale,
 				cancellationToken
 			).Parse();
+			var runtimeCapabilities = options.Sandbox
+				? capabilities.ForSandbox()
+				: capabilities
+			;
 
 			if ( options.Debug ) {
 				await stderr.WriteLineAsync( "SED PROGRAM:" ).ConfigureAwait( false );
@@ -239,6 +307,7 @@ public static partial class Command {
 						program,
 						textCodec,
 						stderr,
+						runtimeCapabilities,
 						cancellationToken
 					).ConfigureAwait( false );
 					if ( result.Quit ) {
@@ -266,7 +335,9 @@ public static partial class Command {
 						options.SuppressAutomaticPrint,
 						options.NullData,
 						options.ListWidth,
-						options.Debug
+						options.Debug,
+						runtimeCapabilities.Shell,
+						runtimeCapabilities.AuxiliaryFiles
 					);
 					try {
 						var result = await ExecuteAsync( program, input, environment, cancellationToken ).ConfigureAwait( false );
@@ -288,7 +359,9 @@ public static partial class Command {
 				options.NullData,
 				options.ListWidth,
 				options.Debug,
-				options.Unbuffered
+				options.Unbuffered,
+				runtimeCapabilities.Shell,
+				runtimeCapabilities.AuxiliaryFiles
 			);
 			try {
 				using var input = new InputSequence(
@@ -309,6 +382,9 @@ public static partial class Command {
 		} catch ( OperationCanceledException ) {
 			await stderr.WriteLineAsync( "sed: operation canceled" ).ConfigureAwait( false );
 			return CommandExitCodes.Canceled;
+		} catch ( SedCapabilityDeniedException ex ) {
+			await stderr.WriteLineAsync( $"sed: {ex.Message}" ).ConfigureAwait( false );
+			return ErrorExitCode;
 		} catch ( Exception ex ) {
 			await stderr.WriteLineAsync( $"sed: {ex.Message}" ).ConfigureAwait( false );
 			return ErrorExitCode;

@@ -187,6 +187,7 @@ public static partial class Command {
 
 	private sealed class ScriptParser {
 
+		private readonly SedScriptDocument myDocument;
 		private readonly List<Instruction> myInstructions;
 		private readonly bool myPosix;
 		private readonly SedRegularExpressionCompiler myRegularExpressions;
@@ -195,7 +196,7 @@ public static partial class Command {
 		private int myIndex;
 
 		public ScriptParser(
-			string text,
+			SedScriptDocument document,
 			bool extendedRegularExpressions,
 			bool sandbox,
 			bool posix,
@@ -203,9 +204,10 @@ public static partial class Command {
 			ITextLocaleProvider textLocale,
 			CancellationToken cancellationToken
 		) {
-			this.myText = text ?? throw new ArgumentNullException(
-				nameof( text )
+			this.myDocument = document ?? throw new ArgumentNullException(
+				nameof( document )
 			);
+			this.myText = document.Text;
 			this.mySandbox = sandbox;
 			this.myPosix = posix;
 			this.myRegularExpressions = new SedRegularExpressionCompiler(
@@ -1411,8 +1413,9 @@ public static partial class Command {
 		private ScriptParseException Error(
 			string message
 		) {
+			var location = this.myDocument.GetLocation( this.myIndex );
 			return new ScriptParseException(
-				$"{message} near script position {this.myIndex + 1}"
+				$"{message} at {location.SourceName}:{location.Line}:{location.Column}"
 			);
 		}
 
