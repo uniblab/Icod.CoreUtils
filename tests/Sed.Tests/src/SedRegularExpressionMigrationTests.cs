@@ -7,6 +7,7 @@ using Xunit;
 /// <summary>
 /// Verifies the Phase LE3 migration from the private .NET translator to the Shared GNU regular-expression provider.
 /// </summary>
+[Collection( "Sed environment" )]
 public sealed class SedRegularExpressionMigrationTests {
 
 	/// <summary>
@@ -161,13 +162,15 @@ public sealed class SedRegularExpressionMigrationTests {
 	}
 
 	/// <summary>
-	/// Verifies deterministic C-locale character classes when the process culture is invariant.
+	/// Verifies that invariant process culture does not override an explicit UTF-8 locale profile.
 	/// </summary>
 	[Fact]
-	public async Task InvariantCultureSelectsPosixCLocaleClasses() {
+	public async Task InvariantCultureRetainsUtf8LocaleCharacterClasses() {
+		var originalLocale = CaptureLocale();
 		var originalCulture = CultureInfo.CurrentCulture;
 		var originalUiCulture = CultureInfo.CurrentUICulture;
 		try {
+			SetLocale( "C.UTF-8" );
 			CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
 			CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
 			var result = await RunAsync(
@@ -176,10 +179,11 @@ public sealed class SedRegularExpressionMigrationTests {
 			);
 
 			Assert.Equal( 0, result.ExitCode );
-			Assert.Equal( "éX\n", result.Output );
+			Assert.Equal( "XX\n", result.Output );
 		} finally {
 			CultureInfo.CurrentCulture = originalCulture;
 			CultureInfo.CurrentUICulture = originalUiCulture;
+			RestoreLocale( originalLocale );
 		}
 	}
 
@@ -211,6 +215,28 @@ public sealed class SedRegularExpressionMigrationTests {
 		Assert.Contains( "invalid regular expression in substitution", result.Error );
 	}
 
+	private static LocaleValues CaptureLocale() {
+		return new LocaleValues(
+			Environment.GetEnvironmentVariable( "LC_ALL" ),
+			Environment.GetEnvironmentVariable( "LC_CTYPE" ),
+			Environment.GetEnvironmentVariable( "LANG" )
+		);
+	}
+	private static void SetLocale(
+		string name
+	) {
+		Environment.SetEnvironmentVariable( "LC_ALL", name );
+		Environment.SetEnvironmentVariable( "LC_CTYPE", null );
+		Environment.SetEnvironmentVariable( "LANG", null );
+	}
+	private static void RestoreLocale(
+		LocaleValues values
+	) {
+		Environment.SetEnvironmentVariable( "LC_ALL", values.LcAll );
+		Environment.SetEnvironmentVariable( "LC_CTYPE", values.LcCtype );
+		Environment.SetEnvironmentVariable( "LANG", values.Lang );
+	}
+
 	private static async Task<CommandResult> RunAsync(
 		string[] args,
 		string input,
@@ -236,6 +262,11 @@ public sealed class SedRegularExpressionMigrationTests {
 		int ExitCode,
 		string Output,
 		string Error
+	);
+	private readonly record struct LocaleValues(
+		string? LcAll,
+		string? LcCtype,
+		string? Lang
 	);
 
 }
