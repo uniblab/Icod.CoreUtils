@@ -35,7 +35,7 @@ public sealed class EditorBufferTests {
 	public void LargeInsertDeleteMaintainsAddressOrderAcrossSegments() {
 		var buffer = new EditorBuffer();
 		var lines = Enumerable.Range( 1, 5000 )
-			.Select( value => Encoding.UTF8.GetBytes( value.ToString() ).AsMemory() )
+			.Select( value => new ReadOnlyMemory<byte>( Encoding.UTF8.GetBytes( value.ToString() ) ) )
 			.ToArray();
 		buffer.Append( lines );
 
@@ -49,7 +49,7 @@ public sealed class EditorBufferTests {
 
 	private static IReadOnlyList<ReadOnlyMemory<byte>> Lines(
 		params string[] values
-	) => values.Select( value => Encoding.UTF8.GetBytes( value ).AsMemory() ).ToArray();
+	) => values.Select( value => new ReadOnlyMemory<byte>( Encoding.UTF8.GetBytes( value ) ) ).ToArray();
 
 	private static string[] Text(
 		EditorBuffer buffer

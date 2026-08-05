@@ -163,13 +163,13 @@ public sealed class SecurityAndCompatibilityTests {
 	) {
 		var text = await File.ReadAllTextAsync( path );
 		return text.Split( '\n', StringSplitOptions.RemoveEmptyEntries )
-			.Select( value => Encoding.UTF8.GetBytes( value ).AsMemory() )
+			.Select( value => new ReadOnlyMemory<byte>( Encoding.UTF8.GetBytes( value ) ) )
 			.ToArray();
 	}
 
 	private static IReadOnlyList<ReadOnlyMemory<byte>> Lines(
 		params string[] values
-	) => values.Select( value => Encoding.UTF8.GetBytes( value ).AsMemory() ).ToArray();
+	) => values.Select( value => new ReadOnlyMemory<byte>( Encoding.UTF8.GetBytes( value ) ) ).ToArray();
 
 	private static MemoryStream StreamOf(
 		string value

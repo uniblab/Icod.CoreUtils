@@ -48,7 +48,7 @@ internal sealed class MemoryFileAccess : IEditorFileAccess {
 	) {
 		cancellationToken.ThrowIfCancellationRequested();
 		this.WrittenPaths.Add( path );
-		this.LastWrittenLines = lines.Select( line => line.ToArray().AsMemory() ).ToArray();
+		this.LastWrittenLines = lines.Select( line => new ReadOnlyMemory<byte>( line.ToArray() ) ).ToArray();
 		var bytes = lines.Sum( line => (long)line.Length )
 			+ Math.Max( 0, lines.Count - ( terminateFinalRecord ? 0 : 1 ) );
 		return ValueTask.FromResult( new EditorFileWriteResult( bytes ) );
