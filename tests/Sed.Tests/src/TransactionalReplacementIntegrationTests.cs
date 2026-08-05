@@ -41,7 +41,9 @@ public sealed class TransactionalReplacementIntegrationTests {
 		Assert.Equal( "replacement\n", await File.ReadAllTextAsync( path ) );
 		Assert.Equal( "original\n", await File.ReadAllTextAsync( backupPath ) );
 		if ( originalMode.HasValue ) {
+#pragma warning disable CA1416
 			Assert.Equal( originalMode.Value, File.GetUnixFileMode( path ) );
+#pragma warning restore CA1416
 		}
 		Assert.Equal(
 			new string[] { "input.txt", "input.txt.bak" },

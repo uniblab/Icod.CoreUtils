@@ -38,7 +38,9 @@ public sealed class TransactionalReplacementIntegrationTests {
 		Assert.Equal( (long)Encoding.UTF8.GetByteCount( "replacement\n" ), result.ByteCount );
 		Assert.Equal( "replacement\n", await File.ReadAllTextAsync( path ) );
 		if ( originalMode.HasValue ) {
+#pragma warning disable CA1416
 			Assert.Equal( originalMode.Value, File.GetUnixFileMode( path ) );
+#pragma warning restore CA1416
 		}
 		Assert.Equal( new string[] { "buffer.txt" }, EntryNames( directory.Path ) );
 		Assert.Contains( TransactionalReplacementStage.WriteTemporary, injector.ObservedStages );
