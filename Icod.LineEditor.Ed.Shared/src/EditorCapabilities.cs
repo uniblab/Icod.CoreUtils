@@ -85,6 +85,66 @@ public sealed record EditorSecurityPolicy {
 	}
 }
 
+/// <summary>Bundles the immutable editor policy with the only file and process capabilities available to an engine.</summary>
+public sealed class EditorCapabilityProfile {
+	/// <summary>Creates the standard unrestricted capability profile.</summary>
+	/// <param name="fileAccess">The file capability.</param>
+	/// <param name="processAccess">The process capability.</param>
+	/// <returns>The immutable standard profile.</returns>
+	public static EditorCapabilityProfile Standard(
+		IEditorFileAccess fileAccess,
+		IEditorProcessAccess processAccess
+	) {
+		ArgumentNullException.ThrowIfNull( fileAccess );
+		ArgumentNullException.ThrowIfNull( processAccess );
+		return new EditorCapabilityProfile(
+			EditorSecurityPolicy.Standard,
+			fileAccess,
+			processAccess
+		);
+	}
+
+	/// <summary>Creates the shared restricted profile used by both <c>red</c> and <c>ed --restricted</c>.</summary>
+	/// <param name="workingDirectory">The working directory captured once when the profile is constructed.</param>
+	/// <param name="fileAccess">The underlying file capability.</param>
+	/// <returns>The immutable restricted profile.</returns>
+	public static EditorCapabilityProfile Restricted(
+		string workingDirectory,
+		IEditorFileAccess fileAccess
+	) {
+		ArgumentException.ThrowIfNullOrWhiteSpace( workingDirectory );
+		ArgumentNullException.ThrowIfNull( fileAccess );
+		var capturedDirectory = Path.GetFullPath( workingDirectory );
+		return new EditorCapabilityProfile(
+			EditorSecurityPolicy.Restricted( capturedDirectory ),
+			new RestrictedEditorFileAccess( capturedDirectory, fileAccess ),
+			new DeniedEditorProcessAccess()
+		);
+	}
+
+	private EditorCapabilityProfile(
+		EditorSecurityPolicy securityPolicy,
+		IEditorFileAccess fileAccess,
+		IEditorProcessAccess processAccess
+	) {
+		ArgumentNullException.ThrowIfNull( securityPolicy );
+		ArgumentNullException.ThrowIfNull( fileAccess );
+		ArgumentNullException.ThrowIfNull( processAccess );
+		this.SecurityPolicy = securityPolicy;
+		this.FileAccess = fileAccess;
+		this.ProcessAccess = processAccess;
+	}
+
+	/// <summary>Gets the immutable parser and dispatcher policy.</summary>
+	public EditorSecurityPolicy SecurityPolicy { get; }
+
+	/// <summary>Gets the file capability exposed to the engine.</summary>
+	public IEditorFileAccess FileAccess { get; }
+
+	/// <summary>Gets the process capability exposed to the engine.</summary>
+	public IEditorProcessAccess ProcessAccess { get; }
+}
+
 /// <summary>Supplies all filename-bearing effects used by the editor engine.</summary>
 public interface IEditorFileAccess {
 	/// <summary>Reads LF-delimited records from a file.</summary>
@@ -374,15 +434,18 @@ public sealed class DeniedEditorProcessAccess : IEditorProcessAccess {
 }
 
 /// <summary>
-/// Restricts file operations to simple leaf names beneath one captured working directory and rejects
-/// existing symbolic-link or reparse-point leaves before delegating to another capability.
+/// Restricts file operations to simple leaf names beneath one captured working directory.
+/// This is a pathname policy compatible with GNU restricted ed; it is not physical filesystem confinement.
+/// A permitted leaf may therefore name a hard link, symbolic link, mount point, or reparse point resolved by
+/// the underlying filesystem capability. Avoiding a separate link pre-check also avoids introducing a
+/// check-then-use race that could be mistaken for a security boundary.
 /// </summary>
 public sealed class RestrictedEditorFileAccess : IEditorFileAccess {
 	private readonly string workingDirectory;
 	private readonly IEditorFileAccess inner;
 
-	/// <summary>Initializes a restricted file capability.</summary>
-	/// <param name="workingDirectory">The captured working directory.</param>
+	/// <summary>Initializes a restricted pathname capability.</summary>
+	/// <param name="workingDirectory">The working directory captured once for the lifetime of the capability.</param>
 	/// <param name="inner">The underlying file capability.</param>
 	public RestrictedEditorFileAccess(
 		string workingDirectory,
@@ -393,6 +456,12 @@ public sealed class RestrictedEditorFileAccess : IEditorFileAccess {
 		this.workingDirectory = Path.GetFullPath( workingDirectory );
 		this.inner = inner;
 	}
+
+	/// <summary>Gets the working directory captured when this capability was constructed.</summary>
+	public string WorkingDirectory => this.workingDirectory;
+
+	/// <summary>Gets whether this capability claims physical confinement.</summary>
+	public bool ProvidesPhysicalConfinement => false;
 
 	/// <inheritdoc/>
 	public ValueTask<EditorFileReadResult> ReadAsync(
@@ -419,32 +488,56 @@ public sealed class RestrictedEditorFileAccess : IEditorFileAccess {
 		string path
 	) {
 		ArgumentException.ThrowIfNullOrWhiteSpace( path );
-		if (
-			Path.IsPathRooted( path )
-			|| path.Contains( Path.DirectorySeparatorChar )
-			|| path.Contains( Path.AltDirectorySeparatorChar )
-			|| path.Contains( ':' )
-			|| "." == path
-			|| ".." == path
-		) {
+		if ( !EditorRestrictedPath.IsSimpleFileName( path ) ) {
 			throw new UnauthorizedAccessException(
 				"Restricted editor file access permits only a simple filename."
 			);
 		}
 		var resolved = Path.GetFullPath( Path.Combine( this.workingDirectory, path ) );
-		if ( !string.Equals( Path.GetDirectoryName( resolved ), this.workingDirectory, StringComparison.OrdinalIgnoreCase ) ) {
+		var comparison = OperatingSystem.IsWindows()
+			? StringComparison.OrdinalIgnoreCase
+			: StringComparison.Ordinal;
+		if ( !string.Equals( Path.GetDirectoryName( resolved ), this.workingDirectory, comparison ) ) {
 			throw new UnauthorizedAccessException(
 				"The resolved filename is outside the captured working directory."
 			);
 		}
-		if ( File.Exists( resolved ) || Directory.Exists( resolved ) ) {
-			var attributes = File.GetAttributes( resolved );
-			if ( 0 != ( attributes & FileAttributes.ReparsePoint ) ) {
-				throw new UnauthorizedAccessException(
-					"Restricted editor file access rejects symbolic links and reparse points."
-				);
-			}
-		}
 		return resolved;
+	}
+}
+
+/// <summary>Provides host-independent restricted-ed pathname classification.</summary>
+public static class EditorRestrictedPath {
+	private static readonly HashSet<string> WindowsDeviceNames = new(
+		StringComparer.OrdinalIgnoreCase
+	) {
+		"AUX", "CLOCK$", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6",
+		"COM7", "COM8", "COM9", "CON", "CONIN$", "CONOUT$", "LPT1", "LPT2",
+		"LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9", "NUL", "PRN"
+	};
+
+	/// <summary>Returns whether a candidate is a simple filename under both Unix and Windows pathname rules.</summary>
+	/// <param name="candidate">The logical filename.</param>
+	/// <returns><see langword="true"/> only for a non-special leaf name.</returns>
+	public static bool IsSimpleFileName(
+		string candidate
+	) {
+		if (
+			string.IsNullOrWhiteSpace( candidate )
+			|| Path.IsPathRooted( candidate )
+			|| candidate.Contains( '/' )
+			|| candidate.Contains( '\\' )
+			|| candidate.Contains( ':' )
+			|| candidate.StartsWith( '!' )
+			|| candidate.EndsWith( ' ' )
+			|| candidate.EndsWith( '.' )
+			|| "." == candidate
+			|| ".." == candidate
+		) {
+			return false;
+		}
+		var extension = candidate.IndexOf( '.' );
+		var stem = 0 > extension ? candidate : candidate[ ..extension ];
+		return !WindowsDeviceNames.Contains( stem );
 	}
 }

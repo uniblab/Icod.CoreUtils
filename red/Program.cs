@@ -1,15 +1,32 @@
 namespace Icod.LineEditor.Red;
 
-/// <summary>
-/// Hosts the <c>red</c> executable entry point.
-/// </summary>
-internal static class Program {
-	/// <summary>
-	/// Runs the restricted line-editor command facade.
-	/// </summary>
-	/// <param name="args">The command-line arguments.</param>
-	/// <returns>The process exit status.</returns>
-	internal static int Main( string[] args ) {
-		return Command.Run( args );
+using Icod.CoreUtils.Shared.Diagnostics;
+
+/// <summary>Hosts the asynchronous <c>red</c> command entry point.</summary>
+public static class Program {
+	/// <summary>Runs the command with process console streams and cooperative Ctrl+C cancellation.</summary>
+	public static async Task<int> Main(
+		string[] args
+	) {
+		using var cancellationSource = new CancellationTokenSource();
+		ConsoleCancelEventHandler handler = (
+			_,
+			eventArgs
+		) => {
+			eventArgs.Cancel = true;
+			cancellationSource.Cancel();
+		};
+		Console.CancelKeyPress += handler;
+		try {
+			return await Command.RunAsync(
+				args,
+				CommandContext.CreateConsole(
+					"red",
+					cancellationSource.Token
+				)
+			).ConfigureAwait( false );
+		} finally {
+			Console.CancelKeyPress -= handler;
+		}
 	}
 }

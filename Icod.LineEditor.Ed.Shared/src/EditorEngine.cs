@@ -32,6 +32,20 @@ public sealed class EditorEngine {
 	) {
 	}
 
+	/// <summary>Initializes an engine from one immutable capability profile.</summary>
+	/// <param name="profile">The policy and capabilities exposed to the engine.</param>
+	/// <param name="regularExpressionProvider">The Shared GNU regular-expression provider.</param>
+	public EditorEngine(
+		EditorCapabilityProfile profile,
+		IRegularExpressionProvider regularExpressionProvider
+	) : this(
+		profile?.SecurityPolicy ?? throw new ArgumentNullException( nameof( profile ) ),
+		profile?.FileAccess ?? throw new ArgumentNullException( nameof( profile ) ),
+		profile?.ProcessAccess ?? throw new ArgumentNullException( nameof( profile ) ),
+		regularExpressionProvider
+	) {
+	}
+
 	/// <summary>Initializes an engine with explicit policy and capabilities.</summary>
 	/// <param name="securityPolicy">The immutable parser and dispatch policy.</param>
 	/// <param name="fileAccess">The filename-bearing capability.</param>
@@ -64,9 +78,7 @@ public sealed class EditorEngine {
 		IEditorFileAccess fileAccess,
 		IRegularExpressionProvider? regularExpressionProvider = null
 	) => new(
-		EditorSecurityPolicy.Restricted( workingDirectory ),
-		new RestrictedEditorFileAccess( workingDirectory, fileAccess ),
-		new DeniedEditorProcessAccess(),
+		EditorCapabilityProfile.Restricted( workingDirectory, fileAccess ),
 		regularExpressionProvider ?? GnuBasicRegularExpressionProvider.Default
 	);
 
@@ -326,6 +338,7 @@ public sealed class EditorEngine {
 		CancellationToken cancellationToken
 	) {
 		this.ThrowIfInterrupted( cancellationToken );
+		this.ValidateRestrictedCommandText( commandText );
 		var parser = new EditorAddressParser(
 			commandText,
 			this.CurrentAddress,
@@ -637,7 +650,7 @@ public sealed class EditorEngine {
 				return new CommandOutcome( scriptIndex, false );
 			}
 			case 'f': {
-				var candidate = arguments.Trim();
+				var candidate = ParseFileNameArgument( arguments );
 				if ( 0 < candidate.Length ) {
 					this.SetRememberedFileName( candidate );
 				}
@@ -1113,11 +1126,19 @@ public sealed class EditorEngine {
 		return address;
 	}
 
+	private static string ParseFileNameArgument(
+		string arguments
+	) {
+		// Leading whitespace separates the command from its filename. Trailing
+		// whitespace is filename data and must remain visible to security policy.
+		return arguments.TrimStart();
+	}
+
 	private string ResolveFileName(
 		string arguments,
 		bool requireName
 	) {
-		var candidate = arguments.Trim();
+		var candidate = ParseFileNameArgument( arguments );
 		if ( 0 == candidate.Length ) {
 			if ( null != this.RememberedFileName ) {
 				return this.RememberedFileName;
@@ -1157,15 +1178,85 @@ public sealed class EditorEngine {
 
 	private static bool IsRestrictedFileName(
 		string candidate
-	) => !(
-		string.IsNullOrWhiteSpace( candidate )
-		|| Path.IsPathRooted( candidate )
-		|| candidate.Contains( Path.DirectorySeparatorChar )
-		|| candidate.Contains( Path.AltDirectorySeparatorChar )
-		|| candidate.Contains( ':' )
-		|| "." == candidate
-		|| ".." == candidate
-	);
+	) => EditorRestrictedPath.IsSimpleFileName( candidate );
+
+	private void ValidateRestrictedDispatch(
+		char command,
+		string arguments
+	) {
+		if ( !this.SecurityPolicy.IsRestricted ) {
+			return;
+		}
+		if ( '!' == command ) {
+			throw new EditorCommandException(
+				EditorDiagnosticCode.RestrictedOperation,
+				"Shell commands are disabled by the editor security profile."
+			);
+		}
+		if ( command is 'e' or 'E' or 'r' or 'w' or 'W' or 'f' ) {
+			var candidate = ParseFileNameArgument( arguments );
+			if ( 0 < candidate.Length ) {
+				ValidateRestrictedFileName( candidate );
+			}
+		}
+		if ( command is 'g' or 'v' ) {
+			var parsed = ParseDelimitedCommand( arguments, allowFlags: false );
+			var nested = string.IsNullOrWhiteSpace( parsed.Remainder ) ? "p" : parsed.Remainder;
+			this.ValidateRestrictedCommandText( nested );
+		}
+	}
+
+	private void ValidateRestrictedCommandText(
+		string commandText
+	) {
+		var position = FindCommandIndex( commandText );
+		if ( 0 > position ) {
+			return;
+		}
+		var command = commandText[ position++ ];
+		this.ValidateRestrictedDispatch( command, commandText[ position.. ] );
+	}
+
+	private static int FindCommandIndex(
+		string text
+	) {
+		var escaped = false;
+		var delimiter = '\0';
+		var afterMark = false;
+		for ( var index = 0; text.Length > index; index++ ) {
+			var character = text[ index ];
+			if ( '\0' != delimiter ) {
+				if ( escaped ) {
+					escaped = false;
+					continue;
+				}
+				if ( '\\' == character ) {
+					escaped = true;
+					continue;
+				}
+				if ( delimiter == character ) {
+					delimiter = '\0';
+				}
+				continue;
+			}
+			if ( afterMark ) {
+				afterMark = false;
+				continue;
+			}
+			if ( '\'' == character ) {
+				afterMark = true;
+				continue;
+			}
+			if ( character is '/' or '?' ) {
+				delimiter = character;
+				continue;
+			}
+			if ( char.IsLetter( character ) || character is '!' or '=' or '#' ) {
+				return index;
+			}
+		}
+		return -1;
+	}
 
 	private void CaptureUndo() {
 		this.undoSnapshot = new EditorSnapshot(
