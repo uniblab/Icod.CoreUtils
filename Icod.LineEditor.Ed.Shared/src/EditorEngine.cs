@@ -387,7 +387,7 @@ public sealed class EditorEngine {
 					this.CaptureUndo();
 				}
 				this.cutBuffer.Clear();
-				this.cutBuffer.AddRange( this.Buffer.Delete( range ).Select( line => line.Content.ToArray().AsMemory() ) );
+				this.cutBuffer.AddRange( this.Buffer.Delete( range ).Select( line => new ReadOnlyMemory<byte>( line.Content.ToArray() ) ) );
 				var inserted = this.Buffer.InsertAfter( range.Start - 1, block.Lines );
 				this.CurrentAddress = 0 == inserted.Start
 					? Math.Min( this.Buffer.Count, range.Start - 1 )
@@ -402,7 +402,7 @@ public sealed class EditorEngine {
 					this.CaptureUndo();
 				}
 				this.cutBuffer.Clear();
-				this.cutBuffer.AddRange( this.Buffer.Delete( range ).Select( line => line.Content.ToArray().AsMemory() ) );
+				this.cutBuffer.AddRange( this.Buffer.Delete( range ).Select( line => new ReadOnlyMemory<byte>( line.Content.ToArray() ) ) );
 				this.CurrentAddress = 0 == this.Buffer.Count
 					? 0
 					: Math.Min( range.Start, this.Buffer.Count );
@@ -1161,7 +1161,7 @@ public sealed class EditorEngine {
 			this.RememberedFileName,
 			this.FinalRecordTerminated,
 			this.marks.ToDictionary( pair => pair.Key, pair => pair.Value ),
-			this.cutBuffer.Select( item => item.ToArray().AsMemory() ).ToArray()
+			this.cutBuffer.Select( item => new ReadOnlyMemory<byte>( item.ToArray() ) ).ToArray()
 		);
 	}
 
@@ -1178,7 +1178,7 @@ public sealed class EditorEngine {
 			this.RememberedFileName,
 			this.FinalRecordTerminated,
 			this.marks.ToDictionary( pair => pair.Key, pair => pair.Value ),
-			this.cutBuffer.Select( item => item.ToArray().AsMemory() ).ToArray()
+			this.cutBuffer.Select( item => new ReadOnlyMemory<byte>( item.ToArray() ) ).ToArray()
 		);
 		this.RestoreSnapshot( snapshot );
 		this.undoSnapshot = current;
@@ -1197,7 +1197,7 @@ public sealed class EditorEngine {
 			this.marks[ pair.Key ] = pair.Value;
 		}
 		this.cutBuffer.Clear();
-		this.cutBuffer.AddRange( snapshot.CutBuffer.Select( item => item.ToArray().AsMemory() ) );
+		this.cutBuffer.AddRange( snapshot.CutBuffer.Select( item => new ReadOnlyMemory<byte>( item.ToArray() ) ) );
 	}
 
 	private void RemoveDanglingMarks() {
