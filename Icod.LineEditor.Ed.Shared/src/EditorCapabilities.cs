@@ -2,6 +2,11 @@ namespace Icod.LineEditor.Ed;
 
 using System.Text;
 using Icod.CoreUtils.Shared.FileSystem;
+using Icod.CoreUtils.Shared.FileSystem.Metadata;
+using Icod.CoreUtils.Shared.FileSystem.Mutation;
+using Icod.CoreUtils.Shared.FileSystem.RecursiveMutation;
+using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 using Icod.CoreUtils.Shared.Records;
 using Icod.CoreUtils.Shared.Processes;
 using Icod.CoreUtils.Shared.Temporary;
@@ -190,13 +195,20 @@ public interface IEditorProcessAccess {
 /// Implements standard file access with Shared record reading, secure sibling staging, and durable flush operations.
 /// </summary>
 public sealed class StandardEditorFileAccess : IEditorFileAccess {
-	private readonly SecureTemporaryObjectCreator temporaryObjectCreator;
+	private const RecursiveMetadataFields ReplacementMetadata =
+		RecursiveMetadataFields.Mode
+		| RecursiveMetadataFields.Ownership
+		| RecursiveMetadataFields.Attributes;
+
+	private readonly ITransactionalReplacementFileSystem transactionalFileSystem;
 	private readonly IFileSystemOperations fileSystemOperations;
+	private readonly ITransactionalReplacementFailureInjector failureInjector;
 
 	/// <summary>Initializes the system-backed standard file capability.</summary>
 	public StandardEditorFileAccess() : this(
-		SecureTemporaryObjectCreator.System,
-		SystemFileSystemOperations.Instance
+		SystemTransactionalReplacementFileSystem.Instance,
+		SystemFileSystemOperations.Instance,
+		NullTransactionalReplacementFailureInjector.Instance
 	) {
 	}
 
@@ -206,11 +218,33 @@ public sealed class StandardEditorFileAccess : IEditorFileAccess {
 	public StandardEditorFileAccess(
 		SecureTemporaryObjectCreator temporaryObjectCreator,
 		IFileSystemOperations fileSystemOperations
+	) : this(
+		new SystemTransactionalReplacementFileSystem(
+			SystemFileSystemMetadataProvider.Instance,
+			SystemFileSystemMutationProvider.Instance,
+			fileSystemOperations,
+			temporaryObjectCreator
+		),
+		fileSystemOperations,
+		NullTransactionalReplacementFailureInjector.Instance
 	) {
-		ArgumentNullException.ThrowIfNull( temporaryObjectCreator );
+	}
+
+	/// <summary>Initializes an editor file capability over an injectable E6 transaction provider.</summary>
+	/// <param name="transactionalFileSystem">The shared transactional-replacement filesystem.</param>
+	/// <param name="fileSystemOperations">The durability operations provider used by append writes.</param>
+	/// <param name="failureInjector">An optional deterministic E6 failure injector.</param>
+	public StandardEditorFileAccess(
+		ITransactionalReplacementFileSystem transactionalFileSystem,
+		IFileSystemOperations fileSystemOperations,
+		ITransactionalReplacementFailureInjector? failureInjector = null
+	) {
+		ArgumentNullException.ThrowIfNull( transactionalFileSystem );
 		ArgumentNullException.ThrowIfNull( fileSystemOperations );
-		this.temporaryObjectCreator = temporaryObjectCreator;
+		this.transactionalFileSystem = transactionalFileSystem;
 		this.fileSystemOperations = fileSystemOperations;
+		this.failureInjector = failureInjector
+			?? NullTransactionalReplacementFailureInjector.Instance;
 	}
 
 	/// <inheritdoc/>
@@ -279,60 +313,95 @@ public sealed class StandardEditorFileAccess : IEditorFileAccess {
 			return new EditorFileWriteResult( appended );
 		}
 
-		var fullPath = Path.GetFullPath( path );
-		var directory = Path.GetDirectoryName( fullPath ) ?? Directory.GetCurrentDirectory();
-		var fileName = Path.GetFileName( fullPath );
-		if ( !TemporaryNameTemplate.TryParse(
-			string.Concat( ".", fileName, ".icod-ed-XXXXXX" ),
-			null,
-			out var template,
-			out var templateError
-		) ) {
-			throw new IOException( templateError ?? "Unable to construct the temporary filename template." );
-		}
-		var creation = this.temporaryObjectCreator.Create(
-			template!.WithDirectory( directory ),
-			TemporaryObjectKind.File,
+		var fullPath = ResolveReplacementPath( path );
+		var observation = await this.transactionalFileSystem.ObserveAsync(
+			fullPath,
+			PathDereferenceMode.NoFollow,
 			cancellationToken
-		);
-		if ( !creation.IsSuccess ) {
-			throw new IOException( creation.ErrorMessage ?? "Unable to create the temporary file." );
-		}
-		var temporaryPath = creation.Path!;
-		try {
-			long written;
-			await using ( var stream = new FileStream(
-				temporaryPath,
-				FileMode.Open,
-				FileAccess.Write,
-				FileShare.None,
-				65536,
-				FileOptions.Asynchronous
-			) ) {
+		).ConfigureAwait( false );
+		var precondition = CreatePrecondition( observation );
+		var metadata = observation.Metadata;
+		var metadataPlan = null == metadata
+			? null
+			: RecursiveMetadataPreservationPlan.Create(
+				metadata,
+				ReplacementMetadata,
+				RecursiveMetadataFields.None
+			);
+		long written = 0;
+		var artifact = new TransactionalReplacementArtifact(
+			recoveryUnitId: "ed-write",
+			path: fullPath,
+			action: TransactionalReplacementAction.Replace,
+			precondition: precondition,
+			contentWriter: async ( destination, token ) => {
 				written = await WriteRecordsAsync(
-					stream,
+					destination,
 					lines,
 					terminateFinalRecord,
-					cancellationToken
+					token
 				).ConfigureAwait( false );
-				await stream.FlushAsync( cancellationToken ).ConfigureAwait( false );
-				await this.fileSystemOperations.FlushFileAsync(
-					stream,
-					FileFlushMode.DataAndMetadata,
-					cancellationToken
-				).ConfigureAwait( false );
-			}
-			File.Move( temporaryPath, fullPath, true );
-			return new EditorFileWriteResult( written );
-		} finally {
-			if ( File.Exists( temporaryPath ) ) {
-				this.temporaryObjectCreator.TryDelete(
-					temporaryPath,
-					TemporaryObjectKind.File,
-					out _
-				);
-			}
+			},
+			displayName: path,
+			sourceMetadata: metadata,
+			metadataPlan: metadataPlan
+		);
+		await using var transaction = new TransactionalFileReplacementTransaction(
+			new TransactionalReplacementArtifact[] { artifact },
+			this.transactionalFileSystem,
+			TransactionalReplacementOptions.Default,
+			failureInjector: this.failureInjector
+		);
+		var transactionResult = await transaction.CommitAsync(
+			cancellationToken
+		).ConfigureAwait( false );
+		if ( !transactionResult.Succeeded ) {
+			throw CreateTransactionException( "ed write", transactionResult );
 		}
+		return new EditorFileWriteResult( written );
+	}
+
+	private static string ResolveReplacementPath(
+		string path
+	) {
+		var fullPath = Path.GetFullPath( path );
+		var information = new FileInfo( fullPath );
+		if ( string.IsNullOrEmpty( information.LinkTarget ) ) {
+			return fullPath;
+		}
+		var target = information.ResolveLinkTarget( returnFinalTarget: true );
+		return target?.FullName
+			?? throw new IOException( "The editor write target could not be resolved." );
+	}
+
+	private static FileSystemMutationPrecondition CreatePrecondition(
+		TransactionalReplacementObservation observation
+	) {
+		if ( !observation.Exists ) {
+			return FileSystemMutationPrecondition.DestinationMustNotExist();
+		}
+		var metadata = observation.Metadata
+			?? throw new IOException( "The destination metadata is unavailable." );
+		return FileSystemMutationPrecondition.FromObservation(
+			metadata.Kind,
+			metadata.EntryIdentity,
+			PathDereferenceMode.NoFollow
+		);
+	}
+
+	private static IOException CreateTransactionException(
+		string operation,
+		TransactionalReplacementResult result
+	) {
+		var diagnostic = 0 == result.Diagnostics.Count
+			? null
+			: result.Diagnostics[ result.Diagnostics.Count - 1 ];
+		return new IOException(
+			null == diagnostic
+				? $"{operation} failed with outcome {result.Outcome}."
+				: diagnostic.Message,
+			diagnostic?.Exception
+		);
 	}
 
 	private static async ValueTask<long> WriteRecordsAsync(
