@@ -650,6 +650,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Mv.Tests", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Install.Tests", "tests\Install.Tests\Icod.CoreUtils.Install.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0100}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Icod.LineEditor.Ed.Shared", "Icod.LineEditor.Ed.Shared", "{2EE6477E-7F3D-4585-A17E-FD849AACAD10}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.LineEditor.Ed.Shared", "Icod.LineEditor.Ed.Shared\Icod.LineEditor.Ed.Shared.csproj", "{8E0ED99C-7ACD-483A-A9F0-6C1DB92F08AF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.LineEditor.Ed.Shared.Tests", "tests\Ed.Shared.Tests\Icod.LineEditor.Ed.Shared.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0101}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -657,6 +663,18 @@ Global
 		Staging|Any CPU = Staging|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8E0ED99C-7ACD-483A-A9F0-6C1DB92F08AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E0ED99C-7ACD-483A-A9F0-6C1DB92F08AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E0ED99C-7ACD-483A-A9F0-6C1DB92F08AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E0ED99C-7ACD-483A-A9F0-6C1DB92F08AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E0ED99C-7ACD-483A-A9F0-6C1DB92F08AF}.Staging|Any CPU.ActiveCfg = Staging|Any CPU
+		{8E0ED99C-7ACD-483A-A9F0-6C1DB92F08AF}.Staging|Any CPU.Build.0 = Staging|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0101}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0101}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0101}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0101}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0101}.Staging|Any CPU.ActiveCfg = Staging|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0101}.Staging|Any CPU.Build.0 = Staging|Any CPU
 		{38C9C31E-BFE0-44E4-8315-E074D28B6CD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{38C9C31E-BFE0-44E4-8315-E074D28B6CD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{38C9C31E-BFE0-44E4-8315-E074D28B6CD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -1904,6 +1922,8 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{8E0ED99C-7ACD-483A-A9F0-6C1DB92F08AF} = {2EE6477E-7F3D-4585-A17E-FD849AACAD10}
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0101} = {F05B4136-23C6-4CF5-8A6A-920F20DC0001}
 		{38C9C31E-BFE0-44E4-8315-E074D28B6CD5} = {4F52FD11-658E-A102-6CD3-7D7C16FFA15B}
 		{810FA4BE-DA8A-43D9-8918-A29D16511236} = {F0F316A6-568A-1714-0BC7-75AE9A2A66AB}
 		{3B4AC1E2-CC70-4A07-A4A2-4C3462E1BDE9} = {4691C031-9FEB-3031-7375-EA377F82082D}
