@@ -650,7 +650,7 @@ public sealed class EditorEngine {
 				return new CommandOutcome( scriptIndex, false );
 			}
 			case 'f': {
-				var candidate = arguments.Trim();
+				var candidate = ParseFileNameArgument( arguments );
 				if ( 0 < candidate.Length ) {
 					this.SetRememberedFileName( candidate );
 				}
@@ -1126,11 +1126,19 @@ public sealed class EditorEngine {
 		return address;
 	}
 
+	private static string ParseFileNameArgument(
+		string arguments
+	) {
+		// Leading whitespace separates the command from its filename. Trailing
+		// whitespace is filename data and must remain visible to security policy.
+		return arguments.TrimStart();
+	}
+
 	private string ResolveFileName(
 		string arguments,
 		bool requireName
 	) {
-		var candidate = arguments.Trim();
+		var candidate = ParseFileNameArgument( arguments );
 		if ( 0 == candidate.Length ) {
 			if ( null != this.RememberedFileName ) {
 				return this.RememberedFileName;
@@ -1186,7 +1194,7 @@ public sealed class EditorEngine {
 			);
 		}
 		if ( command is 'e' or 'E' or 'r' or 'w' or 'W' or 'f' ) {
-			var candidate = arguments.Trim();
+			var candidate = ParseFileNameArgument( arguments );
 			if ( 0 < candidate.Length ) {
 				ValidateRestrictedFileName( candidate );
 			}
