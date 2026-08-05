@@ -120,6 +120,20 @@ public sealed class EditorEngine {
 		private set;
 	}
 
+	/// <summary>Sets the current address for command-line initial-address selection.</summary>
+	/// <param name="address">A line address from zero through the current buffer size.</param>
+	public void SetCurrentAddress(
+		int address
+	) {
+		if ( ( 0 > address ) || ( this.Buffer.Count < address ) ) {
+			throw new ArgumentOutOfRangeException(
+				nameof( address ),
+				"The current address must identify the empty position or an existing line."
+			);
+		}
+		this.CurrentAddress = address;
+	}
+
 	/// <summary>Requests cooperative signal handling before the next command transition.</summary>
 	/// <param name="signal">The requested signal.</param>
 	public void RequestSignal(
