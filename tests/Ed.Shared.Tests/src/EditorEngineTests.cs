@@ -67,6 +67,23 @@ public sealed class EditorEngineTests {
 	}
 
 	[Fact]
+	public async Task CrLfScriptRecognizesSinglePeriodDataBlockTerminator() {
+		var engine = CreateEngine();
+		engine.Load( Lines( "one" ) );
+		var output = new MemoryStream();
+
+		var result = await engine.ExecuteScriptAsync(
+			StreamOf( "1c\r\nONE\r\n.\r\n1p\r\n" ),
+			output,
+			new MemoryStream()
+		);
+
+		Assert.True( result.IsSuccess, result.Diagnostic?.Message );
+		Assert.Equal( "ONE\n", TextOf( output ) );
+		Assert.Equal( new[] { "ONE" }, BufferText( engine ) );
+	}
+
+	[Fact]
 	public async Task GlobalCommandUsesStableSelectedLineIdentitiesDuringDeletion() {
 		var engine = CreateEngine();
 		engine.Load( Lines( "keep", "drop one", "drop two", "keep again" ) );

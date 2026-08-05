@@ -1295,7 +1295,11 @@ public sealed class EditorEngine {
 			if ( null == record ) {
 				break;
 			}
-			records.Add( record.Content.ToArray() );
+			var content = record.Content;
+			if ( record.IsTerminated && !content.IsEmpty && (byte)'\r' == content.Span[ ^1 ] ) {
+				content = content[ ..^1 ];
+			}
+			records.Add( content.ToArray() );
 		}
 		return records.AsReadOnly();
 	}
