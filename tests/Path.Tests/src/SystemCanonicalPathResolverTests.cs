@@ -31,11 +31,11 @@ public sealed class SystemCanonicalPathResolverTests {
 	[Fact]
 	public async Task ResolvesHostSymbolicLinkWhenSupported() {
 		var root = CreateTemporaryDirectory();
+		var link = SystemPath.Combine( root, "link" );
 		try {
 			var target = Directory.CreateDirectory( SystemPath.Combine( root, "target" ) ).FullName;
 			var file = SystemPath.Combine( target, "file.txt" );
 			await File.WriteAllTextAsync( file, "content" );
-			var link = SystemPath.Combine( root, "link" );
 			if ( !TryCreateDirectoryLink( link, "target" ) ) {
 				return;
 			}
@@ -50,6 +50,9 @@ public sealed class SystemCanonicalPathResolverTests {
 			Assert.Equal( "target", inspection.Target );
 			Assert.Equal( SystemPath.GetFullPath( file ), resolved.Path );
 		} finally {
+			if ( Directory.Exists( link ) ) {
+				Directory.Delete( link, recursive: false );
+			}
 			Directory.Delete( root, recursive: true );
 		}
 	}
