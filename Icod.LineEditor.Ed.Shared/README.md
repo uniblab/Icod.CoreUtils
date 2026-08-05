@@ -41,3 +41,20 @@ Sed program, address/range, cycle, sandbox, and in-place policy remain in
 The evidence and dependency decision are recorded in
 `Icod.LineEditor-LE9-Sharing-Audit.md` and enforced by architecture-boundary
 tests in the Ed.Shared and Sed test projects.
+
+## Phase LE10 transactional writes
+
+Complete-file Ed writes and creations now consume Completion Gate E6 through
+`StandardEditorFileAccess`. The capability resolves Ed's terminal-link target,
+freezes an authoritative no-follow identity or absence precondition, stages and
+flushes the complete buffer in a secure sibling file, preserves representable
+mode, ownership, and attributes, and relies on the shared transaction for
+publication, rollback, and cleanup.
+
+Append remains a direct append-and-flush operation because it is not a
+whole-file replacement. Command-level force, modified-buffer, remembered-name,
+and presentation policy remains in the Ed engine and executable. The previous
+private temporary-name, move, and cleanup algorithm has been removed.
+
+The complete Sed/Ed integration and test matrix is recorded in
+`Icod.LineEditor-LE10-Transactional-Replacement.md`.

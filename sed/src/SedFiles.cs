@@ -4,11 +4,16 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Icod.CoreUtils.Shared.FileSystem;
+using Icod.CoreUtils.Shared.FileSystem.Metadata;
+using Icod.CoreUtils.Shared.FileSystem.Mutation;
+using Icod.CoreUtils.Shared.FileSystem.RecursiveMutation;
+using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 using Icod.CoreUtils.Shared.Temporary;
 
 // Responsibility: in-place editing and pathname handling.
 public static partial class Command {
-
 	private static Task<ExecutionResult> ProcessInPlaceAsync(
 		string path,
 		Options options,
@@ -65,25 +70,46 @@ public static partial class Command {
 	}
 
 	/// <summary>
-	/// Implements the temporary command-local in-place replacement mechanism.
-	/// LE10 replaces this implementation with the shared E6 transaction model.
+	/// Implements Sed in-place replacement through the shared E6 transaction model.
 	/// </summary>
 	internal sealed class SystemInPlaceEditor : IInPlaceEditor {
+		private const RecursiveMetadataFields ReplacementMetadata =
+			RecursiveMetadataFields.Mode
+			| RecursiveMetadataFields.Ownership
+			| RecursiveMetadataFields.Attributes;
 
-		private readonly SecureTemporaryObjectCreator myTemporaryObjects;
+		private readonly ITransactionalReplacementFileSystem myFileSystem;
+		private readonly ITransactionalReplacementFailureInjector myFailureInjector;
 
 		/// <summary>Gets the host-backed singleton editor.</summary>
 		public static SystemInPlaceEditor Instance { get; } = new(
-			SecureTemporaryObjectCreator.System
+			SystemTransactionalReplacementFileSystem.Instance,
+			NullTransactionalReplacementFailureInjector.Instance
 		);
 
 		/// <summary>Initializes an editor over an injectable secure temporary-object creator.</summary>
 		public SystemInPlaceEditor(
 			SecureTemporaryObjectCreator temporaryObjects
+		) : this(
+			new SystemTransactionalReplacementFileSystem(
+				SystemFileSystemMetadataProvider.Instance,
+				SystemFileSystemMutationProvider.Instance,
+				SystemFileSystemOperations.Instance,
+				temporaryObjects
+			),
+			NullTransactionalReplacementFailureInjector.Instance
 		) {
-			this.myTemporaryObjects = temporaryObjects ?? throw new ArgumentNullException(
-				nameof( temporaryObjects )
-			);
+		}
+
+		/// <summary>Initializes an editor over an injectable E6 filesystem and failure boundary.</summary>
+		public SystemInPlaceEditor(
+			ITransactionalReplacementFileSystem fileSystem,
+			ITransactionalReplacementFailureInjector? failureInjector = null
+		) {
+			ArgumentNullException.ThrowIfNull( fileSystem );
+			this.myFileSystem = fileSystem;
+			this.myFailureInjector = failureInjector
+				?? NullTransactionalReplacementFailureInjector.Instance;
 		}
 
 		/// <inheritdoc />
@@ -95,112 +121,84 @@ public static partial class Command {
 			ArgumentNullException.ThrowIfNull( request );
 			ArgumentNullException.ThrowIfNull( transformAsync );
 			cancellationToken.ThrowIfCancellationRequested();
-
-			var editPath = ResolveInPlacePath(
-				request.Path,
-				request.FollowSymlinks
+			var editPath = Path.GetFullPath(
+				ResolveInPlacePath( request.Path, request.FollowSymlinks )
 			);
-			var attributes = File.GetAttributes( editPath );
-			UnixFileMode? unixMode = null;
-			if ( !OperatingSystem.IsWindows() ) {
-				unixMode = File.GetUnixFileMode( editPath );
-			}
-
-			var temporaryPath = this.CreateTemporaryPath(
-				Path.GetDirectoryName( editPath ) ?? ".",
+			var observation = await this.myFileSystem.ObserveAsync(
+				editPath,
+				PathDereferenceMode.NoFollow,
 				cancellationToken
-			);
-			try {
-				ExecutionResult result;
-				await using ( var outputStream = new FileStream(
-					temporaryPath,
-					FileMode.Open,
-					FileAccess.Write,
-					FileShare.None,
-					8192,
-					useAsync: true
-				) ) {
-					result = await transformAsync(
-						editPath,
-						outputStream,
-						cancellationToken
-					).ConfigureAwait( false );
-					await outputStream.FlushAsync(
-						cancellationToken
-					).ConfigureAwait( false );
-				}
-
-				if (
-					null != request.BackupSuffix
-					&& 0 < request.BackupSuffix.Length
-				) {
-					var backupPath = BuildBackupPath(
-						editPath,
-						request.BackupSuffix
-					);
-					if ( File.Exists( backupPath ) ) {
-						File.Delete( backupPath );
-					}
-					File.Move( editPath, backupPath );
-				} else {
-					if ( 0 != ( attributes & FileAttributes.ReadOnly ) ) {
-						File.SetAttributes(
-							editPath,
-							attributes & ~FileAttributes.ReadOnly
-						);
-					}
-					File.Delete( editPath );
-				}
-
-				File.Move( temporaryPath, editPath );
-				File.SetAttributes(
-					editPath,
-					attributes & ~FileAttributes.ReparsePoint
+			).ConfigureAwait( false );
+			if ( !observation.Exists || null == observation.Metadata ) {
+				throw new FileNotFoundException(
+					"The in-place input file does not exist.",
+					editPath
 				);
-				if (
-					!OperatingSystem.IsWindows()
-					&& unixMode.HasValue
-				) {
-					File.SetUnixFileMode( editPath, unixMode.Value );
-				}
-				return result;
-			} catch {
-				_ = this.myTemporaryObjects.TryDelete(
-					temporaryPath,
-					TemporaryObjectKind.File,
-					out _
-				);
-				throw;
 			}
+			var metadata = observation.Metadata;
+			var precondition = FileSystemMutationPrecondition.FromObservation(
+				metadata.Kind,
+				metadata.EntryIdentity,
+				PathDereferenceMode.NoFollow
+			);
+			var metadataPlan = RecursiveMetadataPreservationPlan.Create(
+				metadata,
+				ReplacementMetadata,
+				RecursiveMetadataFields.None
+			);
+			ExecutionResult? executionResult = null;
+			var hasBackup = !string.IsNullOrEmpty( request.BackupSuffix );
+			var backupPath = hasBackup
+				? BuildBackupPath( editPath, request.BackupSuffix! )
+				: null;
+			var artifact = new TransactionalReplacementArtifact(
+				recoveryUnitId: "sed-in-place",
+				path: editPath,
+				action: TransactionalReplacementAction.Replace,
+				precondition: precondition,
+				contentWriter: async ( destination, token ) => {
+					executionResult = await transformAsync(
+						editPath,
+						destination,
+						token
+					).ConfigureAwait( false );
+				},
+				displayName: request.Path,
+				sourceMetadata: metadata,
+				metadataPlan: metadataPlan,
+				explicitBackupPath: backupPath,
+				retainBackup: hasBackup
+			);
+			await using var transaction = new TransactionalFileReplacementTransaction(
+				new TransactionalReplacementArtifact[] { artifact },
+				this.myFileSystem,
+				TransactionalReplacementOptions.Default,
+				failureInjector: this.myFailureInjector
+			);
+			var transactionResult = await transaction.CommitAsync(
+				cancellationToken
+			).ConfigureAwait( false );
+			if ( !transactionResult.Succeeded ) {
+				throw CreateTransactionException( "sed in-place edit", transactionResult );
+			}
+			return executionResult
+				?? throw new IOException( "The in-place transform produced no execution result." );
 		}
 
-		private string CreateTemporaryPath(
-			string directory,
-			CancellationToken cancellationToken
+		private static IOException CreateTransactionException(
+			string operation,
+			TransactionalReplacementResult result
 		) {
-			if ( !TemporaryNameTemplate.TryParse(
-				Path.Combine( directory, ".sed.XXXXXXXXXX.tmp" ),
-				explicitSuffix: null,
-				out var template,
-				out var parseError
-			) ) {
-				throw new IOException(
-					parseError ?? "invalid in-place temporary template"
-				);
-			}
-			var creation = this.myTemporaryObjects.Create(
-				template!,
-				TemporaryObjectKind.File,
-				cancellationToken
+			var diagnostic = 0 == result.Diagnostics.Count
+				? null
+				: result.Diagnostics[ result.Diagnostics.Count - 1 ];
+			return new IOException(
+				null == diagnostic
+					? $"{operation} failed with outcome {result.Outcome}."
+					: diagnostic.Message,
+				diagnostic?.Exception
 			);
-			if ( !creation.IsSuccess || null == creation.Path ) {
-				throw new IOException(
-					creation.ErrorMessage ?? "unable to create in-place temporary file"
-				);
-			}
-			return creation.Path;
 		}
-
 	}
 
 	private static string BuildBackupPath(
@@ -234,5 +232,4 @@ public static partial class Command {
 		var target = info.ResolveLinkTarget( returnFinalTarget: true );
 		return target?.FullName ?? path;
 	}
-
 }

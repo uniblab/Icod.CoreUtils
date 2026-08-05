@@ -5,9 +5,9 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `45` |
-| Current engineering milestone | LineEditor Phase LE9 complete; proceed to Phase LE10 — integrate the shared transactional-replacement model into Sed and Ed |
+| Current engineering milestone | LineEditor Phase LE10 complete; proceed to Completion Gate F1 — terminal-aware presentation capabilities |
 | Completed infrastructure milestone | Completion Gates E2 through E6 — canonical paths, authoritative metadata, pathname-indirection characterization, mode expressions, single-path mutation, recursive mutation/copy planning, and transactional replacement |
-| Active infrastructure dependency | LE9 confirmed that neutral LineEditor dependencies remain in the current Shared incubation project and that no general `Icod.LineEditor.Shared` assembly is justified; LE10 consumes Completion Gate E6 transaction contracts |
+| Active infrastructure dependency | LE10 now consumes Completion Gate E6 transactional replacement for Sed in-place edits and Ed complete-file writes while preserving editor-owned backup, append, force, modified-buffer, and link policy |
 | Next command batch | Completion Gate F1 and Batch 46 remain next after the contiguous LineEditor incubation sequence |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
@@ -1167,7 +1167,7 @@ After `cp`, `mv`, and `install` have independently validated E6, Patch repeats i
 
 P11B and P12 are complete. The co-resident Patch implementation is closed at version 1.0, with final limitations recorded in `patch/upstream/P12-closure-audit.md`. It does not create a runtime dependency on Diffutils or LineEditor.
 
-### In-solution LineEditor incubation sequence — Phases LE0 through LE9
+### In-solution LineEditor incubation sequence — Phases LE0 through LE10
 
 This sequence does not alter command-batch numbering. The detailed architecture, repository assessment, security model, and test requirements remain in [`Icod.LineEditor-Informed-Architecture-Plan.md`](Icod.LineEditor-Informed-Architecture-Plan.md); this roadmap records the required schedule and completion dependencies.
 
@@ -1233,7 +1233,7 @@ Phase LE4 is complete. Sed now frames input through Shared `ByteRecordReader` in
 - [x] Isolate current in-place editing behind an internal `InPlaceEditor` boundary and add failure-injection and cleanup characterization tests.
 - [x] Keep the current implementation behind that boundary until Completion Gate E6 supplies the final shared transaction model.
 
-Phase LE5 is complete. `Command.RunAsync(string[] args, CommandContext context)` is now the primary entry path and preserves LE4's byte-stream contract when binary context streams are available. `SedScriptSource` and `SedScriptDocument` retain ordered `-e`, `-f`, and implicit script identity, join sources with literal LF rather than `Environment.NewLine`, and map parser diagnostics to stable source line and column locations. Shell execution remains on Shared `ProcessRunner`; auxiliary reads/writes and in-place editing are injectable capabilities; sandbox policy is enforced both during script compilation and through denied runtime profiles. The existing replacement mechanics are isolated in `SystemInPlaceEditor`, use Shared secure temporary objects, and are covered by failure-injection and cleanup tests while the final E6 migration remains scheduled for LE10. The contract is documented in `Icod.LineEditor-LE5-Orchestration-and-Capabilities.md`; Phases LE6 through LE9 are complete and Phase LE10 is now active.
+Phase LE5 is complete. `Command.RunAsync(string[] args, CommandContext context)` is now the primary entry path and preserves LE4's byte-stream contract when binary context streams are available. `SedScriptSource` and `SedScriptDocument` retain ordered `-e`, `-f`, and implicit script identity, join sources with literal LF rather than `Environment.NewLine`, and map parser diagnostics to stable source line and column locations. Shell execution remains on Shared `ProcessRunner`; auxiliary reads/writes and in-place editing are injectable capabilities; sandbox policy is enforced both during script compilation and through denied runtime profiles. The replacement mechanics were isolated in `SystemInPlaceEditor`, used Shared secure temporary objects, and were covered by failure-injection and cleanup tests until the final E6 migration completed in LE10. The contract is documented in `Icod.LineEditor-LE5-Orchestration-and-Capabilities.md`; Phases LE6 through LE10 are complete and Completion Gate F1 is now active.
 
 #### Phase LE6 — Create `Icod.LineEditor.Ed.Shared`
 
@@ -1243,7 +1243,7 @@ Phase LE5 is complete. `Command.RunAsync(string[] args, CommandContext context)`
 - [x] Define injectable Ed file and process capabilities and immutable standard and restricted security profiles.
 - [x] Establish textual compatibility fixtures for ed scripts emitted by GNU Diffutils and `Icod.DiffUtils` without adding a runtime dependency on `Icod.DiffUtils.Shared`.
 
-Phase LE6 is complete. `Icod.LineEditor.Ed.Shared` now provides bounded segmented line storage, stable line identities, Ed-specific addresses and ranges, marks, cut buffers, substitutions, global execution, reversible undo, remembered session state, injected file and process effects, immutable standard and restricted profiles, controlled diagnostics, signals, cancellation, and exit statuses. The engine consumes the current Shared GNU BRE, byte-record, process, secure-temporary, and filesystem-durability contracts. Its dedicated tests include textual GNU Diffutils-style and `Icod.DiffUtils`-style ed-script fixtures without a runtime Diffutils dependency. The design and phase boundary are recorded in `Icod.LineEditor-LE6-Ed-Shared-Engine.md`; Phases LE7 through LE9 are complete and Phase LE10 is now active.
+Phase LE6 is complete. `Icod.LineEditor.Ed.Shared` now provides bounded segmented line storage, stable line identities, Ed-specific addresses and ranges, marks, cut buffers, substitutions, global execution, reversible undo, remembered session state, injected file and process effects, immutable standard and restricted profiles, controlled diagnostics, signals, cancellation, and exit statuses. The engine consumes the current Shared GNU BRE, byte-record, process, secure-temporary, and filesystem-durability contracts. Its dedicated tests include textual GNU Diffutils-style and `Icod.DiffUtils`-style ed-script fixtures without a runtime Diffutils dependency. The design and phase boundary are recorded in `Icod.LineEditor-LE6-Ed-Shared-Engine.md`; Phases LE7 through LE10 are complete and Completion Gate F1 is now active.
 
 #### Phase LE7 — Rebuild `Icod.LineEditor.Ed`
 
@@ -1252,7 +1252,7 @@ Phase LE6 is complete. `Icod.LineEditor.Ed.Shared` now provides bounded segmente
 - [x] Implement GNU ed 1.22.5 command-line, address, buffer, command, file, process, signal, diagnostic, and exit-status conformance.
 - [x] Add command-level, script, large-buffer, long-line, cancellation, broken-pipe, and interoperability tests.
 
-Phase LE7 is complete. `Icod.LineEditor.Ed.Command` now composes the LE6 mutable engine with the standard file and process capabilities, selects Shared BRE or ERE policy, accepts GNU ed 1.22.5 invocation options and initial-address forms, preserves LF-oriented command/data semantics through byte streams, maps prompting, help, diagnostics, cancellation, modified-buffer warnings, and exit statuses at the executable boundary, and retains the lowercase `ed` assembly. The dedicated command tests cover invocation, profiles, scripts, byte counts, diagnostics, CR policy, large buffers, long lines, cancellation, broken output, text compatibility, and GNU/Icod Diffutils ed-script fixtures. The completed boundary is recorded in `Icod.LineEditor-LE7-Ed-Command.md`; Phases LE8 and LE9 are also complete and Phase LE10 is now active.
+Phase LE7 is complete. `Icod.LineEditor.Ed.Command` now composes the LE6 mutable engine with the standard file and process capabilities, selects Shared BRE or ERE policy, accepts GNU ed 1.22.5 invocation options and initial-address forms, preserves LF-oriented command/data semantics through byte streams, maps prompting, help, diagnostics, cancellation, modified-buffer warnings, and exit statuses at the executable boundary, and retains the lowercase `ed` assembly. The dedicated command tests cover invocation, profiles, scripts, byte counts, diagnostics, CR policy, large buffers, long lines, cancellation, broken output, text compatibility, and GNU/Icod Diffutils ed-script fixtures. The completed boundary is recorded in `Icod.LineEditor-LE7-Ed-Command.md`; Phases LE8 through LE10 are also complete and Completion Gate F1 is now active.
 
 #### Phase LE8 — Implement `Icod.LineEditor.Red`
 
@@ -1263,7 +1263,7 @@ Phase LE7 is complete. `Icod.LineEditor.Ed.Command` now composes the LE6 mutable
 - [x] Capture the restricted working-directory context once and document whether the pinned compatibility profile provides pathname restriction or stronger physical confinement.
 - [x] Add adversarial tests that verify denied operations leave buffer, address, marks, modified state, filename state, and undo state unchanged as required.
 
-Phase LE8 is complete. `Icod.LineEditor.Red.Command` now hosts the LE6 engine under the same immutable restricted profile used by `ed --restricted`; parser/dispatcher preflight rejects direct, remembered, filtered, and global-nested shell commands before mutable transitions, while a denied process capability supplies defense in depth. The shared file policy captures one working directory and applies host-independent simple-name classification to Unix and Windows path forms. Its documented compatibility guarantee is pathname restriction rather than physical confinement across links, reparse points, mounts, and validation/open races. Dedicated Red and shared-engine adversarial tests cover identity, equivalence, path forms, permitted leaves, and preservation of buffer, address, marks, modified state, filename, and undo state. Details are recorded in `Icod.LineEditor-LE8-Red-Restricted-Profile.md`; Phase LE9 is also complete and Phase LE10 is now active.
+Phase LE8 is complete. `Icod.LineEditor.Red.Command` now hosts the LE6 engine under the same immutable restricted profile used by `ed --restricted`; parser/dispatcher preflight rejects direct, remembered, filtered, and global-nested shell commands before mutable transitions, while a denied process capability supplies defense in depth. The shared file policy captures one working directory and applies host-independent simple-name classification to Unix and Windows path forms. Its documented compatibility guarantee is pathname restriction rather than physical confinement across links, reparse points, mounts, and validation/open races. Dedicated Red and shared-engine adversarial tests cover identity, equivalence, path forms, permitted leaves, and preservation of buffer, address, marks, modified state, filename, and undo state. Details are recorded in `Icod.LineEditor-LE8-Red-Restricted-Profile.md`; Phases LE9 and LE10 are also complete and Completion Gate F1 is now active.
 
 #### Phase LE9 — Perform the evidence-based LineEditor sharing audit
 
@@ -1274,19 +1274,21 @@ Phase LE8 is complete. `Icod.LineEditor.Red.Command` now hosts the LE6 engine un
 - [x] Create `Icod.LineEditor.Shared` only if a cohesive residual library remains after those classifications and both completed engines provide real consumers; the audit found no such residual and therefore does not create the project.
 - [x] Record consumer evidence and dependency direction for every retained or previously moved API.
 
-Phase LE9 is complete. The audit compared the completed Sed and Ed implementations, classified every plausible shared primitive, and found that neutral regular-expression, record, diagnostic, process, temporary, filesystem, and text contracts already belong in the current Shared incubation project. Ed addresses, mutable-buffer state, undo, and Red policy remain in `Icod.LineEditor.Ed.Shared`; Sed program parsing, address/range state, pattern and hold spaces, branching, command cycle, sandbox policy, and in-place policy remain in `Icod.LineEditor.Sed`. No cohesive LineEditor-family residual remains, so `Icod.LineEditor.Shared` is not created. Consumer evidence and dependency direction are recorded in `Icod.LineEditor-LE9-Sharing-Audit.md` and enforced by architecture-boundary tests in the Ed.Shared and Sed test projects. Phase LE10 is now active.
+Phase LE9 is complete. The audit compared the completed Sed and Ed implementations, classified every plausible shared primitive, and found that neutral regular-expression, record, diagnostic, process, temporary, filesystem, and text contracts already belong in the current Shared incubation project. Ed addresses, mutable-buffer state, undo, and Red policy remain in `Icod.LineEditor.Ed.Shared`; Sed program parsing, address/range state, pattern and hold spaces, branching, command cycle, sandbox policy, and in-place policy remain in `Icod.LineEditor.Sed`. No cohesive LineEditor-family residual remains, so `Icod.LineEditor.Shared` is not created. Consumer evidence and dependency direction are recorded in `Icod.LineEditor-LE9-Sharing-Audit.md` and enforced by architecture-boundary tests in the Ed.Shared and Sed test projects. Phase LE10 is also complete and Completion Gate F1 is now active.
 
-Completion of Phases LE0 through LE9 leaves Sed decomposed and re-audited, Ed and Red implemented over one engine, and the family boundary justified by actual consumers. Final solution and repository extraction remains deferred until Completion Gate G.
+Completion of Phases LE0 through LE10 leaves Sed decomposed and re-audited, Ed and Red implemented over one engine, the family boundary justified by actual consumers, and both editor write paths integrated with the validated E6 transaction model. Final solution and repository extraction remains deferred until Completion Gate G.
 
 ### In-solution LineEditor transactional-replacement integration — Phase LE10
 
 This follow-up does not alter command-batch numbering. It occurs after Completion Gate E6 and Batches 44 and 45 so the shared transaction model has first been validated by `cp`, `mv`, and `install` before the LineEditor commands replace their temporary command-local mechanisms.
 
-- [ ] Migrate Sed in-place editing to the shared secure sibling-temporary, backup, rollback, metadata, symlink/reparse-point, atomic-replacement, and cleanup contracts.
-- [ ] Migrate Ed write and replacement operations where the command semantics require transactional replacement.
-- [ ] Preserve command-specific backup, append, force, write, modified-buffer, and symlink policies above the shared mechanism.
-- [ ] Add atomicity, rollback, metadata, link, cancellation, failure-injection, and cleanup tests for both engines.
-- [ ] Remove temporary command-local replacement implementations after all three required CI platforms pass.
+- [x] Migrate Sed in-place editing to the shared secure sibling-temporary, backup, rollback, metadata, symlink/reparse-point, atomic-replacement, and cleanup contracts.
+- [x] Migrate Ed write and replacement operations where the command semantics require transactional replacement.
+- [x] Preserve command-specific backup, append, force, write, modified-buffer, and symlink policies above the shared mechanism.
+- [x] Add atomicity, rollback, metadata, link, cancellation, failure-injection, and cleanup tests for both engines.
+- [x] Remove temporary command-local replacement implementations; the required three-runner matrix remains the permanent acceptance check.
+
+Phase LE10 is complete. Sed in-place edits now map to E6 recovery units with explicit retained backups, restoration of pre-existing backups, best-effort mode/ownership/attribute preservation, `--follow-symlinks` resolution before no-follow planning, rollback, cancellation, and deterministic cleanup. Ed complete-file writes and creations now use the same authoritative observation, stable-identity precondition, durable sibling staging, commit, metadata, rollback, and cleanup contracts; append remains a direct append-and-flush policy. Terminal indirection is resolved for Ed and for Sed only under `--follow-symlinks`; unsupported no-follow Sed objects fail without an unsafe local fallback. The implementation and test matrix are recorded in `Icod.LineEditor-LE10-Transactional-Replacement.md`. Completion Gate F1 is now active.
 
 ### Completion Gate F1 — before Batch 46
 
@@ -1699,7 +1701,7 @@ Completion of this gate establishes `Icod.CommandFramework` as the neutral cross
 
 - Phase LE9 found no cohesive general `Icod.LineEditor.Shared` remainder. Similar command vocabulary is not sufficient evidence for sharing: Ed addresses and mutable-buffer state differ fundamentally from Sed addresses, pattern/hold spaces, and streaming cycle state. The project remains absent unless later completed consumers demonstrate an identical family-specific contract that does not belong in `Icod.CommandFramework`.
 
-- Completion Gates E2 through E6 remain general filesystem foundations even though Patch is an early consumer. Patch helps shape and test their cross-suite contracts but keeps filename selection, hunk application, rejects, backups, partial-application decisions, and GNU diagnostics in `Icod.Patch`. E6 is not considered stable from Patch alone: Patch Phase P11A, `cp`/`mv`, and `install` exercise different policies before P11B and P12 close Patch. LineEditor Phase LE10 follows those validations.
+- Completion Gates E2 through E6 remain general filesystem foundations even though Patch is an early consumer. Patch helps shape and test their cross-suite contracts but keeps filename selection, hunk application, rejects, backups, partial-application decisions, and GNU diagnostics in `Icod.Patch`. E6 is not considered stable from Patch alone: Patch Phase P11A, `cp`/`mv`, and `install` exercise different policies before P11B and P12 close Patch. LineEditor Phase LE10 now consumes those validated contracts and leaves Completion Gate F1 as the active milestone.
 
 - Completion Gates F1 through F4 establish cross-suite terminal presentation and control, host and processor-resource facts, process identity and targets, argument-safe launch, child and arbitrary-process waiting contracts, signals, process groups, priorities, monotonic timing, status translation, and timeout behavior before the most platform-intensive suite begins. These APIs live physically in the current Shared incubation project but are provisionally classified as `Icod.CommandFramework` candidates.
 
