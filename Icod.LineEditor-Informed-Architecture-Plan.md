@@ -32,7 +32,7 @@ Icod.LineEditor.Sed.Command
 
 No `EdCommand`, `RedCommand`, or `SedCommand` classes are proposed.
 
-## LE0 through LE8 implementation status
+## LE0 through LE9 implementation status
 
 Phase LE0 was completed on August 4, 2026. Project and solution identities now follow the architecture below, Ed and Red explicitly use C# 13, the Red project file follows the repository's UTF-8-without-BOM convention, and the pre-LE1 source and three-runner test state is recorded in [`Icod.LineEditor-LE0-Baseline.md`](Icod.LineEditor-LE0-Baseline.md). Because the inspected Red project contained only a placeholder entry point, LE0 also establishes the required public `Icod.LineEditor.Red.Command` facade while preserving that seed output; Phase LE8 remains responsible for actual restricted-editor behavior.
 
@@ -50,7 +50,9 @@ Phase LE6 is now complete. `Icod.LineEditor.Ed.Shared` and its dedicated tests e
 
 Phase LE7 is now complete. The `ed` executable retains `Icod.LineEditor.Ed.Command` and the lowercase `ed` assembly while becoming a thin GNU ed 1.22.5 command/session host over the LE6 engine. It now owns declarative option parsing, byte-preserving `CommandContext` orchestration, initial file and `+line`/search selection, standard/restricted profile composition, prompting, diagnostics, script presentation, signal/cancellation mapping, and command-level scale/interoperability tests.
 
-Phase LE8 is now complete. `red` retains `Icod.LineEditor.Red.Command` and the lowercase `red` assembly, uses the same Ed engine and immutable restricted profile as `ed --restricted`, denies shell operations before dispatch and again at the process-capability layer, applies host-independent restricted pathname classification, captures its working directory once, documents pathname restriction rather than physical confinement, and adds adversarial command and state-preservation tests. Phase LE9 is now active.
+Phase LE8 is now complete. `red` retains `Icod.LineEditor.Red.Command` and the lowercase `red` assembly, uses the same Ed engine and immutable restricted profile as `ed --restricted`, denies shell operations before dispatch and again at the process-capability layer, applies host-independent restricted pathname classification, captures its working directory once, documents pathname restriction rather than physical confinement, and adds adversarial command and state-preservation tests.
+
+Phase LE9 is now complete. The completed Sed and Ed implementations were compared rather than abstracted speculatively. Neutral regular-expression, record, diagnostic, process, temporary, filesystem, and text contracts remain in the current Shared incubation project; mutable Ed/Red behavior remains in `Icod.LineEditor.Ed.Shared`; Sed program and cycle behavior remains in `Icod.LineEditor.Sed`. No cohesive residual family library remains, so `Icod.LineEditor.Shared` is not created. The evidence and dependency decision are recorded in `Icod.LineEditor-LE9-Sharing-Audit.md` and locked by architecture-boundary tests. Phase LE10 is now active.
 
 ---
 
@@ -936,7 +938,7 @@ Ed file-modified state versus Sed in-place transactions
 Red restrictions versus Sed sandbox mode
 ```
 
-### Category 3 — possibly family-specific, but not yet proven
+### Category 3 — audited family candidates with no cohesive residual
 
 Possible examples include:
 
@@ -946,15 +948,15 @@ Possible examples include:
 - shared command-script diagnostic formatting;
 - common adapters from the shared regex engine into substitution commands.
 
-These should begin as private or internal implementations in Sed and Ed.
+Phase LE9 found that these remain private or internal implementations in Sed and Ed because their grammar, source-location, diagnostic, and mutation contracts do not align.
 
-After both are complete:
+Phase LE9 completed that comparison:
 
-1. compare the implementations;
-2. verify that their grammar and error semantics truly align;
-3. identify a stable common contract;
-4. move the common implementation once;
-5. create `Icod.LineEditor.Shared` only if the resulting library is cohesive and substantial.
+1. the implementations were compared;
+2. their grammar and error semantics were found to differ materially;
+3. neutral contracts were confirmed in the current Shared incubation project;
+4. Ed-family and Sed-specific implementations were retained with their consumers;
+5. no cohesive residual justified `Icod.LineEditor.Shared`.
 
 It is entirely acceptable for the final architecture to have no `Icod.LineEditor.Shared` project:
 
@@ -1050,7 +1052,7 @@ Phase LE4 is complete as a semantic change separate from the LE1 decomposition. 
 - [x] Defer final atomic replacement internals until Completion Gate E6.
 - [x] Remove `Environment.NewLine` from Sed data serialization and script-source joining.
 
-Phase LE5 is complete. The detailed orchestration, script-source, sandbox, capability, and provisional in-place-edit contracts are recorded in `Icod.LineEditor-LE5-Orchestration-and-Capabilities.md`. Phases LE6 through LE8 are complete and Phase LE9 is active.
+Phase LE5 is complete. The detailed orchestration, script-source, sandbox, capability, and provisional in-place-edit contracts are recorded in `Icod.LineEditor-LE5-Orchestration-and-Capabilities.md`. Phases LE6 through LE9 are complete and Phase LE10 is active.
 
 ## Phase LE6 — Create `Icod.LineEditor.Ed.Shared`
 
@@ -1087,14 +1089,16 @@ Phase LE8 is complete. The permanent restricted command, shared immutable profil
 
 ## Phase LE9 — Perform the actual LineEditor sharing audit
 
-- [ ] Compare Sed and Ed parser primitives.
-- [ ] Compare replacement-template grammars and diagnostics.
-- [ ] Separate cross-suite candidates from editor-family candidates.
-- [ ] Move cross-suite code into the current Shared incubation project.
-- [ ] Keep Ed-only code in `Icod.LineEditor.Ed.Shared`.
-- [ ] Keep Sed-only code in `Icod.LineEditor.Sed`.
-- [ ] Create `Icod.LineEditor.Shared` only if a cohesive residual library remains.
-- [ ] Record the consumer evidence for every moved API.
+- [x] Compare Sed and Ed parser primitives.
+- [x] Compare replacement-template grammars and diagnostics.
+- [x] Separate cross-suite candidates from editor-family candidates.
+- [x] Confirm cross-suite code in the current Shared incubation project; no additional production move was required.
+- [x] Keep Ed-only code in `Icod.LineEditor.Ed.Shared`.
+- [x] Keep Sed-only code in `Icod.LineEditor.Sed`.
+- [x] Create `Icod.LineEditor.Shared` only if a cohesive residual library remains; the audit found none and does not create the project.
+- [x] Record consumer evidence and dependency direction for every retained or previously moved API.
+
+Phase LE9 is complete. Ed and Sed delimiter parsing, address state, replacement templates, diagnostics, mutation models, and security policies were compared in detail. Similar-looking syntax did not form a stable family contract. Existing neutral contracts remain in the Shared incubation project, Ed/Red state remains in `Icod.LineEditor.Ed.Shared`, and Sed state remains in `Icod.LineEditor.Sed`. `Icod.LineEditor.Shared` is therefore not created. The classification matrix, consumer evidence, dependency graph, and reopening criteria are recorded in `Icod.LineEditor-LE9-Sharing-Audit.md`; architecture-boundary tests enforce the result.
 
 ## Phase LE10 — Integrate the later filesystem transaction gate
 
@@ -1133,7 +1137,7 @@ Icod.LineEditor.Sed.Command
 Icod.LineEditor.Shared
 ```
 
-Create it only after Phase LE9 demonstrates a real need.
+Phase LE9 found no cohesive residual library and therefore did not create it. Add it only if later completed consumers provide new evidence that reopens the audit.
 
 ## Likely namespaces
 
