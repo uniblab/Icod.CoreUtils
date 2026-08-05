@@ -1252,16 +1252,18 @@ Phase LE6 is complete. `Icod.LineEditor.Ed.Shared` now provides bounded segmente
 - [x] Implement GNU ed 1.22.5 command-line, address, buffer, command, file, process, signal, diagnostic, and exit-status conformance.
 - [x] Add command-level, script, large-buffer, long-line, cancellation, broken-pipe, and interoperability tests.
 
-Phase LE7 is complete. `Icod.LineEditor.Ed.Command` now composes the LE6 mutable engine with the standard file and process capabilities, selects Shared BRE or ERE policy, accepts GNU ed 1.22.5 invocation options and initial-address forms, preserves LF-oriented command/data semantics through byte streams, maps prompting, help, diagnostics, cancellation, modified-buffer warnings, and exit statuses at the executable boundary, and retains the lowercase `ed` assembly. The dedicated command tests cover invocation, profiles, scripts, byte counts, diagnostics, CR policy, large buffers, long lines, cancellation, broken output, text compatibility, and GNU/Icod Diffutils ed-script fixtures. The completed boundary is recorded in `Icod.LineEditor-LE7-Ed-Command.md`; Phase LE8 is now active.
+Phase LE7 is complete. `Icod.LineEditor.Ed.Command` now composes the LE6 mutable engine with the standard file and process capabilities, selects Shared BRE or ERE policy, accepts GNU ed 1.22.5 invocation options and initial-address forms, preserves LF-oriented command/data semantics through byte streams, maps prompting, help, diagnostics, cancellation, modified-buffer warnings, and exit statuses at the executable boundary, and retains the lowercase `ed` assembly. The dedicated command tests cover invocation, profiles, scripts, byte counts, diagnostics, CR policy, large buffers, long lines, cancellation, broken output, text compatibility, and GNU/Icod Diffutils ed-script fixtures. The completed boundary is recorded in `Icod.LineEditor-LE7-Ed-Command.md`; Phase LE8 is also complete and Phase LE9 is now active.
 
 #### Phase LE8 — Implement `Icod.LineEditor.Red`
 
-- [ ] Retain the public `Icod.LineEditor.Red.Command` and lowercase assembly name `red`.
-- [ ] Use the same Ed engine and make `red` and `ed --restricted` select the same immutable restricted profile.
-- [ ] Deny every shell-bearing path at both parser/dispatcher and process-capability layers, including nested global-command execution and remembered shell commands.
-- [ ] Route every filename-bearing operation through one platform-aware restricted file policy covering Unix paths, Windows drive-relative and rooted paths, UNC and device paths, alternate data streams, symlinks, hard links, reparse points, and validation/open races.
-- [ ] Capture the restricted working-directory context once and document whether the pinned compatibility profile provides pathname restriction or stronger physical confinement.
-- [ ] Add adversarial tests that verify denied operations leave buffer, address, marks, modified state, filename state, and undo state unchanged as required.
+- [x] Retain the public `Icod.LineEditor.Red.Command` and lowercase assembly name `red`.
+- [x] Use the same Ed engine and make `red` and `ed --restricted` select the same immutable restricted profile.
+- [x] Deny every shell-bearing path at both parser/dispatcher and process-capability layers, including nested global-command execution and remembered shell commands.
+- [x] Route every filename-bearing operation through one platform-aware restricted file policy covering Unix paths, Windows drive-relative and rooted paths, UNC and device paths, alternate data streams, symlinks, hard links, reparse points, and validation/open races.
+- [x] Capture the restricted working-directory context once and document whether the pinned compatibility profile provides pathname restriction or stronger physical confinement.
+- [x] Add adversarial tests that verify denied operations leave buffer, address, marks, modified state, filename state, and undo state unchanged as required.
+
+Phase LE8 is complete. `Icod.LineEditor.Red.Command` now hosts the LE6 engine under the same immutable restricted profile used by `ed --restricted`; parser/dispatcher preflight rejects direct, remembered, filtered, and global-nested shell commands before mutable transitions, while a denied process capability supplies defense in depth. The shared file policy captures one working directory and applies host-independent simple-name classification to Unix and Windows path forms. Its documented compatibility guarantee is pathname restriction rather than physical confinement across links, reparse points, mounts, and validation/open races. Dedicated Red and shared-engine adversarial tests cover identity, equivalence, path forms, permitted leaves, and preservation of buffer, address, marks, modified state, filename, and undo state. Details are recorded in `Icod.LineEditor-LE8-Red-Restricted-Profile.md`; Phase LE9 is now active.
 
 #### Phase LE9 — Perform the evidence-based LineEditor sharing audit
 

@@ -32,7 +32,7 @@ Icod.LineEditor.Sed.Command
 
 No `EdCommand`, `RedCommand`, or `SedCommand` classes are proposed.
 
-## LE0 through LE7 implementation status
+## LE0 through LE8 implementation status
 
 Phase LE0 was completed on August 4, 2026. Project and solution identities now follow the architecture below, Ed and Red explicitly use C# 13, the Red project file follows the repository's UTF-8-without-BOM convention, and the pre-LE1 source and three-runner test state is recorded in [`Icod.LineEditor-LE0-Baseline.md`](Icod.LineEditor-LE0-Baseline.md). Because the inspected Red project contained only a placeholder entry point, LE0 also establishes the required public `Icod.LineEditor.Red.Command` facade while preserving that seed output; Phase LE8 remains responsible for actual restricted-editor behavior.
 
@@ -48,7 +48,9 @@ Phase LE5 is now complete. Sed's primary entry point consumes `CommandContext`; 
 
 Phase LE6 is now complete. `Icod.LineEditor.Ed.Shared` and its dedicated tests establish the mutable Ed/Red engine with bounded segmented line storage, stable identities, Ed-specific addresses, marks, cut buffers, substitutions, global commands, undo and remembered state, injected file/process capabilities, immutable standard/restricted profiles, Shared BRE and record/process/temporary/filesystem consumption, and textual GNU/Icod Diffutils ed-script fixtures.
 
-Phase LE7 is now complete. The `ed` executable retains `Icod.LineEditor.Ed.Command` and the lowercase `ed` assembly while becoming a thin GNU ed 1.22.5 command/session host over the LE6 engine. It now owns declarative option parsing, byte-preserving `CommandContext` orchestration, initial file and `+line`/search selection, standard/restricted profile composition, prompting, diagnostics, script presentation, signal/cancellation mapping, and command-level scale/interoperability tests. Phase LE8 now applies the same engine and immutable restricted profile to `red`.
+Phase LE7 is now complete. The `ed` executable retains `Icod.LineEditor.Ed.Command` and the lowercase `ed` assembly while becoming a thin GNU ed 1.22.5 command/session host over the LE6 engine. It now owns declarative option parsing, byte-preserving `CommandContext` orchestration, initial file and `+line`/search selection, standard/restricted profile composition, prompting, diagnostics, script presentation, signal/cancellation mapping, and command-level scale/interoperability tests.
+
+Phase LE8 is now complete. `red` retains `Icod.LineEditor.Red.Command` and the lowercase `red` assembly, uses the same Ed engine and immutable restricted profile as `ed --restricted`, denies shell operations before dispatch and again at the process-capability layer, applies host-independent restricted pathname classification, captures its working directory once, documents pathname restriction rather than physical confinement, and adds adversarial command and state-preservation tests. Phase LE9 is now active.
 
 ---
 
@@ -1048,7 +1050,7 @@ Phase LE4 is complete as a semantic change separate from the LE1 decomposition. 
 - [x] Defer final atomic replacement internals until Completion Gate E6.
 - [x] Remove `Environment.NewLine` from Sed data serialization and script-source joining.
 
-Phase LE5 is complete. The detailed orchestration, script-source, sandbox, capability, and provisional in-place-edit contracts are recorded in `Icod.LineEditor-LE5-Orchestration-and-Capabilities.md`. Phases LE6 and LE7 are complete and Phase LE8 is active.
+Phase LE5 is complete. The detailed orchestration, script-source, sandbox, capability, and provisional in-place-edit contracts are recorded in `Icod.LineEditor-LE5-Orchestration-and-Capabilities.md`. Phases LE6 through LE8 are complete and Phase LE9 is active.
 
 ## Phase LE6 — Create `Icod.LineEditor.Ed.Shared`
 
@@ -1074,12 +1076,14 @@ Phase LE7 is complete. The command boundary, option and session policy, standard
 
 ## Phase LE8 — Implement `Icod.LineEditor.Red`
 
-- [ ] Retain `Icod.LineEditor.Red.Command`.
-- [ ] Use the same Ed engine.
-- [ ] Select the restricted security profile.
-- [ ] Make `red` and `ed --restricted` equivalent.
-- [ ] Add shell, path, filename-state, link, race, and platform-path adversarial tests.
-- [ ] Keep the executable assembly name `red`.
+- [x] Retain `Icod.LineEditor.Red.Command`.
+- [x] Use the same Ed engine.
+- [x] Select the restricted security profile.
+- [x] Make `red` and `ed --restricted` equivalent.
+- [x] Add shell, path, filename-state, link, race, and platform-path adversarial tests.
+- [x] Keep the executable assembly name `red`.
+
+Phase LE8 is complete. The permanent restricted command, shared immutable profile, parser/dispatcher and process-capability defenses, host-independent pathname policy, captured-directory and pathname-only confinement contract, and adversarial validation matrix are recorded in `Icod.LineEditor-LE8-Red-Restricted-Profile.md`.
 
 ## Phase LE9 — Perform the actual LineEditor sharing audit
 

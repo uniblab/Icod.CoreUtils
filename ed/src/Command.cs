@@ -208,26 +208,15 @@ Commands and edited records are LF-delimited data; CRLF command input is accepte
 				options.UnsafeNames
 			);
 			var workingDirectory = Directory.GetCurrentDirectory();
-			if ( options.Restricted ) {
-				fileAccess = new RestrictedEditorFileAccess(
-					workingDirectory,
-					fileAccess
-				);
-			}
-			var processAccess = options.Restricted
-				? (IEditorProcessAccess)new DeniedEditorProcessAccess()
-				: new StandardEditorProcessAccess();
+			var profile = options.Restricted
+				? EditorCapabilityProfile.Restricted( workingDirectory, fileAccess )
+				: EditorCapabilityProfile.Standard( fileAccess, new StandardEditorProcessAccess() );
+			fileAccess = profile.FileAccess;
+			var processAccess = profile.ProcessAccess;
 			var expressionProvider = options.ExtendedRegularExpressions
 				? (IRegularExpressionProvider)GnuExtendedRegularExpressionProvider.Default
 				: GnuBasicRegularExpressionProvider.Default;
-			var engine = new EditorEngine(
-				options.Restricted
-					? EditorSecurityPolicy.Restricted( workingDirectory )
-					: EditorSecurityPolicy.Standard,
-				fileAccess,
-				processAccess,
-				expressionProvider
-			);
+			var engine = new EditorEngine( profile, expressionProvider );
 
 			var initialFileError = await LoadInitialFileAsync(
 				engine,
