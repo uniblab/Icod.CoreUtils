@@ -238,7 +238,7 @@ public sealed class SedCommandTests {
 				"main\n"
 			);
 			Assert.Equal( "main\nextra\n", result.Output );
-			Assert.Equal( $"main{Environment.NewLine}", await File.ReadAllTextAsync( writePath ) );
+			Assert.Equal( "main\n", await File.ReadAllTextAsync( writePath ) );
 		} finally {
 			File.Delete( readPath );
 			File.Delete( writePath );
@@ -369,7 +369,7 @@ public sealed class SedCommandTests {
 				string.Empty
 			);
 			Assert.Equal( 0, result.ExitCode );
-			Assert.Equal( $"beta{Environment.NewLine}", await File.ReadAllTextAsync( path ) );
+			Assert.Equal( "beta\n", await File.ReadAllTextAsync( path ) );
 			Assert.Equal( "alpha\n", await File.ReadAllTextAsync( backup ) );
 			if (
 				!OperatingSystem.IsWindows()
@@ -437,7 +437,7 @@ public sealed class SedCommandTests {
 				string.Empty
 			);
 			Assert.Equal( 0, result.ExitCode );
-			Assert.Equal( $"beta{Environment.NewLine}", await File.ReadAllTextAsync( target ) );
+			Assert.Equal( "beta\n", await File.ReadAllTextAsync( target ) );
 			Assert.NotNull( new FileInfo( link ).LinkTarget );
 		} finally {
 			Directory.Delete( directory, recursive: true );

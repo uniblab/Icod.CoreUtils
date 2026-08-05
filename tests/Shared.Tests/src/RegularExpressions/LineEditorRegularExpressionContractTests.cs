@@ -21,7 +21,10 @@ public sealed class LineEditorRegularExpressionContractTests {
 
 	[Fact]
 	public void BasicRemainsTheDefaultWhileExtendedUsesItsOwnOperatorProfile() {
-		Assert.Equal( GnuRegularExpressionSyntax.Basic, new RegularExpressionOptions().Syntax );
+		var defaults = new RegularExpressionOptions();
+		Assert.Equal( GnuRegularExpressionSyntax.Basic, defaults.Syntax );
+		Assert.Equal( new Rune( '\n' ), defaults.LineSeparator );
+		Assert.False( defaults.DotMatchesNull );
 		Assert.Equal(
 			GnuRegularExpressionSyntax.Extended,
 			RegularExpressionOptions.GnuExtendedCompatibility.Syntax
@@ -67,6 +70,37 @@ public sealed class LineEditorRegularExpressionContractTests {
 
 		Assert.True( result.IsMatch );
 		Assert.Equal( "b", result.Match!.Value );
+	}
+
+	[Fact]
+	public void ConsumerSelectedLineSeparatorControlsMultilineAndDotPolicy() {
+		var nullLineOptions = new RegularExpressionOptions {
+			NewLineSensitive = true,
+			LineSeparator = new Rune( '\0' ),
+			DotMatchesNull = true
+		};
+		var anchored = Compile( Extended, "^b$", nullLineOptions );
+
+		var nullSeparated = anchored.Match( "a\0b\0c" );
+		Assert.True( nullSeparated.IsMatch );
+		Assert.Equal( "b", nullSeparated.Match!.Value );
+		Assert.False( anchored.Match( "a\nb\nc" ).IsMatch );
+
+		var ordinaryDot = Compile(
+			Extended,
+			".",
+			new RegularExpressionOptions {
+				LineSeparator = new Rune( '\0' ),
+				DotMatchesNull = true
+			}
+		);
+		Assert.True( ordinaryDot.Match( "\0" ).IsMatch );
+
+		var multilineDot = Compile( Extended, ".", nullLineOptions );
+		Assert.False( multilineDot.Match( "\0" ).IsMatch );
+
+		var negated = Compile( Extended, "[^a]", nullLineOptions );
+		Assert.False( negated.Match( "\0" ).IsMatch );
 	}
 
 	[Fact]

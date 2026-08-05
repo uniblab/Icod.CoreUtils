@@ -193,10 +193,13 @@ public static partial class Command {
 		bool captureStandardOutput,
 		CancellationToken cancellationToken
 	) {
+		if ( !captureStandardOutput ) {
+			await environment.Output.BeginOutputAsync( cancellationToken ).ConfigureAwait( false );
+		}
 		await using var outputStream = captureStandardOutput
 			? null
 			: new TextWriterStream(
-				environment.Output,
+				new SedOutputTextWriter( environment.Output ),
 				Encoding.UTF8
 			)
 		;

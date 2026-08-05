@@ -16,7 +16,7 @@ The migration deliberately separates reusable regex mechanics from Sed policy.
 - leftmost-longest match selection;
 - numbered captures and back-references;
 - locale-aware character classes and collation through an injected provider;
-- line-sensitive anchors and dot/bracket policy;
+- line-sensitive anchors and dot/bracket policy over a caller-selected logical separator;
 - controlled compile and match diagnostics;
 - cancellation and resource limits.
 
@@ -102,3 +102,7 @@ LE3 intentionally does not claim byte-perfect Sed input semantics. The following
 - CR preservation;
 - byte-to-text and replacement-encoding policy;
 - hardened script-source, sandbox, process, and in-place replacement phases.
+
+## LE4 completion handoff
+
+Phase LE4 has now resolved the byte-record items deferred by this migration. Sed regex matching receives text from the explicit C/POSIX byte or UTF-8 profile, malformed bytes survive through deterministic placeholders, LF/NUL framing and final termination are authoritative record metadata, and replacement output is encoded through the same selected profile. Concrete `-z` multiline use also justified a narrow Shared extension: Sed selects NUL through `RegularExpressionOptions.LineSeparator` and explicitly allows dot to consume NUL outside multiline mode. The detailed contract is recorded in `Icod.LineEditor-LE4-Record-and-Text-Semantics.md`.

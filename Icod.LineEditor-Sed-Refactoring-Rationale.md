@@ -24,6 +24,10 @@ Phase LE1 completed the behavior-preserving decomposition described by this rati
 
 Phase LE2 completed the Shared regular-expression contract audit. The managed Gate R1 foundation already satisfies the cross-suite GNU Sed and GNU Ed needs for BRE/ERE syntax, leftmost-longest matching, captures, locale injection, authoritative string and byte coordinates, invalid-input policy, diagnostics, cancellation, and resource limits. No production Shared extension was required. The audit deliberately leaves empty-pattern reuse, address/substitution context, match iteration, replacement grammar, output encoding, and Sed diagnostics in `Icod.LineEditor.Sed`; these become the adapter and migration responsibilities of LE3.
 
+Phase LE3 completed that migration through a private Sed adapter over the Shared managed GNU BRE/ERE providers. Empty-expression reuse, modifiers, GNU escape preprocessing, POSIX interpretation, replacement context, zero-length progression, and diagnostic presentation remain command-owned.
+
+Phase LE4 completed the record and text-semantic correction. Sed now consumes Shared byte-record framing, preserves CR and explicit final termination, selects C/POSIX byte or UTF-8 decoding from the Shared locale environment, round-trips malformed UTF-8 deterministically, and emits LF or NUL separators explicitly. Pattern and hold spaces remain Sed-owned mutable text states and may grow according to command semantics; unrelated completed records are not retained beyond the one-record lookahead required for `$`.
+
 ## 1. The current state is already beyond a raw rename
 
 The Sed project already uses:
@@ -610,11 +614,16 @@ Icod.LineEditor.Sed.InPlaceEditor
 - preserved Sed-specific empty-expression state, modifiers, GNU escape preprocessing, GNU/POSIX policy, match iteration, replacement context, and diagnostics;
 - added GNU sed 4.10 differential coverage for BRE, ERE, captures, locale classes, control and numeric escapes, strict-POSIX bracket behavior, repeated zero-length matches, and leftmost-longest behavior.
 
-## Stage 5 — Correct record and encoding semantics
+## Stage 5 — Correct record and encoding semantics — completed
 
-- preserve bytes and final termination;
-- treat LF and NUL as explicit Sed data;
-- test CRLF, invalid input, and incomplete records.
+- `SedInputRecord` preserves authoritative bytes, source identity, aggregate and per-source numbers, separator kind, and final termination;
+- Shared LF/NUL byte-record framing preserves CR and malformed input;
+- the CLI uses raw standard streams and the public text facade uses compatibility adapters;
+- C/POSIX byte and UTF-8 profiles define matching, byte/text mapping, and replacement encoding;
+- LF and NUL are emitted explicitly as Sed data;
+- LF/NUL also select the internal pattern-space separator for `N`, `D`, `P`, `H`, `G`, `W`, and multiline anchors;
+- the Shared regex contract gained only the consumer-proven configurable line separator and NUL-dot options, with source-compatible defaults;
+- CRLF, lone CR, invalid UTF-8, NUL, empty, huge, multiline, hold-space, and unterminated inputs are covered.
 
 ## Stage 6 — Harden process, sandbox, and file effects
 

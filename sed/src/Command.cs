@@ -17,8 +17,8 @@ using Icod.CoreUtils.Shared.IO;
 using Icod.CoreUtils.Shared.Processes;
 
 /// <summary>
-/// Implements a portable GNU-compatible <c>sed</c> stream editor using the Shared
-/// managed GNU regular-expression provider and asynchronous text processing.
+/// Implements a portable GNU-compatible <c>sed</c> stream editor using Shared
+/// managed GNU regular expressions and byte-preserving record processing.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -112,11 +112,69 @@ public static partial class Command {
 		TextWriter? stderr = null,
 		CancellationToken cancellationToken = default
 	) {
-		args ??= Array.Empty<string>();
 		stdin ??= Console.In;
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;
+		using var inputStream = new TextReaderInputStream( stdin );
+		using var outputStream = new TextWriterOutputStream( stdout );
+		return await RunCoreAsync(
+			args,
+			inputStream,
+			outputStream,
+			stdout,
+			stderr,
+			cancellationToken
+		).ConfigureAwait( false );
+	}
 
+	/// <summary>Executes Sed against caller-owned byte streams.</summary>
+	/// <param name="args">The command-line arguments, excluding the executable name.</param>
+	/// <param name="stdin">The caller-owned standard-input byte stream.</param>
+	/// <param name="stdout">The caller-owned standard-output byte stream.</param>
+	/// <param name="stderr">The caller-owned standard-error text writer.</param>
+	/// <param name="cancellationToken">The token used to cancel parsing and asynchronous I/O.</param>
+	/// <returns>The GNU-compatible process exit status.</returns>
+	internal static async Task<int> RunStreamAsync(
+		string[] args,
+		Stream stdin,
+		Stream stdout,
+		TextWriter stderr,
+		CancellationToken cancellationToken = default
+	) {
+		ArgumentNullException.ThrowIfNull( stdin );
+		ArgumentNullException.ThrowIfNull( stdout );
+		ArgumentNullException.ThrowIfNull( stderr );
+		using var presentationOutput = new StreamWriter(
+			stdout,
+			new UTF8Encoding( encoderShouldEmitUTF8Identifier: false ),
+			8192,
+			leaveOpen: true
+		) {
+			NewLine = "\n"
+		};
+		try {
+			return await RunCoreAsync(
+				args,
+				stdin,
+				stdout,
+				presentationOutput,
+				stderr,
+				cancellationToken
+			).ConfigureAwait( false );
+		} finally {
+			await presentationOutput.FlushAsync().ConfigureAwait( false );
+		}
+	}
+
+	private static async Task<int> RunCoreAsync(
+		string[] args,
+		Stream stdin,
+		Stream stdout,
+		TextWriter presentationOutput,
+		TextWriter stderr,
+		CancellationToken cancellationToken
+	) {
+		args ??= Array.Empty<string>();
 		try {
 			var options = new Options();
 			var scriptFragments = new List<string>();
@@ -126,80 +184,51 @@ public static partial class Command {
 				options,
 				scriptFragments,
 				files,
-				stdout,
+				presentationOutput,
 				stderr,
 				cancellationToken
 			).ConfigureAwait( false );
+			await presentationOutput.FlushAsync( cancellationToken ).ConfigureAwait( false );
 			if ( argumentResult.HasValue ) {
 				return argumentResult.Value;
 			}
 
 			if ( 0 == scriptFragments.Count ) {
 				if ( 0 == files.Count ) {
-					await stderr.WriteLineAsync(
-						"sed: no script was provided"
-					).ConfigureAwait( false );
+					await stderr.WriteLineAsync( "sed: no script was provided" ).ConfigureAwait( false );
 					return UsageExitCode;
 				}
-
-				scriptFragments.Add(
-					files[ 0 ]
-				);
-				files.RemoveAt(
-					0
-				);
+				scriptFragments.Add( files[ 0 ] );
+				files.RemoveAt( 0 );
 			}
-
 			if ( 0 == files.Count ) {
-				files.Add(
-					"-"
-				);
+				files.Add( "-" );
 			}
-
 			if ( options.InPlace ) {
 				options.Separate = true;
 			}
-
-			if (
-				options.InPlace
-				&& files.Any(
-					path => "-" == path
-				)
-			) {
-				await stderr.WriteLineAsync(
-					"sed: cannot edit standard input in-place"
-				).ConfigureAwait( false );
+			if ( options.InPlace && files.Any( path => "-" == path ) ) {
+				await stderr.WriteLineAsync( "sed: cannot edit standard input in-place" ).ConfigureAwait( false );
 				return UsageExitCode;
 			}
 
-			var scriptText = string.Join(
-				Environment.NewLine,
-				scriptFragments
-			);
+			var textCodec = SedTextCodec.CreateCurrent();
+			var scriptText = string.Join( Environment.NewLine, scriptFragments );
 			var program = new ScriptParser(
 				scriptText,
 				options.ExtendedRegularExpressions,
 				options.Sandbox,
 				options.Posix,
+				options.NullData,
+				textCodec.Locale,
 				cancellationToken
 			).Parse();
 
 			if ( options.Debug ) {
-				await stderr.WriteLineAsync(
-					"SED PROGRAM:"
-				).ConfigureAwait( false );
+				await stderr.WriteLineAsync( "SED PROGRAM:" ).ConfigureAwait( false );
 				foreach ( var scriptLine in scriptText.Split( '\n' ) ) {
-					await stderr.WriteLineAsync(
-						$"  {scriptLine.TrimEnd( '\r' )}"
-					).ConfigureAwait( false );
+					await stderr.WriteLineAsync( $"  {scriptLine.TrimEnd( '\r' )}" ).ConfigureAwait( false );
 				}
-			}
-
-			if (
-				options.Unbuffered
-				&& stdout is StreamWriter streamWriter
-			) {
-				streamWriter.AutoFlush = true;
 			}
 
 			if ( options.InPlace ) {
@@ -208,6 +237,7 @@ public static partial class Command {
 						path,
 						options,
 						program,
+						textCodec,
 						stderr,
 						cancellationToken
 					).ConfigureAwait( false );
@@ -219,37 +249,32 @@ public static partial class Command {
 			}
 
 			if ( options.Separate ) {
+				var separateOutput = new SedOutputWriter( stdout, textCodec, options.NullData ) {
+					AutoFlush = options.Unbuffered
+				};
 				foreach ( var path in files ) {
-					using ( var input = new InputSequence(
-						new SourceSpec[ 1 ] {
-							new SourceSpec(
-								path
-							)
-						},
+					using var input = new InputSequence(
+						new SourceSpec[] { new SourceSpec( path ) },
 						stdin,
-						options.NullData
-					) ) {
-						var environment = new ExecutionEnvironment(
-							stdout,
-							stderr,
-							options.SuppressAutomaticPrint,
-							options.NullData,
-							options.ListWidth,
-							options.Debug
-						);
-						try {
-							var result = await ExecuteAsync(
-								program,
-								input,
-								environment,
-								cancellationToken
-							).ConfigureAwait( false );
-							if ( result.Quit ) {
-								return result.ExitCode;
-							}
-						} finally {
-							await environment.DisposeAsync().ConfigureAwait( false );
+						options.NullData,
+						textCodec
+					);
+					var environment = new ExecutionEnvironment(
+						separateOutput,
+						textCodec,
+						stderr,
+						options.SuppressAutomaticPrint,
+						options.NullData,
+						options.ListWidth,
+						options.Debug
+					);
+					try {
+						var result = await ExecuteAsync( program, input, environment, cancellationToken ).ConfigureAwait( false );
+						if ( result.Quit ) {
+							return result.ExitCode;
 						}
+					} finally {
+						await environment.DisposeAsync( cancellationToken ).ConfigureAwait( false );
 					}
 				}
 				return 0;
@@ -257,48 +282,35 @@ public static partial class Command {
 
 			var sharedEnvironment = new ExecutionEnvironment(
 				stdout,
+				textCodec,
 				stderr,
 				options.SuppressAutomaticPrint,
 				options.NullData,
 				options.ListWidth,
-				options.Debug
+				options.Debug,
+				options.Unbuffered
 			);
 			try {
-				using ( var input = new InputSequence(
-					files.Select(
-						path => new SourceSpec(
-							path
-						)
-					).ToArray(),
+				using var input = new InputSequence(
+					files.Select( path => new SourceSpec( path ) ).ToArray(),
 					stdin,
-					options.NullData
-				) ) {
-					return (
-						await ExecuteAsync(
-							program,
-							input,
-							sharedEnvironment,
-							cancellationToken
-						).ConfigureAwait( false )
-					).ExitCode;
-				}
+					options.NullData,
+					textCodec
+				);
+				return (
+					await ExecuteAsync( program, input, sharedEnvironment, cancellationToken ).ConfigureAwait( false )
+				).ExitCode;
 			} finally {
-				await sharedEnvironment.DisposeAsync().ConfigureAwait( false );
+				await sharedEnvironment.DisposeAsync( cancellationToken ).ConfigureAwait( false );
 			}
 		} catch ( ScriptParseException ex ) {
-			await stderr.WriteLineAsync(
-				$"sed: {ex.Message}"
-			).ConfigureAwait( false );
+			await stderr.WriteLineAsync( $"sed: {ex.Message}" ).ConfigureAwait( false );
 			return UsageExitCode;
 		} catch ( OperationCanceledException ) {
-			await stderr.WriteLineAsync(
-				"sed: operation canceled"
-			).ConfigureAwait( false );
+			await stderr.WriteLineAsync( "sed: operation canceled" ).ConfigureAwait( false );
 			return CommandExitCodes.Canceled;
 		} catch ( Exception ex ) {
-			await stderr.WriteLineAsync(
-				$"sed: {ex.Message}"
-			).ConfigureAwait( false );
+			await stderr.WriteLineAsync( $"sed: {ex.Message}" ).ConfigureAwait( false );
 			return ErrorExitCode;
 		}
 	}

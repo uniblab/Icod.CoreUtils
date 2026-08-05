@@ -5,9 +5,9 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `45` |
-| Current engineering milestone | LineEditor Phase LE3 complete; proceed to Phase LE4 — correct Sed record and text semantics |
+| Current engineering milestone | LineEditor Phase LE4 complete; proceed to Phase LE5 — harden Sed capabilities |
 | Completed infrastructure milestone | Completion Gates E2 through E6 — canonical paths, authoritative metadata, pathname-indirection characterization, mode expressions, single-path mutation, recursive mutation/copy planning, and transactional replacement |
-| Active infrastructure dependency | LE3 now consumes the stabilized Shared BRE/ERE provider through Sed-specific compilation, reuse, iteration, locale, and diagnostic policy; LE4 applies the Shared record and byte/text contracts |
+| Active infrastructure dependency | LE4 now consumes the Shared byte-record and text-locale contracts while preserving Sed-specific pattern/hold-space state; LE5 hardens script, process, sandbox, and external-file capabilities |
 | Next command batch | Completion Gate F1 and Batch 46 remain next after the contiguous LineEditor incubation sequence |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
@@ -254,7 +254,7 @@ Man7 pages are useful synopses and secondary references, but they must not repla
    A command must use the supplied `stdin`, `stdout`, and `stderr`, and must never dispose a caller-owned standard stream.
 
 8. **Sed's remaining risks are record fidelity, capability enforcement, and replacement safety.**
-   LE1 exposed the implementation as responsibility-focused partial modules, and LE3 replaced the private .NET regex translator with Sed-specific policy over the Shared managed GNU BRE/ERE provider. The command still uses a decoded record reader that may normalize CR before LF, combines script fragments with a host-generated line ending, and performs in-place replacement through command-local file moves. LE4 and the later LineEditor phases must migrate record, security, process-capability, and replacement mechanics to the applicable shared contracts without moving Sed's pattern-space and command-cycle state into a general library.
+   LE1 exposed the implementation as responsibility-focused partial modules, LE3 replaced the private .NET regex translator with Sed-specific policy over the Shared managed GNU BRE/ERE provider, and LE4 replaced decoded-line I/O with byte-preserving Shared LF/NUL records and explicit termination. The command still combines script fragments with a host-generated line ending and performs shell, external-file, sandbox, and in-place replacement work through command-local capabilities. LE5 and the later LineEditor phases must harden those effects and migrate replacement mechanics to the applicable shared contracts without moving Sed's pattern-space and command-cycle state into a general library.
 
 ## Project conventions
 
@@ -1215,12 +1215,14 @@ Phase LE3 is complete. `SedRegularExpressionCompiler` now selects the Shared GNU
 
 #### Phase LE4 — Correct Sed record and text semantics
 
-- [ ] Introduce a byte-preserving Sed input record that retains authoritative bytes, source identity, aggregate and per-file record numbers, separator kind, and whether the final record was terminated.
-- [ ] Consume the Shared segmented record foundation for LF and NUL modes; preserve CR as data unless an explicit Sed rule removes it.
-- [ ] Define C/POSIX byte-locale and UTF-8 decoding behavior, invalid-input policy, byte-to-text mapping, and replacement encoding.
-- [ ] Serialize Sed data with explicit LF or NUL separators rather than `Environment.NewLine`; reserve host-generated line endings for diagnostics and presentation only.
-- [ ] Add CRLF, lone-CR, invalid-UTF-8, NUL, empty-record, huge-record, multiline-pattern-space, hold-space-growth, and unterminated-final-record tests.
-- [ ] Document the correct memory invariant: Sed streams unrelated completed input records, while pattern and hold spaces may grow according to Sed semantics.
+- [x] Introduce a byte-preserving Sed input record that retains authoritative bytes, source identity, aggregate and per-file record numbers, separator kind, and whether the final record was terminated.
+- [x] Consume the Shared segmented record foundation for LF and NUL modes; preserve CR as data unless an explicit Sed rule removes it.
+- [x] Define C/POSIX byte-locale and UTF-8 decoding behavior, invalid-input policy, byte-to-text mapping, and replacement encoding.
+- [x] Serialize Sed data with explicit LF or NUL separators rather than `Environment.NewLine`; reserve host-generated line endings for diagnostics and presentation only.
+- [x] Add CRLF, lone-CR, invalid-UTF-8, NUL, empty-record, huge-record, multiline-pattern-space, hold-space-growth, and unterminated-final-record tests.
+- [x] Document the correct memory invariant: Sed streams unrelated completed input records, while pattern and hold spaces may grow according to Sed semantics.
+
+Phase LE4 is complete. Sed now frames input through Shared `ByteRecordReader` in LF or NUL mode, carries source and termination metadata in `SedInputRecord`, selects C/POSIX byte or UTF-8 text policy through `TextLocaleEnvironment`, preserves malformed UTF-8 through deterministic placeholders, and writes separators explicitly through `DelimitedByteRecordWriter`. The CLI uses raw console streams while the established `TextReader`/`TextWriter` facade remains available through compatibility adapters. Pattern and hold spaces retain both termination and the active LF/NUL internal separator needed by multiline, hold, print, list, and file-write commands. Real `-z` consumer evidence also extends Shared line-sensitive regex options with a caller-selected separator and explicit NUL-dot policy while preserving prior defaults. The implementation and acceptance record are documented in `Icod.LineEditor-LE4-Record-and-Text-Semantics.md`; Phase LE5 is now active.
 
 #### Phase LE5 — Harden Sed orchestration, script sources, and capabilities
 

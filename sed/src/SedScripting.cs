@@ -12,6 +12,7 @@ using Icod.CoreUtils.Shared.CommandLine;
 using Icod.CoreUtils.Shared.Diagnostics;
 using Icod.CoreUtils.Shared.IO;
 using Icod.CoreUtils.Shared.Processes;
+using Icod.CoreUtils.Shared.Text;
 
 // Responsibility: script instruction model and parser.
 public static partial class Command {
@@ -198,6 +199,8 @@ public static partial class Command {
 			bool extendedRegularExpressions,
 			bool sandbox,
 			bool posix,
+			bool nullData,
+			ITextLocaleProvider textLocale,
 			CancellationToken cancellationToken
 		) {
 			this.myText = text ?? throw new ArgumentNullException(
@@ -208,6 +211,8 @@ public static partial class Command {
 			this.myRegularExpressions = new SedRegularExpressionCompiler(
 				extendedRegularExpressions,
 				posix,
+				nullData,
+				textLocale,
 				cancellationToken
 			);
 			this.myInstructions = new List<Instruction>();

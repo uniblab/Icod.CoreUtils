@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace Icod.CoreUtils.Shared.RegularExpressions;
 
 /// <summary>Controls GNU regular-expression compilation and matching.</summary>
@@ -36,10 +38,21 @@ public sealed record RegularExpressionOptions {
 	public bool IgnoreCase { get; init; }
 
 	/// <summary>
-	/// Gets or initializes whether line-feed characters delimit logical lines for anchors and are excluded by negated bracket expressions.
-	/// The selected syntax profile may impose additional dot exclusions; GNU Basic and Extended syntax exclude NUL, and GNU Emacs syntax always excludes line feed from dot.
+	/// Gets or initializes whether the configured <see cref="LineSeparator"/> delimits logical lines for anchors, dot, and negated bracket expressions.
+	/// The selected syntax profile may impose additional dot exclusions; GNU Emacs syntax is always line-sensitive for dot.
 	/// </summary>
 	public bool NewLineSensitive { get; init; }
+
+	/// <summary>
+	/// Gets or initializes the Unicode scalar that separates logical lines when <see cref="NewLineSensitive"/> is enabled.
+	/// </summary>
+	public Rune LineSeparator { get; init; } = new( '\n' );
+
+	/// <summary>
+	/// Gets or initializes whether the dot operator may match NUL when NUL is not the active line separator.
+	/// GNU Basic and Extended syntax exclude NUL by default; byte-record consumers such as GNU Sed <c>--null-data</c> may opt in explicitly.
+	/// </summary>
+	public bool DotMatchesNull { get; init; }
 
 	/// <summary>
 	/// Gets or initializes whether otherwise-invalid adjacent repetition operators and interval operators without a preceding expression are accepted.
