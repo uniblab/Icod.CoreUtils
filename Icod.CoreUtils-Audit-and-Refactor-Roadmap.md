@@ -5,9 +5,9 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `45` |
-| Current engineering milestone | LineEditor Phase LE5 complete; proceed to Phase LE6 — create `Icod.LineEditor.Ed.Shared` |
+| Current engineering milestone | LineEditor Phase LE6 complete; proceed to Phase LE7 — rebuild `Icod.LineEditor.Ed` over the shared engine |
 | Completed infrastructure milestone | Completion Gates E2 through E6 — canonical paths, authoritative metadata, pathname-indirection characterization, mode expressions, single-path mutation, recursive mutation/copy planning, and transactional replacement |
-| Active infrastructure dependency | LE5 now consumes `CommandContext`, Shared `ProcessRunner`, secure temporary objects, and injectable side-effect capabilities while preserving Sed-specific orchestration; LE6 builds the Ed/Red engine over the proven Shared foundations |
+| Active infrastructure dependency | LE6 now supplies the reusable Ed/Red mutable engine over Shared BRE, records, process, temporary, and filesystem foundations; LE7 migrates the `ed` executable under the standard profile |
 | Next command batch | Completion Gate F1 and Batch 46 remain next after the contiguous LineEditor incubation sequence |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
@@ -1233,15 +1233,17 @@ Phase LE4 is complete. Sed now frames input through Shared `ByteRecordReader` in
 - [x] Isolate current in-place editing behind an internal `InPlaceEditor` boundary and add failure-injection and cleanup characterization tests.
 - [x] Keep the current implementation behind that boundary until Completion Gate E6 supplies the final shared transaction model.
 
-Phase LE5 is complete. `Command.RunAsync(string[] args, CommandContext context)` is now the primary entry path and preserves LE4's byte-stream contract when binary context streams are available. `SedScriptSource` and `SedScriptDocument` retain ordered `-e`, `-f`, and implicit script identity, join sources with literal LF rather than `Environment.NewLine`, and map parser diagnostics to stable source line and column locations. Shell execution remains on Shared `ProcessRunner`; auxiliary reads/writes and in-place editing are injectable capabilities; sandbox policy is enforced both during script compilation and through denied runtime profiles. The existing replacement mechanics are isolated in `SystemInPlaceEditor`, use Shared secure temporary objects, and are covered by failure-injection and cleanup tests while the final E6 migration remains scheduled for LE10. The contract is documented in `Icod.LineEditor-LE5-Orchestration-and-Capabilities.md`; Phase LE6 is now active.
+Phase LE5 is complete. `Command.RunAsync(string[] args, CommandContext context)` is now the primary entry path and preserves LE4's byte-stream contract when binary context streams are available. `SedScriptSource` and `SedScriptDocument` retain ordered `-e`, `-f`, and implicit script identity, join sources with literal LF rather than `Environment.NewLine`, and map parser diagnostics to stable source line and column locations. Shell execution remains on Shared `ProcessRunner`; auxiliary reads/writes and in-place editing are injectable capabilities; sandbox policy is enforced both during script compilation and through denied runtime profiles. The existing replacement mechanics are isolated in `SystemInPlaceEditor`, use Shared secure temporary objects, and are covered by failure-injection and cleanup tests while the final E6 migration remains scheduled for LE10. The contract is documented in `Icod.LineEditor-LE5-Orchestration-and-Capabilities.md`; Phase LE6 is complete and Phase LE7 is now active.
 
 #### Phase LE6 — Create `Icod.LineEditor.Ed.Shared`
 
-- [ ] Create `Icod.LineEditor.Ed.Shared` and its dedicated test project inside the current solution.
-- [ ] Design and implement the complete Ed/Red mutable editor engine: scalable line storage, stable line identity where required, current and last addresses, marks, cut buffers, addresses and ranges, commands, substitutions, global commands, undo, remembered state, file operations, shell integration, diagnostics, signals, cancellation, and exit statuses.
-- [ ] Consume the current Shared regex, record, process, temporary, filesystem, and capability contracts rather than introducing parallel abstractions.
-- [ ] Define injectable Ed file and process capabilities and immutable standard and restricted security profiles.
-- [ ] Establish textual compatibility fixtures for ed scripts emitted by GNU Diffutils and `Icod.DiffUtils` without adding a runtime dependency on `Icod.DiffUtils.Shared`.
+- [x] Create `Icod.LineEditor.Ed.Shared` and its dedicated test project inside the current solution.
+- [x] Design and implement the complete Ed/Red mutable editor engine: scalable line storage, stable line identity where required, current and last addresses, marks, cut buffers, addresses and ranges, commands, substitutions, global commands, undo, remembered state, file operations, shell integration, diagnostics, signals, cancellation, and exit statuses.
+- [x] Consume the current Shared regex, record, process, temporary, filesystem, and capability contracts rather than introducing parallel abstractions.
+- [x] Define injectable Ed file and process capabilities and immutable standard and restricted security profiles.
+- [x] Establish textual compatibility fixtures for ed scripts emitted by GNU Diffutils and `Icod.DiffUtils` without adding a runtime dependency on `Icod.DiffUtils.Shared`.
+
+Phase LE6 is complete. `Icod.LineEditor.Ed.Shared` now provides bounded segmented line storage, stable line identities, Ed-specific addresses and ranges, marks, cut buffers, substitutions, global execution, reversible undo, remembered session state, injected file and process effects, immutable standard and restricted profiles, controlled diagnostics, signals, cancellation, and exit statuses. The engine consumes the current Shared GNU BRE, byte-record, process, secure-temporary, and filesystem-durability contracts. Its dedicated tests include textual GNU Diffutils-style and `Icod.DiffUtils`-style ed-script fixtures without a runtime Diffutils dependency. The design and phase boundary are recorded in `Icod.LineEditor-LE6-Ed-Shared-Engine.md`; Phase LE7 is now active.
 
 #### Phase LE7 — Rebuild `Icod.LineEditor.Ed`
 

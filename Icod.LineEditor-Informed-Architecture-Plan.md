@@ -32,7 +32,7 @@ Icod.LineEditor.Sed.Command
 
 No `EdCommand`, `RedCommand`, or `SedCommand` classes are proposed.
 
-## LE0 through LE5 implementation status
+## LE0 through LE6 implementation status
 
 Phase LE0 was completed on August 4, 2026. Project and solution identities now follow the architecture below, Ed and Red explicitly use C# 13, the Red project file follows the repository's UTF-8-without-BOM convention, and the pre-LE1 source and three-runner test state is recorded in [`Icod.LineEditor-LE0-Baseline.md`](Icod.LineEditor-LE0-Baseline.md). Because the inspected Red project contained only a placeholder entry point, LE0 also establishes the required public `Icod.LineEditor.Red.Command` facade while preserving that seed output; Phase LE8 remains responsible for actual restricted-editor behavior.
 
@@ -45,6 +45,8 @@ Phase LE3 migrated Sed matching to the Shared managed GNU BRE/ERE providers whil
 Phase LE4 established byte-preserving LF/NUL record framing, explicit termination, C/POSIX byte and UTF-8 locale profiles, invalid-byte preservation, and explicit data separators.
 
 Phase LE5 is now complete. Sed's primary entry point consumes `CommandContext`; script expressions, files, and the implicit operand retain distinct identities and source-relative locations; shell, auxiliary-file, and in-place operations are injectable; Shared `ProcessRunner` remains the system shell implementation; sandbox restrictions have compile-time and runtime enforcement; and provisional replacement mechanics are isolated behind `IInPlaceEditor` pending LE10.
+
+Phase LE6 is now complete. `Icod.LineEditor.Ed.Shared` and its dedicated tests establish the mutable Ed/Red engine with bounded segmented line storage, stable identities, Ed-specific addresses, marks, cut buffers, substitutions, global commands, undo and remembered state, injected file/process capabilities, immutable standard/restricted profiles, Shared BRE and record/process/temporary/filesystem consumption, and textual GNU/Icod Diffutils ed-script fixtures. Phase LE7 now migrates the `ed` executable to that engine.
 
 ---
 
@@ -1044,17 +1046,19 @@ Phase LE4 is complete as a semantic change separate from the LE1 decomposition. 
 - [x] Defer final atomic replacement internals until Completion Gate E6.
 - [x] Remove `Environment.NewLine` from Sed data serialization and script-source joining.
 
-Phase LE5 is complete. The detailed orchestration, script-source, sandbox, capability, and provisional in-place-edit contracts are recorded in `Icod.LineEditor-LE5-Orchestration-and-Capabilities.md`. Phase LE6 is active.
+Phase LE5 is complete. The detailed orchestration, script-source, sandbox, capability, and provisional in-place-edit contracts are recorded in `Icod.LineEditor-LE5-Orchestration-and-Capabilities.md`. Phase LE6 is complete and Phase LE7 is active.
 
 ## Phase LE6 — Create `Icod.LineEditor.Ed.Shared`
 
-- [ ] Create the library and dedicated test project.
-- [ ] Design the mutable buffer, line identity, marks, undo, and editor state.
-- [ ] Implement Ed addresses and command parsing independently from Sed addresses.
-- [ ] Consume the shared BRE provider.
-- [ ] Consume Shared records, process, temporary, and filesystem contracts.
-- [ ] Define file and process security capabilities.
-- [ ] Add textual compatibility fixtures for Ed scripts emitted by GNU Diffutils and `Icod.DiffUtils`.
+- [x] Create the library and dedicated test project.
+- [x] Design the mutable buffer, line identity, marks, undo, and editor state.
+- [x] Implement Ed addresses and command parsing independently from Sed addresses.
+- [x] Consume the shared BRE provider.
+- [x] Consume Shared records, process, temporary, and filesystem contracts.
+- [x] Define file and process security capabilities.
+- [x] Add textual compatibility fixtures for Ed scripts emitted by GNU Diffutils and `Icod.DiffUtils`.
+
+Phase LE6 is complete. The reusable engine, security/capability boundary, Shared-contract consumption, compatibility fixtures, and LE7/LE8 migration boundary are documented in `Icod.LineEditor-LE6-Ed-Shared-Engine.md`.
 
 ## Phase LE7 — Rebuild `Icod.LineEditor.Ed`
 
