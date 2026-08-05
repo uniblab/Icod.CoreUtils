@@ -11,11 +11,14 @@ public sealed class EditorBufferTests {
 		var identity = buffer.GetLine( 2 ).Id;
 
 		var moved = buffer.Move( new EditorAddressRange( 2, 2 ), 4 );
-		var copied = buffer.Copy( new EditorAddressRange( moved.Start, moved.End ), 0 );
 
 		Assert.Equal( 4, moved.Start );
-		Assert.Equal( identity, buffer.GetLine( 4 ).Id );
+		Assert.Equal( identity, buffer.GetLine( moved.Start ).Id );
+
+		var copied = buffer.Copy( new EditorAddressRange( moved.Start, moved.End ), 0 );
+
 		Assert.NotEqual( identity, buffer.GetLine( copied.Start ).Id );
+		Assert.Equal( 5, buffer.FindAddress( identity ) );
 		Assert.Equal( new[] { "two", "one", "three", "four", "two" }, Text( buffer ) );
 	}
 
