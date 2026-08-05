@@ -1,6 +1,6 @@
 # Icod.LineEditor.Ed.Shared
 
-`Icod.LineEditor.Ed.Shared` is the reusable mutable editor engine shared by the future `ed` and `red` command projects.
+`Icod.LineEditor.Ed.Shared` is the reusable mutable editor engine shared by the `ed` and `red` command projects.
 
 The project owns Ed-family behavior rather than process-level command-line policy. It provides:
 
@@ -22,8 +22,22 @@ Icod.CoreUtils.Shared
         ↓
 Icod.LineEditor.Ed.Shared
         ↓
-Icod.LineEditor.Ed       (Phase LE7)
-Icod.LineEditor.Red      (Phase LE8)
+Icod.LineEditor.Ed
+Icod.LineEditor.Red
 ```
 
-The current `ed` and `red` executable projects are not migrated in Phase LE6. They consume this engine in LE7 and LE8 respectively.
+The `ed` and `red` executable projects consume this engine under the standard and permanently restricted command profiles respectively.
+
+## Phase LE9 sharing audit
+
+The completed Ed and Sed engines were compared in Phase LE9. The audit found
+no cohesive residual contract that warrants a general `Icod.LineEditor.Shared`
+assembly. Neutral regular-expression, record, process, temporary, filesystem,
+diagnostic, and text contracts remain in the current Shared incubation
+project. Mutable buffer, address, undo, and Red security behavior remain here;
+Sed program, address/range, cycle, sandbox, and in-place policy remain in
+`Icod.LineEditor.Sed`.
+
+The evidence and dependency decision are recorded in
+`Icod.LineEditor-LE9-Sharing-Audit.md` and enforced by architecture-boundary
+tests in the Ed.Shared and Sed test projects.
