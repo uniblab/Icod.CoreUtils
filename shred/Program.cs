@@ -1,9 +1,9 @@
 namespace Icod.CoreUtils.Shred;
 
-using System;
-
+/// <summary>Hosts the <c>shred</c> command-line entry point.</summary>
 public static class Program {
-	public static int Main( string[] args ) {
-		return Command.Run( args );
-	}
+	/// <summary>Runs the command asynchronously.</summary>
+	/// <param name="args">The command-line arguments.</param>
+	/// <returns>The process exit code.</returns>
+	public static Task<int> Main( string[] args ) => Command.RunAsync( args );
 }

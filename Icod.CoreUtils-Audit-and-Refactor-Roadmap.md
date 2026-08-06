@@ -5,10 +5,10 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `45` |
-| Current engineering milestone | Batch 47 implementation prepared; full three-runner validation of Batches 46 and 47 pending |
+| Current engineering milestone | Batch 48 implementation prepared; full three-runner validation of Batches 46 through 48 pending |
 | Completed infrastructure milestone | Completion Gates E2 through E6 and F1 — filesystem foundations through transactional replacement, plus terminal-aware presentation |
-| Active infrastructure dependency | Batch 47 consumes Completion Gates E1 and E3 traversal, identity, allocated-block, filesystem-information, symlink, and mount-boundary contracts |
-| Next command batch | Validate Batches 46 and 47, then Batch 48 — `shred` |
+| Active infrastructure dependency | Batch 48 uses direct file and device streams, durable flush operations, cryptographic or finite external random sources, and recoverable name-removal policy |
+| Next command batch | Validate Batches 46 through 48, then Completion Gate F2 |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1333,6 +1333,8 @@ The Batch 47 implementation is prepared. `Icod.CoreUtils.Shared.FileSystem.Usage
 - [ ] `shred`
 
 Implement pass selection, random sources, exact-size handling, synchronization, removal and renaming policy, device/file distinctions, progress, and failure recovery. Document and test the limits of overwriting on SSDs, copy-on-write filesystems, snapshots, journaling, and remapped storage.
+
+The Batch 48 implementation is prepared. `shred` now has a documented option model, balanced random and fixed-pattern pass planning, cryptographic and finite external random sources, exact and rounded regular-file sizes, seekable or explicitly sized standard-output and explicit-size device handling, per-pass durable file synchronization, progress diagnostics, and target-local failure isolation. Removal supports direct unlinking or recoverable random-name shortening with best-effort directory synchronization, and removal never begins until all requested overwrite passes succeed. Dedicated `Shred.Tests` coverage exercises parsing, size suffixes, finite random-source exhaustion, exact and rounded writes, final-zero passes, standard output, continuation after failure, progress, and each removal family. `shred/src/README.md` and `Icod.CoreUtils-Batch-48-Data-Destruction.md` record the operational boundary: filesystem-level overwriting cannot guarantee erasure from SSD remapping and wear leveling, copy-on-write extents, journal or RAID caches, snapshots, backups, remote storage, or lower-layer replicas. Final closure requires the full Debug and Release build-and-test matrix on `windows-latest`, `ubuntu-latest`, and `macos-latest`.
 
 ### Completion Gate F2 — shared host and processor-resource foundation before Batch 49
 
