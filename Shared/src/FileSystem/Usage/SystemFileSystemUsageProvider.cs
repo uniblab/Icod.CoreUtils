@@ -177,23 +177,23 @@ public sealed class SystemFileSystemUsageProvider : IFileSystemUsageProvider {
 #pragma warning disable CS0649
 	[StructLayout( LayoutKind.Sequential )]
 	private struct PosixStatVfs {
-		private ulong BlockSize;
-		private ulong FragmentSize;
-		private ulong Blocks;
-		private ulong BlocksFree;
-		private ulong BlocksAvailable;
-		private ulong Files;
-		private ulong FilesFree;
-		private ulong FilesAvailable;
-		private ulong FileSystemIdentifier;
-		private ulong Flags;
-		private ulong MaximumNameLength;
-		private int Spare0;
-		private int Spare1;
-		private int Spare2;
-		private int Spare3;
-		private int Spare4;
-		private int Spare5;
+		public ulong BlockSize;
+		public ulong FragmentSize;
+		public ulong Blocks;
+		public ulong BlocksFree;
+		public ulong BlocksAvailable;
+		public ulong Files;
+		public ulong FilesFree;
+		public ulong FilesAvailable;
+		public ulong FileSystemIdentifier;
+		public ulong Flags;
+		public ulong MaximumNameLength;
+		public int Spare0;
+		public int Spare1;
+		public int Spare2;
+		public int Spare3;
+		public int Spare4;
+		public int Spare5;
 	}
 #pragma warning restore CS0649
 
