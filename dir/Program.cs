@@ -1,10 +1,11 @@
 namespace Icod.CoreUtils.Dir;
 
-using System;
-using System.IO;
-
+/// <summary>Hosts the <c>dir</c> executable. Usage: <c>dir [OPTION]... [FILE]...</c>.</summary>
 public static class Program {
-	public static int Main( string[] args ) {
-		return Command.Run( args, Console.In, Console.Out, Console.Error );
+	/// <summary>Runs the command.</summary>
+	/// <param name="args">Command-line arguments.</param>
+	/// <returns>The asynchronous process exit status.</returns>
+	public static Task<int> Main( string[] args ) {
+		return Command.RunAsync( args );
 	}
 }

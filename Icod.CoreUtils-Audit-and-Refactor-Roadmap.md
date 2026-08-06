@@ -5,10 +5,10 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `45` |
-| Current engineering milestone | Completion Gate F1 complete; proceed to Batch 46 — color database and directory listing family |
+| Current engineering milestone | Batch 46 implementation prepared; full three-runner build and test validation pending |
 | Completed infrastructure milestone | Completion Gates E2 through E6 and F1 — filesystem foundations through transactional replacement, plus terminal-aware presentation |
-| Active infrastructure dependency | Batch 46 now consumes Completion Gate F1 stream, geometry, color, environment, and filename-presentation contracts for `dircolors`, `ls`, `dir`, and `vdir` |
-| Next command batch | Batch 46 — `dircolors`, `ls`, `dir`, and `vdir` |
+| Active infrastructure dependency | Batch 46 consumes Completion Gate F1 terminal, geometry, color, environment, quoting, and filename-presentation contracts |
+| Next command batch | Batch 46 validation, then Batch 47 — `df` and `du` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1288,7 +1288,7 @@ This follow-up does not alter command-batch numbering. It occurs after Completio
 - [x] Add atomicity, rollback, metadata, link, cancellation, failure-injection, and cleanup tests for both engines.
 - [x] Remove temporary command-local replacement implementations; the required three-runner matrix remains the permanent acceptance check.
 
-Phase LE10 is complete. Sed in-place edits now map to E6 recovery units with explicit retained backups, restoration of pre-existing backups, best-effort mode/ownership/attribute preservation, `--follow-symlinks` resolution before no-follow planning, rollback, cancellation, and deterministic cleanup. Ed complete-file writes and creations now use the same authoritative observation, stable-identity precondition, durable sibling staging, commit, metadata, rollback, and cleanup contracts; append remains a direct append-and-flush policy. Terminal indirection is resolved for Ed and for Sed only under `--follow-symlinks`; unsupported no-follow Sed objects fail without an unsafe local fallback. The implementation and test matrix are recorded in `Icod.LineEditor-LE10-Transactional-Replacement.md`. Completion Gate F1 is complete; Batch 46 is now active.
+Phase LE10 is complete. Sed in-place edits now map to E6 recovery units with explicit retained backups, restoration of pre-existing backups, best-effort mode/ownership/attribute preservation, `--follow-symlinks` resolution before no-follow planning, rollback, cancellation, and deterministic cleanup. Ed complete-file writes and creations now use the same authoritative observation, stable-identity precondition, durable sibling staging, commit, metadata, rollback, and cleanup contracts; append remains a direct append-and-flush policy. Terminal indirection is resolved for Ed and for Sed only under `--follow-symlinks`; unsupported no-follow Sed objects fail without an unsafe local fallback. The implementation and test matrix are recorded in `Icod.LineEditor-LE10-Transactional-Replacement.md`. Completion Gate F1 is complete. The Batch 46 implementation is prepared and awaits the required full three-runner build and test matrix before Batch 47 becomes active.
 
 ### Completion Gate F1 — before Batch 46
 
@@ -1304,18 +1304,20 @@ Phase LE10 is complete. Sed in-place edits now map to E6 recovery units with exp
 
 This gate provides only the presentation capabilities needed by `dircolors`, `ls`, `dir`, and `vdir`.
 
-Completion Gate F1 is complete. `Icod.CoreUtils.Shared.Terminal` now supplies injectable standard-stream observations, attached-versus-redirected status, controlled unavailable and failed outcomes, environment and terminal dimension precedence, deterministic 80-by-24 fallback, `TERM`/`COLORTERM`/`SHELL`/`QUOTING_STYLE` capture, GNU never/auto/always color policy, and the directory-listing filename-quoting and control-character vocabulary. System providers use managed console and environment APIs, while dedicated Shared tests use injected providers and cover all required presentation paths on the three-runner matrix. The boundary and conformance choices are recorded in `Icod.CoreUtils-F1-Terminal-Presentation.md`; Batch 46 is now active.
+Completion Gate F1 is complete. `Icod.CoreUtils.Shared.Terminal` now supplies injectable standard-stream observations, attached-versus-redirected status, controlled unavailable and failed outcomes, environment and terminal dimension precedence, deterministic 80-by-24 fallback, `TERM`/`COLORTERM`/`SHELL`/`QUOTING_STYLE` capture, GNU never/auto/always color policy, and the directory-listing filename-quoting and control-character vocabulary. System providers use managed console and environment APIs, while dedicated Shared tests use injected providers and cover all required presentation paths on the three-runner matrix. The boundary and conformance choices are recorded in `Icod.CoreUtils-F1-Terminal-Presentation.md`; the Batch 46 implementation now consumes those contracts and awaits the required full three-runner build and test validation.
 
 ### Batch 46 — Color database and directory listing family (4 tools)
 
-- [ ] `dircolors`
-- [ ] `ls`
-- [ ] `dir`
-- [ ] `vdir`
+- [x] `dircolors`
+- [x] `ls`
+- [x] `dir`
+- [x] `vdir`
 
 Implement the documented `dircolors` database grammar, terminal selectors, file-extension rules, shell-specific output, built-in database, print-database mode, and diagnostics. Produce a reusable `LS_COLORS` parser for the listing engine.
 
 Create one listing engine with three thin entry profiles. Implement locale sorting, quoting, color, columns, widths, recursion with cycle protection, symlink policy, inode/block/owner/group/mode metadata, human sizes, time styles, indicators, classification, dereference modes, and terminal-sensitive defaults. Remove independent simplified `dir` and `vdir` implementations.
+
+The Batch 46 implementation is prepared. `Icod.CoreUtils.Shared.DirectoryListing` now owns a reusable GNU-style `LS_COLORS` codec, a documented `dircolors` database parser/compiler with `TERM` and `COLORTERM` selectors, a built-in color database, Bourne/C-shell emission, and controlled diagnostics. A single metadata-backed directory-listing engine now serves `ls`, `dir`, and `vdir` through thin executable profiles. It provides terminal-sensitive layouts, locale and version ordering, shared F1 quoting/color policy, Unicode display widths, long metadata rows, inode and allocated-block columns, human/SI sizes, selectable timestamps and styles, indicators, recursive identity-cycle protection, and command-line/all/never dereference modes. Shared tests cover option profiles, color parsing and precedence, terminal database selection, malformed input, built-in compilation, and shell inference. Dedicated `Ls.Tests`, `Dir.Tests`, `VDir.Tests`, and `DirColors.Tests` projects exercise each public command boundary and are registered under the solution `tests` folder. The batch remains open until the full solution builds and all applicable tests pass on `windows-latest`, `ubuntu-latest`, and `macos-latest`; Batch 47 follows that validation.
 
 ### Batch 47 — Filesystem usage reporting (2 tools)
 

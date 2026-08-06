@@ -1,10 +1,11 @@
-// Minimal port of the UNIX `vdir` utility to .NET (prints long listing similar to `ls -l`).
 namespace Icod.CoreUtils.Vdir;
 
-using System;
-
-internal static class Program {
-	public static int Main( string[] args ) {
-		return Command.Run( args, Console.In, Console.Out, Console.Error );
+/// <summary>Hosts the <c>vdir</c> executable. Usage: <c>vdir [OPTION]... [FILE]...</c>.</summary>
+public static class Program {
+	/// <summary>Runs the command.</summary>
+	/// <param name="args">Command-line arguments.</param>
+	/// <returns>The asynchronous process exit status.</returns>
+	public static Task<int> Main( string[] args ) {
+		return Command.RunAsync( args );
 	}
 }

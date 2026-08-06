@@ -1,10 +1,11 @@
 namespace Icod.CoreUtils.DirColors;
 
-using System;
-using System.IO;
-
+/// <summary>Hosts the <c>dircolors</c> executable. Usage: <c>dircolors [OPTION]... [FILE]</c>.</summary>
 public static class Program {
-	public static int Main( string[] args ) {
-		return Command.Run( args, Console.In, Console.Out, Console.Error );
+	/// <summary>Runs the command.</summary>
+	/// <param name="args">Command-line arguments.</param>
+	/// <returns>The asynchronous process exit status.</returns>
+	public static Task<int> Main( string[] args ) {
+		return Command.RunAsync( args );
 	}
 }
