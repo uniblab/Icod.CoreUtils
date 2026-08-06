@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `48` |
-| Current engineering milestone | Completion Gate F2 implemented; proceed to Batch 49 — host and processor context |
+| Completed command batches | `0` through `49` |
+| Current engineering milestone | Batch 49 implemented; proceed to Completion Gate F3 — terminal identification and control |
 | Completed infrastructure milestone | Completion Gates E2 through E6, F1, and F2 — filesystem, terminal-presentation, host-identity, and processor-resource foundations |
-| Active infrastructure dependency | Batch 49 consumes the Completion Gate F2 host-identifier, processor-count, affinity, quota, topology, capability, and provenance contracts |
-| Next command batch | Batch 49 — `hostid` and `nproc` |
+| Active infrastructure dependency | Completion Gate F3 must establish terminal pathname, attachment, mode, speed, control-character, and serialization contracts before `tty` and `stty` |
+| Next engineering step | Completion Gate F3, then Batch 50 — `tty` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1360,10 +1360,12 @@ Completion Gate F2 is implemented in `Icod.CoreUtils.Shared.Host`. `IHostResourc
 
 ### Batch 49 — Host and processor context (2 tools)
 
-- [ ] `hostid`
-- [ ] `nproc`
+- [x] `hostid`
+- [x] `nproc`
 
 Add the missing projects. Define reproducible host-ID behavior. Build `nproc` as the first consumer of the shared processor-resource provider, then apply GNU-specific environment overrides, `--all`, `--ignore`, minimum-result, affinity, quota, diagnostics, and exit-status policy in the command project.
+
+The Batch 49 implementation is complete. `hostid` is a thin, injectable consumer of the Completion Gate F2 identifier provider and prints the normalized unsigned 32-bit value as exactly eight lowercase hexadecimal digits without exposing the raw stable identifier used by a fallback provider. It accepts only the standard help and version options, rejects operands, converts unavailable facts and provider failures into controlled diagnostics, and preserves cancellation-aware asynchronous execution. `nproc` is the first command consumer of the F2 processor-resource snapshot. Its command-local policy selects installed/configured processors for `--all`; otherwise combines current-process affinity and managed process availability, falls back through online, installed, and configured counts, applies valid `OMP_NUM_THREADS` and `OMP_THREAD_LIMIT` semantics, rounds hard quotas to the nearest processor with a minimum of one, applies `--ignore` last, and never emits zero. Invalid OpenMP values are ignored while invalid command-line values fail before provider access. Dedicated `HostId.Tests` and `NProc.Tests` projects cover formatting, unavailable facts, provider failures, option boundaries, affinity and runtime limits, host-count fallbacks, OpenMP list values, quota rounding, `--all`, `--ignore`, and the minimum-result rule. The ownership and precedence boundary is recorded in `Icod.CoreUtils-Batch-49-Host-and-Processor-Context.md`. The permanent full-solution Debug/Release and three-runner validation remains part of repository CI.
 
 ### Completion Gate F3 — before Batch 50
 
