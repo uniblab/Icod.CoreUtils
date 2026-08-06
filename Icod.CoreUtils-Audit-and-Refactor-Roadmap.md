@@ -5,10 +5,10 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `45` |
-| Current engineering milestone | LineEditor Phase LE10 complete; proceed to Completion Gate F1 — terminal-aware presentation capabilities |
-| Completed infrastructure milestone | Completion Gates E2 through E6 — canonical paths, authoritative metadata, pathname-indirection characterization, mode expressions, single-path mutation, recursive mutation/copy planning, and transactional replacement |
-| Active infrastructure dependency | LE10 now consumes Completion Gate E6 transactional replacement for Sed in-place edits and Ed complete-file writes while preserving editor-owned backup, append, force, modified-buffer, and link policy |
-| Next command batch | Completion Gate F1 and Batch 46 remain next after the contiguous LineEditor incubation sequence |
+| Current engineering milestone | Completion Gate F1 complete; proceed to Batch 46 — color database and directory listing family |
+| Completed infrastructure milestone | Completion Gates E2 through E6 and F1 — filesystem foundations through transactional replacement, plus terminal-aware presentation |
+| Active infrastructure dependency | Batch 46 now consumes Completion Gate F1 stream, geometry, color, environment, and filename-presentation contracts for `dircolors`, `ls`, `dir`, and `vdir` |
+| Next command batch | Batch 46 — `dircolors`, `ls`, `dir`, and `vdir` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1288,21 +1288,23 @@ This follow-up does not alter command-batch numbering. It occurs after Completio
 - [x] Add atomicity, rollback, metadata, link, cancellation, failure-injection, and cleanup tests for both engines.
 - [x] Remove temporary command-local replacement implementations; the required three-runner matrix remains the permanent acceptance check.
 
-Phase LE10 is complete. Sed in-place edits now map to E6 recovery units with explicit retained backups, restoration of pre-existing backups, best-effort mode/ownership/attribute preservation, `--follow-symlinks` resolution before no-follow planning, rollback, cancellation, and deterministic cleanup. Ed complete-file writes and creations now use the same authoritative observation, stable-identity precondition, durable sibling staging, commit, metadata, rollback, and cleanup contracts; append remains a direct append-and-flush policy. Terminal indirection is resolved for Ed and for Sed only under `--follow-symlinks`; unsupported no-follow Sed objects fail without an unsafe local fallback. The implementation and test matrix are recorded in `Icod.LineEditor-LE10-Transactional-Replacement.md`. Completion Gate F1 is now active.
+Phase LE10 is complete. Sed in-place edits now map to E6 recovery units with explicit retained backups, restoration of pre-existing backups, best-effort mode/ownership/attribute preservation, `--follow-symlinks` resolution before no-follow planning, rollback, cancellation, and deterministic cleanup. Ed complete-file writes and creations now use the same authoritative observation, stable-identity precondition, durable sibling staging, commit, metadata, rollback, and cleanup contracts; append remains a direct append-and-flush policy. Terminal indirection is resolved for Ed and for Sed only under `--follow-symlinks`; unsupported no-follow Sed objects fail without an unsafe local fallback. The implementation and test matrix are recorded in `Icod.LineEditor-LE10-Transactional-Replacement.md`. Completion Gate F1 is complete; Batch 46 is now active.
 
 ### Completion Gate F1 — before Batch 46
 
-* [ ] Add shared terminal-aware presentation capabilities:
+* [x] Add shared terminal-aware presentation capabilities:
 
-  * [ ] terminal-versus-redirected stream detection;
-  * [ ] terminal width and height discovery;
-  * [ ] color-capability policy;
-  * [ ] quoting and control-character presentation policy;
-  * [ ] environment and terminal-name inputs used by `dircolors`;
-  * [ ] injectable providers for deterministic tests;
-  * [ ] controlled fallback when terminal information is unavailable.
+  * [x] terminal-versus-redirected stream detection;
+  * [x] terminal width and height discovery;
+  * [x] color-capability policy;
+  * [x] quoting and control-character presentation policy;
+  * [x] environment and terminal-name inputs used by `dircolors`;
+  * [x] injectable providers for deterministic tests;
+  * [x] controlled fallback when terminal information is unavailable.
 
 This gate provides only the presentation capabilities needed by `dircolors`, `ls`, `dir`, and `vdir`.
+
+Completion Gate F1 is complete. `Icod.CoreUtils.Shared.Terminal` now supplies injectable standard-stream observations, attached-versus-redirected status, controlled unavailable and failed outcomes, environment and terminal dimension precedence, deterministic 80-by-24 fallback, `TERM`/`COLORTERM`/`SHELL`/`QUOTING_STYLE` capture, GNU never/auto/always color policy, and the directory-listing filename-quoting and control-character vocabulary. System providers use managed console and environment APIs, while dedicated Shared tests use injected providers and cover all required presentation paths on the three-runner matrix. The boundary and conformance choices are recorded in `Icod.CoreUtils-F1-Terminal-Presentation.md`; Batch 46 is now active.
 
 ### Batch 46 — Color database and directory listing family (4 tools)
 
@@ -1701,7 +1703,7 @@ Completion of this gate establishes `Icod.CommandFramework` as the neutral cross
 
 - Phase LE9 found no cohesive general `Icod.LineEditor.Shared` remainder. Similar command vocabulary is not sufficient evidence for sharing: Ed addresses and mutable-buffer state differ fundamentally from Sed addresses, pattern/hold spaces, and streaming cycle state. The project remains absent unless later completed consumers demonstrate an identical family-specific contract that does not belong in `Icod.CommandFramework`.
 
-- Completion Gates E2 through E6 remain general filesystem foundations even though Patch is an early consumer. Patch helps shape and test their cross-suite contracts but keeps filename selection, hunk application, rejects, backups, partial-application decisions, and GNU diagnostics in `Icod.Patch`. E6 is not considered stable from Patch alone: Patch Phase P11A, `cp`/`mv`, and `install` exercise different policies before P11B and P12 close Patch. LineEditor Phase LE10 now consumes those validated contracts and leaves Completion Gate F1 as the active milestone.
+- Completion Gates E2 through E6 remain general filesystem foundations even though Patch is an early consumer. Patch helps shape and test their cross-suite contracts but keeps filename selection, hunk application, rejects, backups, partial-application decisions, and GNU diagnostics in `Icod.Patch`. E6 is not considered stable from Patch alone: Patch Phase P11A, `cp`/`mv`, and `install` exercise different policies before P11B and P12 close Patch. LineEditor Phase LE10 consumes those validated contracts, and Completion Gate F1 now supplies the terminal-presentation foundation required by Batch 46.
 
 - Completion Gates F1 through F4 establish cross-suite terminal presentation and control, host and processor-resource facts, process identity and targets, argument-safe launch, child and arbitrary-process waiting contracts, signals, process groups, priorities, monotonic timing, status translation, and timeout behavior before the most platform-intensive suite begins. These APIs live physically in the current Shared incubation project but are provisionally classified as `Icod.CommandFramework` candidates.
 
