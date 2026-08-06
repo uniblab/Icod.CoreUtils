@@ -121,7 +121,7 @@ public sealed class TerminalEnvironmentSnapshot {
 	private static IReadOnlyList<string> CreateTerminalNames(
 		string? term
 	) {
-		return null is term
+		return term is null
 			? Array.Empty<string>()
 			: Array.AsReadOnly( new[] { term! } );
 	}

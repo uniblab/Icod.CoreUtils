@@ -165,7 +165,7 @@ public static class TerminalColorPolicy {
 		string? value,
 		params string[] candidates
 	) {
-		if ( null is value ) {
+		if ( value is null ) {
 			return false;
 		}
 		foreach ( var candidate in candidates ) {

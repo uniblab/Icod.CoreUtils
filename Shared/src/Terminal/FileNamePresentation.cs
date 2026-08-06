@@ -133,7 +133,7 @@ public sealed class FileNamePresentationPolicy {
 	) {
 		ArgumentNullException.ThrowIfNull( presentation );
 		var style = requestedStyle;
-		if ( null is style && TryParseQuotingStyle(
+		if ( style is null && TryParseQuotingStyle(
 			presentation.Environment.QuotingStyle,
 			out var environmentStyle
 		) ) {
@@ -166,7 +166,7 @@ public sealed class FileNamePresentationPolicy {
 		out FileNameQuotingStyle style
 	) {
 		style = FileNameQuotingStyle.Literal;
-		if ( null is value ) {
+		if ( value is null ) {
 			return false;
 		}
 		return value.Trim().ToLowerInvariant() switch {
@@ -294,7 +294,7 @@ public static class FileNamePresenter {
 		for ( var index = 0; index < value.Length; ++index ) {
 			var character = value[ index ];
 			if ( IsSurrogatePairAt( value, index ) ) {
-				if ( null is not builder ) {
+				if ( builder is not null ) {
 					builder.Append( character );
 					builder.Append( value[ ++index ] );
 				} else {
