@@ -1,76 +1,119 @@
 namespace Icod.CoreUtils.Shred;
 
-using System;
-using System.IO;
-using System.Security.Cryptography;
-using System.Text;
-
-/// <summary>
-/// shred: overwrite a file several times with random data then optionally delete.
-/// Credit: Colin Plumb.
-/// Usage: shred [-n passes] [-u] file
-/// </summary>
+/// <summary>Provides the command boundary for GNU-compatible secure overwrite operations.</summary>
 public static class Command {
-	public static int Run( string[] args, System.IO.TextReader? stdin = null, System.IO.TextWriter? stdout = null, System.IO.TextWriter? stderr = null ) {
+	private const string VersionText = "shred (Icod CoreUtils) 0.1.0";
+
+	/// <summary>Runs <c>shred</c> synchronously.</summary>
+	/// <param name="args">The command-line arguments.</param>
+	/// <param name="stdin">The standard-input reader. Binary standard input is not used by this command.</param>
+	/// <param name="stdout">The standard-output writer.</param>
+	/// <param name="stderr">The standard-error writer.</param>
+	/// <returns>The process exit code.</returns>
+	public static int Run(
+		string[] args,
+		TextReader? stdin = null,
+		TextWriter? stdout = null,
+		TextWriter? stderr = null
+	) => RunAsync( args, stdin, stdout, stderr ).GetAwaiter().GetResult();
+
+	/// <summary>Runs <c>shred</c> asynchronously.</summary>
+	/// <param name="args">The command-line arguments.</param>
+	/// <param name="stdin">The standard-input reader. Binary standard input is not used by this command.</param>
+	/// <param name="stdout">The standard-output writer.</param>
+	/// <param name="stderr">The standard-error writer.</param>
+	/// <param name="cancellationToken">A cancellation token.</param>
+	/// <returns>The process exit code.</returns>
+	public static async Task<int> RunAsync(
+		string[] args,
+		TextReader? stdin = null,
+		TextWriter? stdout = null,
+		TextWriter? stderr = null,
+		CancellationToken cancellationToken = default
+	) {
+		ArgumentNullException.ThrowIfNull( args );
+		_ = stdin;
 		stderr ??= Console.Error;
-		if ( args.Length == 0 ) {
-			stderr.WriteLine( "Usage: shred [-n passes] [-u] file" );
-			return 2;
+
+		ShredOptions options;
+		try {
+			options = ShredOptions.Parse( args );
+		} catch ( ShredUsageException exception ) {
+			await stderr.WriteLineAsync( string.Concat( "shred: ", exception.Message ) ).ConfigureAwait( false );
+			await stderr.WriteLineAsync( "Try 'shred --help' for more information." ).ConfigureAwait( false );
+			return 1;
 		}
 
-		var passes = 3;
-		var remove = false;
-		var list = new System.Collections.Generic.List<string>();
-		for ( var i = 0; i < args.Length; i++ ) {
-			if ( args[ i ] == "-u" ) {
-				remove = true;
-				continue;
-			}
-			if ( args[ i ] == "-n" && i + 1 < args.Length ) {
-				if ( int.TryParse( args[ i + 1 ], out var p ) ) {
-					passes = p;
-				}
-				i++;
-				continue;
-			}
-			list.Add( args[ i ] );
+		var textOutput = stdout ?? Console.Out;
+		if ( options.Help ) {
+			await textOutput.WriteAsync( HelpText ).ConfigureAwait( false );
+			return 0;
+		}
+		if ( options.Version ) {
+			await textOutput.WriteLineAsync( VersionText ).ConfigureAwait( false );
+			return 0;
 		}
 
-		var exit = 0;
-		foreach ( var f in list ) {
+		Stream? binaryOutput = null;
+		if ( options.Targets.Contains( "-", StringComparer.Ordinal ) ) {
 			try {
-				if ( !File.Exists( f ) ) {
-					stderr.WriteLine( $"shred: {f}: No such file" );
-					exit = 1;
-					continue;
-				}
-				var fi = new FileInfo( f );
-				var length = fi.Length;
-				using var rng = RandomNumberGenerator.Create();
-				var buffer = new byte[ 8192 ];
-				for ( var pass = 0; pass < passes; pass++ ) {
-					using var fs = new FileStream( f, FileMode.Open, FileAccess.Write );
-					fs.Seek( 0, SeekOrigin.Begin );
-					var remaining = length;
-					while ( remaining > 0 ) {
-						rng.GetBytes( buffer );
-						var toWrite = (int)Math.Min( buffer.Length, remaining );
-						fs.Write( buffer, 0, toWrite );
-						remaining -= toWrite;
-					}
-
-					fs.Flush( true );
-				}
-
-				if ( remove ) {
-					File.Delete( f );
-				}
-			} catch ( Exception ex ) {
-				stderr.WriteLine( $"shred: {f}: {ex.Message}" );
-				exit = 1;
+				binaryOutput = ResolveBinaryOutput( stdout );
+			} catch ( Exception exception ) when ( exception is ShredUsageException
+				or IOException
+				or UnauthorizedAccessException
+				or NotSupportedException ) {
+				await stderr.WriteLineAsync( string.Concat( "shred: ", exception.Message ) ).ConfigureAwait( false );
+				return 1;
 			}
 		}
 
-		return exit;
+		try {
+			var engine = new ShredEngine( stderr );
+			return await engine.ExecuteAsync( options, binaryOutput, cancellationToken ).ConfigureAwait( false );
+		} catch ( OperationCanceledException ) when ( cancellationToken.IsCancellationRequested ) {
+			await stderr.WriteLineAsync( "shred: operation canceled" ).ConfigureAwait( false );
+			return 1;
+		} catch ( Exception exception ) when ( exception is IOException
+			or UnauthorizedAccessException
+			or NotSupportedException
+			or InvalidOperationException
+			or ArgumentException ) {
+			await stderr.WriteLineAsync( string.Concat( "shred: ", exception.Message ) ).ConfigureAwait( false );
+			return 1;
+		}
 	}
+
+	private static Stream ResolveBinaryOutput( TextWriter? output ) {
+		if ( output is null ) {
+			return Console.OpenStandardOutput();
+		}
+		output.Flush();
+		if ( output is StreamWriter streamWriter ) {
+			return streamWriter.BaseStream;
+		}
+		throw new ShredUsageException( "standard output is not backed by a binary stream" );
+	}
+
+	private static readonly string HelpText = """
+Usage: shred [OPTION]... FILE...
+Overwrite the specified FILE(s) repeatedly, in order to make recovery harder.
+
+  -f, --force                 change permissions to allow writing if necessary
+  -n, --iterations=N          overwrite N times instead of the default (3)
+      --random-source=FILE    get random bytes from FILE
+  -s, --size=N                shred this many bytes
+  -u, --remove[=HOW]          truncate and remove after overwriting
+  -v, --verbose               show progress
+  -x, --exact                 do not round file sizes up to a full block
+  -z, --zero                  add a final overwrite with zeros
+      --help                  display this help and exit
+      --version               output version information and exit
+
+HOW may be 'unlink', 'wipe', or 'wipesync' (the default for -u).
+FILE '-' writes to standard output; non-seekable output requires --size.
+
+CAUTION: shred cannot guarantee erasure on copy-on-write or journaled storage,
+SSDs with remapping or wear leveling, snapshots, backups, RAID caches, or remote
+storage.  It overwrites only the blocks exposed through the selected file path.
+""" + Environment.NewLine;
 }
