@@ -668,6 +668,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.VDir.Tests",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.DirColors.Tests", "tests\DirColors.Tests\Icod.CoreUtils.DirColors.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0107}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Df.Tests", "tests\Df.Tests\Icod.CoreUtils.Df.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0108}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Du.Tests", "tests\Du.Tests\Icod.CoreUtils.Du.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0109}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -1965,6 +1969,18 @@ Global
 		{F05B4136-23C6-4CF5-8A6A-920F20DC0107}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F05B4136-23C6-4CF5-8A6A-920F20DC0107}.Staging|Any CPU.ActiveCfg = Staging|Any CPU
 		{F05B4136-23C6-4CF5-8A6A-920F20DC0107}.Staging|Any CPU.Build.0 = Staging|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0108}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0108}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0108}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0108}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0108}.Staging|Any CPU.ActiveCfg = Staging|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0108}.Staging|Any CPU.Build.0 = Staging|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0109}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0109}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0109}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0109}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0109}.Staging|Any CPU.ActiveCfg = Staging|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0109}.Staging|Any CPU.Build.0 = Staging|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -2186,6 +2202,8 @@ Global
 		{F05B4136-23C6-4CF5-8A6A-920F20DC0105} = {F05B4136-23C6-4CF5-8A6A-920F20DC0001}
 		{F05B4136-23C6-4CF5-8A6A-920F20DC0106} = {F05B4136-23C6-4CF5-8A6A-920F20DC0001}
 		{F05B4136-23C6-4CF5-8A6A-920F20DC0107} = {F05B4136-23C6-4CF5-8A6A-920F20DC0001}
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0108} = {F05B4136-23C6-4CF5-8A6A-920F20DC0001}
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0109} = {F05B4136-23C6-4CF5-8A6A-920F20DC0001}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {30D28C3D-CE6B-4262-8EF1-1D4A49129A6C}
