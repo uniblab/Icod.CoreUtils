@@ -1,6 +1,7 @@
 namespace Icod.CoreUtils.Shared.Tests.Host;
 
 using Icod.CoreUtils.Shared.Host;
+using Xunit;
 
 /// <summary>Tests deterministic processor-list, affinity, and quota parsers.</summary>
 public sealed class HostResourceParserTests {

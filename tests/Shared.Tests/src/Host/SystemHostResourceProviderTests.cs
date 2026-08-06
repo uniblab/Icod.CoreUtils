@@ -1,6 +1,7 @@
 namespace Icod.CoreUtils.Shared.Tests.Host;
 
 using Icod.CoreUtils.Shared.Host;
+using Xunit;
 
 /// <summary>Tests the injectable and system host-resource provider boundaries.</summary>
 public sealed class SystemHostResourceProviderTests {

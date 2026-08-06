@@ -1,6 +1,7 @@
 namespace Icod.CoreUtils.Shared.Tests.Host;
 
 using Icod.CoreUtils.Shared.Host;
+using Xunit;
 
 /// <summary>Tests explicit host-resource availability and provenance.</summary>
 public sealed class HostResourceValueTests {
