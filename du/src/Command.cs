@@ -239,7 +239,9 @@ public static class Command {
 			if ( current.Length > 0 ) paths.Add( current.ToString() );
 			return paths;
 		} finally {
-			if ( ownedReader is not null ) await ownedReader.DisposeAsync().ConfigureAwait( false );
+			if ( ownedReader is not null ) {
+				ownedReader.Dispose();
+			}
 		}
 	}
 
