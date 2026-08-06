@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `45` |
-| Current engineering milestone | Batch 48 implementation prepared; full three-runner validation of Batches 46 through 48 pending |
-| Completed infrastructure milestone | Completion Gates E2 through E6 and F1 — filesystem foundations through transactional replacement, plus terminal-aware presentation |
-| Active infrastructure dependency | Batch 48 uses direct file and device streams, durable flush operations, cryptographic or finite external random sources, and recoverable name-removal policy |
-| Next command batch | Validate Batches 46 through 48, then Completion Gate F2 |
+| Completed command batches | `0` through `48` |
+| Current engineering milestone | Completion Gate F2 implemented; proceed to Batch 49 — host and processor context |
+| Completed infrastructure milestone | Completion Gates E2 through E6, F1, and F2 — filesystem, terminal-presentation, host-identity, and processor-resource foundations |
+| Active infrastructure dependency | Batch 49 consumes the Completion Gate F2 host-identifier, processor-count, affinity, quota, topology, capability, and provenance contracts |
+| Next command batch | Batch 49 — `hostid` and `nproc` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1317,44 +1317,46 @@ Implement the documented `dircolors` database grammar, terminal selectors, file-
 
 Create one listing engine with three thin entry profiles. Implement locale sorting, quoting, color, columns, widths, recursion with cycle protection, symlink policy, inode/block/owner/group/mode metadata, human sizes, time styles, indicators, classification, dereference modes, and terminal-sensitive defaults. Remove independent simplified `dir` and `vdir` implementations.
 
-The Batch 46 implementation is prepared. `Icod.CoreUtils.Shared.DirectoryListing` now owns a reusable GNU-style `LS_COLORS` codec, a documented `dircolors` database parser/compiler with `TERM` and `COLORTERM` selectors, a built-in color database, Bourne/C-shell emission, and controlled diagnostics. A single metadata-backed directory-listing engine now serves `ls`, `dir`, and `vdir` through thin executable profiles. It provides terminal-sensitive layouts, locale and version ordering, shared F1 quoting/color policy, Unicode display widths, long metadata rows, inode and allocated-block columns, human/SI sizes, selectable timestamps and styles, indicators, recursive identity-cycle protection, and command-line/all/never dereference modes. Shared tests cover option profiles, color parsing and precedence, terminal database selection, malformed input, built-in compilation, and shell inference. Dedicated `Ls.Tests`, `Dir.Tests`, `VDir.Tests`, and `DirColors.Tests` projects exercise each public command boundary and are registered under the solution `tests` folder. The implementation has been integrated into the main branch. The batch remains open until the full solution builds and all applicable tests pass on `windows-latest`, `ubuntu-latest`, and `macos-latest`; that acceptance work may proceed alongside Batch 47 validation.
+The Batch 46 implementation is complete and integrated. `Icod.CoreUtils.Shared.DirectoryListing` now owns a reusable GNU-style `LS_COLORS` codec, a documented `dircolors` database parser/compiler with `TERM` and `COLORTERM` selectors, a built-in color database, Bourne/C-shell emission, and controlled diagnostics. A single metadata-backed directory-listing engine now serves `ls`, `dir`, and `vdir` through thin executable profiles. It provides terminal-sensitive layouts, locale and version ordering, shared F1 quoting/color policy, Unicode display widths, long metadata rows, inode and allocated-block columns, human/SI sizes, selectable timestamps and styles, indicators, recursive identity-cycle protection, and command-line/all/never dereference modes. Shared tests cover option profiles, color parsing and precedence, terminal database selection, malformed input, built-in compilation, and shell inference. Dedicated `Ls.Tests`, `Dir.Tests`, `VDir.Tests`, and `DirColors.Tests` projects exercise each public command boundary and are registered under the solution `tests` folder. The implementation has been integrated into the main branch and is accepted as the completed Batch 46 baseline. The permanent full-solution Debug/Release and three-runner checks resume when the offline testing environment becomes available.
 
 ### Batch 47 — Filesystem usage reporting (2 tools)
 
-- [ ] `df`
-- [ ] `du`
+- [x] `df`
+- [x] `du`
 
 Use real allocated-block and filesystem data where available. Implement block-size environment rules, human/SI formats, inode reporting, filesystem types, exclusions, totals, apparent size, hard-link deduplication, symlink and mount policies, depth and summarize modes, NUL input, and controlled platform differences.
 
-The Batch 47 implementation is prepared. `Icod.CoreUtils.Shared.FileSystem.Usage` now resolves `DF_BLOCK_SIZE`/`DU_BLOCK_SIZE`, `BLOCK_SIZE`, `BLOCKSIZE`, and `POSIXLY_CORRECT` precedence; formats fixed, human-readable, and SI units; supplies injectable filesystem-capacity snapshots; and performs postorder allocated, apparent, or inode accounting over the shared traversal and metadata providers. Hard-link identities are deduplicated across operands, symbolic-link and one-filesystem policies use the E1 traversal engine, exclusions and timestamps are explicit policies, and POSIX inode pools use `statvfs` while Windows exposes controlled unavailable values. `df` now supports filesystem/type filtering, selected fields, totals, local/inode/portable forms, and explicit unavailable data. `du` now supports depth and summarize policy, all/apparent/inode/separate-directory modes, hard-link policy, command-line/all/no link dereference, mount boundaries, exclusions and exclude files, signed thresholds, NUL-delimited input/output, timestamps, and totals. Dedicated `Df.Tests` and `Du.Tests` projects plus Shared usage-policy and accounting tests are registered under the solution `tests` folder. The boundary and platform policy are recorded in `Icod.CoreUtils-Batch-47-Filesystem-Usage.md`. Final closure requires the full Debug and Release build-and-test matrix on `windows-latest`, `ubuntu-latest`, and `macos-latest`.
+The Batch 47 implementation is complete and integrated. `Icod.CoreUtils.Shared.FileSystem.Usage` now resolves `DF_BLOCK_SIZE`/`DU_BLOCK_SIZE`, `BLOCK_SIZE`, `BLOCKSIZE`, and `POSIXLY_CORRECT` precedence; formats fixed, human-readable, and SI units; supplies injectable filesystem-capacity snapshots; and performs postorder allocated, apparent, or inode accounting over the shared traversal and metadata providers. Hard-link identities are deduplicated across operands, symbolic-link and one-filesystem policies use the E1 traversal engine, exclusions and timestamps are explicit policies, and POSIX inode pools use `statvfs` while Windows exposes controlled unavailable values. `df` now supports filesystem/type filtering, selected fields, totals, local/inode/portable forms, and explicit unavailable data. `du` now supports depth and summarize policy, all/apparent/inode/separate-directory modes, hard-link policy, command-line/all/no link dereference, mount boundaries, exclusions and exclude files, signed thresholds, NUL-delimited input/output, timestamps, and totals. Dedicated `Df.Tests` and `Du.Tests` projects plus Shared usage-policy and accounting tests are registered under the solution `tests` folder. The boundary and platform policy are recorded in `Icod.CoreUtils-Batch-47-Filesystem-Usage.md`. The batch is accepted as the completed Batch 47 baseline; the permanent Debug/Release and three-runner checks resume when the offline testing environment becomes available.
 
 ### Batch 48 — Data destruction (1 tool)
 
-- [ ] `shred`
+- [x] `shred`
 
 Implement pass selection, random sources, exact-size handling, synchronization, removal and renaming policy, device/file distinctions, progress, and failure recovery. Document and test the limits of overwriting on SSDs, copy-on-write filesystems, snapshots, journaling, and remapped storage.
 
-The Batch 48 implementation is prepared. `shred` now has a documented option model, balanced random and fixed-pattern pass planning, cryptographic and finite external random sources, exact and rounded regular-file sizes, seekable or explicitly sized standard-output and explicit-size device handling, per-pass durable file synchronization, progress diagnostics, and target-local failure isolation. Removal supports direct unlinking or recoverable random-name shortening with best-effort directory synchronization, and removal never begins until all requested overwrite passes succeed. Dedicated `Shred.Tests` coverage exercises parsing, size suffixes, finite random-source exhaustion, exact and rounded writes, final-zero passes, standard output, continuation after failure, progress, and each removal family. `shred/src/README.md` and `Icod.CoreUtils-Batch-48-Data-Destruction.md` record the operational boundary: filesystem-level overwriting cannot guarantee erasure from SSD remapping and wear leveling, copy-on-write extents, journal or RAID caches, snapshots, backups, remote storage, or lower-layer replicas. Final closure requires the full Debug and Release build-and-test matrix on `windows-latest`, `ubuntu-latest`, and `macos-latest`.
+The Batch 48 implementation is complete and integrated. `shred` now has a documented option model, balanced random and fixed-pattern pass planning, cryptographic and finite external random sources, exact and rounded regular-file sizes, seekable or explicitly sized standard-output and explicit-size device handling, per-pass durable file synchronization, progress diagnostics, and target-local failure isolation. Removal supports direct unlinking or recoverable random-name shortening with best-effort directory synchronization, and removal never begins until all requested overwrite passes succeed. Dedicated `Shred.Tests` coverage exercises parsing, size suffixes, finite random-source exhaustion, exact and rounded writes, final-zero passes, standard output, continuation after failure, progress, and each removal family. `shred/src/README.md` and `Icod.CoreUtils-Batch-48-Data-Destruction.md` record the operational boundary: filesystem-level overwriting cannot guarantee erasure from SSD remapping and wear leveling, copy-on-write extents, journal or RAID caches, snapshots, backups, remote storage, or lower-layer replicas. The batch is accepted as the completed Batch 48 baseline; the permanent Debug/Release and three-runner checks resume when the offline testing environment becomes available.
 
 ### Completion Gate F2 — shared host and processor-resource foundation before Batch 49
 
-* [ ] Add shared host and processor-resource capabilities to the current Shared incubation project:
+* [x] Add shared host and processor-resource capabilities to the current Shared incubation project:
 
-  * [ ] host-identifier retrieval and normalization;
-  * [ ] configured processor count;
-  * [ ] installed processor count;
-  * [ ] online processor count;
-  * [ ] processors available to the current process;
-  * [ ] current-process affinity inspection;
-  * [ ] container, job-object, processor-set, and cgroup quota inspection where available;
-  * [ ] optional processor topology and NUMA descriptors where supported;
-  * [ ] capability and data-provenance reporting;
-  * [ ] injectable providers and deterministic tests;
-  * [ ] controlled and documented platform differences.
+  * [x] host-identifier retrieval and normalization;
+  * [x] configured processor count;
+  * [x] installed processor count;
+  * [x] online processor count;
+  * [x] processors available to the current process;
+  * [x] current-process affinity inspection;
+  * [x] container, job-object, processor-set, and cgroup quota inspection where available;
+  * [x] optional processor topology and NUMA descriptors where supported;
+  * [x] capability and data-provenance reporting;
+  * [x] injectable providers and deterministic tests;
+  * [x] controlled and documented platform differences.
 
 These factual provider contracts are provisionally classified as `Icod.CommandFramework` candidates even though they are implemented physically in the current `Icod.CoreUtils.Shared` project during incubation. They support `hostid` and `nproc` immediately and later supply processor-resource facts to `Icod.ProcPs.Shared`, `ps`, `top`, `vmstat`, and other consumers.
 
 GNU `nproc` interpretation of `OMP_NUM_THREADS`, `OMP_THREAD_LIMIT`, `--all`, `--ignore`, minimum-result policy, diagnostics, and exit statuses remains command-specific and must not be embedded in the general processor provider.
+
+Completion Gate F2 is implemented in `Icod.CoreUtils.Shared.Host`. `IHostResourceProvider` supplies independently injectable host-identifier and processor-resource observations plus a combined capability snapshot. `HostResourceValue<T>` distinguishes available, unavailable, unsupported, and not-applicable facts and records managed, native, procfs, sysfs, cgroup, Windows registry, processor-group, CPU-set, job-object, macOS sysctl, or derived provenance. Host identifiers use native `gethostid` where available, stable Windows MachineGuid folding, controlled machine-id and host-name fallbacks, and one deterministic 32-bit normalization algorithm without exposing raw stable identifiers. Processor snapshots distinguish configured, installed, online, and current-process-available counts; inspect Linux scheduler affinity and cgroup v1/v2 quotas, Windows CPU sets, processor groups, affinity masks, and job hard caps; and expose optional Linux, Windows, and macOS package, core, logical-processor, and NUMA topology with explicit platform limits. Pure CPU-list, affinity-mask, and cgroup parsers plus injected and system provider tests cover the deterministic boundary. The contract and portability profile are recorded in `Icod.CoreUtils-F2-Host-and-Processor-Resources.md`; Batch 49 may now consume the provider while retaining all GNU `nproc` policy in the command project. The permanent Debug/Release and three-runner validation remains deferred only because the current testing environment is offline.
 
 ### Batch 49 — Host and processor context (2 tools)
 
