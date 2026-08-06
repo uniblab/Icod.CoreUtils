@@ -101,7 +101,7 @@ public static class DuOptionParser {
 			case "no-dereference": options.SymbolicLinkMode = SymbolicLinkTraversalMode.Never; return;
 			case "separate-dirs": options.SeparateDirectories = true; return;
 			case "si": options.SizePolicy = new UsageSizePolicy( UsageSizeStyle.Si, 1 ); return;
-			case "summarize": options.Summarize = true; options.MaximumDepth = 0; return;
+			case "summarize": options.Summarize = true; return;
 			case "one-file-system": options.OneFileSystem = true; return;
 			case "max-depth": options.MaximumDepth = Nonnegative( "max-depth", ReadValue( name, value, arguments, ref index ) ); options.MaximumDepthSpecified = true; return;
 			case "threshold": options.Threshold = SignedSize( ReadValue( name, value, arguments, ref index ) ); return;
@@ -132,7 +132,7 @@ public static class DuOptionParser {
 				case 'm': options.SizePolicy = Blocks( 1024UL * 1024 ); break;
 				case 'P': options.SymbolicLinkMode = SymbolicLinkTraversalMode.Never; break;
 				case 'S': options.SeparateDirectories = true; break;
-				case 's': options.Summarize = true; options.MaximumDepth = 0; break;
+				case 's': options.Summarize = true; break;
 				case 'x': options.OneFileSystem = true; break;
 				case 'B': options.SizePolicy = Blocks( ReadShortValue( argument, ref offset, arguments, ref index, 'B' ) ); break;
 				case 'd': options.MaximumDepth = Nonnegative( "max-depth", ReadShortValue( argument, ref offset, arguments, ref index, 'd' ) ); options.MaximumDepthSpecified = true; break;

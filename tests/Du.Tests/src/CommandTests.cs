@@ -94,8 +94,26 @@ public sealed class CommandTests {
 	[Theory]
 	[InlineData( "--summarize", "--max-depth=1" )]
 	[InlineData( "--max-depth=1", "--summarize" )]
+	[InlineData( "-s", "--max-depth=1" )]
+	[InlineData( "--max-depth=1", "-s" )]
+	[InlineData( "--summarize", "-d1" )]
+	[InlineData( "-d1", "--summarize" )]
 	public void RejectsConflictingSummarizeAndDepth( string first, string second ) {
 		Assert.Throws<DuUsageException>( () => DuOptionParser.Parse( new[] { first, second } ) );
+	}
+
+	/// <summary>Verifies summarize remains compatible with its equivalent explicit depth of zero.</summary>
+	[Theory]
+	[InlineData( "--summarize", "--max-depth=0" )]
+	[InlineData( "--max-depth=0", "--summarize" )]
+	[InlineData( "-s", "-d0" )]
+	[InlineData( "-d0", "-s" )]
+	public void AcceptsSummarizeWithZeroDepth( string first, string second ) {
+		var options = DuOptionParser.Parse( new[] { first, second } );
+
+		Assert.True( options.Summarize );
+		Assert.True( options.MaximumDepthSpecified );
+		Assert.Equal( 0, options.MaximumDepth );
 	}
 
 	/// <summary>Verifies the asynchronous command boundary exposes help.</summary>
