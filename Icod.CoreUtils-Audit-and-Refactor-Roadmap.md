@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `53` |
-| Current engineering milestone | Batch 53 implemented; proceed to Batch 54 |
+| Completed command batches | `0` through `54` |
+| Current engineering milestone | Batch 54 implemented; proceed to Batch 55 |
 | Completed infrastructure milestone | Completion Gates E2 through E6 and F1 through F4 — filesystem, terminal-presentation, host-resource, terminal-control, and process-control foundations |
-| Active infrastructure dependency | Batch 54 must consume the completed F4 process-priority and launch contracts |
-| Next engineering step | Batch 54 — GNU `nice` and util-linux `renice` |
+| Active infrastructure dependency | Batch 55 must consume the completed F4 monotonic-clock, wait, signal, process-group, and termination contracts |
+| Next engineering step | Batch 55 — GNU `timeout` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1453,14 +1453,16 @@ The Batch 53 implementation is complete. `Icod.UtilLinux.Kill` now follows util-
 
 ### Batch 54 — Process priority control (2 tools)
 
-- [ ] `nice`
-- [ ] `renice`
+- [x] `nice`
+- [x] `renice`
 
 Keep `nice` under the GNU Coreutils authority and create the suite-correct util-linux `renice` project and dedicated tests with assembly name `renice`.
 
 For `nice` (`nice\Icod.CoreUtils.Nice`), implement the complete adjustment grammar, command lookup and launch, priority application without child-start races, exact child-status propagation, privilege failures, and controlled platform capability handling.
 
 For `renice` (`renice\Icod.UtilLinux.Renice`), pin util-linux 2.42.2 and implement absolute and relative priorities; the `-n` and `POSIXLY_CORRECT` interaction; explicit `--priority` and `--relative`; process, process-group, user-ID, and username targets; ordered target-class changes; multiple targets; privilege and resource-limit behavior; vanished targets; partial success; exact diagnostics and statuses; and defensible Windows priority-class mapping or controlled unsupported results. Both commands consume the F4 priority contracts rather than introducing command-local native APIs.
+
+The Batch 54 implementation is complete. GNU `nice` now follows the Coreutils 9.11 option and historical adjustment grammar, changes the wrapper priority before child creation so POSIX children inherit the requested niceness without a child-start race, preserves permission-only launch behavior, resolves commands through the F4 executor, and propagates child/126/127 statuses. `Icod.UtilLinux.Renice` follows util-linux 2.42.2, including absolute and relative modes, the `-n`/`POSIXLY_CORRECT` interaction, ordered process/group/user selector changes, username-first user resolution, multiple targets, and aggregate failure status. F4 now exposes a priority-specific nonnegative selector model for process, process-group, and user targets (including POSIX selector zero); the system selector provider maps those selectors to `getpriority(2)`/`setpriority(2)` and preserves the documented Windows individual-process priority-class substitution while rejecting unsupported group/user mappings. Dedicated `Nice.Tests` and `Renice.Tests` cover grammar, ordering, status propagation, selector zero, username resolution, clamping, and partial failure. The ownership and capability decisions are recorded in `Icod.CoreUtils-Batch-54-Priority-Control.md`.
 
 ### Batch 55 — Time-bounded execution (1 tool)
 

@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<LangVersion>13.0</LangVersion>
 		<OutputType>Exe</OutputType>
 		<TargetFramework>net10.0</TargetFramework>
+		<LangVersion>13.0</LangVersion>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<OutputPath>..\bin\$(Configuration)\</OutputPath>
-		<AssemblyName>nice</AssemblyName>
-		<RootNamespace>Icod.CoreUtils.Nice</RootNamespace>
+		<AssemblyName>renice</AssemblyName>
+		<RootNamespace>Icod.UtilLinux.Renice</RootNamespace>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
 		<PlatformTarget>AnyCPU</PlatformTarget>
