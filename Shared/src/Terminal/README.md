@@ -1,16 +1,30 @@
-# Terminal presentation
+# Terminal presentation and control
 
-`Icod.CoreUtils.Shared.Terminal` is the Completion Gate F1 presentation layer for `dircolors`, `ls`, `dir`, and `vdir`. It is a provisional cross-suite `Icod.CommandFramework` candidate because later ProcPs and Tar consumers may need the same observation contracts.
+`Icod.CoreUtils.Shared.Terminal` contains the neutral terminal foundations established by Completion Gates F1 and F3. The namespace remains a provisional cross-suite `Icod.CommandFramework` candidate because directory listing, future ProcPs and Tar consumers, and terminal commands need the same observations without depending on one another.
 
-## Responsibilities
+## Presentation responsibilities from Gate F1
 
 - distinguish attached and redirected standard streams through an injectable provider;
 - discover terminal dimensions and apply `COLUMNS`, `LINES`, then deterministic fallback precedence;
 - capture the `TERM` terminal name plus `COLORTERM`, `SHELL`, and `QUOTING_STYLE` without reading process-global state inside command policy;
 - infer ANSI 16-color, 256-color, and true-color capability and resolve never, auto, and always color modes;
-- resolve GNU directory-listing quoting defaults, retain invalid environment values for command diagnostics, and present control characters deterministically;
+- resolve GNU directory-listing quoting defaults, retain invalid environment values for command diagnostics, and present filename control characters deterministically;
 - convert unsupported console APIs and failed geometry queries into controlled observations.
 
-## Boundary
+## Identification and control responsibilities from Gate F3
 
-This namespace does not implement cursor movement, raw mode, echo control, signals, process groups, pseudo-terminals, or full-screen interfaces. Those mechanics belong to later terminal-control gates. It also does not parse the `dircolors` database or `LS_COLORS`; Batch 46 owns those Coreutils-specific grammars above these neutral observations.
+- identify borrowed file descriptors and owned named terminal or console devices;
+- inspect terminal attachment and discover a POSIX terminal pathname or stable Windows console alias;
+- retrieve and apply complete Linux/macOS `termios` or Windows console-mode snapshots;
+- preserve native POSIX input and output speed codes while reporting recognized baud rates;
+- preserve the complete native POSIX control-character array and render bytes using GNU-compatible visible notation;
+- serialize POSIX modes using GNU's colon-separated hexadecimal flag and control-character form;
+- serialize Windows input and output console modes using separate version-stable prefixes;
+- distinguish available, unavailable, unsupported, and failed operations rather than fabricating cross-platform data;
+- permit command tests to inject a provider without opening process-global handles.
+
+## Platform boundary
+
+Linux and macOS expose terminal pathnames, complete `termios` flags, native speeds, control characters, immediate application, drain-before-application, and drain-plus-input-discard application. Windows exposes console attachment, `CONIN$` or `CONOUT$`, and complete `GetConsoleMode`/`SetConsoleMode` values. Windows does not synthesize POSIX baud rates, control characters, line discipline, or drain semantics.
+
+The shared layer does not assign GNU option names, control-character names, `sane` or `raw` profiles, or command exit statuses. Batch 50 owns `tty` policy and Batch 51 owns `stty` parsing, profiles, display, diagnostics, and exit behavior. Cursor movement, signals, process groups, pseudo-terminals, and full-screen interfaces remain outside this gate. The namespace also does not parse the `dircolors` database or `LS_COLORS`; Batch 46 owns those Coreutils-specific grammars above the neutral presentation observations.
