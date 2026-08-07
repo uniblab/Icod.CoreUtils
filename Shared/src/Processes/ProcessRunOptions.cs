@@ -31,6 +31,15 @@ public sealed class ProcessRunOptions {
 		set;
 	}
 
+	/// <summary>Gets or sets whether the child starts as the leader of a new process group.</summary>
+	/// <remarks>
+	/// POSIX hosts create the group atomically with child launch. Windows uses the .NET process-group creation facility.
+	/// </remarks>
+	public bool CreateProcessGroup {
+		get;
+		set;
+	}
+
 	/// <summary>Gets or sets whether standard error is captured in the result.</summary>
 	public bool CaptureStandardError {
 		get;

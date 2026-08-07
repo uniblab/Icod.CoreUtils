@@ -157,6 +157,51 @@ internal static class ProcessNative {
 		IntPtr oldSet
 	);
 
+	/// <summary>Gets the POSIX spawn flag that assigns the child process group.</summary>
+	internal const short PosixSpawnSetProcessGroup = 0x0002;
+
+	/// <summary>Initializes one opaque POSIX spawn-attribute object.</summary>
+	[DllImport(
+		"libc",
+		EntryPoint = "posix_spawnattr_init",
+		SetLastError = false
+	)]
+	internal static extern int PosixSpawnAttributeInit(
+		IntPtr attributes
+	);
+
+	/// <summary>Destroys one initialized POSIX spawn-attribute object.</summary>
+	[DllImport(
+		"libc",
+		EntryPoint = "posix_spawnattr_destroy",
+		SetLastError = false
+	)]
+	internal static extern int PosixSpawnAttributeDestroy(
+		IntPtr attributes
+	);
+
+	/// <summary>Sets POSIX spawn-attribute flags.</summary>
+	[DllImport(
+		"libc",
+		EntryPoint = "posix_spawnattr_setflags",
+		SetLastError = false
+	)]
+	internal static extern int PosixSpawnAttributeSetFlags(
+		IntPtr attributes,
+		short flags
+	);
+
+	/// <summary>Sets the child process group requested by POSIX spawn attributes.</summary>
+	[DllImport(
+		"libc",
+		EntryPoint = "posix_spawnattr_setpgroup",
+		SetLastError = false
+	)]
+	internal static extern int PosixSpawnAttributeSetProcessGroup(
+		IntPtr attributes,
+		int processGroupId
+	);
+
 	/// <summary>Creates a POSIX child process using exact argument and environment vectors.</summary>
 	[DllImport(
 		"libc",
