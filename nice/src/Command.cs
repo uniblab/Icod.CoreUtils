@@ -229,9 +229,9 @@ public static class Command {
 		bool ShowVersion,
 		string? Error
 	) {
-		private static NiceArguments Help { get; } = new( 10, false, null, Array.Empty<string>(), true, false, null );
-		private static NiceArguments Version { get; } = new( 10, false, null, Array.Empty<string>(), false, true, null );
-		private static NiceArguments Failure( string error ) => new( 10, false, null, Array.Empty<string>(), false, false, error );
+		public static NiceArguments Help { get; } = new( 10, false, null, Array.Empty<string>(), true, false, null );
+		public static NiceArguments Version { get; } = new( 10, false, null, Array.Empty<string>(), false, true, null );
+		public static NiceArguments Failure( string error ) => new( 10, false, null, Array.Empty<string>(), false, false, error );
 	}
 
 	private const string HelpText = """
