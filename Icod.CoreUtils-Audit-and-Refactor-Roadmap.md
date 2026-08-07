@@ -5,10 +5,10 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `49` |
-| Current engineering milestone | Batch 49 implemented; proceed to Completion Gate F3 — terminal identification and control |
-| Completed infrastructure milestone | Completion Gates E2 through E6, F1, and F2 — filesystem, terminal-presentation, host-identity, and processor-resource foundations |
-| Active infrastructure dependency | Completion Gate F3 must establish terminal pathname, attachment, mode, speed, control-character, and serialization contracts before `tty` and `stty` |
-| Next engineering step | Completion Gate F3, then Batch 50 — `tty` |
+| Current engineering milestone | Completion Gate F3 implemented; proceed to Batch 50 — `tty` |
+| Completed infrastructure milestone | Completion Gates E2 through E6 and F1 through F3 — filesystem, terminal-presentation, host-resource, and terminal-control foundations |
+| Active infrastructure dependency | Batch 50 and Batch 51 consume the completed F3 endpoint, terminal-mode, speed, control-character, and serialization contracts |
+| Next engineering step | Batch 50 — `tty` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1369,17 +1369,19 @@ The Batch 49 implementation is complete. `hostid` is a thin, injectable consumer
 
 ### Completion Gate F3 — before Batch 50
 
-* [ ] Add shared terminal-identification and terminal-control capabilities:
+* [x] Add shared terminal-identification and terminal-control capabilities:
 
-  * [ ] terminal pathname discovery;
-  * [ ] terminal attachment inspection for selected file descriptors;
-  * [ ] terminal-mode retrieval and mutation;
-  * [ ] input and output speed reporting;
-  * [ ] control-character representation;
-  * [ ] machine-readable mode serialization and restoration;
-  * [ ] explicit Unix and Windows capability boundaries.
+  * [x] terminal pathname discovery;
+  * [x] terminal attachment inspection for selected file descriptors;
+  * [x] terminal-mode retrieval and mutation;
+  * [x] input and output speed reporting;
+  * [x] control-character representation;
+  * [x] machine-readable mode serialization and restoration;
+  * [x] explicit Unix and Windows capability boundaries.
 
 This gate supports `tty` and `stty` without requiring child-process or signal infrastructure prematurely.
+
+The Completion Gate F3 implementation is complete. `Icod.CoreUtils.Shared.Terminal` now exposes injectable endpoint, observation, result, complete mode-snapshot, serialization, and mutation contracts. The system provider dispatches to Linux/macOS `termios`, Windows console-mode, or an explicit unsupported provider without transferring ownership of borrowed descriptors. POSIX observations use `isatty` and `ttyname_r`; snapshots preserve native flags, the complete control-character array, disabled-character value, line discipline where present, native speed codes, recognized baud rates, flag width, and all three `tcsetattr` timing modes. Windows observations expose `CONIN$` or `CONOUT$`, input/output direction, and complete `GetConsoleMode`/`SetConsoleMode` state while explicitly declining to invent POSIX speeds, control characters, or drain semantics. `TerminalModeCodec` emits and restores GNU's colon-separated POSIX hexadecimal form and a direction-safe Windows form, and `TerminalControlCharacterFormatter` supplies GNU-compatible visible byte notation. Deterministic Shared tests cover contracts, injection, codec round trips, malformed and ABI-incompatible state, control-character rendering, regular-file redirection, and nonmutating runner smoke observations. The platform boundary and Batch 50/51 ownership are recorded in `Icod.CoreUtils-F3-Terminal-Identification-and-Control.md`. Permanent full-solution Debug/Release validation on Windows, Ubuntu, and macOS remains part of repository CI.
 
 ### Batch 50 — Terminal identification (1 tool)
 
