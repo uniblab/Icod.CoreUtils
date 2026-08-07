@@ -166,8 +166,8 @@ public sealed class SystemProcessExecutor : IProcessExecutor {
 			}
 			executable = located.Value!;
 		}
-		if ( null != options.ArgumentZero ) {
-			return await this.RunWithArgumentZeroAsync(
+		if ( null != options.ArgumentZero || ( options.CreateProcessGroup && !OperatingSystem.IsWindows() ) ) {
+			return await this.RunWithPosixSpawnAsync(
 				options,
 				executable,
 				environment,
@@ -427,7 +427,7 @@ public sealed class SystemProcessExecutor : IProcessExecutor {
 		}
 	}
 
-	private async Task<ProcessResult> RunWithArgumentZeroAsync(
+	private async Task<ProcessResult> RunWithPosixSpawnAsync(
 		ProcessRunOptions options,
 		string executable,
 		ProcessEnvironment environment,
@@ -435,7 +435,7 @@ public sealed class SystemProcessExecutor : IProcessExecutor {
 		CancellationToken cancellationToken
 	) {
 		if ( OperatingSystem.IsWindows() ) {
-			return this.HandleArgumentZeroSetupFailure(
+			return this.HandlePosixSpawnSetupFailure(
 				options,
 				startedTimestamp,
 				"The managed Windows launcher cannot set an independent native argument zero safely."
@@ -447,10 +447,10 @@ public sealed class SystemProcessExecutor : IProcessExecutor {
 			|| options.CaptureStandardOutput
 			|| options.CaptureStandardError
 		) {
-			return this.HandleArgumentZeroSetupFailure(
+			return this.HandlePosixSpawnSetupFailure(
 				options,
 				startedTimestamp,
-				"An explicit argument zero currently requires inherited standard streams on POSIX hosts."
+				"Native POSIX launch options currently require inherited standard streams."
 			);
 		}
 
@@ -459,7 +459,7 @@ public sealed class SystemProcessExecutor : IProcessExecutor {
 		try {
 			using var path = new Utf8NativeString( executable );
 			var argumentValues = new List<string>( options.Arguments.Count + 1 ) {
-				options.ArgumentZero!
+				options.ArgumentZero ?? executable
 			};
 			argumentValues.AddRange( options.Arguments );
 			using var arguments = new Utf8NativeStringVector( argumentValues );
@@ -475,11 +475,12 @@ public sealed class SystemProcessExecutor : IProcessExecutor {
 						Directory.SetCurrentDirectory( options.WorkingDirectory );
 					}
 					using var signalScope = PosixProcessLaunchScope.Enter( options.SignalPolicy, options.UseUnreadableStandardInput );
+					using var spawnAttributes = new PosixSpawnAttributeScope( options.CreateProcessGroup );
 					spawnResult = ProcessNative.PosixSpawn(
 						out processId,
 						path.Pointer,
 						IntPtr.Zero,
-						IntPtr.Zero,
+						spawnAttributes.Pointer,
 						arguments.Pointer,
 						environmentVector.Pointer
 					);
@@ -501,7 +502,7 @@ public sealed class SystemProcessExecutor : IProcessExecutor {
 				TryTerminatePosixProcess( processId, true );
 				await ReapPosixChildAsync( processId, this._clock ).ConfigureAwait( false );
 			}
-			return this.HandleArgumentZeroSetupFailure(
+			return this.HandlePosixSpawnSetupFailure(
 				options,
 				startedTimestamp,
 				exception.Message
@@ -590,7 +591,7 @@ public sealed class SystemProcessExecutor : IProcessExecutor {
 		}
 	}
 
-	private ProcessResult HandleArgumentZeroSetupFailure(
+	private ProcessResult HandlePosixSpawnSetupFailure(
 		ProcessRunOptions options,
 		long startedTimestamp,
 		string message
@@ -753,6 +754,9 @@ public sealed class SystemProcessExecutor : IProcessExecutor {
 			RedirectStandardOutput = null != options.StandardOutput || options.CaptureStandardOutput,
 			RedirectStandardError = null != options.StandardError || options.CaptureStandardError
 		};
+		if ( options.CreateProcessGroup && OperatingSystem.IsWindows() ) {
+			startInfo.CreateNewProcessGroup = true;
+		}
 		if ( null != options.WorkingDirectory ) {
 			startInfo.WorkingDirectory = options.WorkingDirectory;
 		}

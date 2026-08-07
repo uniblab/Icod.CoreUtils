@@ -716,6 +716,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Nice.Tests",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.UtilLinux.Renice.Tests", "tests\Renice.Tests\Icod.UtilLinux.Renice.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0119}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Timeout.Tests", "tests\Timeout.Tests\Icod.CoreUtils.Timeout.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0120}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -2121,6 +2123,12 @@ Global
 		{F05B4136-23C6-4CF5-8A6A-920F20DC0119}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F05B4136-23C6-4CF5-8A6A-920F20DC0119}.Staging|Any CPU.ActiveCfg = Staging|Any CPU
 		{F05B4136-23C6-4CF5-8A6A-920F20DC0119}.Staging|Any CPU.Build.0 = Staging|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0120}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0120}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0120}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0120}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0120}.Staging|Any CPU.ActiveCfg = Staging|Any CPU
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0120}.Staging|Any CPU.Build.0 = Staging|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -2360,6 +2368,7 @@ Global
 		{5B370E68-510C-4405-A447-B94ACDCAA6A7} = {6C828FF6-046C-44EE-8EBE-564FABEF4BF2}
 		{F05B4136-23C6-4CF5-8A6A-920F20DC0118} = {F05B4136-23C6-4CF5-8A6A-920F20DC0001}
 		{F05B4136-23C6-4CF5-8A6A-920F20DC0119} = {F05B4136-23C6-4CF5-8A6A-920F20DC0001}
+		{F05B4136-23C6-4CF5-8A6A-920F20DC0120} = {F05B4136-23C6-4CF5-8A6A-920F20DC0001}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {30D28C3D-CE6B-4262-8EF1-1D4A49129A6C}

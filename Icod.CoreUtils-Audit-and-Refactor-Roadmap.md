@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `54` |
-| Current engineering milestone | Batch 54 implemented; proceed to Batch 55 |
+| Completed command batches | `0` through `55` |
+| Current engineering milestone | Batch 55 implemented; proceed to Completion Gate P1 |
 | Completed infrastructure milestone | Completion Gates E2 through E6 and F1 through F4 — filesystem, terminal-presentation, host-resource, terminal-control, and process-control foundations |
-| Active infrastructure dependency | Batch 55 must consume the completed F4 monotonic-clock, wait, signal, process-group, and termination contracts |
-| Next engineering step | Batch 55 — GNU `timeout` |
+| Active infrastructure dependency | Completion Gate P1 must audit the F2-F4 processor/process contracts against their first large ProcPs consumer and establish the procps-ng provider boundary |
+| Next engineering step | Completion Gate P1 — ProcPs classification and provider foundation before Batch 56 |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1466,9 +1466,11 @@ The Batch 54 implementation is complete. GNU `nice` now follows the Coreutils 9.
 
 ### Batch 55 — Time-bounded execution (1 tool)
 
-- [ ] `timeout`
+- [x] `timeout`
 
 Implement the complete GNU duration grammar and support signal selection, repeated or single kill-after behavior as required by the pinned GNU profile, foreground and process-group handling, status preservation, verbose diagnostics, exact exit-status propagation, monotonic timing, cancellation, child cleanup, and explicit platform-capability handling.
+
+The Batch 55 implementation is complete. `Icod.CoreUtils.Timeout` now follows GNU Coreutils 9.11, including decimal and hexadecimal floating-point durations with `s`/`m`/`h`/`d` suffixes, zero-duration disabling, `--foreground`, one-stage `--kill-after` escalation, `--preserve-status`, named/numeric/realtime signal selection, GNU long-option abbreviations, verbose signal diagnostics, and the 124/125/126/127/137 status boundaries. Timing uses the shared monotonic clock rather than wall time. F4 now exposes atomic child process-group creation as a launch option: POSIX hosts apply `POSIX_SPAWN_SETPGROUP` through the existing native spawn boundary, while Windows uses the .NET 10 process-group launch facility and the declared process-tree termination substitution where POSIX group signaling cannot be represented. Timeout delivery uses protected child identities plus explicit process and process-group targets; non-KILL timeout signals are followed by `CONT` as in the GNU monitor. Dedicated `Timeout.Tests` cover zero durations, foreground/group targeting, preserve-status behavior, escalation, signal grammar, hexadecimal durations, long-option abbreviations, and a real child-process timeout through the system F4 executor. The ownership, process-group, timing, and platform decisions are recorded in `Icod.CoreUtils-Batch-55-Time-Bounded-Execution.md`.
 
 ### Completion Gate P1 — ProcPs classification and provider foundation before Batch 56
 

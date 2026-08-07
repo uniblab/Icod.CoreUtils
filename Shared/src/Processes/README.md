@@ -7,10 +7,11 @@ The `Icod.CoreUtils.Shared.Processes` namespace supplies the cross-suite process
 - Model process identities with optional PID-reuse tokens.
 - Model process, process-group, and session targets without overloading signed integers.
 - Resolve executables against explicit working-directory and environment snapshots.
-- Launch exact argument vectors with `UseShellExecute = false` and `ProcessStartInfo.ArgumentList`, plus a narrow POSIX `posix_spawn` path when a distinct native `argv[0]` is required.
+- Launch exact argument vectors with `UseShellExecute = false` and `ProcessStartInfo.ArgumentList`, plus a narrow POSIX `posix_spawn` path when a distinct native `argv[0]` or atomic child process-group creation is required.
 - Construct inherited, empty, and explicitly modified child environments.
 - Forward or capture all three standard streams asynchronously, with an explicit POSIX launch mode for write-only `/dev/null` standard input when a child must observe read failure rather than EOF.
 - Expose the protected child identity at launch for concurrent signal or priority orchestration.
+- Create an isolated child process group at launch when a supervising command such as `timeout` must signal the child and its descendants.
 - Apply explicit cancellation, monotonic timeout, process-tree cleanup, and leave-running policies.
 - Observe liveness and wait for arbitrary processes through controlled result contracts.
 - Parse, list, translate, inspect, and deliver signals where the host exposes those operations, observe Linux blocked masks, and apply requested POSIX signal dispositions or masks atomically around child creation.
