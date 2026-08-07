@@ -440,7 +440,7 @@ public sealed class TerminalEndpointObservation {
 		TerminalPlatformKind? platform,
 		TerminalControlCapabilities capabilities
 	) {
-		if ( !isTerminal && ( null is not platform ) ) {
+		if ( !isTerminal && ( platform is not null ) ) {
 			throw new ArgumentException(
 				"A nonterminal endpoint cannot report a terminal platform.",
 				nameof( platform )
@@ -487,7 +487,7 @@ public sealed class TerminalEndpointObservation {
 			);
 		}
 		var normalizedPathname = string.IsNullOrWhiteSpace( pathname ) ? null : pathname;
-		if ( capabilities.HasFlag( TerminalControlCapabilities.Pathname ) != ( null is not normalizedPathname ) ) {
+		if ( capabilities.HasFlag( TerminalControlCapabilities.Pathname ) != ( normalizedPathname is not null ) ) {
 			throw new ArgumentException(
 				"The pathname capability and pathname value must be reported together.",
 				nameof( capabilities )
@@ -594,13 +594,13 @@ public sealed class TerminalModeSnapshot {
 						"A POSIX terminal flag exceeds the declared 32-bit native width."
 					);
 				}
-				if ( ( null is not consoleDirection ) || ( null is not consoleMode ) ) {
+				if ( ( consoleDirection is not null ) || ( consoleMode is not null ) ) {
 					throw new ArgumentException(
 						"A POSIX terminal mode cannot contain Windows console fields.",
 						nameof( consoleMode )
 					);
 				}
-				if ( ( null is inputSpeed ) || ( null is outputSpeed ) ) {
+				if ( ( inputSpeed is null ) || ( outputSpeed is null ) ) {
 					throw new ArgumentException(
 						"A POSIX terminal mode requires native input and output speed values.",
 						nameof( inputSpeed )

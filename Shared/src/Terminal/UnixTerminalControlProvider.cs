@@ -75,7 +75,7 @@ internal sealed class UnixTerminalControlProvider : ITerminalControlProvider {
 				| TerminalControlCapabilities.Speeds
 				| TerminalControlCapabilities.ControlCharacters
 				| TerminalControlCapabilities.MachineSerialization;
-			if ( null is not pathname ) {
+			if ( pathname is not null ) {
 				capabilities |= TerminalControlCapabilities.Pathname;
 			}
 			return TerminalControlResult<TerminalEndpointObservation>.Available(
