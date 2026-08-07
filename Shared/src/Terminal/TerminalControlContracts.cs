@@ -452,7 +452,7 @@ public sealed class TerminalEndpointObservation {
 				nameof( capabilities )
 			);
 		}
-		if ( isTerminal && ( null is platform ) ) {
+		if ( isTerminal && ( platform is null ) ) {
 			throw new ArgumentException(
 				"A terminal endpoint must identify its native terminal platform.",
 				nameof( platform )
