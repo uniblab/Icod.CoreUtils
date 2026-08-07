@@ -1,5 +1,4 @@
 namespace Icod.CoreUtils.Shared.Processes;
-
 /// <summary>
 /// Identifies process-control capabilities exposed by a provider on the current host.
 /// </summary>
@@ -32,5 +31,7 @@ public enum ProcessControlCapabilities {
 	/// <summary>Windows priority-class substitutions are available.</summary>
 	WindowsPrioritySubstitution = 1 << 11,
 	/// <summary>Blocked signal masks can be observed.</summary>
-	SignalMaskObservation = 1 << 12
+	SignalMaskObservation = 1 << 12,
+	/// <summary>User-ID priority selectors are supported.</summary>
+	UserPriorityTargets = 1 << 13
 }
