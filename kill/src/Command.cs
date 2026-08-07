@@ -147,7 +147,7 @@ public static class Command {
 							cancellationToken
 						).ConfigureAwait( false );
 					}
-				} else if ( 0 >= target.NativeProcessId || null != options.QueuedValue ) {
+				} else if ( 0 >= target.NativeProcessId ) {
 					delivery = await host.DeliverNativeTargetAsync(
 						target.NativeProcessId,
 						options.Signal,
@@ -162,7 +162,7 @@ public static class Command {
 						delivery = await signals.DeliverAsync(
 							ProcessTarget.ForProcess( identity.Value! ),
 							options.Signal,
-							null,
+							options.QueuedValue,
 							cancellationToken
 						).ConfigureAwait( false );
 					}

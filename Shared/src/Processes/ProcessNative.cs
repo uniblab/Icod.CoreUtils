@@ -26,6 +26,25 @@ internal static class ProcessNative {
 	/// <summary>Gets the POSIX write-only open flag.</summary>
 	internal const int OpenWriteOnly = 1;
 
+	/// <summary>Represents the POSIX <c>union sigval</c> used by <c>sigqueue(3)</c>.</summary>
+	[StructLayout( LayoutKind.Explicit )]
+	internal struct SignalValue {
+		/// <summary>Stores the queued integer member of the native union.</summary>
+		[FieldOffset( 0 )]
+		internal int Integer;
+		/// <summary>Reserves pointer-sized storage for the native union on the current architecture.</summary>
+		[FieldOffset( 0 )]
+		internal IntPtr Pointer;
+
+		/// <summary>Initializes a queued integer value while clearing the full native union storage.</summary>
+		internal SignalValue(
+			int integer
+		) {
+			this.Pointer = IntPtr.Zero;
+			this.Integer = integer;
+		}
+	}
+
 	/// <summary>Duplicates one open POSIX file descriptor.</summary>
 	[DllImport(
 		"libc",
@@ -77,6 +96,18 @@ internal static class ProcessNative {
 	internal static extern int Kill(
 		int processId,
 		int signal
+	);
+
+	/// <summary>Invokes POSIX <c>sigqueue(3)</c> for one process.</summary>
+	[DllImport(
+		"libc",
+		EntryPoint = "sigqueue",
+		SetLastError = true
+	)]
+	internal static extern int SigQueue(
+		int processId,
+		int signal,
+		SignalValue value
 	);
 
 	/// <summary>Invokes POSIX getpriority.</summary>

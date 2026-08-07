@@ -4,7 +4,7 @@ These tests exercise the host and processor-resource provider independently of B
 
 Coverage includes:
 
-- explicit availability and provenance states;
+- explicit availability, source-provenance, and Completion Gate P1 semantic-fidelity states;
 - native and textual host-ID normalization;
 - CPU-list and affinity-mask parsing;
 - cgroup v1 and v2 quota parsing;

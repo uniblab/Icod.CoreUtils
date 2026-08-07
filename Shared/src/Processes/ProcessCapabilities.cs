@@ -33,5 +33,7 @@ public enum ProcessControlCapabilities {
 	/// <summary>Blocked signal masks can be observed.</summary>
 	SignalMaskObservation = 1 << 12,
 	/// <summary>User-ID priority selectors are supported.</summary>
-	UserPriorityTargets = 1 << 13
+	UserPriorityTargets = 1 << 13,
+	/// <summary>Queued signal values can be delivered to individual processes.</summary>
+	QueuedSignalDelivery = 1 << 14
 }
