@@ -32,7 +32,8 @@ The repository and solution will also serve as the **temporary development home*
 - `Icod.LineEditor.Ed.Shared`, `Icod.LineEditor.Ed`, `Icod.LineEditor.Red`, and `Icod.LineEditor.Sed`;
 - an optional `Icod.LineEditor.Shared` only if the completed Ed and Sed engines later demonstrate cohesive family-specific reuse that is neither cross-suite framework material nor specific to one engine;
 - `Icod.Tar`;
-- `Icod.ProcPs.Shared` and the complete procps-ng command family.
+- `Icod.UtilLinux.Kill` and `Icod.UtilLinux.Renice`, the selected util-linux process-control commands;
+- `Icod.ProcPs.Shared` and the selected procps-ng command family, explicitly excluding procps-ng `kill`, `skill`, and `snice`.
 
 These projects will use their **final ownership-correct project names and namespaces from the beginning**, but they will remain in `Icod.CoreUtils.sln` and this repository until the final architectural extraction. Developing the suites together provides real consumers for the current `Shared` APIs, makes cross-suite duplication visible, and supplies the evidence needed to decide which APIs belong in `Icod.CommandFramework`, which remain in `Icod.CoreUtils.Shared`, and which belong in a suite-specific Shared library.
 
@@ -81,6 +82,7 @@ Icod.LineEditor.Ed
 Icod.LineEditor.Red
 Icod.LineEditor.Sed
 Icod.Tar
+Icod.UtilLinux.*
 Icod.ProcPs.*
 ```
 
@@ -88,7 +90,7 @@ The solution should use matching solution folders and suite directories so sourc
 
 ### Co-resident executable-name collisions
 
-Some suites contain commands with the same executable name. In particular, procps-ng supplies names such as `kill` and `uptime` that may overlap commands already implemented under the Coreutils roadmap.
+Some suites contain commands with the same executable name. In particular, procps-ng supplies `uptime`, which overlaps the historical Coreutils-roadmap implementation. The `kill` executable is implemented only once, as the pinned util-linux profile, so no ProcPs `kill` collision is retained.
 
 During the co-resident phase:
 
@@ -173,6 +175,7 @@ Icod.CommandFramework
 - `Icod.LineEditor.Sed` owns Sed-specific script parsing, address and range state, pattern and hold spaces, branching, command-cycle behavior, substitutions, sandbox policy, and in-place-editing semantics.
 - A general `Icod.LineEditor.Shared` project is created only if completed Ed and Sed implementations demonstrate cohesive editor-family reuse that is neither cross-suite `Icod.CommandFramework` material nor specific to one engine. It must not be created merely to wrap the regular-expression, record, diagnostic, process, temporary, filesystem, or text APIs already incubating in the current Shared project.
 - `Icod.Tar` owns archive formats, entry models, sparse-file archive behavior, selection and exclusion rules, compression integration, and extraction security.
+- `Icod.UtilLinux.Kill` and `Icod.UtilLinux.Renice` own the pinned util-linux command profiles for signal delivery and reprioritizing existing processes. They consume the general process identity, target, signal, priority, clock, and status contracts from the current Shared incubation project. No `Icod.UtilLinux.Shared` project is planned unless later util-linux consumers demonstrate genuine suite-local reuse that does not belong in `Icod.CommandFramework`.
 - `Icod.ProcPs.Shared` owns procps-ng-specific process enumeration, Linux `/proc` parsing and equivalent observation providers, selection grammar, detailed snapshots, field definitions, sorting, personalities, terminal association, CPU and memory metric interpretation, kernel-data models, and full-screen process-tool support. It consumes rather than duplicates the general processor-resource, process-identity, target, launch, wait, signal, priority, clock, and terminal contracts incubated in the current Shared project.
 
 ### Co-resident suite incubation policy
@@ -208,7 +211,8 @@ For the co-resident sibling-suite projects, use the corresponding upstream proje
 | `cmp`, `diff`, `diff3`, `sdiff` | `Icod.DiffUtils` | GNU Diffutils 3.12 |
 | `patch` | `Icod.Patch` | GNU patch 2.8 |
 | `ed`, `red` | `Icod.LineEditor.Ed` | GNU ed 1.22.5 |
-| procps-ng command family | `Icod.ProcPs` | procps-ng 4.0.6, with an explicitly documented portability profile |
+| `kill`, `renice` | `Icod.UtilLinux` | util-linux 2.42.2 |
+| selected procps-ng command family, excluding `kill`, `skill`, and `snice` | `Icod.ProcPs` | procps-ng 4.0.6, with an explicitly documented portability profile |
 | `tar` | `Icod.Tar` | GNU tar |
 
 Man7 pages are useful synopses and secondary references, but they must not replace the authoritative upstream manual.
@@ -260,7 +264,7 @@ Man7 pages are useful synopses and secondary references, but they must not repla
 
 These conventions apply to every existing project that is altered and every project that is added:
 
-1. Project filenames and namespaces use conventional PascalCase and the correct suite family, such as `Icod.CoreUtils.BaseName.csproj`, `Icod.DiffUtils.Diff.csproj`, `Icod.LineEditor.Ed.csproj`, or `Icod.ProcPs.Ps.csproj`.
+1. Project filenames and namespaces use conventional PascalCase and the correct suite family, such as `Icod.CoreUtils.BaseName.csproj`, `Icod.DiffUtils.Diff.csproj`, `Icod.LineEditor.Ed.csproj`, `Icod.UtilLinux.Kill.csproj`, or `Icod.ProcPs.Ps.csproj`.
 2. `<AssemblyName>` remains the short lowercase command name exactly matching the tool directory, such as `basename`.
 3. All source and project text files are UTF-8.
 4. The first `<PropertyGroup>` of every altered or added `.csproj` contains `<LangVersion>13.0</LangVersion>`, and every project retains the established Debug, Staging, and Release conditional property groups.  Example:
@@ -345,7 +349,7 @@ These conventions apply to every existing project that is altered and every proj
 12. `--help` and `--version` behavior, write failures, broken pipes, cancellation, and disposal are tested consistently.
 13. Native structures and calls are defined per supported operating-system ABI; a Linux structure declaration must not be assumed valid on macOS or Windows.
 14. The exact upstream package and version used as the conformance baseline is recorded for every batch.
-15. `Icod.CoreUtils` command projects do not take production dependencies on `Icod.DiffUtils`, `Icod.Grep`, `Icod.Patch`, `Icod.LineEditor.Ed`, `Icod.LineEditor.Red`, `Icod.ProcPs`, `Icod.LineEditor.Sed`, or `Icod.Tar`.
+15. `Icod.CoreUtils` command projects do not take production dependencies on `Icod.DiffUtils`, `Icod.Grep`, `Icod.Patch`, `Icod.LineEditor.Ed`, `Icod.LineEditor.Red`, `Icod.UtilLinux`, `Icod.ProcPs`, `Icod.LineEditor.Sed`, or `Icod.Tar`.
 16. Co-resident suite projects remain isolated by namespace, solution folder, tests, and output paths; Completion Gate G performs the final solution, repository, packaging, and CI extraction.
 17. Until the final framework audit, every substantial Shared API records a provisional classification: cross-suite `Icod.CommandFramework` candidate, Coreutils-only `Icod.CoreUtils.Shared` candidate, suite-specific Shared candidate, or command-local implementation. The classification may change when real consumers provide better evidence.
 18. A type's current assembly is not proof of final ownership. Cross-suite process and processor mechanics may reside temporarily in the current `Icod.CoreUtils.Shared` project, while ProcPs-specific enumeration, `/proc` parsing, field catalogs, selection grammar, metrics, and screen state remain in `Icod.ProcPs.Shared`.
@@ -448,7 +452,7 @@ This historical completion remains authoritative. The command has since moved to
 - [x] `uptime`
 - [x] `date`
 
-`ps` and `uptime` were implemented and stabilized as part of this historical batch. Their completed history remains recorded here; Batches 56 and 62 later migrate useful code and tests into the suite-correct `Icod.ProcPs` projects without rewriting history.
+`ps` and `uptime` were implemented and stabilized as part of this historical batch. Their completed history remains recorded here; Batches 57 and 62 later migrate useful code and tests into the suite-correct `Icod.ProcPs` projects without rewriting history.
 
 ### Batch 10 — Block-oriented copy and conversion (1 tool)
 
@@ -1423,7 +1427,7 @@ The Batch 51 implementation is complete. `Icod.CoreUtils.Stty` reads and writes 
 
 These contracts are provisionally classified as `Icod.CommandFramework` candidates even though they are implemented physically in the current `Icod.CoreUtils.Shared` project during incubation.
 
-This gate supports `env` and `nohup`, allows Coreutils `kill` to validate signal parsing, targets, and delivery in Batch 53, allows `nice` and `timeout` to validate priority, waiting, process groups, clocks, termination, and status propagation in Batch 54, and supplies the common mechanics consumed immediately by the ProcPs block and later by `Icod.Tar`, `Icod.LineEditor.Ed.Shared`, and other suites.
+This gate supports `env` and `nohup`; allows the util-linux `kill` profile to validate signal parsing, process names, targets, PID-reuse protection, queued values, delayed follow-up signals, and delivery in Batch 53; allows GNU `nice` and util-linux `renice` to validate child and existing-process priority behavior in Batch 54; allows GNU `timeout` to validate waiting, process groups, clocks, termination, and status propagation in Batch 55; and supplies the common mechanics consumed immediately by the ProcPs block and later by `Icod.Tar`, `Icod.LineEditor.Ed.Shared`, and other suites.
 
 Completion Gate F4 is complete. `Icod.CoreUtils.Shared.Processes` now provides controlled operation results; PID identities with Linux `/proc` or start-time reuse tokens; explicit process, group, and session targets; environment snapshots; executable lookup; injectable execution, inspection, signal, and priority providers; exact `ArgumentList` launch; concurrent stream forwarding and capture; timeout, cancellation, process-tree, and leave-running policies; child and arbitrary-process waits; portable signal parsing and Linux disposition inspection; POSIX signal and priority operations; declared Windows substitutions; and portable termination translation. `Icod.CoreUtils.Shared.Time` now supplies injectable monotonic clocks and fixed-rate periodic scheduling. Cross-platform integration tests use `ProcessTestHost`, and the ownership and capability policy is recorded in `Icod.CoreUtils-Completion-Gate-F4-Process-Foundation.md`.
 
@@ -1434,26 +1438,41 @@ Completion Gate F4 is complete. `Icod.CoreUtils.Shared.Processes` now provides c
 
 Build the shared child-process launch environment. Implement environment clearing/removal, split-string parsing, working directory, `argv0`, signal policy, NUL output, command lookup, `nohup` redirection rules, diagnostics, and asynchronous stream forwarding.
 
-### Batch 53 — Signal control (1 tool)
+### Batch 53 — util-linux signal control (1 tool)
 
-* [ ] `kill`
+- [ ] `Icod.UtilLinux.Kill`
 
-Implement signal-name and signal-number parsing, signal listing and translation, process and process-group targets, queued values where supported and in scope, exact diagnostics and exit statuses, and Windows substitutions only where they are semantically defensible.
+Create the suite-correct project and dedicated tests with assembly name `kill`. Pin util-linux 2.42.2 as the authoritative profile rather than procps-ng `kill`, a shell builtin, or the historical GNU Coreutils variant.
 
-### Batch 54 — Priority and time-bounded execution (2 tools)
+Implement numeric, named, and realtime signals; signal zero; positive PID, zero, negative process-group, and `-1` targets; mixed process-name and PID operands; same-user and `--all` name lookup; PID-only lookup; signal listing, table output, number/name conversion, and hexadecimal signal-mask decoding; queued values; handler requirements; verbose reporting; `/proc` signal-state display; PID-plus-pidfd-inode identities where supported; repeated race-free `--timeout` follow-up signals; exact success, failure, and partial-success statuses; and explicit capability diagnostics where Windows, macOS, BSD, or an older Linux kernel cannot provide a util-linux extension safely.
 
-* [ ] `nice`
-* [ ] `timeout`
+Do not add `Icod.ProcPs.Kill`. ProcPs selection commands consume the same Shared signal contracts, but the repository exposes only the util-linux `kill` executable profile.
 
-Implement priority adjustment without child-start races. Parse the complete duration grammar and support signal selection, kill-after behavior, foreground and process-group handling, status preservation, verbose diagnostics, exact exit-status propagation, and explicit platform-capability handling.
+### Batch 54 — Process priority control (2 tools)
 
-### Completion Gate P1 — ProcPs classification and provider foundation before Batch 55
+- [ ] `nice`
+- [ ] `Icod.UtilLinux.Renice`
+
+Keep `nice` under the GNU Coreutils authority and create the suite-correct util-linux `renice` project and dedicated tests with assembly name `renice`.
+
+For `nice`, implement the complete adjustment grammar, command lookup and launch, priority application without child-start races, exact child-status propagation, privilege failures, and controlled platform capability handling.
+
+For `renice`, pin util-linux 2.42.2 and implement absolute and relative priorities; the `-n` and `POSIXLY_CORRECT` interaction; explicit `--priority` and `--relative`; process, process-group, user-ID, and username targets; ordered target-class changes; multiple targets; privilege and resource-limit behavior; vanished targets; partial success; exact diagnostics and statuses; and defensible Windows priority-class mapping or controlled unsupported results. Both commands consume the F4 priority contracts rather than introducing command-local native APIs.
+
+### Batch 55 — Time-bounded execution (1 tool)
+
+- [ ] `timeout`
+
+Implement the complete GNU duration grammar and support signal selection, repeated or single kill-after behavior as required by the pinned GNU profile, foreground and process-group handling, status preservation, verbose diagnostics, exact exit-status propagation, monotonic timing, cancellation, child cleanup, and explicit platform-capability handling.
+
+### Completion Gate P1 — ProcPs classification and provider foundation before Batch 56
 
 - [ ] Establish the co-resident procps-ng suite foundation:
 
-  - [ ] pin procps-ng 4.0.6 and audit its exact command, launcher, alias, and install inventory;
+  - [ ] pin procps-ng 4.0.6 and audit its exact launcher, alias, and install inventory for the selected command set;
+  - [ ] record `kill`, `skill`, and `snice` as deliberately out of scope for `Icod.ProcPs`; the sole `kill` profile is util-linux 2.42.2 and `renice` is implemented under the same util-linux authority;
   - [ ] resolve the pinned-baseline relationship between `pidwait` and `pwait`;
-  - [ ] audit every processor- and process-related API created by Completion Gates F2 through F4 and record its actual Coreutils, ProcPs, Tar, Ed, and other suite consumers;
+  - [ ] audit every processor- and process-related API created by Completion Gates F2 through F4 and record its actual Coreutils, UtilLinux, ProcPs, Tar, Ed, and other suite consumers;
   - [ ] keep genuinely cross-suite processor-resource, process-identity, target, launch, wait, signal, priority, clock, scheduler, status, and terminal contracts in the current Shared incubation project and classify them as future `Icod.CommandFramework` candidates;
   - [ ] prohibit `Icod.ProcPs.Shared` from introducing duplicate abstractions for those common mechanics;
   - [ ] define Linux `/proc` as the canonical ProcPs observation provider;
@@ -1464,14 +1483,14 @@ Implement priority adjustment without child-start races. Parse the complete dura
   - [ ] define memory, swap, CPU activity, load, uptime, virtual-memory, process-map, slab, hugepage, user-session, and kernel-parameter provider boundaries;
   - [ ] consume the shared monotonic clock and periodic scheduler while defining ProcPs-specific sampling intervals, counter deltas, wraparound, and refresh semantics;
   - [ ] consume shared terminal primitives while defining testable ProcPs screen models, interaction, sorting, filtering, and configuration behavior;
-  - [ ] establish suite-specific output directories for command names that collide with existing Coreutils projects;
+  - [ ] establish suite-specific output directories for remaining command-name collisions such as `uptime`;
   - [ ] establish fixture-driven `/proc` parsing and injectable ProcPs provider tests.
 
 Linux behavior remains authoritative for procps-ng. Other supported platforms must expose honest capability and provenance information rather than fabricated Linux fields, misleading zero values, or silent success.
 
-This gate follows Batches 52 through 54 so ProcPs can consume already tested process launch, identity, targets, waiting, signals, process groups, status propagation, priorities, clocks, and timeout foundations. It precedes the ProcPs block so those cross-suite facilities are not rediscovered independently by each procps-ng command and so ProcPs-specific observation begins at the correct architectural layer.
+This gate follows Batches 52 through 55 so ProcPs can consume already tested process launch, identity, targets, waiting, signals, process groups, status propagation, existing-process and child priority behavior, clocks, and timeout foundations. It precedes the ProcPs block so those cross-suite facilities are not rediscovered independently by each procps-ng command and so ProcPs-specific observation begins at the correct architectural layer.
 
-### Batch 55 — `Icod.ProcPs.Shared` provider foundation (1 library)
+### Batch 56 — `Icod.ProcPs.Shared` provider foundation (1 library)
 
 - [ ] `Icod.ProcPs.Shared`
 
@@ -1488,7 +1507,7 @@ Create the suite-specific Shared project and its dedicated test project inside t
 
 `Icod.ProcPs.Shared` uses project references to the current Shared incubation project during development. It consumes common processor-resource, process identity, targets, launching, waiting, signals, priorities, clocks, scheduling, statuses, and terminal primitives from that project. Procps-specific enumeration, fields, selection, personalities, `/proc` parsers, kernel models, metric interpretation, and screen state remain here. Neither layer should duplicate the other merely because `Icod.CommandFramework` has not yet been extracted.
 
-### Batch 56 — Basic system summaries (2 tools)
+### Batch 57 — Basic system summaries (2 tools)
 
 - [ ] `Icod.ProcPs.Uptime`
 - [ ] `Icod.ProcPs.Free`
@@ -1501,7 +1520,7 @@ For `free`, implement physical and swap memory reporting, units, human-readable 
 
 These commands validate the narrowest uptime, load, memory, unit, and provenance contracts before more complicated sampled or per-process consumers are introduced. Because a Coreutils-profile `uptime` may also exist, use the ProcPs suite output directory during incubation and keep the conformance profiles separately testable until final packaging policy is decided.
 
-### Batch 57 — Sampled system statistics (1 tool)
+### Batch 58 — Sampled system statistics (1 tool)
 
 - [ ] `Icod.ProcPs.Vmstat`
 
@@ -1509,7 +1528,7 @@ Create the project and tests with assembly name `vmstat`. Implement process, mem
 
 This batch validates deterministic clocks, interval sampling, counter deltas, units, wraparound, and partial provider availability before the full-screen tools depend on them.
 
-### Batch 58 — Process selection, signaling, and waiting (4 projects)
+### Batch 59 — Process selection, signaling, and waiting (4 projects)
 
 - [ ] `Icod.ProcPs.Pgrep`
 - [ ] `Icod.ProcPs.Pkill`
@@ -1524,7 +1543,7 @@ For `pkill`, reuse the same selection model and implement signal delivery, queue
 
 For `pidwait`, implement the pinned procps-ng waiting behavior using pidfd or an equivalent provider where available, including selection, vanished processes, permissions, cancellation, and exact statuses. Upstream renamed `pwait` to `pidwait`; retain `pwait` as a compatibility launcher only when confirmed by the pinned suite compatibility policy. Both launchers must use one engine rather than drift into separate implementations.
 
-### Batch 59 — Process lookup and working directories (2 tools)
+### Batch 60 — Process lookup and working directories (2 tools)
 
 - [ ] `Icod.ProcPs.PidOf`
 - [ ] `Icod.ProcPs.Pwdx`
@@ -1534,20 +1553,6 @@ For `pidof`, implement program-name matching, scripts, roots, omission lists, se
 For `pwdx`, implement one or more process targets, permission and vanished-process behavior, process-root and namespace effects, path reporting, exact diagnostics, and controlled platform limitations.
 
 These commands provide focused validation of executable identity, process roots, namespace-aware path resolution, and short-lived-process races before the larger process-reporting engine.
-
-### Batch 60 — Direct and legacy process control (3 tools)
-
-- [ ] `Icod.ProcPs.Kill`
-- [ ] `Icod.ProcPs.Skill`
-- [ ] `Icod.ProcPs.Snice`
-
-For ProcPs `kill`, implement the procps-ng option and signal model, process targets, queued values where supported, listing and translation, exact diagnostics, and platform substitutions only where semantically defensible.
-
-For `skill`, implement the pinned obsolete selection and signaling interface faithfully, reuse the shared process-selection and signal-delivery models, issue upstream-compatible warnings where applicable, and do not silently substitute `pkill` argument semantics.
-
-For `snice`, implement the pinned obsolete selection and priority grammar, process targeting, privilege failures, partial success, diagnostics, and platform capability mapping.
-
-This batch follows Coreutils `kill`, `nice`, and `timeout` so common signal, target, priority, and child-process behavior has already been exercised. Because a Coreutils-profile `kill` may coexist, use the ProcPs suite output directory and keep both conformance profiles separately testable until Completion Gate G.
 
 ### Batch 61 — Process memory maps (1 tool)
 
@@ -1593,7 +1598,7 @@ Create the project and tests with assembly name `tload`. Implement terminal load
 
 Create the project and tests with assembly name `watch`. Implement periodic argument-safe child execution, interval and precision, differences and color, headers, beep, equexit, chgexit and error-exit behavior, terminal resizing, visible-change semantics, command-status propagation, cancellation, suspension and resume, and terminal restoration.
 
-This batch combines the shared terminal refresh model with the child-process infrastructure already established by Completion Gate F4 and Batches 52 through 54.
+This batch combines the shared terminal refresh model with the child-process infrastructure already established by Completion Gate F4 and Batches 52 through 55.
 
 ### Batch 67 — Specialized kernel-memory displays (2 tools)
 
@@ -1614,7 +1619,7 @@ Create the project and tests with assembly name `top`. Implement dynamic samplin
 
 Keep the screen model independently testable from rendering. `top` is last in the ProcPs block because it combines almost every provider, metric, process-selection, formatting, signal, sampling, configuration, and terminal capability established by the preceding batches.
 
-Completion of Batches 55 through 68 leaves the complete command family installed by the pinned procps-ng baseline implemented as suite-correct projects inside the current solution. The exact inventory is verified in Completion Gate P1; any discrepancy is corrected in the roadmap rather than silently omitted. Final solution, repository, package, launcher-alias, and executable-collision policy is resolved in Completion Gate G.
+Completion of Batches 56 through 68 leaves the selected procps-ng command set implemented as suite-correct projects inside the current solution. Completion Gate P1 records the exact included inventory and the deliberate exclusion of procps-ng `kill`, `skill`, and `snice`; any other discrepancy is corrected in the roadmap rather than silently omitted. Final solution, repository, package, launcher-alias, and executable-collision policy is resolved in Completion Gate G.
 
 ### Batch 69 — Root-directory execution (1 tool)
 
@@ -1650,7 +1655,7 @@ The project remains co-resident until Completion Gate G, when it is moved into i
 
 ### Completion Gate G — final classification, package extraction, and repository split
 
-This gate is deliberately last. By this point the Coreutils, Diffutils, Grep, Patch, Ed, Sed, Tar, and ProcPs projects have been developed together in one solution, providing the consumer evidence needed to choose stable API and repository boundaries.
+This gate is deliberately last. By this point the Coreutils, Diffutils, Grep, Patch, Ed, Sed, selected UtilLinux commands, Tar, and ProcPs projects have been developed together in one solution, providing the consumer evidence needed to choose stable API and repository boundaries.
 
 - [ ] Inventory every public, protected, and internal API in the current Shared incubation project and record its actual consumers by project and suite.
 - [ ] Inventory every API in `Icod.DiffUtils.Shared`, `Icod.LineEditor.Ed.Shared`, `Icod.ProcPs.Shared`, any evidence-based `Icod.LineEditor.Shared`, and any other suite engine to detect duplication or misplaced cross-suite contracts.
@@ -1671,6 +1676,7 @@ This gate is deliberately last. By this point the Coreutils, Diffutils, Grep, Pa
   - [ ] `Icod.Grep`;
   - [ ] `Icod.Patch`;
   - [ ] `Icod.LineEditor`, containing `Icod.LineEditor.Ed.Shared`, `Icod.LineEditor.Ed`, `Icod.LineEditor.Red`, and `Icod.LineEditor.Sed`; Phase LE9 did not justify a general `Icod.LineEditor.Shared` project;
+  - [ ] `Icod.UtilLinux`, containing the selected `kill` and `renice` command projects;
   - [ ] `Icod.Tar`;
   - [ ] `Icod.ProcPs`.
 - [ ] Preserve relevant history, project identities, test corpora, documentation, and CI policy during each extraction.
@@ -1725,21 +1731,21 @@ Completion of this gate establishes `Icod.CommandFramework` as the neutral cross
 
 - Completion Gates F1 through F4 establish cross-suite terminal presentation and control, host and processor-resource facts, process identity and targets, argument-safe launch, child and arbitrary-process waiting contracts, signals, process groups, priorities, monotonic timing, status translation, and timeout behavior before the most platform-intensive suite begins. These APIs live physically in the current Shared incubation project but are provisionally classified as `Icod.CommandFramework` candidates.
 
-- Completion Gate P1 follows Coreutils `env`, `nohup`, `kill`, `nice`, and `timeout`, audits those shared processor and process APIs against their first large sibling-suite consumer, prohibits duplicate ProcPs abstractions, and then defines the procps-ng-specific observation and provenance layer. Linux `/proc` remains the authoritative semantic source; Windows, macOS, and BSD providers must identify exact, equivalent, approximated, and unavailable data honestly.
+- Completion Gate P1 follows Coreutils `env`, `nohup`, `nice`, and `timeout` together with util-linux `kill` and `renice`, audits those shared processor and process APIs against their first large sibling-suite consumer, prohibits duplicate ProcPs abstractions, and then defines the procps-ng-specific observation and provenance layer. Linux `/proc` remains the authoritative semantic source; Windows, macOS, and BSD providers must identify exact, equivalent, approximated, and unavailable data honestly.
 
-- Batches 55 through 68 are consecutive so `Icod.ProcPs.Shared` and the complete pinned procps-ng family evolve together. The order progresses from narrow system summaries, through sampled statistics and process targeting, to process maps and `ps`, then to user, kernel, terminal, specialized-memory, and finally full-screen process monitoring.
+- Batches 56 through 68 are consecutive so `Icod.ProcPs.Shared` and the selected procps-ng command set evolve together. The order progresses from narrow system summaries, through sampled statistics and process targeting, to process maps and `ps`, then to user, kernel, terminal, specialized-memory, and finally full-screen process monitoring. Procps-ng `kill`, `skill`, and `snice` are intentionally absent rather than deferred.
 
 - The architectural boundary is facts and mechanics versus suite interpretation: common processor availability, identity, targeting, launch, wait, signal, priority, clock, status, and terminal contracts remain in the current Shared incubation project, while ProcPs owns `/proc` parsing, process enumeration, detailed snapshots, selection grammar, field catalogs, metric interpretation, personalities, sorting, and screen behavior.
 
-- `uptime` and `free` validate the narrowest load and memory providers; `vmstat` validates interval sampling and counter deltas; `pgrep`, `pkill`, and `pidwait` establish one selection engine; and `pidof`, `pwdx`, `kill`, `skill`, and `snice` exercise identity, path, signal, and priority behavior before `ps` consumes the complete process model.
+- `uptime` and `free` validate the narrowest load and memory providers; `vmstat` validates interval sampling and counter deltas; `pgrep`, `pkill`, and `pidwait` establish one selection engine; and `pidof`, `pwdx`, and `pmap` exercise identity, path, lifetime-race, and mapping behavior before `ps` consumes the complete process model. Signal and priority mechanics have already been validated independently by util-linux `kill` and `renice` and GNU `nice` and `timeout`.
 
 - `ps` is deliberately not the ProcPs foundation. It follows smaller provider consumers so process races, fields, namespaces, maps, metrics, and selection behavior can be corrected before they are hidden inside its large personality and formatting surface.
 
 - `tload`, `watch`, `hugetop`, and `slabtop` progressively validate the refresh and terminal runtime. `top` remains last because it combines process snapshots, sampled CPU and memory, fields, sorting, filtering, configuration, signals, interactive input, rendering, resizing, suspension, and terminal restoration.
 
-- The historical `ps` and `uptime` work remains recorded in Batch 9. Batches 56 and 62 migrate useful implementation and tests into the correct ProcPs namespace without rewriting history. ProcPs `kill` and `uptime` coexist with any Coreutils-profile commands through suite-specific output directories until final package ownership is decided.
+- The historical `ps` and `uptime` work remains recorded in Batch 9. Batches 57 and 62 migrate useful implementation and tests into the correct ProcPs namespace without rewriting history. ProcPs `uptime` coexists with the historical Coreutils-profile command through suite-specific output directories until final package ownership is decided. `kill` has one ownership-correct implementation under `Icod.UtilLinux`.
 
-- Obsolete or compatibility procps-ng tools such as `skill`, `snice`, and `pwait` remain in scope because the stated goal is the complete pinned suite. Their deprecation or alias status must be documented rather than used as a reason for silent omission.
+- Procps-ng `skill` and `snice` are explicitly out of scope. `pwait` remains only as a compatibility launcher over the `pidwait` engine when Completion Gate P1 confirms that the pinned procps-ng 4.0.6 install policy still exposes it.
 
 - `chroot`, the SELinux commands, and `stdbuf` follow ProcPs because they are specialized privilege, security-context, or preload concerns and provide no foundational provider capability required by the ProcPs family.
 
@@ -1791,7 +1797,7 @@ A batch is complete only when:
 - lowercase assembly names and PascalCase project/namespace conventions are preserved;
 - the target framework and project configuration satisfy the current completion gate;
 - roadmap status and documentation are updated;
-- co-resident suite batches preserve suite-correct namespaces, isolated output paths, tests, and dependency direction; Completion Gate G leaves no stale solution, packaging, CI, or inventory references after extraction;
+- co-resident suite batches preserve suite-correct namespaces, isolated output paths, tests, and dependency direction; the selected `Icod.UtilLinux` commands remain separate from both Coreutils and ProcPs ownership; Completion Gate G leaves no stale solution, packaging, CI, or inventory references after extraction;
 - LineEditor milestones preserve the exact public command classes `Icod.LineEditor.Ed.Command`, `Icod.LineEditor.Red.Command`, and `Icod.LineEditor.Sed.Command`; keep Ed/Red state in `Icod.LineEditor.Ed.Shared`; keep Sed cycle state in `Icod.LineEditor.Sed`; and create `Icod.LineEditor.Shared` only after the evidence-based sharing audit;
 - LineEditor tests cover GNU BRE/ERE, byte-preserving LF/NUL and final-record semantics, script-source diagnostics, Sed sandbox denial, Red shell and path denial, in-place/write atomicity, rollback, links, races, cancellation, and cleanup as applicable;
 - ProcPs batches consume the shared processor and process foundation without duplicating its identities, targets, launch, wait, signal, priority, timing, status, or terminal contracts;
