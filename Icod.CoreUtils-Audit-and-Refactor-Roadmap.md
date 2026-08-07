@@ -1441,9 +1441,9 @@ The Batch 52 implementation is complete. `Icod.CoreUtils.Env` now implements the
 
 ### Batch 53 — util-linux signal control (1 tool)
 
-- [ ] `Icod.UtilLinux.Kill`
+- [ ] `kill`
 
-Create the suite-correct project and dedicated tests with assembly name `kill`. Pin util-linux 2.42.2 as the authoritative profile rather than procps-ng `kill`, a shell builtin, or the historical GNU Coreutils variant.
+Create the suite-correct project `kill\Icod.UtilLinux.Kill` and dedicated tests with assembly name `kill`. Pin util-linux 2.42.2 as the authoritative profile rather than procps-ng `kill`, a shell builtin, or the historical GNU Coreutils variant.
 
 Implement numeric, named, and realtime signals; signal zero; positive PID, zero, negative process-group, and `-1` targets; mixed process-name and PID operands; same-user and `--all` name lookup; PID-only lookup; signal listing, table output, number/name conversion, and hexadecimal signal-mask decoding; queued values; handler requirements; verbose reporting; `/proc` signal-state display; PID-plus-pidfd-inode identities where supported; repeated race-free `--timeout` follow-up signals; exact success, failure, and partial-success statuses; and explicit capability diagnostics where Windows, macOS, BSD, or an older Linux kernel cannot provide a util-linux extension safely.
 
@@ -1452,13 +1452,13 @@ Do not add `Icod.ProcPs.Kill`. ProcPs selection commands consume the same Shared
 ### Batch 54 — Process priority control (2 tools)
 
 - [ ] `nice`
-- [ ] `Icod.UtilLinux.Renice`
+- [ ] `renice`
 
 Keep `nice` under the GNU Coreutils authority and create the suite-correct util-linux `renice` project and dedicated tests with assembly name `renice`.
 
-For `nice`, implement the complete adjustment grammar, command lookup and launch, priority application without child-start races, exact child-status propagation, privilege failures, and controlled platform capability handling.
+For `nice` (`nice\Icod.CoreUtils.Nice`), implement the complete adjustment grammar, command lookup and launch, priority application without child-start races, exact child-status propagation, privilege failures, and controlled platform capability handling.
 
-For `renice`, pin util-linux 2.42.2 and implement absolute and relative priorities; the `-n` and `POSIXLY_CORRECT` interaction; explicit `--priority` and `--relative`; process, process-group, user-ID, and username targets; ordered target-class changes; multiple targets; privilege and resource-limit behavior; vanished targets; partial success; exact diagnostics and statuses; and defensible Windows priority-class mapping or controlled unsupported results. Both commands consume the F4 priority contracts rather than introducing command-local native APIs.
+For `renice` (`renice\Icod.UtilLinux.Renice`), pin util-linux 2.42.2 and implement absolute and relative priorities; the `-n` and `POSIXLY_CORRECT` interaction; explicit `--priority` and `--relative`; process, process-group, user-ID, and username targets; ordered target-class changes; multiple targets; privilege and resource-limit behavior; vanished targets; partial success; exact diagnostics and statuses; and defensible Windows priority-class mapping or controlled unsupported results. Both commands consume the F4 priority contracts rather than introducing command-local native APIs.
 
 ### Batch 55 — Time-bounded execution (1 tool)
 
