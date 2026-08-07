@@ -41,7 +41,7 @@ internal static class EnvSplitStringParser {
 				continue;
 			}
 			if ( '$' == character && !singleQuoted ) {
-				AppendVariable();
+				AppendVariable( index );
 				continue;
 			}
 			if ( '\\' == character ) {
@@ -95,7 +95,7 @@ internal static class EnvSplitStringParser {
 			started = false;
 		}
 
-		void AppendVariable() {
+		void AppendVariable( int index ) {
 			if ( index + 3 >= value.Length || '{' != value[ index + 1 ] ) {
 				throw new EnvUsageException( "only ${VARNAME} expansion is supported in -S" );
 			}
