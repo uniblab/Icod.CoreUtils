@@ -1,9 +1,13 @@
 namespace Icod.UtilLinux.Kill;
 
-using System;
-
+/// <summary>Hosts the util-linux-compatible <c>kill</c> command.</summary>
 public static class Program {
-	public static int Main( string[] args ) {
-		return Command.Run( args );
-	}
+	/// <summary>Runs the command.</summary>
+	public static Task<int> Main(
+		string[] args
+	) => Command.RunAsync(
+		args,
+		Console.Out,
+		Console.Error
+	);
 }
