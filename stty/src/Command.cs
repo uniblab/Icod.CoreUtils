@@ -54,9 +54,10 @@ public static class Command {
 		}
 
 		provider ??= SystemTerminalControlProvider.Instance;
-		var endpoint = null is options.File
+		var endpoint = ( options.File is null )
 			? TerminalEndpoint.StandardInput
-			: TerminalEndpoint.ForPath( options.File );
+			: TerminalEndpoint.ForPath( options.File! )
+		;
 		try {
 			cancellationToken.ThrowIfCancellationRequested();
 			var result = provider.GetMode( endpoint );

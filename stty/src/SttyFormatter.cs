@@ -78,7 +78,7 @@ public static class SttyFormatter {
 			: new[] { "intr", "quit", "erase", "kill", "eof", "time", "min", null, "start", "stop", "susp", "eol", "rprnt", "discard", "werase", "lnext", "eol2" };
 		var first = true;
 		for ( var index = 0; index < names.Length && index < mode.ControlCharacters.Count; ++index ) {
-			if ( null is names[ index ] ) {
+			if ( names[ index ] is null ) {
 				continue;
 			}
 			if ( !first ) {
