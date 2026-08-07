@@ -83,6 +83,26 @@ public static class Program {
 					return 0;
 				}
 
+			case "environment":
+				Console.Write(
+					1 < args.Length
+						? Environment.GetEnvironmentVariable( args[ 1 ] )
+						: string.Empty
+				);
+				return 0;
+
+			case "cwd":
+				Console.Write(
+					Directory.GetCurrentDirectory()
+				);
+				return 0;
+
+			case "pid":
+				Console.Write(
+					Environment.ProcessId
+				);
+				return 0;
+
 			case "sleep":
 				await Task.Delay(
 					1 < args.Length
