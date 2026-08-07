@@ -33,8 +33,8 @@ public static class Command {
 		var files = outputFileProvider ?? SystemNohupOutputFileProvider.Instance;
 		var standardStreams = standardStreamStateProvider ?? SystemNohupStandardStreamStateProvider.Instance;
 		var operands = new List<string>();
-		for ( var index = 0; index < args.Length; index++ ) {
-			var token = args[ index ];
+		if ( 0 < args.Length ) {
+			var token = args[ 0 ];
 			if ( "--help" == token ) {
 				await WriteAsync( stdout, string.Concat( NormalizeLineEndings( HelpText ), Environment.NewLine ), cancellationToken ).ConfigureAwait( false );
 				return 0;
@@ -44,16 +44,14 @@ public static class Command {
 				return 0;
 			}
 			if ( "--" == token ) {
-				operands.AddRange( args.Skip( index + 1 ) );
-				break;
-			}
-			if ( token.StartsWith( "-", StringComparison.Ordinal ) && "-" != token ) {
+				operands.AddRange( args.Skip( 1 ) );
+			} else if ( token.StartsWith( "-", StringComparison.Ordinal ) && "-" != token ) {
 				await WriteDiagnosticAsync( stderr, $"nohup: unrecognized option '{token}'", cancellationToken ).ConfigureAwait( false );
 				await WriteDiagnosticAsync( stderr, "Try 'nohup --help' for more information.", cancellationToken ).ConfigureAwait( false );
 				return internalFailure;
+			} else {
+				operands.AddRange( args );
 			}
-			operands.AddRange( args.Skip( index ) );
-			break;
 		}
 		if ( 0 == operands.Count ) {
 			await WriteDiagnosticAsync( stderr, "nohup: missing operand", cancellationToken ).ConfigureAwait( false );
