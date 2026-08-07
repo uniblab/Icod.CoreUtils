@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `52` |
-| Current engineering milestone | Batch 52 implemented; proceed to Batch 53 |
+| Completed command batches | `0` through `53` |
+| Current engineering milestone | Batch 53 implemented; proceed to Batch 54 |
 | Completed infrastructure milestone | Completion Gates E2 through E6 and F1 through F4 — filesystem, terminal-presentation, host-resource, terminal-control, and process-control foundations |
-| Active infrastructure dependency | Batch 53 must consume the completed F4 signal, target, identity, and waiting contracts |
-| Next engineering step | Batch 53 — util-linux `kill` |
+| Active infrastructure dependency | Batch 54 must consume the completed F4 process-priority and launch contracts |
+| Next engineering step | Batch 54 — GNU `nice` and util-linux `renice` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1441,13 +1441,15 @@ The Batch 52 implementation is complete. `Icod.CoreUtils.Env` now implements the
 
 ### Batch 53 — util-linux signal control (1 tool)
 
-- [ ] `kill`
+- [x] `kill`
 
 Create the suite-correct project `kill\Icod.UtilLinux.Kill` and dedicated tests with assembly name `kill`. Pin util-linux 2.42.2 as the authoritative profile rather than procps-ng `kill`, a shell builtin, or the historical GNU Coreutils variant.
 
 Implement numeric, named, and realtime signals; signal zero; positive PID, zero, negative process-group, and `-1` targets; mixed process-name and PID operands; same-user and `--all` name lookup; PID-only lookup; signal listing, table output, number/name conversion, and hexadecimal signal-mask decoding; queued values; handler requirements; verbose reporting; `/proc` signal-state display; PID-plus-pidfd-inode identities where supported; repeated race-free `--timeout` follow-up signals; exact success, failure, and partial-success statuses; and explicit capability diagnostics where Windows, macOS, BSD, or an older Linux kernel cannot provide a util-linux extension safely.
 
 Do not add `Icod.ProcPs.Kill`. ProcPs selection commands consume the same Shared signal contracts, but the repository exposes only the util-linux `kill` executable profile.
+
+The Batch 53 implementation is complete. `Icod.UtilLinux.Kill` now follows util-linux 2.42.2 rather than the procps-ng or shell-builtin profiles. It consumes the F4 process identity, signal, target, disposition, and status contracts for ordinary positive-PID and negative process-group operations and adds a narrow command-local util-linux host boundary for exact-name `/proc` discovery, same-user filtering, `sigqueue(3)`, Linux signal-state decoding, native PID `0`/`-1` conventions, and pidfd-protected signaling. The command implements named, numeric, signal-zero, and Linux realtime forms; mixed names and PIDs; `--all`, `--pid`, `--require-handler`, `--verbose`, `--list`, `--table`, hexadecimal masks, `--show-process-state`, queued values, `PID:PIDFD_INODE`, and repeated `--timeout` follow-ups. Delayed signals use an open pidfd and polling so a recycled PID cannot receive a follow-up; pidfd-inode identities are restricted to Linux 6.9 or later. Unsupported host capabilities fail explicitly, and multi-target results preserve util-linux statuses 0, 1, and 64. Dedicated `Icod.UtilLinux.Kill.Tests` coverage and the ownership/capability record are documented in `Icod.CoreUtils-Batch-53-UtilLinux-Kill.md`.
 
 ### Batch 54 — Process priority control (2 tools)
 
