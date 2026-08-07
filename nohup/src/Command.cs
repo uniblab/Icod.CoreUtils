@@ -47,7 +47,7 @@ public static class Command {
 				operands.AddRange( args.Skip( index + 1 ) );
 				break;
 			}
-			if ( token.StartsWith( '-', StringComparison.Ordinal ) && "-" != token ) {
+			if ( token.StartsWith( "-", StringComparison.Ordinal ) && "-" != token ) {
 				await WriteDiagnosticAsync( stderr, $"nohup: unrecognized option '{token}'", cancellationToken ).ConfigureAwait( false );
 				await WriteDiagnosticAsync( stderr, "Try 'nohup --help' for more information.", cancellationToken ).ConfigureAwait( false );
 				return internalFailure;
@@ -159,8 +159,9 @@ public static class Command {
 	private static NohupOutputDestination? TryOpenDestination(
 		INohupOutputFileProvider files,
 		ProcessEnvironment environment,
-		out string error
+		out string? error
 	) {
+		error = null;
 		Exception? currentFailure = null;
 		try {
 			return files.OpenAppend( "nohup.out" );
