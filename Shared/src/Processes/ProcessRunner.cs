@@ -386,8 +386,7 @@ public sealed class SystemProcessExecutor : IProcessExecutor {
 		DirectoryNotFoundException when !string.IsNullOrEmpty( workingDirectory )
 			&& !Directory.Exists( workingDirectory ) => ProcessLaunchFailureKind.CannotInvoke,
 		FileNotFoundException or DirectoryNotFoundException => ProcessLaunchFailureKind.NotFound,
-		Win32Exception win32Exception when 2 == win32Exception.NativeErrorCode
-			or 3 == win32Exception.NativeErrorCode => ProcessLaunchFailureKind.NotFound,
+		Win32Exception win32Exception when ( ( 2 == win32Exception.NativeErrorCode ) or ( 3 == win32Exception.NativeErrorCode ) ) => ProcessLaunchFailureKind.NotFound,
 		_ => ProcessLaunchFailureKind.CannotInvoke
 	};
 
