@@ -5,10 +5,10 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `51` |
-| Current engineering milestone | Batches 50 and 51 implemented; proceed to Completion Gate F4 |
-| Completed infrastructure milestone | Completion Gates E2 through E6 and F1 through F3 — filesystem, terminal-presentation, host-resource, and terminal-control foundations |
-| Active infrastructure dependency | Completion Gate F4 must establish shared process execution and control contracts before Batch 52 |
-| Next engineering step | Completion Gate F4 — shared process execution and control foundation |
+| Current engineering milestone | Completion Gate F4 implemented; proceed to Batch 52 |
+| Completed infrastructure milestone | Completion Gates E2 through E6 and F1 through F4 — filesystem, terminal-presentation, host-resource, terminal-control, and process-control foundations |
+| Active infrastructure dependency | Batch 52 must consume the completed F4 process execution and control contracts |
+| Next engineering step | Batch 52 — `env` and `nohup` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1401,29 +1401,31 @@ The Batch 51 implementation is complete. `Icod.CoreUtils.Stty` reads and writes 
 
 ### Completion Gate F4 — shared process execution and control foundation before Batch 52
 
-* [ ] Add cross-suite process execution and control primitives to the current Shared incubation project:
+* [x] Add cross-suite process execution and control primitives to the current Shared incubation project:
 
-  * [ ] process identity with optional PID-reuse detection tokens where supported;
-  * [ ] process, process-group, and session target models;
-  * [ ] executable lookup;
-  * [ ] argument-safe process launching without shell interpolation;
-  * [ ] working-directory and environment construction;
-  * [ ] asynchronous standard-stream forwarding;
-  * [ ] child-process lifetime, cancellation, cleanup, and orphan policy;
-  * [ ] process liveness and deterministic vanished-process results;
-  * [ ] child-process waiting;
-  * [ ] arbitrary-process waiting capability contracts for later `pidwait` use;
-  * [ ] signal-name and signal-number parsing;
-  * [ ] signal listing, translation, disposition, and delivery;
-  * [ ] process-priority retrieval and mutation;
-  * [ ] monotonic-clock, cancellation-aware delay, and periodic-scheduling contracts;
-  * [ ] exit-status, signal-termination, timeout, and other termination-reason translation;
-  * [ ] controlled Windows substitutions where semantics are defensible;
-  * [ ] injectable providers and cross-platform integration tests.
+  * [x] process identity with optional PID-reuse detection tokens where supported;
+  * [x] process, process-group, and session target models;
+  * [x] executable lookup;
+  * [x] argument-safe process launching without shell interpolation;
+  * [x] working-directory and environment construction;
+  * [x] asynchronous standard-stream forwarding;
+  * [x] child-process lifetime, cancellation, cleanup, and orphan policy;
+  * [x] process liveness and deterministic vanished-process results;
+  * [x] child-process waiting;
+  * [x] arbitrary-process waiting capability contracts for later `pidwait` use;
+  * [x] signal-name and signal-number parsing;
+  * [x] signal listing, translation, disposition, and delivery;
+  * [x] process-priority retrieval and mutation;
+  * [x] monotonic-clock, cancellation-aware delay, and periodic-scheduling contracts;
+  * [x] exit-status, signal-termination, timeout, and other termination-reason translation;
+  * [x] controlled Windows substitutions where semantics are defensible;
+  * [x] injectable providers and cross-platform integration tests.
 
 These contracts are provisionally classified as `Icod.CommandFramework` candidates even though they are implemented physically in the current `Icod.CoreUtils.Shared` project during incubation.
 
 This gate supports `env` and `nohup`, allows Coreutils `kill` to validate signal parsing, targets, and delivery in Batch 53, allows `nice` and `timeout` to validate priority, waiting, process groups, clocks, termination, and status propagation in Batch 54, and supplies the common mechanics consumed immediately by the ProcPs block and later by `Icod.Tar`, `Icod.LineEditor.Ed.Shared`, and other suites.
+
+Completion Gate F4 is complete. `Icod.CoreUtils.Shared.Processes` now provides controlled operation results; PID identities with Linux `/proc` or start-time reuse tokens; explicit process, group, and session targets; environment snapshots; executable lookup; injectable execution, inspection, signal, and priority providers; exact `ArgumentList` launch; concurrent stream forwarding and capture; timeout, cancellation, process-tree, and leave-running policies; child and arbitrary-process waits; portable signal parsing and Linux disposition inspection; POSIX signal and priority operations; declared Windows substitutions; and portable termination translation. `Icod.CoreUtils.Shared.Time` now supplies injectable monotonic clocks and fixed-rate periodic scheduling. Cross-platform integration tests use `ProcessTestHost`, and the ownership and capability policy is recorded in `Icod.CoreUtils-Completion-Gate-F4-Process-Foundation.md`.
 
 ### Batch 52 — Environment and hangup-independent execution (2 tools)
 
