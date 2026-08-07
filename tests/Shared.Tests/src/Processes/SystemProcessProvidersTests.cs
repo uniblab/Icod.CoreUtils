@@ -75,6 +75,37 @@ public sealed class SystemProcessProvidersTests {
 		);
 	}
 
+	/// <summary>Verifies Linux queued-signal delivery and explicit capability reporting elsewhere.</summary>
+	[Fact]
+	public async Task QueuedSignalDeliveryIsCapabilityGated() {
+		var provider = SystemProcessSignalProvider.Instance;
+		var identity = SystemProcessInspector.Instance.ObserveIdentity(
+			Environment.ProcessId
+		);
+		Assert.True( identity.Succeeded, identity.Message );
+		if ( OperatingSystem.IsLinux() ) {
+			Assert.True(
+				provider.Capabilities.HasFlag( ProcessControlCapabilities.QueuedSignalDelivery )
+			);
+			var result = await provider.DeliverAsync(
+				ProcessTarget.ForProcess( identity.Value! ),
+				ProcessSignalCatalog.Parse( "CONT" ).Value!,
+				123
+			);
+			Assert.True( result.Succeeded, result.Message );
+			return;
+		}
+		Assert.False(
+			provider.Capabilities.HasFlag( ProcessControlCapabilities.QueuedSignalDelivery )
+		);
+		var unsupported = await provider.DeliverAsync(
+			ProcessTarget.ForProcess( identity.Value! ),
+			new ProcessSignal( 0, "0" ),
+			123
+		);
+		Assert.Equal( ProcessOperationStatus.Unsupported, unsupported.Status );
+	}
+
 	/// <summary>Verifies that the current process priority can be observed or fails in a controlled manner.</summary>
 	[Fact]
 	public void ObservesCurrentProcessPriority() {

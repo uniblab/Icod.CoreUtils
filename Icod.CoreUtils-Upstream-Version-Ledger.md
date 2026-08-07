@@ -24,6 +24,7 @@ The version recorded here is the authority for synopsis, options, operands, envi
 | `POSIX-2024` | The Open Group Base Specifications Issue 8 / IEEE Std 1003.1-2024 | Issue 8 | document number `9799919799` | [POSIX.1-2024 online specification](https://pubs.opengroup.org/onlinepubs/9799919799/) |
 | `SED-4.10` | GNU sed | 4.10 | tag `v4.10`; commit `89b7a2224d4faa9d8baf76094b1232ad1477ef3e` | [GNU sed 4.10 release](https://lists.gnu.org/archive/html/info-gnu/2026-04/msg00009.html) |
 | `NETTOOLS-2.10` | net-tools `hostname` | 2.10 | tag `v2.10` | [net-tools project and release files](https://sourceforge.net/projects/net-tools/) |
+| `UTIL-LINUX-2.42.2` | util-linux | 2.42.2 | `util-linux-2.42.2.tar.xz`; SHA-256 `03a05d3adf9602ef128f2da05b84b3205ce60c351e5737c0370f74000679ce8a` | [util-linux 2.42.2 release files](https://www.kernel.org/pub/linux/utils/util-linux/v2.42/) |
 | `PROCPS-4.0.6` | procps-ng `ps` | 4.0.6 | tag `v4.0.6`; release commit `4dafddf4` | [procps-ng 4.0.6 tag](https://gitlab.com/procps-ng/procps/-/tags) |
 | `GREP-3.12` | GNU grep | 3.12 | tag `v3.12`; commit `3f8c09ec197a2ced82855f9ecd2cbc83874379ab` | [GNU Grep 3.12 manual](https://www.gnu.org/software/grep/manual/grep.html) |
 | `DIFFUTILS-3.12` | GNU Diffutils | 3.12 | tag `v3.12`; commit `16681a3cbcea47e82683c713b0dac7d59d85a6fa` | [GNU Diffutils 3.12 manual](https://www.gnu.org/software/diffutils/manual/diffutils.html) |
@@ -65,41 +66,41 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 | 23 | Completed | Character transformation: `tr` | `COREUTILS-9.11`; `POSIX-2024` for character classes and utility semantics |
 | 24 | Completed | Graph ordering: `tsort` | `COREUTILS-9.11`; `POSIX-2024` for the standardized utility contract |
 | 25 | Completed | Permuted indexing: `ptx` | `COREUTILS-9.11`; `GNULIB-COREUTILS-9.11` for GNU Emacs regular-expression syntax |
-| 26 | Planned after E1 and R1 | `Icod.Grep.Grep` search engine | `GREP-3.12`; `GNULIB-COREUTILS-9.11`; `POSIX-2024` |
-| 27 | Planned | Splitting and reversing: `split`, `tac` | `COREUTILS-9.11` |
-| 28 | Planned | Pattern-directed splitting: `csplit` | `COREUTILS-9.11`; Gate R1 authorities for regular expressions |
-| 29 | Planned | Page presentation: `pr` | `COREUTILS-9.11` |
-| 30 | Planned | `Icod.DiffUtils.Shared` foundation | `DIFFUTILS-3.12`; Gate E1 authorities for recursive directory comparison |
-| 31 | Planned | `Icod.DiffUtils.Cmp` | `DIFFUTILS-3.12` |
-| 32 | Planned | `Icod.DiffUtils.Diff` | `DIFFUTILS-3.12`; Gate E1 authorities for recursive traversal |
-| 33 | Planned | `Icod.DiffUtils.Diff3` | `DIFFUTILS-3.12` |
-| 34 | Planned | `Icod.DiffUtils.SDiff` | `DIFFUTILS-3.12` |
-| 35 | Planned | Symbolic-link and canonical-path resolution: `readlink`, `realpath` | `COREUTILS-9.11` |
-| 36 | Planned | File metadata and timestamps: `stat`, `touch` | `COREUTILS-9.11` |
-| 37 | Planned | Condition evaluator: `test` | `COREUTILS-9.11`; `POSIX-2024` |
-| 38 | Planned | Basic directory and name removal: `mkdir`, `rmdir`, `unlink` | `COREUTILS-9.11` |
-| 39 | Planned | Hard and symbolic links: `link`, `ln` | `COREUTILS-9.11` |
-| 40 | Planned | Special file creation: `mkfifo`, `mknod` | `COREUTILS-9.11`; `POSIX-2024` where standardized |
-| 41 | Planned | Permission modes: `chmod` | `COREUTILS-9.11`; `POSIX-2024` |
-| 42 | Planned | Ownership and group mutation: `chown`, `chgrp` | `COREUTILS-9.11`; `POSIX-2024` |
-| 43 | Planned | Recursive removal: `rm` | `COREUTILS-9.11` |
-| 44 | Planned | Copy and move engine: `cp`, `mv` | `COREUTILS-9.11` |
-| 45 | Planned | Installation engine: `install` | `COREUTILS-9.11` |
-| 46 | Planned | Color database and directory listing: `dircolors`, `ls`, `dir`, `vdir` | `COREUTILS-9.11` |
-| 47 | Planned | Filesystem usage reporting: `df`, `du` | `COREUTILS-9.11` |
-| 48 | Planned | Data destruction: `shred` | `COREUTILS-9.11` |
-| 49 | Planned | Host and processor context: `hostid`, `nproc` | `COREUTILS-9.11`; `PROCPS-4.0.6` as a secondary consumer authority for shared processor-resource contracts |
-| 50 | Planned | Terminal identification: `tty` | `COREUTILS-9.11`; `POSIX-2024` |
-| 51 | Planned | Terminal characteristics: `stty` | `COREUTILS-9.11`; `POSIX-2024` |
-| 52 | Planned | Environment and hangup-independent execution: `env`, `nohup` | `COREUTILS-9.11`; `POSIX-2024` |
-| 53 | Planned | Signal control: Coreutils `kill` | `COREUTILS-9.11`; `POSIX-2024` |
-| 54 | Planned | Priority and time-bounded execution: `nice`, `timeout` | `COREUTILS-9.11`; `POSIX-2024` where standardized |
-| 55 | Planned | `Icod.ProcPs.Shared` provider foundation | `PROCPS-4.0.6` |
-| 56 | Planned | ProcPs basic system summaries: `uptime`, `free` | `PROCPS-4.0.6` |
-| 57 | Planned | ProcPs sampled system statistics: `vmstat` | `PROCPS-4.0.6` |
-| 58 | Planned | ProcPs process selection, signaling, and waiting: `pgrep`, `pkill`, `pidwait`, `pwait` | `PROCPS-4.0.6` |
-| 59 | Planned | ProcPs process lookup and working directories: `pidof`, `pwdx` | `PROCPS-4.0.6` |
-| 60 | Planned | ProcPs direct and legacy process control: `kill`, `skill`, `snice` | `PROCPS-4.0.6` |
+| 26 | Completed | `Icod.Grep` search engine | `GREP-3.12`; `GNULIB-COREUTILS-9.11`; `POSIX-2024` |
+| 27 | Completed | Splitting and reversing: `split`, `tac` | `COREUTILS-9.11` |
+| 28 | Completed | Pattern-directed splitting: `csplit` | `COREUTILS-9.11`; Gate R1 authorities for regular expressions |
+| 29 | Completed | Page presentation: `pr` | `COREUTILS-9.11` |
+| 30 | Completed | `Icod.DiffUtils.Shared` foundation | `DIFFUTILS-3.12`; Gate E1 authorities for recursive directory comparison |
+| 31 | Completed | `Icod.DiffUtils.Cmp` | `DIFFUTILS-3.12` |
+| 32 | Completed | `Icod.DiffUtils.Diff` | `DIFFUTILS-3.12`; Gate E1 authorities for recursive traversal |
+| 33 | Completed | `Icod.DiffUtils.Diff3` | `DIFFUTILS-3.12` |
+| 34 | Completed | `Icod.DiffUtils.SDiff` | `DIFFUTILS-3.12` |
+| 35 | Completed | Symbolic-link and canonical-path resolution: `readlink`, `realpath` | `COREUTILS-9.11` |
+| 36 | Completed | File metadata and timestamps: `stat`, `touch` | `COREUTILS-9.11` |
+| 37 | Completed | Condition evaluator: `test` | `COREUTILS-9.11`; `POSIX-2024` |
+| 38 | Completed | Basic directory and name removal: `mkdir`, `rmdir`, `unlink` | `COREUTILS-9.11` |
+| 39 | Completed | Hard and symbolic links: `link`, `ln` | `COREUTILS-9.11` |
+| 40 | Completed | Special file creation: `mkfifo`, `mknod` | `COREUTILS-9.11`; `POSIX-2024` where standardized |
+| 41 | Completed | Permission modes: `chmod` | `COREUTILS-9.11`; `POSIX-2024` |
+| 42 | Completed | Ownership and group mutation: `chown`, `chgrp` | `COREUTILS-9.11`; `POSIX-2024` |
+| 43 | Completed | Recursive removal: `rm` | `COREUTILS-9.11` |
+| 44 | Completed | Copy and move engine: `cp`, `mv` | `COREUTILS-9.11` |
+| 45 | Completed | Installation engine: `install` | `COREUTILS-9.11` |
+| 46 | Completed | Color database and directory listing: `dircolors`, `ls`, `dir`, `vdir` | `COREUTILS-9.11` |
+| 47 | Completed | Filesystem usage reporting: `df`, `du` | `COREUTILS-9.11` |
+| 48 | Completed | Data destruction: `shred` | `COREUTILS-9.11` |
+| 49 | Completed | Host and processor context: `hostid`, `nproc` | `COREUTILS-9.11`; `PROCPS-4.0.6` as a secondary consumer authority for shared processor-resource contracts |
+| 50 | Completed | Terminal identification: `tty` | `COREUTILS-9.11`; `POSIX-2024` |
+| 51 | Completed | Terminal characteristics: `stty` | `COREUTILS-9.11`; `POSIX-2024` |
+| 52 | Completed | Environment and hangup-independent execution: `env`, `nohup` | `COREUTILS-9.11`; `POSIX-2024` |
+| 53 | Completed | util-linux signal control: `kill` | `UTIL-LINUX-2.42.2` |
+| 54 | Completed | Process priority control: GNU `nice`, util-linux `renice` | `COREUTILS-9.11`; `UTIL-LINUX-2.42.2`; `POSIX-2024` where standardized |
+| 55 | Completed | Time-bounded execution: `timeout` | `COREUTILS-9.11` |
+| 56 | Planned | `Icod.ProcPs.Shared` provider foundation | `PROCPS-4.0.6` |
+| 57 | Planned | ProcPs basic system summaries: `uptime`, `free` | `PROCPS-4.0.6` |
+| 58 | Planned | ProcPs sampled system statistics: `vmstat` | `PROCPS-4.0.6` |
+| 59 | Planned | ProcPs process selection, signaling, and waiting: `pgrep`, `pkill`, `pidwait` | `PROCPS-4.0.6` |
+| 60 | Planned | ProcPs process lookup and working directories: `pidof`, `pwdx` | `PROCPS-4.0.6` |
 | 61 | Planned | ProcPs process memory maps: `pmap` | `PROCPS-4.0.6` |
 | 62 | Planned | ProcPs process reporting: `ps` | `PROCPS-4.0.6` |
 | 63 | Planned | ProcPs user and session reporting: `w` | `PROCPS-4.0.6` |
@@ -124,18 +125,19 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 | C2 | Completed | Byte-preserving text units, locale blanks, display columns, and tab stops | `COREUTILS-9.11`; `POSIX-2024` where locale semantics apply |
 | C3 | Completed | Byte records, positional ranges, delimiters, and escape profiles | `COREUTILS-9.11`; `POSIX-2024` where standardized |
 | D | Completed | Stable external ordering and secure temporary workspaces | `COREUTILS-9.11`; `GNULIB-COREUTILS-9.11` |
-| E1 | Next; required before Batch 26 | Read-only pathname expansion and recursive traversal | `GREP-3.12`; `COREUTILS-9.11`; `DIFFUTILS-3.12`; `TAR-1.35`; `GNULIB-COREUTILS-9.11`; `POSIX-2024` |
-| R1 | Next; required before Batch 26 | Shared GNU/POSIX BRE and ERE foundation | `GREP-3.12`; `COREUTILS-9.11`; `SED-4.10`; `ED-1.22.5`; `GNULIB-COREUTILS-9.11`; `POSIX-2024` |
-| E2 | Planned | Canonical and physical pathname resolution | `COREUTILS-9.11`; `POSIX-2024`; supported-platform filesystem API documentation |
-| E3 | Planned | Filesystem metadata and timestamp mutation | `COREUTILS-9.11`; `POSIX-2024`; supported-platform filesystem API documentation |
-| E4 | Planned | Modes and basic pathname mutation | `COREUTILS-9.11`; `POSIX-2024` |
-| E5 | Planned | Mutation-safe recursive traversal, identity, preservation, and copy policy | `COREUTILS-9.11`; `TAR-1.35`; `POSIX-2024` |
-| E6 | Planned | Transactional file replacement, backup, rollback, and cleanup | `COREUTILS-9.11`; `PATCH-2.8`; `SED-4.10`; `ED-1.22.5`; `TAR-1.35` |
-| F1 | Planned | Terminal-aware presentation and color policy | `COREUTILS-9.11`; `POSIX-2024` where standardized |
-| F2 | Planned | Host identity and processor-resource capabilities | `COREUTILS-9.11`; `PROCPS-4.0.6`; supported-platform processor API documentation |
-| F3 | Planned | Terminal identification and terminal modes | `COREUTILS-9.11`; `PROCPS-4.0.6`; `POSIX-2024` |
-| F4 | Planned | Process execution, waiting, signals, priorities, clocks, and termination | `COREUTILS-9.11`; `PROCPS-4.0.6`; `POSIX-2024` |
-| P1 | Planned | ProcPs classification and provider foundation | `PROCPS-4.0.6` |
+| E1 | Completed | Read-only pathname expansion and recursive traversal | `GREP-3.12`; `COREUTILS-9.11`; `DIFFUTILS-3.12`; `TAR-1.35`; `GNULIB-COREUTILS-9.11`; `POSIX-2024` |
+| R1 | Completed | Shared GNU/POSIX BRE and ERE foundation | `GREP-3.12`; `COREUTILS-9.11`; `SED-4.10`; `ED-1.22.5`; `GNULIB-COREUTILS-9.11`; `POSIX-2024` |
+| E2 | Completed | Canonical and physical pathname resolution | `COREUTILS-9.11`; `POSIX-2024`; supported-platform filesystem API documentation |
+| E3 | Completed | Filesystem metadata and timestamp mutation | `COREUTILS-9.11`; `POSIX-2024`; supported-platform filesystem API documentation |
+| E3R | Completed | Windows reparse-point characterization | `COREUTILS-9.11`; Windows reparse-point API documentation |
+| E4 | Completed | Modes and basic pathname mutation | `COREUTILS-9.11`; `POSIX-2024` |
+| E5 | Completed | Mutation-safe recursive traversal, identity, preservation, and copy policy | `COREUTILS-9.11`; `TAR-1.35`; `POSIX-2024` |
+| E6 | Completed | Transactional file replacement, backup, rollback, and cleanup | `COREUTILS-9.11`; `PATCH-2.8`; `SED-4.10`; `ED-1.22.5`; `TAR-1.35` |
+| F1 | Completed | Terminal-aware presentation and color policy | `COREUTILS-9.11`; `POSIX-2024` where standardized |
+| F2 | Completed | Host identity and processor-resource capabilities | `COREUTILS-9.11`; `PROCPS-4.0.6`; supported-platform processor API documentation |
+| F3 | Completed | Terminal identification and terminal modes | `COREUTILS-9.11`; `PROCPS-4.0.6`; `POSIX-2024` |
+| F4 | Completed | Process execution, waiting, signals, priorities, clocks, and termination | `COREUTILS-9.11`; `UTIL-LINUX-2.42.2`; `PROCPS-4.0.6`; `POSIX-2024` |
+| P1 | Completed | ProcPs classification and provider foundation | `PROCPS-4.0.6`; `UTIL-LINUX-2.42.2` for excluded/owned process-control profiles |
 | G | Planned | Final API classification, package extraction, and repository split | All pinned suite authorities plus repository architecture policy |
 
 
@@ -446,6 +448,21 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 - **Required boundary:** define original bytes, decoded scalars, UTF-16 positions, match and capture offsets, invalid-input behavior, locale profiles, cancellation, and resource limits without introducing a dependency on `System.Text.RegularExpressions` for BRE or ERE semantics.
 - **Perl mode:** GNU Grep `-P` is a separate PCRE capability decision and is not part of the BRE/ERE language provider.
 - **State:** not started; must be completed and validated before Batch 26.
+
+## Completion Gate P1 implementation record
+
+- **Gate and subject:** Completion Gate P1, ProcPs classification and provider foundation.
+- **Authority reconfirmed:** 7 August 2026.
+- **Authoritative package:** procps-ng 4.0.6, tag `v4.0.6`, release commit `4dafddf4`.
+- **Selected executable inventory:** `uptime`, `free`, `vmstat`, `pgrep`, `pkill`, `pidwait`, `pidof`, `pwdx`, `pmap`, `ps`, `w`, `sysctl`, `tload`, `watch`, `hugetop`, `slabtop`, and `top`.
+- **Deliberate exclusions:** procps-ng `kill`, `skill`, and `snice`; repository `kill` and `renice` remain pinned to `UTIL-LINUX-2.42.2`.
+- **`pidwait` decision:** procps-ng renamed `pwait` to `pidwait` in 4.0.0; 4.0.6 installs `pidwait` and no `pwait` compatibility launcher, so Batch 59 has no `Icod.ProcPs.PWait` project.
+- **Cross-suite boundary:** F2-F4 host-resource, process identity/target, launch, wait, signal, priority, monotonic-time, status, and terminal contracts remain in the current Shared incubation layer and are classified as future `Icod.CommandFramework` candidates.
+- **Shared gap closed:** Linux individual-process queued signal values are implemented through `IProcessSignalProvider`/`sigqueue(3)` and advertised as `QueuedSignalDelivery`; positive-PID util-linux `kill --queue` consumes the Shared path, and ProcPs must do the same rather than adding another queued-signal abstraction.
+- **Observation policy:** Linux `/proc` is authoritative; Windows, macOS, and BSD providers are capability-driven. `ObservationFidelity` distinguishes exact, equivalent, approximated, synthesized, and unavailable semantics independently from source provenance.
+- **ProcPs-owned layer:** process enumeration and detailed snapshots, selection grammar, procfs/sysfs/cgroup parsers, process fields and personalities, metrics, sampling/delta interpretation, screen state, configuration, sorting, filtering, and interaction remain in `Icod.ProcPs.Shared`.
+- **Architecture record:** `Icod.CoreUtils-Completion-Gate-P1-ProcPs-Foundation.md`.
+- **Next step:** Batch 56 creates `Icod.ProcPs.Shared` and its tests over these frozen common contracts.
 
 ## Required batch-start record
 

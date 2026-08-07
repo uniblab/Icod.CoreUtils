@@ -28,3 +28,7 @@
 Linux and macOS expose terminal pathnames, complete `termios` flags, native speeds, control characters, immediate application, drain-before-application, and drain-plus-input-discard application. Windows exposes console attachment, `CONIN$` or `CONOUT$`, and complete `GetConsoleMode`/`SetConsoleMode` values. Windows does not synthesize POSIX baud rates, control characters, line discipline, or drain semantics.
 
 The shared layer does not assign GNU option names, control-character names, `sane` or `raw` profiles, or command exit statuses. Batch 50 owns `tty` policy and Batch 51 owns `stty` parsing, profiles, display, diagnostics, and exit behavior. Cursor movement, signals, process groups, pseudo-terminals, and full-screen interfaces remain outside this gate. The namespace also does not parse the `dircolors` database or `LS_COLORS`; Batch 46 owns those Coreutils-specific grammars above the neutral presentation observations.
+
+## Completion Gate P1 ProcPs boundary
+
+ProcPs `tload`, `watch`, `hugetop`, `slabtop`, and `top` consume these neutral attachment, geometry, environment, presentation-capability, and terminal-mode observations. `Icod.ProcPs.Shared` owns full-screen buffers, interaction state, field layout, sorting/filtering, configuration, refresh decisions, and command-specific restoration policy. It must not introduce duplicate terminal handles, geometry probes, or console/termios snapshots merely to keep ProcPs code under a suite namespace.

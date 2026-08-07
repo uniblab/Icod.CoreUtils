@@ -5,10 +5,10 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `55` |
-| Current engineering milestone | Batch 55 implemented; proceed to Completion Gate P1 |
+| Current engineering milestone | Completion Gate P1 implemented; proceed to Batch 56 |
 | Completed infrastructure milestone | Completion Gates E2 through E6 and F1 through F4 — filesystem, terminal-presentation, host-resource, terminal-control, and process-control foundations |
-| Active infrastructure dependency | Completion Gate P1 must audit the F2-F4 processor/process contracts against their first large ProcPs consumer and establish the procps-ng provider boundary |
-| Next engineering step | Completion Gate P1 — ProcPs classification and provider foundation before Batch 56 |
+| Active infrastructure dependency | Batch 56 must implement the ProcPs-specific provider/domain layer without duplicating the F2-F4 cross-suite contracts frozen by Completion Gate P1 |
+| Next engineering step | Batch 56 — `Icod.ProcPs.Shared` provider foundation |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1474,28 +1474,30 @@ The Batch 55 implementation is complete. `Icod.CoreUtils.Timeout` now follows GN
 
 ### Completion Gate P1 — ProcPs classification and provider foundation before Batch 56
 
-- [ ] Establish the co-resident procps-ng suite foundation:
+- [x] Establish the co-resident procps-ng suite foundation:
 
-  - [ ] pin procps-ng 4.0.6 and audit its exact launcher, alias, and install inventory for the selected command set;
-  - [ ] record `kill`, `skill`, and `snice` as deliberately out of scope for `Icod.ProcPs`; the sole `kill` profile is util-linux 2.42.2 and `renice` is implemented under the same util-linux authority;
-  - [ ] resolve the pinned-baseline relationship between `pidwait` and `pwait`;
-  - [ ] audit every processor- and process-related API created by Completion Gates F2 through F4 and record its actual Coreutils, UtilLinux, ProcPs, Tar, Ed, and other suite consumers;
-  - [ ] keep genuinely cross-suite processor-resource, process-identity, target, launch, wait, signal, priority, clock, scheduler, status, and terminal contracts in the current Shared incubation project and classify them as future `Icod.CommandFramework` candidates;
-  - [ ] prohibit `Icod.ProcPs.Shared` from introducing duplicate abstractions for those common mechanics;
-  - [ ] define Linux `/proc` as the canonical ProcPs observation provider;
-  - [ ] define Windows, macOS, and BSD process and system observation capabilities;
-  - [ ] attach provenance to every field that is exact, equivalent, approximated, synthesized, or unavailable;
-  - [ ] define the boundary between general process mechanics and ProcPs-specific enumeration, detailed snapshots, selection grammar, fields, personalities, metrics, sorting, and presentation;
-  - [ ] define process lifetime races, permissions, namespaces, containers, affinity, and quota interpretation for ProcPs observations without redefining the underlying common identity and resource contracts;
-  - [ ] define memory, swap, CPU activity, load, uptime, virtual-memory, process-map, slab, hugepage, user-session, and kernel-parameter provider boundaries;
-  - [ ] consume the shared monotonic clock and periodic scheduler while defining ProcPs-specific sampling intervals, counter deltas, wraparound, and refresh semantics;
-  - [ ] consume shared terminal primitives while defining testable ProcPs screen models, interaction, sorting, filtering, and configuration behavior;
-  - [ ] establish suite-specific output directories for remaining command-name collisions such as `uptime`;
-  - [ ] establish fixture-driven `/proc` parsing and injectable ProcPs provider tests.
+  - [x] pin procps-ng 4.0.6 and audit its exact launcher, alias, and install inventory for the selected command set;
+  - [x] record `kill`, `skill`, and `snice` as deliberately out of scope for `Icod.ProcPs`; the sole `kill` profile is util-linux 2.42.2 and `renice` is implemented under the same util-linux authority;
+  - [x] resolve the pinned-baseline relationship between `pidwait` and `pwait`: procps-ng 4.0.6 installs `pidwait` and no `pwait` compatibility launcher;
+  - [x] audit every processor- and process-related API created by Completion Gates F2 through F4 and record its actual Coreutils, UtilLinux, ProcPs, Tar, Ed, and other suite consumers;
+  - [x] keep genuinely cross-suite processor-resource, process-identity, target, launch, wait, signal, priority, clock, scheduler, status, and terminal contracts in the current Shared incubation project and classify them as future `Icod.CommandFramework` candidates;
+  - [x] prohibit `Icod.ProcPs.Shared` from introducing duplicate abstractions for those common mechanics;
+  - [x] define Linux `/proc` as the canonical ProcPs observation provider;
+  - [x] define Windows, macOS, and BSD process and system observation capabilities;
+  - [x] define `ObservationFidelity` so every ProcPs field can distinguish exact, equivalent, approximated, synthesized, and unavailable semantics independently from source provenance;
+  - [x] define the boundary between general process mechanics and ProcPs-specific enumeration, detailed snapshots, selection grammar, fields, personalities, metrics, sorting, and presentation;
+  - [x] define process lifetime races, permissions, namespaces, containers, affinity, and quota interpretation for ProcPs observations without redefining the underlying common identity and resource contracts;
+  - [x] define memory, swap, CPU activity, load, uptime, virtual-memory, process-map, slab, hugepage, user-session, and kernel-parameter provider boundaries;
+  - [x] consume the shared monotonic clock and periodic scheduler while defining ProcPs-specific sampling intervals, counter deltas, wraparound, and refresh semantics;
+  - [x] consume shared terminal primitives while defining testable ProcPs screen models, interaction, sorting, filtering, and configuration behavior;
+  - [x] establish suite-specific output directories for remaining command-name collisions such as `uptime`;
+  - [x] establish fixture-driven `/proc` parsing and injectable ProcPs provider tests.
 
-Linux behavior remains authoritative for procps-ng. Other supported platforms must expose honest capability and provenance information rather than fabricated Linux fields, misleading zero values, or silent success.
+Linux behavior remains authoritative for procps-ng. Other supported platforms must expose honest capability and provenance/fidelity information rather than fabricated Linux fields, misleading zero values, or silent success.
 
-This gate follows Batches 52 through 55 so ProcPs can consume already tested process launch, identity, targets, waiting, signals, process groups, status propagation, existing-process and child priority behavior, clocks, and timeout foundations. It precedes the ProcPs block so those cross-suite facilities are not rediscovered independently by each procps-ng command and so ProcPs-specific observation begins at the correct architectural layer.
+Completion Gate P1 is complete. The pinned 4.0.6 install audit selects 17 ProcPs executables across Batches 57 through 68 and confirms that `pwait` was renamed to `pidwait` in procps-ng 4.0.0 and is not installed as an alias by 4.0.6; Batch 59 therefore contains only `pgrep`, `pkill`, and `pidwait`. `kill`, `skill`, and `snice` remain deliberately excluded. The F2-F4 consumer audit is recorded in `Icod.CoreUtils-Completion-Gate-P1-ProcPs-Foundation.md` and freezes processor facts, identity, targets, launching, arbitrary waits, signals, priorities, monotonic timing, status translation, and terminal primitives as cross-suite Shared contracts and future `Icod.CommandFramework` candidates. P1 also closes the proven cross-suite queued-signal gap by implementing Linux individual-process `sigqueue(3)` delivery through `IProcessSignalProvider`, advertising `QueuedSignalDelivery`, and migrating positive-PID util-linux `kill --queue` delivery to that Shared path; ProcPs must consume this provider rather than introducing another queued-signal API. The neutral `ObservationFidelity` vocabulary separates semantic quality from source provenance so Batch 56 can label every platform-dependent field honestly.
+
+This gate follows Batches 52 through 55 so ProcPs consumes already tested process launch, identity, targets, waiting, signals, process groups, status propagation, existing-process and child priority behavior, clocks, and timeout foundations. It precedes the ProcPs block so those cross-suite facilities are not rediscovered independently by each procps-ng command and so ProcPs-specific observation begins at the correct architectural layer.
 
 ### Batch 56 — `Icod.ProcPs.Shared` provider foundation (1 library)
 
@@ -1505,9 +1507,9 @@ Create the suite-specific Shared project and its dedicated test project inside t
 
 - process enumeration and detailed snapshots built on the common process-identity model;
 - parent and child relationships, sessions, groups, users, terminals, namespaces, containers, and lifetime-race interpretation required by procps-ng;
-- Linux `/proc` parsing and equivalent Windows, macOS, and BSD observation providers;
-- field provenance and capability reporting;
-- the procps-ng process-selection grammar and adapters over the common signal, arbitrary-wait, priority, and target providers;
+- Linux `/proc` parsing and capability-driven Windows, macOS, and BSD observation providers;
+- source provenance, `ObservationFidelity`, and capability reporting for every platform-dependent field;
+- the procps-ng process-selection grammar and adapters over the common signal (including queued-value delivery), arbitrary-wait, priority, and target providers;
 - memory, swap, CPU activity, load, uptime, virtual-memory, map, slab, hugepage, and user-session metrics;
 - counter-delta, sampling-window, wraparound, and refresh calculations over the common monotonic clock and scheduler;
 - field catalogs, sorting, personalities, display policy, configuration, and reusable ProcPs screen models.
@@ -1535,12 +1537,11 @@ Create the project and tests with assembly name `vmstat`. Implement process, mem
 
 This batch validates deterministic clocks, interval sampling, counter deltas, units, wraparound, and partial provider availability before the full-screen tools depend on them.
 
-### Batch 59 — Process selection, signaling, and waiting (4 projects)
+### Batch 59 — Process selection, signaling, and waiting (3 projects)
 
 - [ ] `Icod.ProcPs.Pgrep`
 - [ ] `Icod.ProcPs.Pkill`
 - [ ] `Icod.ProcPs.PidWait`
-- [ ] `Icod.ProcPs.PWait`
 
 Implement one shared process-selection grammar and apply it consistently across selection, signal delivery, and waiting.
 
@@ -1548,7 +1549,7 @@ For `pgrep`, cover names and regular expressions; IDs; ancestry; sessions; group
 
 For `pkill`, reuse the same selection model and implement signal delivery, queued values, echoing, newest and oldest behavior, process release where supported, partial failure, and exact statuses.
 
-For `pidwait`, implement the pinned procps-ng waiting behavior using pidfd or an equivalent provider where available, including selection, vanished processes, permissions, cancellation, and exact statuses. Upstream renamed `pwait` to `pidwait`; retain `pwait` as a compatibility launcher only when confirmed by the pinned suite compatibility policy. Both launchers must use one engine rather than drift into separate implementations.
+For `pidwait`, implement the pinned procps-ng waiting behavior using pidfd or an equivalent Shared provider where available, including selection, vanished processes, permissions, cancellation, and exact statuses. Procps-ng 4.0.6 installs only `pidwait`; do not add a `pwait` compatibility launcher or a separate `Icod.ProcPs.PWait` project.
 
 ### Batch 60 — Process lookup and working directories (2 tools)
 
@@ -1752,7 +1753,7 @@ Completion of this gate establishes `Icod.CommandFramework` as the neutral cross
 
 - The historical `ps` and `uptime` work remains recorded in Batch 9. Batches 57 and 62 migrate useful implementation and tests into the correct ProcPs namespace without rewriting history. ProcPs `uptime` coexists with the historical Coreutils-profile command through suite-specific output directories until final package ownership is decided. `kill` has one ownership-correct implementation under `Icod.UtilLinux`.
 
-- Procps-ng `skill` and `snice` are explicitly out of scope. `pwait` remains only as a compatibility launcher over the `pidwait` engine when Completion Gate P1 confirms that the pinned procps-ng 4.0.6 install policy still exposes it.
+- Procps-ng `kill`, `skill`, and `snice` are explicitly out of scope. Completion Gate P1 confirms that procps-ng 4.0.6 installs `pidwait` but no `pwait` alias, so only `Icod.ProcPs.PidWait` is planned.
 
 - `chroot`, the SELinux commands, and `stdbuf` follow ProcPs because they are specialized privilege, security-context, or preload concerns and provide no foundational provider capability required by the ProcPs family.
 

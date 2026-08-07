@@ -206,16 +206,19 @@ public sealed class CommandTests {
 		Assert.Contains( "no userspace handler", output.ToString(), StringComparison.Ordinal );
 	}
 
-	/// <summary>Verifies queued data uses the native sigqueue path.</summary>
+	/// <summary>Verifies queued data for a positive PID uses the shared F4 signal provider.</summary>
 	[Fact]
-	public async Task QueueUsesNativeDelivery() {
+	public async Task QueueUsesSharedSignalDelivery() {
 		var platform = new FakePlatform();
+		var signals = new FakeSignalProvider();
 		var exitCode = await Command.RunAsync(
-			[ "--queue", "17", "123" ], new StringWriter(), new StringWriter(), new FakeSignalProvider(), new FakeInspector(), platform
+			[ "--queue", "17", "123" ], new StringWriter(), new StringWriter(), signals, new FakeInspector(), platform
 		);
 		Assert.Equal( 0, exitCode );
-		var delivery = Assert.Single( platform.NativeDeliveries );
+		var delivery = Assert.Single( signals.Deliveries );
+		Assert.Equal( 123, delivery.Target.Identifier );
 		Assert.Equal( 17, delivery.QueuedValue );
+		Assert.Empty( platform.NativeDeliveries );
 	}
 
 	/// <summary>Verifies repeated timeout stages and queue data are kept on the pidfd path.</summary>
@@ -240,14 +243,16 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task QueueTakesPrecedenceOverPidFdInodeWithoutTimeout() {
 		var platform = new FakePlatform();
+		var signals = new FakeSignalProvider();
 		var exitCode = await Command.RunAsync(
 			[ "-TERM", "--queue", "9", "123:4567" ],
-			new StringWriter(), new StringWriter(), new FakeSignalProvider(), new FakeInspector(), platform
+			new StringWriter(), new StringWriter(), signals, new FakeInspector(), platform
 		);
 		Assert.Equal( 0, exitCode );
-		var delivery = Assert.Single( platform.NativeDeliveries );
-		Assert.Equal( 123, delivery.ProcessId );
+		var delivery = Assert.Single( signals.Deliveries );
+		Assert.Equal( 123, delivery.Target.Identifier );
 		Assert.Equal( 9, delivery.QueuedValue );
+		Assert.Empty( platform.NativeDeliveries );
 		Assert.Empty( platform.PidFdDeliveries );
 	}
 
@@ -331,8 +336,8 @@ public sealed class CommandTests {
 	}
 
 	private sealed class FakeSignalProvider : IProcessSignalProvider {
-		public ProcessControlCapabilities Capabilities => ProcessControlCapabilities.SignalDelivery | ProcessControlCapabilities.SignalDisposition;
-		public List<( ProcessTarget Target, ProcessSignal Signal )> Deliveries { get; } = [];
+		public ProcessControlCapabilities Capabilities => ProcessControlCapabilities.SignalDelivery | ProcessControlCapabilities.SignalDisposition | ProcessControlCapabilities.QueuedSignalDelivery;
+		public List<( ProcessTarget Target, ProcessSignal Signal, int? QueuedValue )> Deliveries { get; } = [];
 		public ProcessSignalDisposition Disposition { get; set; } = ProcessSignalDisposition.Caught;
 		public int? FailProcessId { get; set; }
 		public IReadOnlyList<ProcessSignal> ListSignals() => Enumerable.Range( 0, 32 )
@@ -350,7 +355,7 @@ public sealed class CommandTests {
 			int? queuedValue = null,
 			CancellationToken cancellationToken = default
 		) {
-			this.Deliveries.Add( ( target, signal ) );
+			this.Deliveries.Add( ( target, signal, queuedValue ) );
 			return Task.FromResult(
 				this.FailProcessId == target.Identifier
 					? ProcessOperationResult.Failure( ProcessOperationStatus.AccessDenied, "denied" )

@@ -418,6 +418,7 @@ public sealed class SystemProcessSignalProvider : IProcessSignalProvider, IProce
 			if ( OperatingSystem.IsLinux() ) {
 				capabilities |= ProcessControlCapabilities.SignalDisposition
 					| ProcessControlCapabilities.SignalMaskObservation
+					| ProcessControlCapabilities.QueuedSignalDelivery
 				;
 			}
 			return capabilities;
@@ -656,11 +657,11 @@ public sealed class SystemProcessSignalProvider : IProcessSignalProvider, IProce
 				)
 			);
 		}
-		if ( null != queuedValue ) {
+		if ( null != queuedValue && ( !OperatingSystem.IsLinux() || ProcessTargetKind.Process != target.Kind ) ) {
 			return Task.FromResult(
 				ProcessOperationResult.Failure(
 					ProcessOperationStatus.Unsupported,
-					"Queued signal values require a provider with sigqueue support."
+					"Queued signal values are supported only for individual Linux process targets."
 				)
 			);
 		}
@@ -672,14 +673,16 @@ public sealed class SystemProcessSignalProvider : IProcessSignalProvider, IProce
 				)
 				: this.DeliverPosix(
 					target,
-					signal
+					signal,
+					queuedValue
 				)
 		);
 	}
 
 	private ProcessOperationResult DeliverPosix(
 		ProcessTarget target,
-		ProcessSignal signal
+		ProcessSignal signal,
+		int? queuedValue
 	) {
 		if ( ProcessTargetKind.Session == target.Kind ) {
 			return ProcessOperationResult.Failure(
@@ -712,10 +715,26 @@ public sealed class SystemProcessSignalProvider : IProcessSignalProvider, IProce
 			? checked( -target.Identifier )
 			: target.Identifier
 		;
-		if ( 0 == ProcessNative.Kill(
-			nativeTarget,
-			signal.Number
-		) ) {
+		int nativeResult;
+		try {
+			nativeResult = null == queuedValue
+				? ProcessNative.Kill(
+					nativeTarget,
+					signal.Number
+				)
+				: ProcessNative.SigQueue(
+					target.Identifier,
+					signal.Number,
+					new ProcessNative.SignalValue( queuedValue.Value )
+				)
+			;
+		} catch ( EntryPointNotFoundException exception ) when ( null != queuedValue ) {
+			return ProcessOperationResult.Failure(
+				ProcessOperationStatus.Unsupported,
+				exception.Message
+			);
+		}
+		if ( 0 == nativeResult ) {
 			return ProcessOperationResult.Success();
 		}
 		var error = Marshal.GetLastPInvokeError();
