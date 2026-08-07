@@ -8,12 +8,65 @@ using System.Runtime.InteropServices;
 internal static class ProcessNative {
 	/// <summary>Gets the POSIX permission-denied error number.</summary>
 	internal const int PermissionDenied = 1;
+	/// <summary>Gets the POSIX interrupted-system-call error number.</summary>
+	internal const int Interrupted = 4;
 	/// <summary>Gets the POSIX no-such-process error number.</summary>
 	internal const int NoSuchProcess = 3;
+	/// <summary>Gets the POSIX no-such-file error number.</summary>
+	internal const int NoSuchFile = 2;
 	/// <summary>Gets the POSIX access-denied error number.</summary>
 	internal const int AccessDenied = 13;
 	/// <summary>Gets the POSIX invalid-argument error number.</summary>
 	internal const int InvalidArgument = 22;
+	/// <summary>Gets the waitpid nonblocking option.</summary>
+	internal const int WaitNoHang = 1;
+	/// <summary>Gets the native signal-handler error sentinel.</summary>
+	internal static IntPtr SignalError => new( -1 );
+
+	/// <summary>Gets the POSIX write-only open flag.</summary>
+	internal const int OpenWriteOnly = 1;
+
+	/// <summary>Duplicates one open POSIX file descriptor.</summary>
+	[DllImport(
+		"libc",
+		EntryPoint = "dup",
+		SetLastError = true
+	)]
+	internal static extern int Dup(
+		int descriptor
+	);
+
+	/// <summary>Duplicates one POSIX descriptor onto another descriptor number.</summary>
+	[DllImport(
+		"libc",
+		EntryPoint = "dup2",
+		SetLastError = true
+	)]
+	internal static extern int Dup2(
+		int sourceDescriptor,
+		int destinationDescriptor
+	);
+
+	/// <summary>Opens a POSIX pathname without creation flags.</summary>
+	[DllImport(
+		"libc",
+		EntryPoint = "open",
+		SetLastError = true
+	)]
+	internal static extern int Open(
+		string path,
+		int flags
+	);
+
+	/// <summary>Closes one POSIX file descriptor.</summary>
+	[DllImport(
+		"libc",
+		EntryPoint = "close",
+		SetLastError = true
+	)]
+	internal static extern int Close(
+		int descriptor
+	);
 
 	/// <summary>Invokes POSIX kill.</summary>
 	[DllImport(
@@ -49,11 +102,93 @@ internal static class ProcessNative {
 		int priority
 	);
 
+	/// <summary>Sets one POSIX signal disposition and returns the previous handler.</summary>
+	[DllImport(
+		"libc",
+		EntryPoint = "signal",
+		SetLastError = true
+	)]
+	internal static extern IntPtr Signal(
+		int signal,
+		IntPtr handler
+	);
+
+	/// <summary>Initializes an empty POSIX signal set.</summary>
+	[DllImport(
+		"libc",
+		EntryPoint = "sigemptyset",
+		SetLastError = true
+	)]
+	internal static extern int SigEmptySet(
+		IntPtr set
+	);
+
+	/// <summary>Adds one signal to a POSIX signal set.</summary>
+	[DllImport(
+		"libc",
+		EntryPoint = "sigaddset",
+		SetLastError = true
+	)]
+	internal static extern int SigAddSet(
+		IntPtr set,
+		int signal
+	);
+
+	/// <summary>Removes one signal from a POSIX signal set.</summary>
+	[DllImport(
+		"libc",
+		EntryPoint = "sigdelset",
+		SetLastError = true
+	)]
+	internal static extern int SigDeleteSet(
+		IntPtr set,
+		int signal
+	);
+
+	/// <summary>Reads or changes the calling thread's POSIX signal mask.</summary>
+	[DllImport(
+		"libc",
+		EntryPoint = "pthread_sigmask",
+		SetLastError = false
+	)]
+	internal static extern int PThreadSignalMask(
+		int how,
+		IntPtr set,
+		IntPtr oldSet
+	);
+
+	/// <summary>Creates a POSIX child process using exact argument and environment vectors.</summary>
+	[DllImport(
+		"libc",
+		EntryPoint = "posix_spawn",
+		SetLastError = false
+	)]
+	internal static extern int PosixSpawn(
+		out int processId,
+		IntPtr path,
+		IntPtr fileActions,
+		IntPtr attributes,
+		IntPtr arguments,
+		IntPtr environment
+	);
+
+	/// <summary>Waits for or polls one POSIX child process.</summary>
+	[DllImport(
+		"libc",
+		EntryPoint = "waitpid",
+		SetLastError = true
+	)]
+	internal static extern int WaitPid(
+		int processId,
+		out int status,
+		int options
+	);
+
 	/// <summary>Maps a POSIX error number to a controlled process-operation status.</summary>
 	internal static ProcessOperationStatus MapErrno(
 		int error
 	) => error switch {
-		NoSuchProcess => ProcessOperationStatus.Vanished,
+		NoSuchProcess or NoSuchFile => ProcessOperationStatus.Vanished,
 		PermissionDenied or AccessDenied => ProcessOperationStatus.AccessDenied,
 		InvalidArgument => ProcessOperationStatus.InvalidArgument,
 		_ => ProcessOperationStatus.Failed

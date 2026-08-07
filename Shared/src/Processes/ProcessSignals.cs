@@ -109,6 +109,17 @@ public interface IProcessSignalProvider {
 }
 
 /// <summary>
+/// Observes the blocked-mask state of process signals where the host exposes it.
+/// </summary>
+public interface IProcessSignalMaskProvider {
+	/// <summary>Observes whether a signal is blocked for the identified process.</summary>
+	ProcessOperationResult<bool> ObserveBlocked(
+		ProcessIdentity identity,
+		ProcessSignal signal
+	);
+}
+
+/// <summary>
 /// Supplies the portable signal catalog used by process-control commands.
 /// </summary>
 public static class ProcessSignalCatalog {
@@ -383,7 +394,7 @@ public static class ProcessSignalCatalog {
 /// <summary>
 /// Provides host signal operations and controlled Windows substitutions.
 /// </summary>
-public sealed class SystemProcessSignalProvider : IProcessSignalProvider {
+public sealed class SystemProcessSignalProvider : IProcessSignalProvider, IProcessSignalMaskProvider {
 	private readonly IProcessInspector _inspector;
 
 	/// <summary>Gets the shared system signal provider.</summary>
@@ -405,7 +416,9 @@ public sealed class SystemProcessSignalProvider : IProcessSignalProvider {
 				| ProcessControlCapabilities.ProcessGroupTargets
 			;
 			if ( OperatingSystem.IsLinux() ) {
-				capabilities |= ProcessControlCapabilities.SignalDisposition;
+				capabilities |= ProcessControlCapabilities.SignalDisposition
+					| ProcessControlCapabilities.SignalMaskObservation
+				;
 			}
 			return capabilities;
 		}
@@ -539,6 +552,83 @@ public sealed class SystemProcessSignalProvider : IProcessSignalProvider {
 			);
 		} catch ( IOException exception ) {
 			return ProcessOperationResult<ProcessSignalDisposition>.Failure(
+				ProcessOperationStatus.Failed,
+				exception.Message
+			);
+		}
+	}
+
+	/// <inheritdoc />
+	public ProcessOperationResult<bool> ObserveBlocked(
+		ProcessIdentity identity,
+		ProcessSignal signal
+	) {
+		ArgumentNullException.ThrowIfNull(
+			identity
+		);
+		ArgumentNullException.ThrowIfNull(
+			signal
+		);
+		if ( !OperatingSystem.IsLinux() ) {
+			return ProcessOperationResult<bool>.Failure(
+				ProcessOperationStatus.Unsupported,
+				"Blocked signal masks are exposed only through Linux /proc."
+			);
+		}
+		if ( 0 >= signal.Number || 64 < signal.Number ) {
+			return ProcessOperationResult<bool>.Failure(
+				ProcessOperationStatus.InvalidArgument,
+				"Only numbered Linux signals have observable blocked-mask state."
+			);
+		}
+		var observed = this._inspector.ObserveIdentity(
+			identity.ProcessId
+		);
+		if ( !observed.Succeeded ) {
+			return ProcessOperationResult<bool>.Failure(
+				observed.Status,
+				observed.Message,
+				observed.NativeErrorCode
+			);
+		}
+		if ( !SystemProcessInspector.MatchesExpectedIdentity(
+			identity,
+			observed.Value!
+		) ) {
+			return ProcessOperationResult<bool>.Failure(
+				ProcessOperationStatus.Reused,
+				$"Process identifier {identity.ProcessId} has been reused."
+			);
+		}
+		try {
+			var statusLines = File.ReadAllLines(
+				$"/proc/{identity.ProcessId}/status"
+			);
+			var blocked = ParseSignalMask(
+				statusLines,
+				"SigBlk:"
+			);
+			var bit = 1UL << ( signal.Number - 1 );
+			return ProcessOperationResult<bool>.Success(
+				0 != ( blocked & bit )
+			);
+		} catch ( FileNotFoundException ) {
+			return ProcessOperationResult<bool>.Failure(
+				ProcessOperationStatus.Vanished,
+				$"Process {identity.ProcessId} vanished."
+			);
+		} catch ( DirectoryNotFoundException ) {
+			return ProcessOperationResult<bool>.Failure(
+				ProcessOperationStatus.Vanished,
+				$"Process {identity.ProcessId} vanished."
+			);
+		} catch ( UnauthorizedAccessException exception ) {
+			return ProcessOperationResult<bool>.Failure(
+				ProcessOperationStatus.AccessDenied,
+				exception.Message
+			);
+		} catch ( IOException exception ) {
+			return ProcessOperationResult<bool>.Failure(
 				ProcessOperationStatus.Failed,
 				exception.Message
 			);

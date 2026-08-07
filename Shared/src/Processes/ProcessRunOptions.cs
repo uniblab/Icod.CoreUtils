@@ -20,10 +20,16 @@ public enum ProcessCancellationPolicy {
 public sealed class ProcessRunOptions {
 	private ProcessCancellationPolicy _cancellationPolicy = ProcessCancellationPolicy.KillProcessTree;
 
-	/// <summary>Gets the exact child-process arguments.</summary>
+	/// <summary>Gets the exact child-process arguments after argument zero.</summary>
 	public IList<string> Arguments {
 		get;
 	} = new List<string>();
+
+	/// <summary>Gets or sets an explicit native argument zero. A null value uses the executable name selected by the host launcher.</summary>
+	public string? ArgumentZero {
+		get;
+		set;
+	}
 
 	/// <summary>Gets or sets whether standard error is captured in the result.</summary>
 	public bool CaptureStandardError {
@@ -107,6 +113,12 @@ public sealed class ProcessRunOptions {
 		set;
 	}
 
+	/// <summary>Gets or sets launch-time signal disposition and mask changes for the child process.</summary>
+	public ProcessLaunchSignalPolicy? SignalPolicy {
+		get;
+		set;
+	}
+
 	/// <summary>Gets or sets whether the executable is resolved before launch.</summary>
 	public bool ResolveExecutable {
 		get;
@@ -137,6 +149,14 @@ public sealed class ProcessRunOptions {
 		set;
 	}
 
+	/// <summary>
+	/// Gets or sets whether a POSIX child inherits standard input as a write-only null device so reads fail rather than return end-of-file.
+	/// </summary>
+	public bool UseUnreadableStandardInput {
+		get;
+		set;
+	}
+
 	/// <summary>Gets or sets an optional monotonic execution timeout.</summary>
 	public TimeSpan? Timeout {
 		get;
@@ -153,9 +173,13 @@ public sealed class ProcessRunOptions {
 	public ProcessRunOptions(
 		string fileName
 	) {
-		ArgumentException.ThrowIfNullOrWhiteSpace(
-			fileName
-		);
+		ArgumentNullException.ThrowIfNull( fileName );
+		if ( fileName.Contains( '\0' ) ) {
+			throw new ArgumentException(
+				"Executable names cannot contain a NUL character.",
+				nameof( fileName )
+			);
+		}
 		this.FileName = fileName;
 	}
 }

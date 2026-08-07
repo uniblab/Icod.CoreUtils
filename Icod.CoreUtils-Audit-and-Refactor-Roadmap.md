@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `51` |
-| Current engineering milestone | Completion Gate F4 implemented; proceed to Batch 52 |
+| Completed command batches | `0` through `52` |
+| Current engineering milestone | Batch 52 implemented; proceed to Batch 53 |
 | Completed infrastructure milestone | Completion Gates E2 through E6 and F1 through F4 — filesystem, terminal-presentation, host-resource, terminal-control, and process-control foundations |
-| Active infrastructure dependency | Batch 52 must consume the completed F4 process execution and control contracts |
-| Next engineering step | Batch 52 — `env` and `nohup` |
+| Active infrastructure dependency | Batch 53 must consume the completed F4 signal, target, identity, and waiting contracts |
+| Next engineering step | Batch 53 — util-linux `kill` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1433,10 +1433,11 @@ Completion Gate F4 is complete. `Icod.CoreUtils.Shared.Processes` now provides c
 
 ### Batch 52 — Environment and hangup-independent execution (2 tools)
 
-- [ ] `env`
-- [ ] `nohup`
+- [x] `env`
+- [x] `nohup`
 
 Build the shared child-process launch environment. Implement environment clearing/removal, split-string parsing, working directory, `argv0`, signal policy, NUL output, command lookup, `nohup` redirection rules, diagnostics, and asynchronous stream forwarding.
+The Batch 52 implementation is complete. `Icod.CoreUtils.Env` now implements the GNU 9.11 environment, `-S`, working-directory, native `argv0`, signal-policy, NUL-output, debug, command-lookup, and 125/126/127 status boundaries over the F4 process contracts. `Icod.CoreUtils.Nohup` adds terminal-aware input suppression, `nohup.out` with `$HOME` fallback, stderr-to-stdout policy, POSIX SIGHUP suppression, leave-running cancellation semantics, and exact launch-status propagation. Dedicated `Env.Tests` and `Nohup.Tests` projects cover the command boundaries. The Shared launcher extensions and platform-specific standard-input policy are recorded in `Icod.CoreUtils-Batch-52-Environment-and-Nohup.md`.
 
 ### Batch 53 — util-linux signal control (1 tool)
 

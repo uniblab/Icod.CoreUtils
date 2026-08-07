@@ -29,7 +29,9 @@ public enum ProcessLaunchFailureKind {
 	/// <summary>The requested executable could not be found.</summary>
 	NotFound,
 	/// <summary>The executable was found but could not be invoked.</summary>
-	CannotInvoke
+	CannotInvoke,
+	/// <summary>Launch preparation such as signal policy or working-directory setup failed before invocation.</summary>
+	SetupFailed
 }
 
 /// <summary>
@@ -161,9 +163,11 @@ public sealed class ProcessTermination {
 			: 128 + this.Signal.Number,
 		ProcessTerminationKind.TimedOut => timeoutExitCode,
 		ProcessTerminationKind.Canceled => 125,
-		ProcessTerminationKind.LaunchFailed => ProcessLaunchFailureKind.NotFound == this.LaunchFailureKind
-			? 127
-			: 126,
+		ProcessTerminationKind.LaunchFailed => this.LaunchFailureKind switch {
+			ProcessLaunchFailureKind.NotFound => 127,
+			ProcessLaunchFailureKind.SetupFailed => 125,
+			_ => 126
+		},
 		ProcessTerminationKind.Vanished => 1,
 		_ => this.ExitCode ?? 1
 	};

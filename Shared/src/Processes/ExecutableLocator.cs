@@ -30,10 +30,17 @@ public sealed class SystemExecutableLocator : IExecutableLocator {
 		ProcessEnvironment? environment = null,
 		string? workingDirectory = null
 	) {
-		if ( string.IsNullOrWhiteSpace( executable ) || executable.Contains( '\0' ) ) {
+		ArgumentNullException.ThrowIfNull( executable );
+		if ( executable.Contains( '\0' ) ) {
 			return ProcessOperationResult<string>.Failure(
 				ProcessOperationStatus.InvalidArgument,
-				"An executable name is required."
+				"Executable names cannot contain a NUL character."
+			);
+		}
+		if ( 0 == executable.Length ) {
+			return ProcessOperationResult<string>.Failure(
+				ProcessOperationStatus.Vanished,
+				"Executable '' was not found."
 			);
 		}
 		try {
@@ -103,7 +110,7 @@ public sealed class SystemExecutableLocator : IExecutableLocator {
 		var pathValue = GetVariable(
 			variables,
 			"PATH"
-		) ?? string.Empty;
+		) ?? GetDefaultSearchPath();
 		var candidates = new List<string>();
 		foreach ( var pathEntry in pathValue.Split( Path.PathSeparator ) ) {
 			var directory = string.IsNullOrEmpty( pathEntry )
@@ -157,6 +164,11 @@ public sealed class SystemExecutableLocator : IExecutableLocator {
 			name
 		);
 	}
+
+	private static string GetDefaultSearchPath() => OperatingSystem.IsWindows()
+		? string.Empty
+		: string.Concat( "/bin", Path.PathSeparator, "/usr/bin" )
+	;
 
 	private static IReadOnlyList<string> GetCandidateExtensions(
 		string executable,
@@ -217,6 +229,12 @@ public sealed class SystemExecutableLocator : IExecutableLocator {
 		string candidate
 	) {
 		try {
+			if ( Directory.Exists( candidate ) ) {
+				return ProcessOperationResult<string>.Failure(
+					ProcessOperationStatus.AccessDenied,
+					$"File '{candidate}' is a directory and cannot be executed."
+				);
+			}
 			if ( !File.Exists( candidate ) ) {
 				return ProcessOperationResult<string>.Failure(
 					ProcessOperationStatus.Vanished
