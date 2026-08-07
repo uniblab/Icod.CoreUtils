@@ -189,12 +189,6 @@ public sealed class SystemKillPlatform : IKillPlatform {
 				"PID-file-descriptor signaling is supported only on Linux architectures with pidfd syscalls."
 			);
 		}
-		if ( null != expectedPidFdInode && !OperatingSystem.IsLinuxVersionAtLeast( 6, 9 ) ) {
-			return ProcessOperationResult.Failure(
-				ProcessOperationStatus.Unsupported,
-				"PID plus pidfd-inode identities require Linux 6.9 or later."
-			);
-		}
 		var descriptor = checked( (int)SyscallPidFdOpen( PidFdOpenSystemCall, processId, 0 ) );
 		if ( 0 > descriptor ) {
 			return NativeFailure( processId, signal, Marshal.GetLastPInvokeError(), "pidfd_open() failed" );
