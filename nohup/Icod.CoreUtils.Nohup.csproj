@@ -8,8 +8,8 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<OutputPath>..\bin\$(Configuration)\</OutputPath>
-		<AssemblyName>env</AssemblyName>
-		<RootNamespace>Icod.CoreUtils.Env</RootNamespace>
+		<AssemblyName>nohup</AssemblyName>
+		<RootNamespace>Icod.CoreUtils.Nohup</RootNamespace>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
 		<PlatformTarget>AnyCPU</PlatformTarget>

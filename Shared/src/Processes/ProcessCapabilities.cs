@@ -30,5 +30,7 @@ public enum ProcessControlCapabilities {
 	/// <summary>Windows termination substitutions are available.</summary>
 	WindowsTerminationSubstitution = 1 << 10,
 	/// <summary>Windows priority-class substitutions are available.</summary>
-	WindowsPrioritySubstitution = 1 << 11
+	WindowsPrioritySubstitution = 1 << 11,
+	/// <summary>Blocked signal masks can be observed.</summary>
+	SignalMaskObservation = 1 << 12
 }

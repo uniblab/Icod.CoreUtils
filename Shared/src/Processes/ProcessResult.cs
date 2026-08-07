@@ -45,6 +45,23 @@ public sealed class ProcessResult {
 	/// <summary>Gets whether execution was canceled by the caller.</summary>
 	public bool WasCanceled => ProcessTerminationKind.Canceled == this.Termination.Kind;
 
+	/// <summary>Creates a process result from an explicit portable termination description.</summary>
+	public static ProcessResult FromTermination(
+		ProcessTermination termination,
+		bool started = true,
+		ProcessIdentity? identity = null,
+		TimeSpan elapsed = default,
+		string? standardOutput = null,
+		string? standardError = null
+	) => new(
+		started,
+		identity,
+		termination,
+		elapsed,
+		standardOutput,
+		standardError
+	);
+
 	/// <summary>Initializes a compatibility process result.</summary>
 	internal ProcessResult(
 		int? exitCode,

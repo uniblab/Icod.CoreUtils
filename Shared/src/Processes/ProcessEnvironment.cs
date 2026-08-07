@@ -114,7 +114,7 @@ public sealed class ProcessEnvironmentBuilder {
 	private static void ValidateName(
 		string name
 	) {
-		ArgumentException.ThrowIfNullOrWhiteSpace(
+		ArgumentNullException.ThrowIfNull(
 			name
 		);
 		if ( name.Contains( '=' ) || name.Contains( '\0' ) ) {

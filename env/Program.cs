@@ -1,10 +1,7 @@
-// Port of the standard UNIX `env` utility (minimal).
 namespace Icod.CoreUtils.Env;
 
-using System;
-
+/// <summary>Entry point for GNU <c>env</c>.</summary>
 internal static class Program {
-	public static int Main( string[] args ) {
-		return Command.Run( args, Console.In, Console.Out, Console.Error );
-	}
+	/// <summary>Runs GNU <c>env</c>.</summary>
+	public static Task<int> Main( string[] args ) => Command.RunAsync( args );
 }
