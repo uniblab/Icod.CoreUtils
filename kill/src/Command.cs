@@ -1,4 +1,4 @@
-namespace Icod.CoreUtils.Kill;
+namespace Icod.UtilLinux.Kill;
 
 using System;
 using System.Diagnostics;
