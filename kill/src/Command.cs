@@ -384,6 +384,12 @@ public static class Command {
 				$"Unknown signal '{text}'."
 			);
 		}
+		if ( '+' == text[ 0 ] || '-' == text[ 0 ] ) {
+			return ProcessOperationResult<ProcessSignal>.Failure(
+				ProcessOperationStatus.InvalidArgument,
+				$"Unknown signal '{text}'."
+			);
+		}
 		var normalized = text;
 		if ( char.IsAsciiDigit( text[ 0 ] ) ) {
 			if ( !int.TryParse( text, NumberStyles.None, CultureInfo.InvariantCulture, out var number ) ) {
