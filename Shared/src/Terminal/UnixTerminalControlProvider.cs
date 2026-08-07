@@ -8,29 +8,29 @@ using System.Runtime.InteropServices;
 /// Linux and macOS.
 /// </summary>
 internal sealed class UnixTerminalControlProvider : ITerminalControlProvider {
-	private const string LibC = "libc";
-	private const int InvalidArgument = 22;
-	private const int NotATerminal = 25;
-	private const int OpenReadOnly = 0;
-	private const int OpenWriteOnly = 1;
-	private const int OpenReadWrite = 2;
-	private const int LinuxOpenNoControllingTerminal = 0x100;
-	private const int LinuxOpenNonBlocking = 0x800;
-	private const int MacOpenNonBlocking = 0x4;
-	private const int MacOpenNoControllingTerminal = 0x20000;
-	private const int TerminalApplyImmediately = 0;
-	private const int TerminalApplyAfterDrain = 1;
-	private const int TerminalApplyAfterDrainAndFlush = 2;
-	private const int LinuxTermiosSize = 60;
-	private const int LinuxControlCharacterOffset = 17;
-	private const int LinuxControlCharacterCount = 32;
-	private const int LinuxInputSpeedOffset = 52;
-	private const int LinuxOutputSpeedOffset = 56;
-	private const int MacTermiosSize = 72;
-	private const int MacControlCharacterOffset = 32;
-	private const int MacControlCharacterCount = 20;
-	private const int MacInputSpeedOffset = 56;
-	private const int MacOutputSpeedOffset = 64;
+	public const string LibC = "libc";
+	public const int InvalidArgument = 22;
+	public const int NotATerminal = 25;
+	public const int OpenReadOnly = 0;
+	public const int OpenWriteOnly = 1;
+	public const int OpenReadWrite = 2;
+	public const int LinuxOpenNoControllingTerminal = 0x100;
+	public const int LinuxOpenNonBlocking = 0x800;
+	public const int MacOpenNonBlocking = 0x4;
+	public const int MacOpenNoControllingTerminal = 0x20000;
+	public const int TerminalApplyImmediately = 0;
+	public const int TerminalApplyAfterDrain = 1;
+	public const int TerminalApplyAfterDrainAndFlush = 2;
+	public const int LinuxTermiosSize = 60;
+	public const int LinuxControlCharacterOffset = 17;
+	public const int LinuxControlCharacterCount = 32;
+	public const int LinuxInputSpeedOffset = 52;
+	public const int LinuxOutputSpeedOffset = 56;
+	public const int MacTermiosSize = 72;
+	public const int MacControlCharacterOffset = 32;
+	public const int MacControlCharacterCount = 20;
+	public const int MacInputSpeedOffset = 56;
+	public const int MacOutputSpeedOffset = 64;
 
 	private UnixTerminalControlProvider() {
 	}
@@ -195,13 +195,13 @@ internal sealed class UnixTerminalControlProvider : ITerminalControlProvider {
 				Marshal.Copy( bytes, 0, buffer, bytes.Length );
 				if ( 0 != NativeSetInputSpeed( buffer, checked( (nuint)mode.InputSpeed!.Value.NativeCode ) )
 					|| 0 != NativeSetOutputSpeed( buffer, checked( (nuint)mode.OutputSpeed!.Value.NativeCode ) ) ) {
-					var nativeError = Marshal.GetLastPInvokeError();
+					var nativeErr = Marshal.GetLastPInvokeError();
 					return TerminalControlMutationResult.Unavailable(
 						string.Concat(
 							"The terminal speed code is not supported by this host: ",
-							new Win32Exception( nativeError ).Message
+							new Win32Exception( nativeErr ).Message
 						),
-						nativeError
+						nativeErr
 					);
 				}
 				var action = timing switch {

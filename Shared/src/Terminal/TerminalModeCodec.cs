@@ -184,13 +184,13 @@ public static class TerminalModeCodec {
 		string value,
 		out ulong parsed
 	) {
-		return !string.IsNullOrEmpty( value )
-			&& ulong.TryParse(
-				value,
-				NumberStyles.AllowHexSpecifier,
-				CultureInfo.InvariantCulture,
-				out parsed
-			);
+		var tryParsed = ulong.TryParse(
+			value,
+			NumberStyles.AllowHexSpecifier,
+			CultureInfo.InvariantCulture,
+			out parsed
+		);
+		return !string.IsNullOrEmpty( value ) && tryParsed;
 	}
 
 	private static void AppendHex(

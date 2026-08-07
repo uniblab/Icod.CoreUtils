@@ -622,7 +622,7 @@ public sealed class TerminalModeSnapshot {
 						nameof( controlCharacters )
 					);
 				}
-				if ( ( null is consoleDirection ) || ( null is consoleMode ) ) {
+				if ( ( consoleDirection is null ) || ( consoleMode is null ) ) {
 					throw new ArgumentException(
 						"A Windows console mode requires its direction and native mode value.",
 						nameof( consoleMode )
