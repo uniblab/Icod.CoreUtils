@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `49` |
-| Current engineering milestone | Completion Gate F3 implemented; proceed to Batch 50 — `tty` |
+| Completed command batches | `0` through `51` |
+| Current engineering milestone | Batches 50 and 51 implemented; proceed to Completion Gate F4 |
 | Completed infrastructure milestone | Completion Gates E2 through E6 and F1 through F3 — filesystem, terminal-presentation, host-resource, and terminal-control foundations |
-| Active infrastructure dependency | Batch 50 and Batch 51 consume the completed F3 endpoint, terminal-mode, speed, control-character, and serialization contracts |
-| Next engineering step | Batch 50 — `tty` |
+| Active infrastructure dependency | Completion Gate F4 must establish shared process execution and control contracts before Batch 52 |
+| Next engineering step | Completion Gate F4 — shared process execution and control foundation |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1385,15 +1385,19 @@ The Completion Gate F3 implementation is complete. `Icod.CoreUtils.Shared.Termin
 
 ### Batch 50 — Terminal identification (1 tool)
 
-- [ ] `tty`
+- [x] `tty`
 
 Add the missing project. Implement silent mode, terminal-name reporting, correct standard-input inspection, and statuses for terminal versus nonterminal input across supported platforms.
 
+The Batch 50 implementation is complete. `Icod.CoreUtils.Tty` is a thin consumer of the Completion Gate F3 observation contract and always inspects the borrowed standard-input endpoint rather than managed stream redirection heuristics. It reports the provider pathname or stable Windows console alias, prints `not a tty` for a controlled nonterminal observation, and implements `-s`, `--silent`, and `--quiet` as status-only aliases. The command preserves GNU's distinct statuses for terminal input, nonterminal input, invalid usage, output failure, and an indeterminate terminal name. An injectable provider and dedicated `Tty.Tests` project cover terminal and nonterminal observations, silent output, missing names, and option boundaries.
+
 ### Batch 51 — Terminal characteristics (1 tool)
 
-- [ ] `stty`
+- [x] `stty`
 
 Add the missing project as a dedicated platform batch. Implement reading and changing terminal modes, sane/raw profiles, control characters, speed, machine-readable save/restore form, selected device handling, and a documented Windows capability boundary.
+
+The Batch 51 implementation is complete. `Icod.CoreUtils.Stty` reads and writes complete Gate F3 snapshots for standard input or a named `-F`/`--file` endpoint. It provides ordinary, `--all`, and GNU-compatible machine `--save` reports; ordered setting application; sane/raw/cooked, newline, parity, and eight-bit profiles; common POSIX input, output, control, and local flags; named control characters; line discipline where available; Linux and macOS speed maps; bare numeric, `ispeed`, and `ospeed` changes; and the reporting-only `speed` operand. POSIX mutations default to output-drain timing and support explicit immediate application. Windows preserves the complete native console mode and supports defensible processed-input, line-input, echo, processed-output, wrap, sane, and raw changes while rejecting POSIX-only speed, parity, line-discipline, control-character, and drain semantics. Dedicated `Stty.Tests` coverage validates parsing, reporting, save/restore, profiles, speed rules, selected devices, timing, controlled provider failures, and the Windows boundary. The shared ownership and platform policy are recorded in `Icod.CoreUtils-Batches-50-and-51-Terminal-Commands.md`.
 
 ### Completion Gate F4 — shared process execution and control foundation before Batch 52
 
