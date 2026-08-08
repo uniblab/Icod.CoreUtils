@@ -5,10 +5,10 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `55` |
-| Current engineering milestone | Completion Gate P1 implemented; proceed to Batch 56 |
+| Current engineering milestone | Batch 56 implemented; proceed to Batch 57 |
 | Completed infrastructure milestone | Completion Gates E2 through E6 and F1 through F4 — filesystem, terminal-presentation, host-resource, terminal-control, and process-control foundations |
-| Active infrastructure dependency | Batch 56 must implement the ProcPs-specific provider/domain layer without duplicating the F2-F4 cross-suite contracts frozen by Completion Gate P1 |
-| Next engineering step | Batch 56 — `Icod.ProcPs.Shared` provider foundation |
+| Active infrastructure dependency | ProcPs commands must consume `Icod.ProcPs.Shared` for suite-specific observations and the current Shared project for the cross-suite F2-F4 contracts frozen by Completion Gate P1 |
+| Next engineering step | Batch 57 — `Icod.ProcPs.Uptime` and `Icod.ProcPs.Free` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1501,7 +1501,7 @@ This gate follows Batches 52 through 55 so ProcPs consumes already tested proces
 
 ### Batch 56 — `Icod.ProcPs.Shared` provider foundation (1 library)
 
-- [ ] `Icod.ProcPs.Shared`
+- [x] `Icod.ProcPs.Shared`
 
 Create the suite-specific Shared project and its dedicated test project inside the current solution. Implement the procps-ng-specific observation and domain foundation:
 
@@ -1515,6 +1515,8 @@ Create the suite-specific Shared project and its dedicated test project inside t
 - field catalogs, sorting, personalities, display policy, configuration, and reusable ProcPs screen models.
 
 `Icod.ProcPs.Shared` uses project references to the current Shared incubation project during development. It consumes common processor-resource, process identity, targets, launching, waiting, signals, priorities, clocks, scheduling, statuses, and terminal primitives from that project. Procps-specific enumeration, fields, selection, personalities, `/proc` parsers, kernel models, metric interpretation, and screen state remain here. Neither layer should duplicate the other merely because `Icod.CommandFramework` has not yet been extracted.
+
+Batch 56 is complete. `Icod.ProcPs.Shared` is a `net10.0` class library at `Icod.ProcPs.Shared/Icod.ProcPs.Shared.csproj`, patterned after `Icod.DiffUtils.Shared` and referenced by a dedicated `tests/ProcPs.Shared.Tests` project. The initial provider surface includes authoritative Linux procfs process/system observation, capability-driven portable process/uptime observation, explicit provenance plus `ObservationFidelity`, PID-reuse-aware snapshots, process selection, adapters over the common signal/wait/priority contracts, memory maps, memory/swap/CPU/load/uptime/vmstat/slab/hugepage models, counter/sampling helpers over common monotonic time, and reusable field/sort/personality/display/screen models. Linux user-session metrics use the same libc utmpx fallback semantics documented by procps-ng and count only `USER_PROCESS` records; non-Linux providers report the field unsupported rather than fabricating sessions from process enumeration. Detailed design and validation notes are recorded in `Icod.CoreUtils-Batch-56-ProcPs-Shared-Foundation.md`.
 
 ### Batch 57 — Basic system summaries (2 tools)
 

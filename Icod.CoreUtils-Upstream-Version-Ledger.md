@@ -96,7 +96,7 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 | 53 | Completed | util-linux signal control: `kill` | `UTIL-LINUX-2.42.2` |
 | 54 | Completed | Process priority control: GNU `nice`, util-linux `renice` | `COREUTILS-9.11`; `UTIL-LINUX-2.42.2`; `POSIX-2024` where standardized |
 | 55 | Completed | Time-bounded execution: `timeout` | `COREUTILS-9.11` |
-| 56 | Planned | `Icod.ProcPs.Shared` provider foundation | `PROCPS-4.0.6` |
+| 56 | Completed | `Icod.ProcPs.Shared` provider foundation | `PROCPS-4.0.6` |
 | 57 | Planned | ProcPs basic system summaries: `uptime`, `free` | `PROCPS-4.0.6` |
 | 58 | Planned | ProcPs sampled system statistics: `vmstat` | `PROCPS-4.0.6` |
 | 59 | Planned | ProcPs process selection, signaling, and waiting: `pgrep`, `pkill`, `pidwait` | `PROCPS-4.0.6` |
@@ -462,7 +462,8 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 - **Observation policy:** Linux `/proc` is authoritative; Windows, macOS, and BSD providers are capability-driven. `ObservationFidelity` distinguishes exact, equivalent, approximated, synthesized, and unavailable semantics independently from source provenance.
 - **ProcPs-owned layer:** process enumeration and detailed snapshots, selection grammar, procfs/sysfs/cgroup parsers, process fields and personalities, metrics, sampling/delta interpretation, screen state, configuration, sorting, filtering, and interaction remain in `Icod.ProcPs.Shared`.
 - **Architecture record:** `Icod.CoreUtils-Completion-Gate-P1-ProcPs-Foundation.md`.
-- **Next step:** Batch 56 creates `Icod.ProcPs.Shared` and its tests over these frozen common contracts.
+- **Batch 56 result:** `Icod.ProcPs.Shared` and `ProcPs.Shared.Tests` now provide the suite-specific observation, selection, metric, sampling, field, personality, sorting, and screen foundation over the frozen common contracts.
+- **Next step:** Batch 57 consumes that foundation for `Icod.ProcPs.Uptime` and `Icod.ProcPs.Free`.
 
 ## Required batch-start record
 
