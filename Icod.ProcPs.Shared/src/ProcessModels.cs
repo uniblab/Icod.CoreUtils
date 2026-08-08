@@ -91,8 +91,10 @@ public sealed class ProcProcessSnapshot {
 	public ProcObservedValue<int> ParentProcessId { get; init; } = ProcObservedValue<int>.Missing( ProcObservationAvailability.Unavailable );
 	/// <summary>Gets the process-group identifier.</summary>
 	public ProcObservedValue<int> ProcessGroupId { get; init; } = ProcObservedValue<int>.Missing( ProcObservationAvailability.Unavailable );
-	/// <summary>Gets the session identifier.</summary>
+	/// <summary>Gets the POSIX process-session identifier when the platform exposes that concept.</summary>
 	public ProcObservedValue<int> SessionId { get; init; } = ProcObservedValue<int>.Missing( ProcObservationAvailability.Unavailable );
+	/// <summary>Gets a platform login or desktop-session identifier when that concept is distinct from a POSIX process session.</summary>
+	public ProcObservedValue<int> PlatformSessionId { get; init; } = ProcObservedValue<int>.Missing( ProcObservationAvailability.Unavailable );
 	/// <summary>Gets the real user identifier.</summary>
 	public ProcObservedValue<uint> RealUserId { get; init; } = ProcObservedValue<uint>.Missing( ProcObservationAvailability.Unavailable );
 	/// <summary>Gets the effective user identifier.</summary>

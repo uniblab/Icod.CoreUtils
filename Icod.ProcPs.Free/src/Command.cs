@@ -161,26 +161,26 @@ For more details see free(1).
 	}
 	private static MemoryValues Derive( ProcMemoryInfo memory ) {
 		ulong Read( string key ) => memory.Fields.TryGetValue( key, out var value ) ? value : 0UL;
-		var total = Read( "MemTotal" );
-		var free = Read( "MemFree" );
-		var available = Read( "MemAvailable" );
+		var total = memory.TotalBytes ?? Read( "MemTotal" );
+		var free = memory.FreeBytes ?? memory.AvailableBytes ?? Read( "MemFree" );
+		var available = memory.AvailableBytes ?? Read( "MemAvailable" );
 		if ( 0 == available || available > total ) available = free;
 		var used = total >= available ? total - available : total >= free ? total - free : 0UL;
-		var buffers = Read( "Buffers" );
-		var cache = SaturatingAdd( Read( "Cached" ), Read( "SReclaimable" ) );
-		var swapTotal = Read( "SwapTotal" );
-		var swapFree = Read( "SwapFree" );
+		var buffers = memory.BuffersBytes ?? Read( "Buffers" );
+		var cache = memory.CacheBytes ?? SaturatingAdd( Read( "Cached" ), Read( "SReclaimable" ) );
+		var swapTotal = memory.SwapTotalBytes ?? Read( "SwapTotal" );
+		var swapFree = memory.SwapFreeBytes ?? Read( "SwapFree" );
 		var swapUsed = swapTotal >= swapFree ? swapTotal - swapFree : 0UL;
-		var lowTotal = Read( "LowTotal" );
-		var lowFree = Read( "LowFree" );
+		var lowTotal = memory.LowTotalBytes ?? Read( "LowTotal" );
+		var lowFree = memory.LowFreeBytes ?? Read( "LowFree" );
 		if ( 0 == lowTotal ) { lowTotal = total; lowFree = free; }
-		var highTotal = Read( "HighTotal" );
-		var highFree = Read( "HighFree" );
+		var highTotal = memory.HighTotalBytes ?? Read( "HighTotal" );
+		var highFree = memory.HighFreeBytes ?? Read( "HighFree" );
 		return new MemoryValues(
-			total, used, free, Read( "Shmem" ), buffers, cache, available,
+			total, used, free, memory.SharedBytes ?? Read( "Shmem" ), buffers, cache, available,
 			lowTotal, lowTotal >= lowFree ? lowTotal - lowFree : 0UL, lowFree,
 			highTotal, highTotal >= highFree ? highTotal - highFree : 0UL, highFree,
-			swapTotal, swapUsed, swapFree, Read( "CommitLimit" ), Read( "Committed_AS" )
+			swapTotal, swapUsed, swapFree, memory.CommitLimitBytes ?? Read( "CommitLimit" ), memory.CommittedBytes ?? Read( "Committed_AS" )
 		);
 	}
 	private static ulong SaturatingAdd( ulong left, ulong right ) => ulong.MaxValue - left < right ? ulong.MaxValue : left + right;

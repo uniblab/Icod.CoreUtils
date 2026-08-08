@@ -72,11 +72,12 @@ For more details see uptime(1).
 				return 0;
 			}
 			var snapshot = await metrics.GetSnapshotAsync( cancellationToken ).ConfigureAwait( false );
-			if ( !snapshot.LoadAverage.HasValue ) {
+			var load = ResolveLoadAverages( snapshot );
+			if ( !load.HasValue ) {
 				await WriteDiagnosticAsync( stderr, "uptime: Cannot get load average", cancellationToken ).ConfigureAwait( false );
 				return 1;
 			}
-			await WriteLineAsync( stdout, FormatStandard( clock.GetLocalNow(), uptime.Value.Uptime.TotalSeconds, snapshot.UserSessions, snapshot.LoadAverage.Value ), cancellationToken ).ConfigureAwait( false );
+			await WriteLineAsync( stdout, FormatStandard( clock.GetLocalNow(), uptime.Value.Uptime.TotalSeconds, snapshot.UserSessions, load.Value ), cancellationToken ).ConfigureAwait( false );
 			return 0;
 		} catch ( OperationCanceledException ) when ( cancellationToken.IsCancellationRequested ) { return 130; }
 	}
@@ -84,8 +85,9 @@ For more details see uptime(1).
 		var snapshot = await metrics.GetSnapshotAsync( cancellationToken ).ConfigureAwait( false );
 		if ( !snapshot.Uptime.HasValue ) { await WriteDiagnosticAsync( stderr, "uptime: procps_uptime_secs", cancellationToken ).ConfigureAwait( false ); return 1; }
 		if ( !snapshot.UserSessions.HasValue ) { await WriteDiagnosticAsync( stderr, "uptime: procps_users", cancellationToken ).ConfigureAwait( false ); return 1; }
-		if ( !snapshot.LoadAverage.HasValue ) { await WriteDiagnosticAsync( stderr, "uptime: procps_loadavg", cancellationToken ).ConfigureAwait( false ); return 1; }
-		var load = snapshot.LoadAverage.Value;
+		var loadObservation = ResolveLoadAverages( snapshot );
+		if ( !loadObservation.HasValue ) { await WriteDiagnosticAsync( stderr, "uptime: procps_loadavg", cancellationToken ).ConfigureAwait( false ); return 1; }
+		var load = loadObservation.Value;
 		var text = string.Format(
 			CultureInfo.InvariantCulture,
 			"{0} {1:F6} {2} {3:F2} {4:F2} {5:F2}",
@@ -111,8 +113,11 @@ For more details see uptime(1).
 	}
 	/// <summary>Formats the procps-ng pretty uptime component.</summary>
 	public static string FormatPretty( double uptimeSeconds ) => string.Concat( "up ", FormatUptimeOnly( uptimeSeconds, pretty: true ) );
-	/// <summary>Formats the procps-ng standard uptime display using supplied observations.</summary>
-	public static string FormatStandard( DateTimeOffset now, double uptimeSeconds, ProcObservedValue<ProcUserSessionInfo> users, ProcLoadAverage load ) {
+	/// <summary>Formats the procps-ng standard uptime display using Linux-specific load details.</summary>
+	public static string FormatStandard( DateTimeOffset now, double uptimeSeconds, ProcObservedValue<ProcUserSessionInfo> users, ProcLoadAverage load )
+		=> FormatStandard( now, uptimeSeconds, users, new ProcLoadAverages( load.OneMinute, load.FiveMinutes, load.FifteenMinutes ) );
+	/// <summary>Formats the procps-ng standard uptime display using cross-platform load averages.</summary>
+	public static string FormatStandard( DateTimeOffset now, double uptimeSeconds, ProcObservedValue<ProcUserSessionInfo> users, ProcLoadAverages load ) {
 		var userText = users.HasValue
 			? string.Format( CultureInfo.InvariantCulture, ", {0,2} {1},  ", users.Value.Count, 1 == users.Value.Count ? "user" : "users" )
 			: ", ? users,  ";
@@ -121,6 +126,18 @@ For more details see uptime(1).
 			" {0:HH:mm:ss} up {1}{2}load average: {3:F2}, {4:F2}, {5:F2}",
 			now, FormatUptimeOnly( uptimeSeconds, pretty: false ), userText, load.OneMinute, load.FiveMinutes, load.FifteenMinutes
 		);
+	}
+	private static ProcObservedValue<ProcLoadAverages> ResolveLoadAverages( ProcSystemSnapshot snapshot ) {
+		if ( snapshot.LoadAverages.HasValue ) return snapshot.LoadAverages;
+		if ( snapshot.LoadAverage.HasValue ) {
+			var load = snapshot.LoadAverage.Value;
+			return ProcObservedValue<ProcLoadAverages>.Available(
+				new ProcLoadAverages( load.OneMinute, load.FiveMinutes, load.FifteenMinutes ),
+				snapshot.LoadAverage.Source,
+				snapshot.LoadAverage.Fidelity
+			);
+		}
+		return ProcObservedValue<ProcLoadAverages>.Missing( snapshot.LoadAverage.Availability, snapshot.LoadAverage.Diagnostic ?? snapshot.LoadAverages.Diagnostic );
 	}
 	private static string FormatUptimeOnly( double uptimeSeconds, bool pretty ) {
 		const int decade = 60 * 60 * 24 * 365 * 10;

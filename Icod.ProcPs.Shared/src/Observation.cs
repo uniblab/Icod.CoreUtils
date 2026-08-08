@@ -5,17 +5,27 @@ using Icod.CoreUtils.Shared.Host;
 /// <summary>Identifies the source from which a ProcPs observation was obtained.</summary>
 public enum ProcObservationSource {
 	/// <summary>No source produced a value.</summary>
-	Unavailable,
+	Unavailable = 0,
 	/// <summary>The value came directly from Linux procfs.</summary>
-	LinuxProcfs,
+	LinuxProcfs = 1,
 	/// <summary>The value came from the cross-platform .NET process API.</summary>
-	DotNetProcessApi,
+	DotNetProcessApi = 2,
 	/// <summary>The value came from another platform API with equivalent intent.</summary>
-	PlatformApi,
+	PlatformApi = 3,
 	/// <summary>The value was derived from one or more other observations.</summary>
-	Derived,
+	Derived = 4,
 	/// <summary>The value came from explicit ProcPs configuration.</summary>
-	Configuration
+	Configuration = 5,
+	/// <summary>The value came from a Windows native API.</summary>
+	WindowsNativeApi = 6,
+	/// <summary>The value came from a Darwin Mach API.</summary>
+	DarwinMach = 7,
+	/// <summary>The value came from Darwin libproc.</summary>
+	DarwinLibProc = 8,
+	/// <summary>The value came from a Darwin sysctl interface.</summary>
+	DarwinSysctl = 9,
+	/// <summary>The value came from a POSIX/libc API.</summary>
+	PosixLibc = 10
 }
 
 /// <summary>Describes why a ProcPs observation does or does not contain a value.</summary>
@@ -131,7 +141,9 @@ public enum ProcProcessCapabilities : ulong {
 	/// <summary>Thread counts can be observed.</summary>
 	Threads = 1UL << 13,
 	/// <summary>Memory maps can be observed.</summary>
-	MemoryMaps = 1UL << 14
+	MemoryMaps = 1UL << 14,
+	/// <summary>A platform login/desktop session identifier can be observed when it is distinct from a POSIX process session.</summary>
+	PlatformSessions = 1UL << 15
 }
 
 /// <summary>Describes suite-specific system-metric capabilities.</summary>
