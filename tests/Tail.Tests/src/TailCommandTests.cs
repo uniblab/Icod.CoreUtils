@@ -232,7 +232,7 @@ public sealed class TailCommandTests {
 		using var cancellation = new CancellationTokenSource(
 			TimeSpan.FromSeconds( 10 )
 		);
-		using var outputStream = new MemoryStream();
+		using var outputStream = new SignalingMemoryStream();
 		using var outputText = new StringWriter();
 		using var error = new StringWriter();
 		try {
@@ -245,19 +245,16 @@ public sealed class TailCommandTests {
 				stdoutStream: outputStream,
 				cancellationToken: cancellation.Token
 			);
-
-			await Task.Delay( 100, CancellationToken.None );
 			await File.AppendAllTextAsync(
 				path,
 				"alpha\n",
 				new UTF8Encoding( false ),
 				CancellationToken.None
 			);
-
-			await Task.Delay(
-				TimeSpan.FromSeconds( 1 ),
-				CancellationToken.None
+			await outputStream.Signal.WaitAsync(
+				cancellation.Token
 			);
+
 			cancellation.Cancel();
 			var exitCode = await commandTask;
 
@@ -315,6 +312,28 @@ public sealed class TailCommandTests {
 		);
 	}
 
+	private sealed class SignalingMemoryStream : MemoryStream {
+
+		private readonly TaskCompletionSource<bool> mySignal = new(
+			TaskCreationOptions.RunContinuationsAsynchronously
+		);
+
+		public Task Signal => this.mySignal.Task;
+
+		public override async ValueTask WriteAsync(
+			ReadOnlyMemory<byte> buffer,
+			CancellationToken cancellationToken = default
+		) {
+			await base.WriteAsync(
+				buffer,
+				cancellationToken
+			).ConfigureAwait( false );
+			if ( !buffer.IsEmpty ) {
+				this.mySignal.TrySetResult( true );
+			}
+		}
+
+	}
 	private sealed class NonSeekableReadStream : Stream {
 
 		private readonly MemoryStream myInner;
