@@ -189,6 +189,13 @@ public interface IProcSystemMetricsProvider {
 	ProcSystemCapabilities Capabilities { get; }
 	/// <summary>Captures a coherent best-effort system snapshot.</summary>
 	Task<ProcSystemSnapshot> GetSnapshotAsync( CancellationToken cancellationToken = default );
+	/// <summary>Gets physical-memory and swap information without requiring unrelated system observations.</summary>
+	async Task<ProcObservedValue<ProcMemoryInfo>> GetMemoryAsync( CancellationToken cancellationToken = default ) => ( await this.GetSnapshotAsync( cancellationToken ).ConfigureAwait( false ) ).Memory;
+	/// <summary>Gets system or container uptime using the strongest semantics exposed by the provider.</summary>
+	async Task<ProcObservedValue<ProcUptimeInfo>> GetUptimeAsync( bool containerMode, CancellationToken cancellationToken = default ) {
+		if ( containerMode ) return ProcObservedValue<ProcUptimeInfo>.Missing( ProcObservationAvailability.Unsupported, "Container uptime is not exposed by this provider." );
+		return ( await this.GetSnapshotAsync( cancellationToken ).ConfigureAwait( false ) ).Uptime;
+	}
 }
 
 /// <summary>Selects Linux procfs metrics or a capability-driven portable provider.</summary>
@@ -204,6 +211,10 @@ public sealed class SystemProcSystemMetricsProvider : IProcSystemMetricsProvider
 	}
 	/// <inheritdoc />
 	public Task<ProcSystemSnapshot> GetSnapshotAsync( CancellationToken cancellationToken = default ) => this._inner.GetSnapshotAsync( cancellationToken );
+	/// <inheritdoc />
+	public Task<ProcObservedValue<ProcMemoryInfo>> GetMemoryAsync( CancellationToken cancellationToken = default ) => this._inner.GetMemoryAsync( cancellationToken );
+	/// <inheritdoc />
+	public Task<ProcObservedValue<ProcUptimeInfo>> GetUptimeAsync( bool containerMode, CancellationToken cancellationToken = default ) => this._inner.GetUptimeAsync( containerMode, cancellationToken );
 }
 
 /// <summary>Reads authoritative procps-ng-style system metrics from Linux procfs.</summary>
@@ -225,6 +236,32 @@ public sealed class LinuxProcSystemMetricsProvider : IProcSystemMetricsProvider 
 	public LinuxProcSystemMetricsProvider( string procRoot = "/proc" ) {
 		ArgumentException.ThrowIfNullOrWhiteSpace( procRoot );
 		this._procRoot = procRoot;
+	}
+	/// <inheritdoc />
+	public Task<ProcObservedValue<ProcMemoryInfo>> GetMemoryAsync( CancellationToken cancellationToken = default ) => ObserveFileAsync( "meminfo", text => new ProcMemoryInfo( LinuxProcParsers.ParseMemInfo( text ) ), cancellationToken );
+	/// <inheritdoc />
+	public async Task<ProcObservedValue<ProcUptimeInfo>> GetUptimeAsync( bool containerMode, CancellationToken cancellationToken = default ) {
+		if ( !containerMode ) return await ObserveFileAsync( "uptime", ParseUptime, cancellationToken ).ConfigureAwait( false );
+		if ( !OperatingSystem.IsLinux() ) return ProcObservedValue<ProcUptimeInfo>.Missing( ProcObservationAvailability.Unsupported, "Container uptime with procps-ng semantics is available only on Linux." );
+		var system = await ObserveFileAsync( "uptime", ParseUptime, cancellationToken ).ConfigureAwait( false );
+		if ( !system.HasValue ) return system;
+		var init = await ObserveFileAsync( Path.Combine( "1", "stat" ), LinuxProcParsers.ParseProcessStat, cancellationToken ).ConfigureAwait( false );
+		if ( !init.HasValue ) return ProcObservedValue<ProcUptimeInfo>.Missing( init.Availability, init.Diagnostic );
+		try {
+			var ticksPerSecond = LinuxSystemNative.SysConf( LinuxSystemNative.ClockTicksPerSecond );
+			if ( 0 >= ticksPerSecond ) return ProcObservedValue<ProcUptimeInfo>.Missing( ProcObservationAvailability.Unavailable, "sysconf(_SC_CLK_TCK) did not return a positive clock frequency." );
+			var startSeconds = init.Value.StartTimeTicks / (double)ticksPerSecond;
+			var containerSeconds = Math.Max( 0d, system.Value.Uptime.TotalSeconds - startSeconds );
+			return ProcObservedValue<ProcUptimeInfo>.Available(
+				new ProcUptimeInfo( TimeSpan.FromSeconds( containerSeconds ), null ),
+				ProcObservationSource.Derived,
+				ObservationFidelity.Exact
+			);
+		} catch ( DllNotFoundException exception ) {
+			return ProcObservedValue<ProcUptimeInfo>.Missing( ProcObservationAvailability.Unsupported, exception.Message );
+		} catch ( EntryPointNotFoundException exception ) {
+			return ProcObservedValue<ProcUptimeInfo>.Missing( ProcObservationAvailability.Unsupported, exception.Message );
+		}
 	}
 	/// <inheritdoc />
 	public async Task<ProcSystemSnapshot> GetSnapshotAsync( CancellationToken cancellationToken = default ) {
@@ -282,6 +319,13 @@ public sealed class LinuxProcSystemMetricsProvider : IProcSystemMetricsProvider 
 				}
 			}
 		}
+	}
+	private static class LinuxSystemNative {
+		/// <summary>Gets the POSIX <c>_SC_CLK_TCK</c> selector used by Linux libc.</summary>
+		public const int ClockTicksPerSecond = 2;
+		/// <summary>Reads a POSIX system-configuration value.</summary>
+		[DllImport( "libc", EntryPoint = "sysconf", ExactSpelling = true, SetLastError = true )]
+		public static extern long SysConf( int name );
 	}
 	private static class LinuxSessionNative {
 		/// <summary>Rewinds the libc user-accounting iterator.</summary>
@@ -373,6 +417,14 @@ public sealed class LinuxProcSystemMetricsProvider : IProcSystemMetricsProvider 
 public sealed class PortableProcSystemMetricsProvider : IProcSystemMetricsProvider {
 	/// <inheritdoc />
 	public ProcSystemCapabilities Capabilities => ProcSystemCapabilities.Uptime;
+	/// <inheritdoc />
+	public async Task<ProcObservedValue<ProcMemoryInfo>> GetMemoryAsync( CancellationToken cancellationToken = default ) => ( await this.GetSnapshotAsync( cancellationToken ).ConfigureAwait( false ) ).Memory;
+	/// <inheritdoc />
+	public async Task<ProcObservedValue<ProcUptimeInfo>> GetUptimeAsync( bool containerMode, CancellationToken cancellationToken = default ) {
+		cancellationToken.ThrowIfCancellationRequested();
+		if ( containerMode ) return ProcObservedValue<ProcUptimeInfo>.Missing( ProcObservationAvailability.Unsupported, "Container uptime with procps-ng semantics is not exposed by the portable provider." );
+		return ( await this.GetSnapshotAsync( cancellationToken ).ConfigureAwait( false ) ).Uptime;
+	}
 	/// <inheritdoc />
 	public Task<ProcSystemSnapshot> GetSnapshotAsync( CancellationToken cancellationToken = default ) {
 		cancellationToken.ThrowIfCancellationRequested();

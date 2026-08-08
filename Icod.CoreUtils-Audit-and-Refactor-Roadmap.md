@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `55` |
-| Current engineering milestone | Batch 56 implemented; proceed to Batch 57 |
+| Completed command batches | `0` through `55`; ProcPs Batch `57` implementation is ready for validation |
+| Current engineering milestone | Batch 57 implemented; required build/test/CI validation pending |
 | Completed infrastructure milestone | Completion Gates E2 through E6 and F1 through F4 — filesystem, terminal-presentation, host-resource, terminal-control, and process-control foundations |
-| Active infrastructure dependency | ProcPs commands must consume `Icod.ProcPs.Shared` for suite-specific observations and the current Shared project for the cross-suite F2-F4 contracts frozen by Completion Gate P1 |
-| Next engineering step | Batch 57 — `Icod.ProcPs.Uptime` and `Icod.ProcPs.Free` |
+| Active infrastructure dependency | Batch 58 must consume the Batch 56 ProcPs provider/sampling foundation and preserve the Batch 57 provenance, unit, and controlled-platform semantics |
+| Next engineering step | Validate Batch 57 on the required runners; then Batch 58 — `Icod.ProcPs.Vmstat` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -90,14 +90,14 @@ The solution should use matching solution folders and suite directories so sourc
 
 ### Co-resident executable-name collisions
 
-Some suites contain commands with the same executable name. In particular, procps-ng supplies `uptime`, which overlaps the historical Coreutils-roadmap implementation. The `kill` executable is implemented only once, as the pinned util-linux profile, so no ProcPs `kill` collision is retained.
+Some suites can contain commands with the same executable name. The historical Batch 9 `uptime` implementation is not retained as a competing Coreutils profile: Batch 57 replaces it with the pinned procps-ng profile and transfers live ownership to `Icod.ProcPs.Uptime`. The `kill` executable is likewise implemented only once, as the pinned util-linux profile, so no ProcPs `kill` collision is retained.
 
 During the co-resident phase:
 
 - every executable retains the lowercase command assembly name required by its upstream suite;
-- projects with colliding output names use suite-specific output directories;
-- tests and packaging identify the suite explicitly rather than assuming one repository-wide path per executable name;
-- no implementation is silently discarded merely to avoid a build-output collision;
+- projects with unavoidable colliding output names use suite-specific output directories;
+- when the roadmap deliberately transfers ownership of an existing executable, the obsolete implementation and tests are retired rather than kept solely to preserve a historical namespace;
+- tests and packaging identify the owning suite explicitly;
 - the final repository and packaging split resolves which commands may be installed together and how any aliases or umbrella distributions are composed.
 
 ### Ultimate architecture
@@ -452,7 +452,7 @@ This historical completion remains authoritative. The command has since moved to
 - [x] `uptime`
 - [x] `date`
 
-`ps` and `uptime` were implemented and stabilized as part of this historical batch. Their completed history remains recorded here; Batches 57 and 62 later migrate useful code and tests into the suite-correct `Icod.ProcPs` projects without rewriting history.
+`ps` and `uptime` were implemented and stabilized as part of this historical batch. Their completed history remains recorded here. Batch 57 replaces the live historical `uptime` project with the procps-ng-owned `Icod.ProcPs.Uptime` implementation, while Batch 62 later migrates useful `ps` code and tests into the suite-correct ProcPs project.
 
 ### Batch 10 — Block-oriented copy and conversion (1 tool)
 
@@ -1490,7 +1490,7 @@ The Batch 55 implementation is complete. `Icod.CoreUtils.Timeout` now follows GN
   - [x] define memory, swap, CPU activity, load, uptime, virtual-memory, process-map, slab, hugepage, user-session, and kernel-parameter provider boundaries;
   - [x] consume the shared monotonic clock and periodic scheduler while defining ProcPs-specific sampling intervals, counter deltas, wraparound, and refresh semantics;
   - [x] consume shared terminal primitives while defining testable ProcPs screen models, interaction, sorting, filtering, and configuration behavior;
-  - [x] establish suite-specific output directories for remaining command-name collisions such as `uptime`;
+  - [x] establish explicit ownership policy for command-name collisions; Batch 57 retires the historical Coreutils `uptime` executable in favor of the ProcPs implementation rather than shipping two `uptime` binaries;
   - [x] establish fixture-driven `/proc` parsing and injectable ProcPs provider tests.
 
 Linux behavior remains authoritative for procps-ng. Other supported platforms must expose honest capability and provenance/fidelity information rather than fabricated Linux fields, misleading zero values, or silent success.
@@ -1520,8 +1520,8 @@ Batch 56 is complete. `Icod.ProcPs.Shared` is a `net10.0` class library at `Icod
 
 ### Batch 57 — Basic system summaries (2 tools)
 
-- [ ] `Icod.ProcPs.Uptime`
-- [ ] `Icod.ProcPs.Free`
+- [x] `Icod.ProcPs.Uptime`
+- [x] `Icod.ProcPs.Free`
 
 Create the suite-correct projects and dedicated test projects with lowercase assembly names `uptime` and `free`.
 
@@ -1529,7 +1529,9 @@ For `uptime`, migrate useful code and tests from historical Batch 9 and implemen
 
 For `free`, implement physical and swap memory reporting, units, human-readable and SI forms, totals, wide, low/high, committed-memory forms, repeated sampling, exact rounding, and controlled platform limitations.
 
-These commands validate the narrowest uptime, load, memory, unit, and provenance contracts before more complicated sampled or per-process consumers are introduced. Because a Coreutils-profile `uptime` may also exist, use the ProcPs suite output directory during incubation and keep the conformance profiles separately testable until final packaging policy is decided.
+These commands validate the narrowest uptime, load, memory, unit, and provenance contracts before more complicated sampled or per-process consumers are introduced. `Icod.ProcPs.Uptime` replaces the historical Batch 9 `Icod.CoreUtils.Uptime` project and test identity as the repository's sole `uptime` executable. It retains the historical root `bin/<Configuration>/` output location so existing repository build/package expectations continue to resolve one `uptime` binary while source ownership moves to ProcPs.
+
+Batch 57 implementation is complete and ready for repository validation. `Icod.ProcPs.Uptime` and `Icod.ProcPs.Free` provide the pinned procps-ng 4.0.6 command profiles with dedicated tests. `Icod.ProcPs.Uptime` replaces and retires the former `Icod.CoreUtils.Uptime` project/tests while preserving the single historical root output path for the `uptime` executable; `free` uses the ProcPs suite output path. `uptime` covers standard, pretty, raw, since, user/load presentation, `PROCPS_CONTAINER`, Linux container uptime derived from PID 1 start time, controlled unsupported-platform behavior, and explicit observation provenance. `free` covers physical/swap summaries, binary and SI unit families, procps-compatible human scaling, wide/low-high/total/committed/line forms, repeat/count sampling, fractional interval parsing, and controlled memory-provider limitations. The Batch 57 tests also pin Linux procfs memory/uptime provenance and the derived provenance of container uptime. The implementation environment used for this batch did not provide a .NET SDK, so the roadmap-wide Debug/Release build, full test, differential-CLI, and three-runner CI closure checks remain pending; Batch 57 should be marked closed only after those checks pass. Detailed compatibility notes are recorded in `Icod.CoreUtils-Batch-57-ProcPs-Basic-System-Summaries.md`.
 
 ### Batch 58 — Sampled system statistics (1 tool)
 
@@ -1753,7 +1755,7 @@ Completion of this gate establishes `Icod.CommandFramework` as the neutral cross
 
 - `tload`, `watch`, `hugetop`, and `slabtop` progressively validate the refresh and terminal runtime. `top` remains last because it combines process snapshots, sampled CPU and memory, fields, sorting, filtering, configuration, signals, interactive input, rendering, resizing, suspension, and terminal restoration.
 
-- The historical `ps` and `uptime` work remains recorded in Batch 9. Batches 57 and 62 migrate useful implementation and tests into the correct ProcPs namespace without rewriting history. ProcPs `uptime` coexists with the historical Coreutils-profile command through suite-specific output directories until final package ownership is decided. `kill` has one ownership-correct implementation under `Icod.UtilLinux`.
+- The historical `ps` and `uptime` work remains recorded in Batch 9. Batch 57 replaces the live Coreutils-profile `uptime` project with `Icod.ProcPs.Uptime`; Batch 62 later migrates `ps`. Historical roadmap provenance is retained without retaining duplicate executables. `kill` likewise has one ownership-correct implementation under `Icod.UtilLinux`.
 
 - Procps-ng `kill`, `skill`, and `snice` are explicitly out of scope. Completion Gate P1 confirms that procps-ng 4.0.6 installs `pidwait` but no `pwait` alias, so only `Icod.ProcPs.PidWait` is planned.
 
