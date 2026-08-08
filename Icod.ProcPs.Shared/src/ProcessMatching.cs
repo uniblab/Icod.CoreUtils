@@ -923,8 +923,12 @@ public static class ProcMatchCommand {
 	private static bool IsFileStreamLocked( FileStream stream, bool leavePosition ) {
 		try {
 			var originalPosition = leavePosition && stream.CanSeek ? stream.Position : 0;
-			stream.Lock( 0, 1 );
-			stream.Unlock( 0, 1 );
+			if ( OperatingSystem.IsWindows() ) {
+#pragma warning disable CA1416
+				stream.Lock( 0, 1 );
+				stream.Unlock( 0, 1 );
+#pragma warning restore CA1416
+			}
 			if ( leavePosition && stream.CanSeek ) stream.Position = originalPosition;
 			return false;
 		} catch ( IOException ) {
@@ -1019,7 +1023,7 @@ Options:
 		public bool ShowUsageOnError = true;
 		public string? Pattern;
 		public ICompiledRegularExpression? PatternExpression;
-		public string Delimiter = Environment.NewLine;
+		public string Delimiter = System.Environment.NewLine;
 		public bool ListName;
 		public bool ListFull;
 		public bool Quiet;
