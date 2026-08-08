@@ -58,3 +58,21 @@ continue to use the cross-suite process-control contracts.
 
 `pidwait` is the only installed waiting executable in the pinned procps-ng
 4.0.6 profile. No `pwait` launcher or project is created.
+
+## Batch 60 process identity and path lookup
+
+`SystemProcProcessPathProvider` is the shared reuse-aware source for executable,
+process-root, and current-working-directory paths used by `pidof` and `pwdx`.
+Linux observes `/proc/PID/exe`, `/proc/PID/root`, and `/proc/PID/cwd`; macOS uses
+Darwin `libproc` (`proc_pidpath` and `PROC_PIDVNODEPATHINFO`); Windows supplies
+executable identity from the native/.NET process surface but deliberately marks
+another process's CWD and POSIX-style process root unsupported because Windows
+has no stable documented equivalent.
+
+`ProcProcessLookupCommand` contains the pinned procps-ng 4.0.6 lookup profiles so
+matching and process-race policy stay in the ProcPs family layer. `pidof` covers
+executable/argv identity, script matching, root filtering, omit lists including
+`%PPID`, custom separators, single-shot/quiet behavior, and Linux lightweight
+tasks. `pwdx` uses the same reuse-protected path observations for one or more
+processes and reports vanished, denied, and unsupported observations without
+silently substituting the caller's directory or another unrelated pathname.
