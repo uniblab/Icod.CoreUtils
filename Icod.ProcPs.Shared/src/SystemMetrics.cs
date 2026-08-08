@@ -43,6 +43,53 @@ public sealed class ProcCpuTimes {
 	}
 }
 
+/// <summary>Contains cross-platform aggregate CPU counters in provider-native counter units.</summary>
+public sealed class ProcCpuActivity {
+	/// <summary>Gets user-mode counter units.</summary>
+	public ulong User { get; }
+	/// <summary>Gets system or kernel-mode counter units.</summary>
+	public ulong System { get; }
+	/// <summary>Gets idle counter units.</summary>
+	public ulong Idle { get; }
+	/// <summary>Gets nice user-mode counter units when the platform exposes them separately.</summary>
+	public ulong? Nice { get; }
+	/// <summary>Gets I/O-wait counter units when the platform exposes them separately.</summary>
+	public ulong? Wait { get; }
+	/// <summary>Gets other non-guest counter units that do not map cleanly to the common categories.</summary>
+	public ulong? Other { get; }
+	/// <summary>Gets the native counter width used for wraparound calculations.</summary>
+	public int CounterBitWidth { get; }
+	/// <summary>Gets the non-double-counted total represented by this observation.</summary>
+	public ulong Total => unchecked( this.User + this.System + this.Idle + ( this.Nice ?? 0UL ) + ( this.Wait ?? 0UL ) + ( this.Other ?? 0UL ) );
+	/// <summary>Initializes cross-platform CPU activity counters.</summary>
+	public ProcCpuActivity( ulong user, ulong system, ulong idle, ulong? nice = null, ulong? wait = null, ulong? other = null, int counterBitWidth = 64 ) {
+		if ( 1 > counterBitWidth || 64 < counterBitWidth ) throw new ArgumentOutOfRangeException( nameof( counterBitWidth ) );
+		this.User = user;
+		this.System = system;
+		this.Idle = idle;
+		this.Nice = nice;
+		this.Wait = wait;
+		this.Other = other;
+		this.CounterBitWidth = counterBitWidth;
+	}
+}
+
+/// <summary>Contains cross-platform one-, five-, and fifteen-minute load averages.</summary>
+public sealed class ProcLoadAverages {
+	/// <summary>Gets the one-minute load average.</summary>
+	public double OneMinute { get; }
+	/// <summary>Gets the five-minute load average.</summary>
+	public double FiveMinutes { get; }
+	/// <summary>Gets the fifteen-minute load average.</summary>
+	public double FifteenMinutes { get; }
+	/// <summary>Initializes cross-platform load averages.</summary>
+	public ProcLoadAverages( double oneMinute, double fiveMinutes, double fifteenMinutes ) {
+		this.OneMinute = oneMinute;
+		this.FiveMinutes = fiveMinutes;
+		this.FifteenMinutes = fifteenMinutes;
+	}
+}
+
 /// <summary>Contains Linux-style load-average information.</summary>
 public sealed class ProcLoadAverage {
 	/// <summary>Gets the one-minute load average.</summary>
@@ -82,26 +129,90 @@ public sealed class ProcUptimeInfo {
 	}
 }
 
-/// <summary>Contains physical-memory and swap values expressed in bytes.</summary>
+/// <summary>Contains cross-platform physical-memory, swap, and commit values expressed in bytes.</summary>
 public sealed class ProcMemoryInfo {
-	/// <summary>Gets all recognized and unrecognized meminfo values keyed by Linux field name.</summary>
+	/// <summary>Gets raw source-specific fields. Linux providers preserve all <c>/proc/meminfo</c> keys here.</summary>
 	public IReadOnlyDictionary<string, ulong> Fields { get; }
 	/// <summary>Gets total physical memory when reported.</summary>
-	public ulong? TotalBytes => Get( "MemTotal" );
-	/// <summary>Gets free physical memory when reported.</summary>
-	public ulong? FreeBytes => Get( "MemFree" );
-	/// <summary>Gets available physical memory when reported.</summary>
-	public ulong? AvailableBytes => Get( "MemAvailable" );
-	/// <summary>Gets total swap when reported.</summary>
-	public ulong? SwapTotalBytes => Get( "SwapTotal" );
-	/// <summary>Gets free swap when reported.</summary>
-	public ulong? SwapFreeBytes => Get( "SwapFree" );
-	/// <summary>Initializes memory information.</summary>
+	public ulong? TotalBytes { get; }
+	/// <summary>Gets immediately free physical memory when the source distinguishes it from reusable/available memory.</summary>
+	public ulong? FreeBytes { get; }
+	/// <summary>Gets physical memory reusable without paging when reported.</summary>
+	public ulong? AvailableBytes { get; }
+	/// <summary>Gets buffer memory when the source exposes a defensible analogue.</summary>
+	public ulong? BuffersBytes { get; }
+	/// <summary>Gets reusable cache memory when the source exposes a defensible analogue.</summary>
+	public ulong? CacheBytes { get; }
+	/// <summary>Gets shared memory when reported.</summary>
+	public ulong? SharedBytes { get; }
+	/// <summary>Gets total swap or paging-file capacity when reported.</summary>
+	public ulong? SwapTotalBytes { get; }
+	/// <summary>Gets free swap or paging-file capacity when reported.</summary>
+	public ulong? SwapFreeBytes { get; }
+	/// <summary>Gets the system commit limit when reported.</summary>
+	public ulong? CommitLimitBytes { get; }
+	/// <summary>Gets currently committed memory when reported.</summary>
+	public ulong? CommittedBytes { get; }
+	/// <summary>Gets low-memory-zone total bytes when the source exposes Linux low/high zones.</summary>
+	public ulong? LowTotalBytes { get; }
+	/// <summary>Gets low-memory-zone free bytes when the source exposes Linux low/high zones.</summary>
+	public ulong? LowFreeBytes { get; }
+	/// <summary>Gets high-memory-zone total bytes when the source exposes Linux low/high zones.</summary>
+	public ulong? HighTotalBytes { get; }
+	/// <summary>Gets high-memory-zone free bytes when the source exposes Linux low/high zones.</summary>
+	public ulong? HighFreeBytes { get; }
+
+	/// <summary>Initializes memory information from Linux <c>/proc/meminfo</c> fields.</summary>
 	public ProcMemoryInfo( IReadOnlyDictionary<string, ulong> fields ) {
 		ArgumentNullException.ThrowIfNull( fields );
 		this.Fields = fields;
+		this.TotalBytes = Get( fields, "MemTotal" );
+		this.FreeBytes = Get( fields, "MemFree" );
+		this.AvailableBytes = Get( fields, "MemAvailable" );
+		this.BuffersBytes = Get( fields, "Buffers" );
+		this.CacheBytes = SaturatingAdd( Get( fields, "Cached" ), Get( fields, "SReclaimable" ) );
+		this.SharedBytes = Get( fields, "Shmem" );
+		this.SwapTotalBytes = Get( fields, "SwapTotal" );
+		this.SwapFreeBytes = Get( fields, "SwapFree" );
+		this.CommitLimitBytes = Get( fields, "CommitLimit" );
+		this.CommittedBytes = Get( fields, "Committed_AS" );
+		this.LowTotalBytes = Get( fields, "LowTotal" );
+		this.LowFreeBytes = Get( fields, "LowFree" );
+		this.HighTotalBytes = Get( fields, "HighTotal" );
+		this.HighFreeBytes = Get( fields, "HighFree" );
 	}
-	private ulong? Get( string key ) => this.Fields.TryGetValue( key, out var value ) ? value : null;
+
+	/// <summary>Initializes memory information from neutral platform observations.</summary>
+	public ProcMemoryInfo(
+		ulong? totalBytes, ulong? freeBytes, ulong? availableBytes, ulong? buffersBytes = null, ulong? cacheBytes = null,
+		ulong? sharedBytes = null, ulong? swapTotalBytes = null, ulong? swapFreeBytes = null, ulong? commitLimitBytes = null,
+		ulong? committedBytes = null, ulong? lowTotalBytes = null, ulong? lowFreeBytes = null, ulong? highTotalBytes = null,
+		ulong? highFreeBytes = null, IReadOnlyDictionary<string, ulong>? fields = null
+	) {
+		this.Fields = fields ?? new Dictionary<string, ulong>( StringComparer.Ordinal );
+		this.TotalBytes = totalBytes;
+		this.FreeBytes = freeBytes;
+		this.AvailableBytes = availableBytes;
+		this.BuffersBytes = buffersBytes;
+		this.CacheBytes = cacheBytes;
+		this.SharedBytes = sharedBytes;
+		this.SwapTotalBytes = swapTotalBytes;
+		this.SwapFreeBytes = swapFreeBytes;
+		this.CommitLimitBytes = commitLimitBytes;
+		this.CommittedBytes = committedBytes;
+		this.LowTotalBytes = lowTotalBytes;
+		this.LowFreeBytes = lowFreeBytes;
+		this.HighTotalBytes = highTotalBytes;
+		this.HighFreeBytes = highFreeBytes;
+	}
+
+	private static ulong? Get( IReadOnlyDictionary<string, ulong> fields, string key ) => fields.TryGetValue( key, out var value ) ? value : null;
+	private static ulong? SaturatingAdd( ulong? left, ulong? right ) {
+		if ( !left.HasValue && !right.HasValue ) return null;
+		var leftValue = left ?? 0UL;
+		var rightValue = right ?? 0UL;
+		return ulong.MaxValue - leftValue < rightValue ? ulong.MaxValue : leftValue + rightValue;
+	}
 }
 
 /// <summary>Contains one Linux slab allocator row.</summary>
@@ -154,7 +265,7 @@ public sealed class ProcHugePageInfo {
 
 /// <summary>Contains user-session metrics when a platform provider can expose them.</summary>
 public sealed class ProcUserSessionInfo {
-	/// <summary>Gets the number of active user sessions.</summary>
+	/// <summary>Gets the number of logged-in user sessions represented by the provider.</summary>
 	public int Count { get; }
 	/// <summary>Initializes user-session information.</summary>
 	public ProcUserSessionInfo( int count ) {
@@ -165,12 +276,16 @@ public sealed class ProcUserSessionInfo {
 
 /// <summary>Contains one coherent ProcPs system-metric snapshot.</summary>
 public sealed class ProcSystemSnapshot {
-	/// <summary>Gets aggregate CPU counters.</summary>
+	/// <summary>Gets Linux-specific aggregate CPU counters, including procfs-only categories.</summary>
 	public ProcObservedValue<ProcCpuTimes> Cpu { get; init; } = ProcObservedValue<ProcCpuTimes>.Missing( ProcObservationAvailability.Unavailable );
+	/// <summary>Gets cross-platform aggregate CPU activity counters.</summary>
+	public ProcObservedValue<ProcCpuActivity> CpuActivity { get; init; } = ProcObservedValue<ProcCpuActivity>.Missing( ProcObservationAvailability.Unavailable );
 	/// <summary>Gets physical-memory and swap metrics.</summary>
 	public ProcObservedValue<ProcMemoryInfo> Memory { get; init; } = ProcObservedValue<ProcMemoryInfo>.Missing( ProcObservationAvailability.Unavailable );
-	/// <summary>Gets load averages.</summary>
+	/// <summary>Gets Linux-specific load-average details including runnable/entity counters and latest PID.</summary>
 	public ProcObservedValue<ProcLoadAverage> LoadAverage { get; init; } = ProcObservedValue<ProcLoadAverage>.Missing( ProcObservationAvailability.Unavailable );
+	/// <summary>Gets cross-platform one-, five-, and fifteen-minute load averages.</summary>
+	public ProcObservedValue<ProcLoadAverages> LoadAverages { get; init; } = ProcObservedValue<ProcLoadAverages>.Missing( ProcObservationAvailability.Unavailable );
 	/// <summary>Gets uptime.</summary>
 	public ProcObservedValue<ProcUptimeInfo> Uptime { get; init; } = ProcObservedValue<ProcUptimeInfo>.Missing( ProcObservationAvailability.Unavailable );
 	/// <summary>Gets virtual-memory counters by Linux vmstat field name.</summary>
@@ -198,7 +313,7 @@ public interface IProcSystemMetricsProvider {
 	}
 }
 
-/// <summary>Selects Linux procfs metrics or a capability-driven portable provider.</summary>
+/// <summary>Selects the strongest native system-metric provider available for the current platform.</summary>
 public sealed class SystemProcSystemMetricsProvider : IProcSystemMetricsProvider {
 	private readonly IProcSystemMetricsProvider _inner;
 	/// <summary>Gets the shared system metrics provider.</summary>
@@ -207,7 +322,13 @@ public sealed class SystemProcSystemMetricsProvider : IProcSystemMetricsProvider
 	public ProcSystemCapabilities Capabilities => this._inner.Capabilities;
 	/// <summary>Initializes the system metric provider.</summary>
 	public SystemProcSystemMetricsProvider() {
-		this._inner = OperatingSystem.IsLinux() ? new LinuxProcSystemMetricsProvider() : new PortableProcSystemMetricsProvider();
+		this._inner = OperatingSystem.IsLinux()
+			? new LinuxProcSystemMetricsProvider()
+			: OperatingSystem.IsWindows()
+				? new WindowsProcSystemMetricsProvider()
+				: OperatingSystem.IsMacOS()
+					? new MacOsProcSystemMetricsProvider()
+					: new PortableProcSystemMetricsProvider();
 	}
 	/// <inheritdoc />
 	public Task<ProcSystemSnapshot> GetSnapshotAsync( CancellationToken cancellationToken = default ) => this._inner.GetSnapshotAsync( cancellationToken );
@@ -273,10 +394,29 @@ public sealed class LinuxProcSystemMetricsProvider : IProcSystemMetricsProvider 
 		var slab = await ObserveFileAsync<IReadOnlyList<ProcSlabEntry>>( "slabinfo", ParseSlabInfo, cancellationToken ).ConfigureAwait( false );
 		var hugePages = memory.HasValue ? ParseHugePages( memory.Value ) : ProcObservedValue<ProcHugePageInfo>.Missing( memory.Availability, memory.Diagnostic );
 		var userSessions = ObserveUserSessions();
+		var neutralCpu = stat.HasValue
+			? ProcObservedValue<ProcCpuActivity>.Available(
+				new ProcCpuActivity(
+					stat.Value.User,
+					SaturatingAdd( stat.Value.System, SaturatingAdd( stat.Value.Irq, stat.Value.SoftIrq ) ),
+					stat.Value.Idle,
+					stat.Value.Nice,
+					stat.Value.IoWait,
+					stat.Value.Steal
+				),
+				ProcObservationSource.LinuxProcfs,
+				ObservationFidelity.Exact
+			)
+			: ProcObservedValue<ProcCpuActivity>.Missing( stat.Availability, stat.Diagnostic );
+		var neutralLoad = load.HasValue
+			? ProcObservedValue<ProcLoadAverages>.Available( new ProcLoadAverages( load.Value.OneMinute, load.Value.FiveMinutes, load.Value.FifteenMinutes ), ProcObservationSource.LinuxProcfs, ObservationFidelity.Exact )
+			: ProcObservedValue<ProcLoadAverages>.Missing( load.Availability, load.Diagnostic );
 		return new ProcSystemSnapshot {
 			Cpu = stat,
+			CpuActivity = neutralCpu,
 			Memory = memory,
 			LoadAverage = load,
+			LoadAverages = neutralLoad,
 			Uptime = uptime,
 			VirtualMemory = vm,
 			Slab = slab,
@@ -304,7 +444,7 @@ public sealed class LinuxProcSystemMetricsProvider : IProcSystemMetricsProvider 
 				}
 				return ProcObservedValue<ProcUserSessionInfo>.Available(
 					new ProcUserSessionInfo( count ),
-					ProcObservationSource.PlatformApi,
+					ProcObservationSource.PosixLibc,
 					ObservationFidelity.Equivalent
 				);
 			} catch ( DllNotFoundException exception ) {
@@ -411,9 +551,10 @@ public sealed class LinuxProcSystemMetricsProvider : IProcSystemMetricsProvider 
 			ObservationFidelity.Exact
 		);
 	}
+	private static ulong SaturatingAdd( ulong left, ulong right ) => ulong.MaxValue - left < right ? ulong.MaxValue : left + right;
 }
 
-/// <summary>Provides only defensible cross-platform system metrics when Linux procfs is unavailable.</summary>
+/// <summary>Provides only defensible cross-platform system metrics when native platform providers are unavailable.</summary>
 public sealed class PortableProcSystemMetricsProvider : IProcSystemMetricsProvider {
 	/// <inheritdoc />
 	public ProcSystemCapabilities Capabilities => ProcSystemCapabilities.Uptime;
@@ -431,8 +572,10 @@ public sealed class PortableProcSystemMetricsProvider : IProcSystemMetricsProvid
 		var unsupported = "Linux procps-ng system metric semantics are not exposed by the portable provider.";
 		return Task.FromResult( new ProcSystemSnapshot {
 			Cpu = ProcObservedValue<ProcCpuTimes>.Missing( ProcObservationAvailability.Unsupported, unsupported ),
+			CpuActivity = ProcObservedValue<ProcCpuActivity>.Missing( ProcObservationAvailability.Unsupported, unsupported ),
 			Memory = ProcObservedValue<ProcMemoryInfo>.Missing( ProcObservationAvailability.Unsupported, unsupported ),
 			LoadAverage = ProcObservedValue<ProcLoadAverage>.Missing( ProcObservationAvailability.Unsupported, unsupported ),
+			LoadAverages = ProcObservedValue<ProcLoadAverages>.Missing( ProcObservationAvailability.Unsupported, unsupported ),
 			Uptime = ProcObservedValue<ProcUptimeInfo>.Available( new ProcUptimeInfo( TimeSpan.FromMilliseconds( Environment.TickCount64 ), null ), ProcObservationSource.PlatformApi, ObservationFidelity.Equivalent ),
 			VirtualMemory = ProcObservedValue<IReadOnlyDictionary<string, ulong>>.Missing( ProcObservationAvailability.Unsupported, unsupported ),
 			Slab = ProcObservedValue<IReadOnlyList<ProcSlabEntry>>.Missing( ProcObservationAvailability.Unsupported, unsupported ),

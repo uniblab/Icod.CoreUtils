@@ -15,6 +15,19 @@ public sealed class CommandTests {
 		Assert.Equal( string.Empty, result.Error );
 	}
 	[Fact]
+	public async Task StandardOutputAcceptsNeutralLoadAverages() {
+		var snapshot = new ProcSystemSnapshot {
+			Uptime = Available( new ProcUptimeInfo( TimeSpan.FromMinutes( 15 ), null ) ),
+			UserSessions = Available( new ProcUserSessionInfo( 1 ) ),
+			LoadAverages = Available( new ProcLoadAverages( 0.25, 0.5, 0.75 ) )
+		};
+		var result = await InvokeAsync( [], new FakeMetricsProvider( snapshot ), new FixedTimeProvider( new DateTimeOffset( 2026, 8, 7, 12, 34, 56, TimeSpan.Zero ) ) );
+		Assert.Equal( 0, result.Status );
+		Assert.Equal( $" 12:34:56 up 15 min,  1 user,  load average: 0.25, 0.50, 0.75{Environment.NewLine}", result.Output );
+		Assert.Equal( string.Empty, result.Error );
+	}
+
+	[Fact]
 	public async Task PrettyUsesProcpsDecompositionRules() {
 		var provider = CreateProvider( TimeSpan.FromSeconds( 93784 ), 0, new ProcLoadAverage( 0, 0, 0, 0, 0, 0 ) );
 		var result = await InvokeAsync( [ "--pretty" ], provider, TimeProvider.System );

@@ -18,7 +18,7 @@ public interface IProcProcessProvider {
 	Task<ProcObservedValue<IReadOnlyList<ProcMemoryMapEntry>>> GetMemoryMapsAsync( int processId, CancellationToken cancellationToken = default );
 }
 
-/// <summary>Selects the authoritative Linux procfs provider or a capability-driven portable provider.</summary>
+/// <summary>Selects the strongest native process provider available for the current platform.</summary>
 public sealed class SystemProcProcessProvider : IProcProcessProvider {
 	private readonly IProcProcessProvider _inner;
 	/// <summary>Gets the shared system ProcPs process provider.</summary>
@@ -32,7 +32,11 @@ public sealed class SystemProcProcessProvider : IProcProcessProvider {
 		ArgumentNullException.ThrowIfNull( inspector );
 		this._inner = OperatingSystem.IsLinux()
 			? new LinuxProcProcessProvider( inspector )
-			: new DotNetProcProcessProvider( inspector );
+			: OperatingSystem.IsWindows()
+				? new WindowsProcProcessProvider( inspector )
+				: OperatingSystem.IsMacOS()
+					? new MacOsProcProcessProvider( inspector )
+					: new DotNetProcProcessProvider( inspector );
 	}
 	/// <inheritdoc />
 	public Task<ProcProcessCollection> GetProcessesAsync( CancellationToken cancellationToken = default ) => this._inner.GetProcessesAsync( cancellationToken );
@@ -264,13 +268,12 @@ public sealed class LinuxProcProcessProvider : IProcProcessProvider {
 	};
 }
 
-/// <summary>Provides capability-driven process observations on Windows, macOS, and BSD using the .NET process API.</summary>
+/// <summary>Provides conservative fallback process observations using the cross-platform .NET process API.</summary>
 public sealed class DotNetProcProcessProvider : IProcProcessProvider {
 	private readonly IProcessInspector _inspector;
 	/// <inheritdoc />
 	public ProcProcessCapabilities Capabilities => ProcProcessCapabilities.Enumeration
 		| ProcProcessCapabilities.Identity
-		| ProcProcessCapabilities.Sessions
 		| ProcProcessCapabilities.CpuTimes
 		| ProcProcessCapabilities.Memory
 		| ProcProcessCapabilities.Priority
@@ -305,7 +308,6 @@ public sealed class DotNetProcProcessProvider : IProcProcessProvider {
 			using var process = Process.GetProcessById( processId );
 			var snapshot = new ProcProcessSnapshot( before.Value! ) {
 				CommandName = TryObserve( () => process.ProcessName, ObservationFidelity.Equivalent ),
-				SessionId = TryObserve( () => process.SessionId, ObservationFidelity.Equivalent ),
 				UserCpuTicks = TryObserve( () => checked( (ulong)process.UserProcessorTime.Ticks ), ObservationFidelity.Equivalent ),
 				SystemCpuTicks = TryObserve( () => checked( (ulong)process.PrivilegedProcessorTime.Ticks ), ObservationFidelity.Equivalent ),
 				VirtualMemoryBytes = TryObserve( () => checked( (ulong)process.VirtualMemorySize64 ), ObservationFidelity.Equivalent ),
@@ -346,6 +348,7 @@ public sealed class DotNetProcProcessProvider : IProcProcessProvider {
 		ParentProcessId = source.ParentProcessId,
 		ProcessGroupId = source.ProcessGroupId,
 		SessionId = source.SessionId,
+		PlatformSessionId = source.PlatformSessionId,
 		RealUserId = source.RealUserId,
 		EffectiveUserId = source.EffectiveUserId,
 		RealGroupId = source.RealGroupId,

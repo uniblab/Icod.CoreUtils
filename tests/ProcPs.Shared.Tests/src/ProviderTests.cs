@@ -43,4 +43,68 @@ public sealed class ProviderTests {
 		Assert.Equal( Environment.ProcessId, observed.Value.ProcessId );
 		Assert.True( observed.Value.CommandName.HasValue );
 	}
+	[Fact]
+	public void SystemProcessProviderSelectsThePrimaryPlatformBackend() {
+		var capabilities = SystemProcProcessProvider.Instance.Capabilities;
+		if ( OperatingSystem.IsLinux() ) {
+			Assert.True( capabilities.HasFlag( ProcProcessCapabilities.Namespaces ) );
+			Assert.True( capabilities.HasFlag( ProcProcessCapabilities.MemoryMaps ) );
+		} else if ( OperatingSystem.IsWindows() ) {
+			Assert.True( capabilities.HasFlag( ProcProcessCapabilities.Parentage ) );
+			Assert.True( capabilities.HasFlag( ProcProcessCapabilities.PlatformSessions ) );
+			Assert.False( capabilities.HasFlag( ProcProcessCapabilities.Sessions ) );
+		} else if ( OperatingSystem.IsMacOS() ) {
+			Assert.True( capabilities.HasFlag( ProcProcessCapabilities.Parentage ) );
+			Assert.True( capabilities.HasFlag( ProcProcessCapabilities.ProcessGroups ) );
+			Assert.True( capabilities.HasFlag( ProcProcessCapabilities.Sessions ) );
+		}
+	}
+
+	[Fact]
+	public async Task PortableProviderDoesNotMislabelPlatformSessionAsPosixSession() {
+		var provider = new DotNetProcProcessProvider( SystemProcessInspector.Instance );
+		Assert.False( provider.Capabilities.HasFlag( ProcProcessCapabilities.Sessions ) );
+		Assert.False( provider.Capabilities.HasFlag( ProcProcessCapabilities.PlatformSessions ) );
+		var observed = await provider.GetProcessAsync( Environment.ProcessId );
+		Assert.True( observed.HasValue, observed.Diagnostic );
+		Assert.False( observed.Value.SessionId.HasValue );
+		Assert.False( observed.Value.PlatformSessionId.HasValue );
+	}
+
+	[Fact]
+	public async Task WindowsProviderUsesNativeParentAndPlatformSessionWhenRunningOnWindows() {
+		if ( !OperatingSystem.IsWindows() ) return;
+		var provider = new WindowsProcProcessProvider( SystemProcessInspector.Instance );
+		Assert.True( provider.Capabilities.HasFlag( ProcProcessCapabilities.Parentage ) );
+		Assert.True( provider.Capabilities.HasFlag( ProcProcessCapabilities.PlatformSessions ) );
+		Assert.False( provider.Capabilities.HasFlag( ProcProcessCapabilities.Sessions ) );
+		var observed = await provider.GetProcessAsync( Environment.ProcessId );
+		Assert.True( observed.HasValue, observed.Diagnostic );
+		Assert.True( observed.Value.ParentProcessId.HasValue, observed.Value.ParentProcessId.Diagnostic );
+		Assert.Equal( ProcObservationSource.WindowsNativeApi, observed.Value.ParentProcessId.Source );
+		Assert.True( observed.Value.PlatformSessionId.HasValue, observed.Value.PlatformSessionId.Diagnostic );
+		Assert.Equal( ProcObservationSource.WindowsNativeApi, observed.Value.PlatformSessionId.Source );
+		Assert.False( observed.Value.SessionId.HasValue );
+	}
+
+	[Fact]
+	public async Task MacOsProviderUsesDarwinAndPosixMetadataWhenRunningOnMacOs() {
+		if ( !OperatingSystem.IsMacOS() ) return;
+		var provider = new MacOsProcProcessProvider( SystemProcessInspector.Instance );
+		Assert.True( provider.Capabilities.HasFlag( ProcProcessCapabilities.Parentage ) );
+		Assert.True( provider.Capabilities.HasFlag( ProcProcessCapabilities.ProcessGroups ) );
+		Assert.True( provider.Capabilities.HasFlag( ProcProcessCapabilities.Sessions ) );
+		Assert.True( provider.Capabilities.HasFlag( ProcProcessCapabilities.Users ) );
+		var observed = await provider.GetProcessAsync( Environment.ProcessId );
+		Assert.True( observed.HasValue, observed.Diagnostic );
+		Assert.True( observed.Value.ParentProcessId.HasValue, observed.Value.ParentProcessId.Diagnostic );
+		Assert.True( observed.Value.ProcessGroupId.HasValue, observed.Value.ProcessGroupId.Diagnostic );
+		Assert.True( observed.Value.SessionId.HasValue, observed.Value.SessionId.Diagnostic );
+		Assert.True( observed.Value.RealUserId.HasValue, observed.Value.RealUserId.Diagnostic );
+		Assert.True( observed.Value.EffectiveUserId.HasValue, observed.Value.EffectiveUserId.Diagnostic );
+		Assert.True( observed.Value.NiceValue.HasValue, observed.Value.NiceValue.Diagnostic );
+		Assert.Equal( ProcObservationSource.DarwinLibProc, observed.Value.ParentProcessId.Source );
+		Assert.Equal( ProcObservationSource.PosixLibc, observed.Value.SessionId.Source );
+	}
+
 }

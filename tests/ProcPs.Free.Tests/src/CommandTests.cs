@@ -19,6 +19,29 @@ public sealed class CommandTests {
 		Assert.Equal( expected, result.Output );
 	}
 	[Fact]
+	public void NeutralMemoryFieldsRenderWithoutLinuxMeminfoKeys() {
+		static ulong KiB( ulong value ) => value * 1024UL;
+		var memory = new ProcMemoryInfo(
+			totalBytes: KiB( 1000 ),
+			freeBytes: KiB( 300 ),
+			availableBytes: KiB( 400 ),
+			buffersBytes: KiB( 50 ),
+			cacheBytes: KiB( 125 ),
+			sharedBytes: KiB( 20 ),
+			swapTotalBytes: KiB( 500 ),
+			swapFreeBytes: KiB( 200 )
+		);
+		var output = Command.Render( memory );
+		var expected = string.Join( Environment.NewLine, [
+			"               total        used        free      shared  buff/cache   available",
+			"Mem:            1000         600         300          20         175         400",
+			"Swap:            500         300         200",
+			string.Empty
+		] );
+		Assert.Equal( expected, output );
+	}
+
+	[Fact]
 	public async Task WideLoHiTotalAndCommittedColumnsAreRendered() {
 		var result = await InvokeAsync( [ "--wide", "--lohi", "--total", "--committed" ], new FakeMetricsProvider( SampleMemory() ) );
 		Assert.Equal( 0, result.Status );
