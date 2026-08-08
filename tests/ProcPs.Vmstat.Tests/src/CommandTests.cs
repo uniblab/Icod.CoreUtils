@@ -240,15 +240,15 @@ public sealed class CommandTests {
 		var proc = Path.Combine( root, "proc" );
 		var sys = Path.Combine( root, "sys" );
 		Directory.CreateDirectory( proc );
-		Directory.CreateDirectory( Path.Combine( sys, "dev", "block", "8:1" ) );
+		var partitionMarker = Path.Combine( sys, "dev", "block", "8:1", "partition" );
+		bool FileExists( string path ) => string.Equals( path, partitionMarker, StringComparison.Ordinal );
 		try {
 			await File.WriteAllTextAsync( Path.Combine( proc, "stat" ), "cpu 1 2 3 4 5 6 7 8 9 10\nintr 100 1 2\nctxt 200\nbtime 300\nprocesses 400\nprocs_running 5\nprocs_blocked 6\n" );
 			await File.WriteAllTextAsync( Path.Combine( proc, "diskstats" ), "8 0 sda 1 2 3 4 5 6 7 8 9 10 11\n8 1 sda1 12 13 14 15 16 17 18 19 20 21 22\n" );
-			await File.WriteAllTextAsync( Path.Combine( sys, "dev", "block", "8:1", "partition" ), "1\n" );
 			var counters = LinuxProcVmstatProvider.ParseSystemCounters( await File.ReadAllTextAsync( Path.Combine( proc, "stat" ) ) );
 			Assert.Equal( 5UL, counters.RunningProcesses );
 			Assert.Equal( 400UL, counters.Forks );
-			var rows = LinuxProcVmstatProvider.ParseDiskStats( await File.ReadAllTextAsync( Path.Combine( proc, "diskstats" ) ), sys );
+			var rows = LinuxProcVmstatProvider.ParseDiskStats( await File.ReadAllTextAsync( Path.Combine( proc, "diskstats" ) ), sys, FileExists );
 			Assert.Equal( 2, rows.Count );
 			Assert.False( rows[ 0 ].IsPartition );
 			Assert.True( rows[ 1 ].IsPartition );

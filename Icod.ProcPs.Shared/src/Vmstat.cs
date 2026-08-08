@@ -260,9 +260,13 @@ public sealed class LinuxProcVmstatProvider : IProcVmstatProvider {
 		return new ProcVmstatSystemCounters( Require( "procs_running" ), Require( "procs_blocked" ), Require( "intr" ), Require( "ctxt" ), Require( "btime" ), Require( "processes" ) );
 	}
 	/// <summary>Parses Linux <c>/proc/diskstats</c> rows and classifies partitions through sysfs.</summary>
-	public static IReadOnlyList<ProcDiskStatEntry> ParseDiskStats( string text, string sysRoot = "/sys" ) {
+	/// <param name="text">The contents of Linux <c>/proc/diskstats</c>.</param>
+	/// <param name="sysRoot">The sysfs root used to locate device metadata.</param>
+	/// <param name="fileExists">An optional file-existence probe. Production callers normally omit this parameter; tests may supply one to emulate Linux sysfs paths on hosts whose native file system cannot represent them.</param>
+	public static IReadOnlyList<ProcDiskStatEntry> ParseDiskStats( string text, string sysRoot = "/sys", Func<string, bool>? fileExists = null ) {
 		ArgumentNullException.ThrowIfNull( text );
 		ArgumentException.ThrowIfNullOrWhiteSpace( sysRoot );
+		var partitionFileExists = fileExists ?? File.Exists;
 		var rows = new List<ProcDiskStatEntry>();
 		foreach ( var raw in text.Split( '\n' ) ) {
 			var line = raw.Trim();
@@ -271,7 +275,7 @@ public sealed class LinuxProcVmstatProvider : IProcVmstatProvider {
 			if ( 14 > fields.Length ) continue;
 			if ( !int.TryParse( fields[ 0 ], NumberStyles.None, CultureInfo.InvariantCulture, out var major ) || !int.TryParse( fields[ 1 ], NumberStyles.None, CultureInfo.InvariantCulture, out var minor ) ) throw new FormatException( "Invalid /proc/diskstats device number." );
 			ulong Read( int index ) => ulong.TryParse( fields[ index ], NumberStyles.None, CultureInfo.InvariantCulture, out var value ) ? value : throw new FormatException( $"Invalid /proc/diskstats counter at field {index}." );
-			var isPartition = File.Exists( Path.Combine( sysRoot, "dev", "block", string.Concat( major.ToString( CultureInfo.InvariantCulture ), ":", minor.ToString( CultureInfo.InvariantCulture ) ), "partition" ) );
+			var isPartition = partitionFileExists( Path.Combine( sysRoot, "dev", "block", string.Concat( major.ToString( CultureInfo.InvariantCulture ), ":", minor.ToString( CultureInfo.InvariantCulture ) ), "partition" ) );
 			rows.Add( new ProcDiskStatEntry( major, minor, fields[ 2 ], isPartition, Read( 3 ), Read( 4 ), Read( 5 ), Read( 6 ), Read( 7 ), Read( 8 ), Read( 9 ), Read( 10 ), Read( 11 ), Read( 12 ), Read( 13 ) ) );
 		}
 		return rows;
