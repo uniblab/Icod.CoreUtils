@@ -100,7 +100,7 @@ public sealed class PsCommandTests {
 	public async Task MetricsAndExtendedProcPsFieldsAreRendered() {
 		using var output = new MemoryStream();
 		var status = await RunAsync(
-			[ "-p", "202", "-o", "pid=,pcpu=,pmem=,etime=,cgroup=,container=,pidns=,environ=" ],
+			[ "-p", "202", "--cols", "200", "-o", "pid=,pcpu=,pmem=,etime=,cgroup=,container=,pidns=,environ=" ],
 			output
 		);
 		Assert.Equal( 0, status );
@@ -188,7 +188,7 @@ public sealed class PsCommandTests {
 	[Fact]
 	public async Task SecuritySignalAndCapabilityFieldsUseSupplementObservations() {
 		using var output = new MemoryStream();
-		var status = await RunAsync( [ "-p", "101", "-o", "label=,blocked=,caught=,ignored=,pending=,capeff=" ], output );
+		var status = await RunAsync( [ "-p", "101", "--cols", "200", "-o", "label=,blocked=,caught=,ignored=,pending=,capeff=" ], output );
 		Assert.Equal( 0, status );
 		Assert.Equal( "system_u:system_r:worker_t:s0 0000000000000004 0000000000000008 0000000000000001 0000000000000002 0000000000000025", Text( output ).Trim() );
 	}
