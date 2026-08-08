@@ -390,8 +390,11 @@ Options:
 	}
 
 	private static bool TryParseHex( string text, out ulong value ) {
-		if ( text.StartsWith( "0x", StringComparison.OrdinalIgnoreCase ) ) text = text[ 2.. ];
-		return 0 < text.Length && ulong.TryParse( text, NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out value );
+		value = 0;
+		if ( text.StartsWith( "0x", StringComparison.OrdinalIgnoreCase ) ) {
+			text = text[ 2.. ];
+		}
+		return ( 0 < text.Length ) && ulong.TryParse( text, NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out value );
 	}
 
 	private static bool TryParsePid( string text, out int processId ) {
