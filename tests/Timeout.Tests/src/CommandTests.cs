@@ -11,7 +11,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task PropagatesNormalExitStatus() {
 		var executor = FakeExecutor.Exited( 37 );
-		var status = await Command.RunAsync( new[] { "1", "child" }, processExecutor: executor, signalProvider: new FakeSignals( executor ), clock: new NeverClock() );
+		var status = await Command.RunAsync( new[] { "1", "child" }, stdout: Stream.Null, stderr: Stream.Null, processExecutor: executor, signalProvider: new FakeSignals( executor ), clock: new NeverClock() );
 		Assert.Equal( 37, status );
 		Assert.True( executor.LastOptions!.CreateProcessGroup );
 	}
@@ -22,7 +22,7 @@ public sealed class CommandTests {
 		var executor = FakeExecutor.Exited( 0 );
 		var clock = new RecordingClock();
 		var signals = new FakeSignals( executor );
-		var status = await Command.RunAsync( new[] { "0", "child" }, processExecutor: executor, signalProvider: signals, clock: clock );
+		var status = await Command.RunAsync( new[] { "0", "child" }, stdout: Stream.Null, stderr: Stream.Null, processExecutor: executor, signalProvider: signals, clock: clock );
 		Assert.Equal( 0, status );
 		Assert.Empty( clock.Delays );
 		Assert.Empty( signals.Deliveries );
@@ -33,7 +33,7 @@ public sealed class CommandTests {
 	public async Task DefaultTimeoutSignalsProcessAndGroup() {
 		var executor = FakeExecutor.Waiting();
 		var signals = new FakeSignals( executor ) { CompleteOnSignalNumber = 15 };
-		var status = await Command.RunAsync( new[] { "1", "child" }, processExecutor: executor, signalProvider: signals, clock: new ImmediateClock() );
+		var status = await Command.RunAsync( new[] { "1", "child" }, stdout: Stream.Null, stderr: Stream.Null, processExecutor: executor, signalProvider: signals, clock: new ImmediateClock() );
 		Assert.Equal( 124, status );
 		Assert.Contains( signals.Deliveries, item => ProcessTargetKind.Process == item.Target.Kind && 15 == item.Signal.Number );
 		Assert.Contains( signals.Deliveries, item => ProcessTargetKind.ProcessGroup == item.Target.Kind && 15 == item.Signal.Number );
@@ -45,7 +45,7 @@ public sealed class CommandTests {
 	public async Task ForegroundSignalsOnlyTheChild() {
 		var executor = FakeExecutor.Waiting();
 		var signals = new FakeSignals( executor ) { CompleteOnSignalNumber = 15 };
-		var status = await Command.RunAsync( new[] { "--foreground", "1", "child" }, processExecutor: executor, signalProvider: signals, clock: new ImmediateClock() );
+		var status = await Command.RunAsync( new[] { "--foreground", "1", "child" }, stdout: Stream.Null, stderr: Stream.Null, processExecutor: executor, signalProvider: signals, clock: new ImmediateClock() );
 		Assert.Equal( 124, status );
 		Assert.False( executor.LastOptions!.CreateProcessGroup );
 		Assert.DoesNotContain( signals.Deliveries, item => ProcessTargetKind.ProcessGroup == item.Target.Kind );
@@ -56,7 +56,7 @@ public sealed class CommandTests {
 	public async Task PreserveStatusReturnsChildTermination() {
 		var executor = FakeExecutor.Waiting();
 		var signals = new FakeSignals( executor ) { CompleteOnSignalNumber = 15 };
-		var status = await Command.RunAsync( new[] { "--preserve-status", "1", "child" }, processExecutor: executor, signalProvider: signals, clock: new ImmediateClock() );
+		var status = await Command.RunAsync( new[] { "--preserve-status", "1", "child" }, stdout: Stream.Null, stderr: Stream.Null, processExecutor: executor, signalProvider: signals, clock: new ImmediateClock() );
 		Assert.Equal( 143, status );
 	}
 
@@ -68,6 +68,7 @@ public sealed class CommandTests {
 		using var error = new MemoryStream();
 		var status = await Command.RunAsync(
 			new[] { "--verbose", "--kill-after=2", "1", "child" },
+			stdout: Stream.Null,
 			stderr: error,
 			processExecutor: executor,
 			signalProvider: signals,
@@ -86,9 +87,10 @@ public sealed class CommandTests {
 	[InlineData( "+15" )]
 	[InlineData( "-15" )]
 	public async Task RejectsSignedNumericSignals( string signal ) {
+		ArgumentNullException.ThrowIfNull( signal );
 		var executor = FakeExecutor.Exited( 0 );
 		using var error = new MemoryStream();
-		var status = await Command.RunAsync( new[] { "--signal", signal, "1", "child" }, stderr: error, processExecutor: executor, signalProvider: new FakeSignals( executor ) );
+		var status = await Command.RunAsync( new[] { "--signal", signal, "1", "child" }, stdout: Stream.Null, stderr: error, processExecutor: executor, signalProvider: new FakeSignals( executor ) );
 		Assert.Equal( 125, status );
 		Assert.Null( executor.LastOptions );
 	}
@@ -99,7 +101,7 @@ public sealed class CommandTests {
 		var executor = FakeExecutor.Waiting();
 		var signals = new FakeSignals( executor ) { CompleteOnSignalNumber = 15 };
 		var clock = new RecordingImmediateClock();
-		var status = await Command.RunAsync( new[] { "0x1.8p1s", "child" }, processExecutor: executor, signalProvider: signals, clock: clock );
+		var status = await Command.RunAsync( new[] { "0x1.8p1s", "child" }, stdout: Stream.Null, stderr: Stream.Null, processExecutor: executor, signalProvider: signals, clock: clock );
 		Assert.Equal( 124, status );
 		Assert.Equal( TimeSpan.FromSeconds( 3 ), Assert.Single( clock.Delays ) );
 	}
@@ -110,7 +112,7 @@ public sealed class CommandTests {
 		var executor = FakeExecutor.Waiting();
 		var signals = new FakeSignals( executor ) { CompleteOnSignalNumber = 15 };
 		var clock = new RecordingImmediateClock();
-		var status = await Command.RunAsync( new[] { "0x1d", "child" }, processExecutor: executor, signalProvider: signals, clock: clock );
+		var status = await Command.RunAsync( new[] { "0x1d", "child" }, stdout: Stream.Null, stderr: Stream.Null, processExecutor: executor, signalProvider: signals, clock: clock );
 		Assert.Equal( 124, status );
 		Assert.Equal( TimeSpan.FromSeconds( 29 ), Assert.Single( clock.Delays ) );
 	}
@@ -119,7 +121,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task MissingCommandReturns127() {
 		using var error = new MemoryStream();
-		var status = await Command.RunAsync( new[] { "0", $"icod-timeout-missing-{Guid.NewGuid():N}" }, stderr: error );
+		var status = await Command.RunAsync( new[] { "0", $"icod-timeout-missing-{Guid.NewGuid():N}" }, stdout: Stream.Null, stderr: error );
 		Assert.Equal( 127, status );
 	}
 
@@ -129,7 +131,7 @@ public sealed class CommandTests {
 		var host = GetProcessTestHostPath();
 		Assert.True( File.Exists( host ), $"Process test host was not built at '{host}'." );
 		var dotnet = Environment.GetEnvironmentVariable( "DOTNET_HOST_PATH" ) ?? "dotnet";
-		var status = await Command.RunAsync( new[] { "0.05", dotnet, host, "sleep", "30000" } );
+		var status = await Command.RunAsync( new[] { "0.05", dotnet, host, "sleep", "30000" }, stdout: Stream.Null, stderr: Stream.Null );
 		Assert.Equal( 124, status );
 	}
 
@@ -139,8 +141,9 @@ public sealed class CommandTests {
 	[InlineData( "0x1p+" )]
 	[InlineData( "0x1p-no" )]
 	public async Task RejectsIncompleteHexadecimalExponent( string duration ) {
+		ArgumentNullException.ThrowIfNull( duration );
 		var executor = FakeExecutor.Exited( 0 );
-		var status = await Command.RunAsync( new[] { duration, "child" }, processExecutor: executor, signalProvider: new FakeSignals( executor ) );
+		var status = await Command.RunAsync( new[] { duration, "child" }, stdout: Stream.Null, stderr: Stream.Null, processExecutor: executor, signalProvider: new FakeSignals( executor ) );
 		Assert.Equal( 125, status );
 		Assert.Null( executor.LastOptions );
 	}
@@ -149,7 +152,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task RejectsWhitespaceAfterDurationSign() {
 		var executor = FakeExecutor.Exited( 0 );
-		var status = await Command.RunAsync( new[] { "+ 1", "child" }, processExecutor: executor, signalProvider: new FakeSignals( executor ) );
+		var status = await Command.RunAsync( new[] { "+ 1", "child" }, stdout: Stream.Null, stderr: Stream.Null, processExecutor: executor, signalProvider: new FakeSignals( executor ) );
 		Assert.Equal( 125, status );
 		Assert.Null( executor.LastOptions );
 	}
@@ -159,8 +162,9 @@ public sealed class CommandTests {
 	[InlineData( "--help=value" )]
 	[InlineData( "--version=value" )]
 	public async Task CommonOptionsRejectAttachedValues( string option ) {
+		ArgumentNullException.ThrowIfNull( option );
 		var executor = FakeExecutor.Exited( 0 );
-		var status = await Command.RunAsync( new[] { option }, processExecutor: executor, signalProvider: new FakeSignals( executor ) );
+		var status = await Command.RunAsync( new[] { option }, stdout: Stream.Null, stderr: Stream.Null, processExecutor: executor, signalProvider: new FakeSignals( executor ) );
 		Assert.Equal( 125, status );
 		Assert.Null( executor.LastOptions );
 	}
@@ -169,7 +173,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task AcceptsUnambiguousLongOptionAbbreviations() {
 		var executor = FakeExecutor.Exited( 12 );
-		var status = await Command.RunAsync( new[] { "--pres", "0", "child" }, processExecutor: executor, signalProvider: new FakeSignals( executor ), clock: new NeverClock() );
+		var status = await Command.RunAsync( new[] { "--pres", "0", "child" }, stdout: Stream.Null, stderr: Stream.Null, processExecutor: executor, signalProvider: new FakeSignals( executor ), clock: new NeverClock() );
 		Assert.Equal( 12, status );
 	}
 
@@ -193,8 +197,12 @@ public sealed class CommandTests {
 			return value;
 		}
 		internal static FakeExecutor Waiting() => new();
-		internal void CompleteWithSignal( ProcessSignal signal ) => this._completion.TrySetResult( ProcessResult.FromTermination( ProcessTermination.Signaled( signal ), identity: new ProcessIdentity( 4242 ) ) );
+		internal void CompleteWithSignal( ProcessSignal signal ) {
+			ArgumentNullException.ThrowIfNull( signal );
+			this._completion.TrySetResult( ProcessResult.FromTermination( ProcessTermination.Signaled( signal ), identity: new ProcessIdentity( 4242 ) ) );
+		}
 		public Task<ProcessResult> RunAsync( ProcessRunOptions options, CancellationToken cancellationToken = default ) {
+			ArgumentNullException.ThrowIfNull( options );
 			this.LastOptions = options;
 			options.ProcessStarted?.Invoke( new ProcessIdentity( 4242 ) );
 			return this._completion.Task;
@@ -208,12 +216,23 @@ public sealed class CommandTests {
 		internal FakeSignals( FakeExecutor executor ) => this._executor = executor;
 		public ProcessControlCapabilities Capabilities => ProcessControlCapabilities.SignalDelivery | ProcessControlCapabilities.ProcessGroupTargets;
 		public IReadOnlyList<ProcessSignal> ListSignals() => ProcessSignalCatalog.PortableSignals;
-		public ProcessOperationResult<ProcessSignal> ParseSignal( string text ) => ProcessSignalCatalog.Parse( text );
+		public ProcessOperationResult<ProcessSignal> ParseSignal( string text ) {
+			ArgumentNullException.ThrowIfNull( text );
+			return ProcessSignalCatalog.Parse( text );
+		}
 		public ProcessOperationResult<ProcessSignal> TranslateSignal( int number ) => ProcessSignalCatalog.Translate( number );
-		public ProcessOperationResult<ProcessSignalDisposition> ObserveDisposition( ProcessIdentity identity, ProcessSignal signal ) => ProcessOperationResult<ProcessSignalDisposition>.Failure( ProcessOperationStatus.Unsupported );
+		public ProcessOperationResult<ProcessSignalDisposition> ObserveDisposition( ProcessIdentity identity, ProcessSignal signal ) {
+			ArgumentNullException.ThrowIfNull( identity );
+			ArgumentNullException.ThrowIfNull( signal );
+			return ProcessOperationResult<ProcessSignalDisposition>.Failure( ProcessOperationStatus.Unsupported );
+		}
 		public Task<ProcessOperationResult> DeliverAsync( ProcessTarget target, ProcessSignal signal, int? queuedValue = null, CancellationToken cancellationToken = default ) {
+			ArgumentNullException.ThrowIfNull( target );
+			ArgumentNullException.ThrowIfNull( signal );
 			this.Deliveries.Add( ( target, signal ) );
-			if ( ProcessTargetKind.Process == target.Kind && this.CompleteOnSignalNumber == signal.Number ) this._executor.CompleteWithSignal( signal );
+			if ( ProcessTargetKind.Process == target.Kind && this.CompleteOnSignalNumber == signal.Number ) {
+				this._executor.CompleteWithSignal( signal );
+			}
 			return Task.FromResult( ProcessOperationResult.Success() );
 		}
 	}

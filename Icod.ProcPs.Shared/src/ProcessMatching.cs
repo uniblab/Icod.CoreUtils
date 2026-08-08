@@ -97,14 +97,18 @@ public sealed class SystemProcMatchControl : IProcMatchControl {
 	}
 }
 
-/// <summary>Contains supplementary observations needed by the pgrep/pkill/pidwait family but not by general ProcPs snapshots.</summary>
+/// <summary>Contains supplementary observations shared by ProcPs matching and process-reporting commands but not by general snapshots.</summary>
 public sealed class ProcMatchSupplement {
-	/// <summary>Gets the task-group identifier used by pgrep -p when lightweight threads are enumerated.</summary>
+	/// <summary>Gets the task-group identifier used when Linux lightweight threads are enumerated.</summary>
 	public int ThreadGroupId { get; init; }
 	/// <summary>Gets elapsed process age when observable.</summary>
 	public ProcObservedValue<TimeSpan> Elapsed { get; init; } = ProcObservedValue<TimeSpan>.Missing( ProcObservationAvailability.Unavailable );
 	/// <summary>Gets environment entries in NAME=VALUE form when observable.</summary>
 	public ProcObservedValue<IReadOnlyList<string>> Environment { get; init; } = ProcObservedValue<IReadOnlyList<string>>.Missing( ProcObservationAvailability.Unavailable );
+	/// <summary>Gets Linux process status fields used by procps presentation commands when observable.</summary>
+	public ProcObservedValue<IReadOnlyDictionary<string, string>> LinuxStatusFields { get; init; } = ProcObservedValue<IReadOnlyDictionary<string, string>>.Missing( ProcObservationAvailability.Unsupported );
+	/// <summary>Gets the host security label for the process when observable.</summary>
+	public ProcObservedValue<string> SecurityLabel { get; init; } = ProcObservedValue<string>.Missing( ProcObservationAvailability.Unsupported );
 }
 
 /// <summary>Pairs one process/task snapshot with supplementary process-selection observations.</summary>
@@ -122,7 +126,7 @@ public sealed class ProcMatchCandidate {
 	}
 }
 
-/// <summary>Supplies the additional observations used only by the pgrep-family selector.</summary>
+/// <summary>Supplies additional observations used by ProcPs matching and process-reporting commands.</summary>
 public interface IProcMatchSupplementProvider {
 	/// <summary>Builds candidates for the supplied process collection, optionally including Linux lightweight tasks.</summary>
 	Task<IReadOnlyList<ProcMatchCandidate>> GetCandidatesAsync(
@@ -132,7 +136,7 @@ public interface IProcMatchSupplementProvider {
 	);
 }
 
-/// <summary>System implementation of pgrep-family supplementary observations.</summary>
+/// <summary>System implementation of supplementary ProcPs process observations.</summary>
 public sealed class SystemProcMatchSupplementProvider : IProcMatchSupplementProvider {
 	private readonly string procRoot;
 	/// <summary>Gets the system supplementary provider.</summary>
@@ -161,7 +165,9 @@ public sealed class SystemProcMatchSupplementProvider : IProcMatchSupplementProv
 			candidates.Add( new ProcMatchCandidate( process, supplement ) );
 			if ( includeLightweightTasks ) {
 				foreach ( var task in await ReadLinuxTasksAsync( process, supplement, cancellationToken ).ConfigureAwait( false ) ) {
-					if ( task.Process.ProcessId != process.ProcessId ) candidates.Add( task );
+					if ( task.Process.ProcessId != process.ProcessId ) {
+						candidates.Add( task );
+					}
 				}
 			}
 		}
@@ -172,10 +178,19 @@ public sealed class SystemProcMatchSupplementProvider : IProcMatchSupplementProv
 			ProcObservationAvailability.Unsupported,
 			"The host provider does not expose another process's environment."
 		);
+		var statusFields = ProcObservedValue<IReadOnlyDictionary<string, string>>.Missing(
+			ProcObservationAvailability.Unsupported,
+			"Linux process status fields are available only from procfs."
+		);
+		var securityLabel = ProcObservedValue<string>.Missing(
+			ProcObservationAvailability.Unsupported,
+			"Process security labels are available only where the host exposes them."
+		);
 		if ( OperatingSystem.IsLinux() ) {
+			var processRoot = Path.Combine( this.procRoot, process.ProcessId.ToString( CultureInfo.InvariantCulture ) );
 			try {
 				var bytes = await File.ReadAllBytesAsync(
-					Path.Combine( this.procRoot, process.ProcessId.ToString( CultureInfo.InvariantCulture ), "environ" ),
+					Path.Combine( processRoot, "environ" ),
 					cancellationToken
 				).ConfigureAwait( false );
 				environment = ProcObservedValue<IReadOnlyList<string>>.Available(
@@ -188,11 +203,37 @@ public sealed class SystemProcMatchSupplementProvider : IProcMatchSupplementProv
 			} catch ( IOException exception ) {
 				environment = ProcObservedValue<IReadOnlyList<string>>.Missing( ProcObservationAvailability.Unavailable, exception.Message );
 			}
+			try {
+				var text = await File.ReadAllTextAsync( Path.Combine( processRoot, "status" ), cancellationToken ).ConfigureAwait( false );
+				statusFields = ProcObservedValue<IReadOnlyDictionary<string, string>>.Available(
+					ParseStatusFields( text ),
+					ProcObservationSource.LinuxProcfs,
+					Icod.CoreUtils.Shared.Host.ObservationFidelity.Exact
+				);
+			} catch ( UnauthorizedAccessException exception ) {
+				statusFields = ProcObservedValue<IReadOnlyDictionary<string, string>>.Missing( ProcObservationAvailability.AccessDenied, exception.Message );
+			} catch ( IOException exception ) {
+				statusFields = ProcObservedValue<IReadOnlyDictionary<string, string>>.Missing( ProcObservationAvailability.Unavailable, exception.Message );
+			}
+			try {
+				var text = await File.ReadAllTextAsync( Path.Combine( processRoot, "attr", "current" ), cancellationToken ).ConfigureAwait( false );
+				securityLabel = ProcObservedValue<string>.Available(
+					text.Trim(),
+					ProcObservationSource.LinuxProcfs,
+					Icod.CoreUtils.Shared.Host.ObservationFidelity.Exact
+				);
+			} catch ( UnauthorizedAccessException exception ) {
+				securityLabel = ProcObservedValue<string>.Missing( ProcObservationAvailability.AccessDenied, exception.Message );
+			} catch ( IOException exception ) {
+				securityLabel = ProcObservedValue<string>.Missing( ProcObservationAvailability.Unavailable, exception.Message );
+			}
 		}
 		return new ProcMatchSupplement {
 			ThreadGroupId = process.ProcessId,
 			Elapsed = ObserveElapsed( process.ProcessId ),
-			Environment = environment
+			Environment = environment,
+			LinuxStatusFields = statusFields,
+			SecurityLabel = securityLabel
 		};
 	}
 	private async Task<IReadOnlyList<ProcMatchCandidate>> ReadLinuxTasksAsync(
@@ -249,13 +290,27 @@ public sealed class SystemProcMatchSupplementProvider : IProcMatchSupplementProv
 					new ProcMatchSupplement {
 						ThreadGroupId = process.ProcessId,
 						Elapsed = processSupplement.Elapsed,
-						Environment = processSupplement.Environment
+						Environment = processSupplement.Environment,
+						LinuxStatusFields = processSupplement.LinuxStatusFields,
+						SecurityLabel = processSupplement.SecurityLabel
 					}
 				) );
 			} catch ( IOException ) { }
 			catch ( UnauthorizedAccessException ) { }
 			catch ( FormatException ) { }
 			catch ( OverflowException ) { }
+		}
+		return result;
+	}
+	private static IReadOnlyDictionary<string, string> ParseStatusFields( string text ) {
+		ArgumentNullException.ThrowIfNull( text );
+		var result = new Dictionary<string, string>( StringComparer.Ordinal );
+		foreach ( var line in text.Split( '\n' ) ) {
+			var separator = line.IndexOf( ':' );
+			if ( 0 >= separator ) {
+				continue;
+			}
+			result[ line[ ..separator ] ] = line[ ( separator + 1 ).. ].Trim();
 		}
 		return result;
 	}
