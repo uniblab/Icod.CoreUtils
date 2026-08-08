@@ -71,7 +71,7 @@ For more details see free(1).
 		if ( parsed.ShowHelp ) { await WriteAsync( stdout, NormalizeLineEndings( HelpText ), cancellationToken ).ConfigureAwait( false ); return 0; }
 		if ( parsed.ShowVersion ) { await WriteLineAsync( stdout, VersionText, cancellationToken ).ConfigureAwait( false ); return 0; }
 		var metrics = metricsProvider ?? SystemProcSystemMetricsProvider.Instance;
-		var delay = delayAsync ?? static ( duration, token ) => Task.Delay( duration, token );
+		Func<TimeSpan, CancellationToken, Task> delay = delayAsync ?? new Func<TimeSpan, CancellationToken, Task>( DefaultDelayAsync );
 		var remaining = parsed.RepeatCount;
 		try {
 			while ( true ) {
@@ -88,6 +88,7 @@ For more details see free(1).
 			return 0;
 		} catch ( OperationCanceledException ) when ( cancellationToken.IsCancellationRequested ) { return 130; }
 	}
+	private static Task DefaultDelayAsync( TimeSpan duration, CancellationToken cancellationToken ) => Task.Delay( duration, cancellationToken );
 	private static async Task<int> ReportMemoryFailureAsync( Stream? stderr, ProcObservedValue<ProcMemoryInfo> observation, CancellationToken cancellationToken ) {
 		string text;
 		if ( ProcObservationAvailability.Unsupported == observation.Availability ) text = "free: memory information with procps-ng semantics is not available on this platform";
