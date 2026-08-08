@@ -200,7 +200,7 @@ public sealed class LinuxProcMemoryMapProvider : IProcMemoryMapProvider {
 			if ( null != process.Identity.ReuseToken && !process.Identity.Equals( after.Value ) ) {
 				return ProcObservedValue<ProcMemoryMapSet>.Missing( ProcObservationAvailability.Reused, $"Process identifier {process.ProcessId} was reused during memory-map observation." );
 			}
-			return ProcObservedValue<ProcMemoryMapSet>.Available( maps, ProcObservationSource.LinuxProcfs, ObservationFidelity.Exact );
+			return ProcObservedValue<ProcMemoryMapSet>.Available( maps, ProcObservationSource.LinuxProcfs, Icod.CoreUtils.Shared.Host.ObservationFidelity.Exact );
 		} catch ( UnauthorizedAccessException exception ) {
 			return ProcObservedValue<ProcMemoryMapSet>.Missing( ProcObservationAvailability.AccessDenied, exception.Message );
 		} catch ( DirectoryNotFoundException exception ) {
