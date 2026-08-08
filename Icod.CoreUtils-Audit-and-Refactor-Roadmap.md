@@ -323,7 +323,7 @@ These conventions apply to every existing project that is altered and every proj
 9. When multiple strings are sent to `WriteAsync`, `WriteLineAsync`, or related output methods, combine them with `System.String.Concat` rather than the `+` operator.
 10. Each command has its own dedicated xUnit test project following the established `tests/<Tool>.Tests` pattern.
 11. Each Program.cs file must have class-level XML documentation whose `<summary>` includes the command usage, plus a dedicated usage-printing or usage-writing function.
-12. Every member or type which is declared public, protected, or internal must have XML documentation consisting of valid <summary>, <param>, <returns>, <value>, and <exception> details as appropriate.  These cannot be stubs merely to silence CS1591.
+12. Every member or type which is declared public, protected, or internal must have XML documentation consisting of valid &lt;summary&gt;, <param>, <returns>, <value>, and <exception> details as appropriate.  These cannot be stubs merely to silence CS1591.
 13. Any directory with more than one source code file must have a README.md file describing the contents and purposes of that directory.
 14. Every new project is added to the solution, all required configuration mappings, the appropriate suite solution folder, and every local and CI build/test entry point.
 15. Co-resident projects whose lowercase executable names collide use suite-specific output directories. Tests and packaging identify the suite explicitly; an assembly name is not changed merely to avoid an incubation-time path collision.
