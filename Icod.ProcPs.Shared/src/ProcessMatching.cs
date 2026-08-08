@@ -439,7 +439,7 @@ public static class ProcMatchCommand {
 		var supplementProvider = supplements ?? SystemProcMatchSupplementProvider.Instance;
 		try {
 			var collection = await provider.GetProcessesAsync( cancellationToken ).ConfigureAwait( false );
-			var currentPid = ( currentProcessIdProvider ?? static () => Environment.ProcessId )();
+			var currentPid = currentProcessIdProvider?.Invoke() ?? Environment.ProcessId;
 			ResolveSelfRelativeSelectors( parsed, currentPid, collection.Processes );
 			IReadOnlyList<ProcMatchCandidate> candidates;
 			try {
