@@ -408,7 +408,7 @@ public static class ProcProcessLookupCommand {
 		if ( commandLineAvailable && 0 == arguments.Count && !withWorkers ) return false;
 		var command = process.CommandName.HasValue ? process.CommandName.Value : string.Empty;
 		var argv0 = 0 < arguments.Count ? arguments[ 0 ] : string.Empty;
-		if ( argv0.StartsWith( '-', StringComparison.Ordinal ) ) argv0 = argv0[ 1.. ];
+		if ( argv0.StartsWith( "-", StringComparison.Ordinal ) ) argv0 = argv0[ 1.. ];
 		var argv0Base = BaseName( argv0 );
 		var programBase = BaseName( program );
 		var executable = pathObservation.HasValue && pathObservation.Value.ExecutablePath.HasValue ? pathObservation.Value.ExecutablePath.Value : string.Empty;
@@ -511,7 +511,7 @@ public static class ProcProcessLookupCommand {
 				}
 				continue;
 			}
-			if ( options && argument.StartsWith( '-', StringComparison.Ordinal ) && "-" != argument ) {
+			if ( options && argument.StartsWith( "-", StringComparison.Ordinal ) && "-" != argument ) {
 				for ( var characterIndex = 1; characterIndex < argument.Length; characterIndex++ ) {
 					var option = argument[ characterIndex ];
 					string? Value() {
@@ -555,7 +555,7 @@ public static class ProcProcessLookupCommand {
 			if ( options && "--" == argument ) { options = false; continue; }
 			if ( options && ( "-h" == argument || "--help" == argument ) ) { result.ShowHelp = true; continue; }
 			if ( options && ( "-V" == argument || "--version" == argument ) ) { result.ShowVersion = true; continue; }
-			if ( options && argument.StartsWith( '-', StringComparison.Ordinal ) && !argument.StartsWith( "/proc/", StringComparison.Ordinal ) ) return result.Fail( $"unrecognized option '{argument}'" );
+			if ( options && argument.StartsWith( "-", StringComparison.Ordinal ) && !argument.StartsWith( "/proc/", StringComparison.Ordinal ) ) return result.Fail( $"unrecognized option '{argument}'" );
 			result.Targets.Add( argument );
 		}
 		return result;
