@@ -272,7 +272,14 @@ For more details see free(1).
 	private static async Task WriteErrorAsync( Stream? stream, string text, CancellationToken cancellationToken ) { if ( null == stream ) { await Console.Error.WriteAsync( text.AsMemory(), cancellationToken ).ConfigureAwait( false ); return; } var bytes = Utf8.GetBytes( text ); await stream.WriteAsync( bytes, cancellationToken ).ConfigureAwait( false ); await stream.FlushAsync( cancellationToken ).ConfigureAwait( false ); }
 	private static Task WriteLineAsync( Stream? stream, string text, CancellationToken cancellationToken ) => WriteAsync( stream, string.Concat( text, Environment.NewLine ), cancellationToken );
 	private static async Task WriteDiagnosticAsync( Stream? stream, string text, CancellationToken cancellationToken ) { if ( null == stream ) { await Console.Error.WriteLineAsync( text.AsMemory(), cancellationToken ).ConfigureAwait( false ); return; } var bytes = Utf8.GetBytes( string.Concat( text, Environment.NewLine ) ); await stream.WriteAsync( bytes, cancellationToken ).ConfigureAwait( false ); await stream.FlushAsync( cancellationToken ).ConfigureAwait( false ); }
-	private static string NormalizeLineEndings( string value ) => "\n" == Environment.NewLine ? value : value.Replace( "\n", Environment.NewLine, StringComparison.Ordinal );
+	private static string NormalizeLineEndings( string value ) {
+		var normalized = value
+			.Replace( "\r\n", "\n", StringComparison.Ordinal )
+			.Replace( "\r", "\n", StringComparison.Ordinal );
+		return "\n" == Environment.NewLine
+			? normalized
+			: normalized.Replace( "\n", Environment.NewLine, StringComparison.Ordinal );
+	}
 	private sealed record FreeArguments( int Exponent, bool Si, bool Human, bool LoHi, bool Line, bool Total, bool Committed, bool Wide, bool Repeat, int? RepeatCount, TimeSpan RepeatInterval, bool ShowHelp, bool ShowVersion, string? Error, bool ShowUsageOnError );
 	private sealed record LongOptionResolution( string? Option, string? Error );
 	private sealed record MemoryValues( ulong Total, ulong Used, ulong Free, ulong Shared, ulong Buffers, ulong Cache, ulong Available, ulong LowTotal, ulong LowUsed, ulong LowFree, ulong HighTotal, ulong HighUsed, ulong HighFree, ulong SwapTotal, ulong SwapUsed, ulong SwapFree, ulong CommitLimit, ulong Committed );
