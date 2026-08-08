@@ -4,7 +4,7 @@
 procps-ng 4.0.6 command set in this repository. It owns process enumeration,
 procps field semantics, Linux `/proc` parsing, native Windows and macOS
 observation providers, conservative fallback observations for other platforms,
-process selection, system metrics, sampling calculations, personalities,
+process selection, system metrics, vmstat-specific cumulative counters and disk observations, sampling calculations, personalities,
 sorting, and reusable screen-state models.
 
 Cross-suite mechanics remain in `Icod.CoreUtils.Shared`: process identities and
@@ -28,6 +28,7 @@ The primary provider matrix is:
 |---|---|---|---|
 | Process detail | `/proc` + shared identity provider | .NET process data augmented by Tool Help and Terminal Services session APIs | .NET process data augmented by Darwin `libproc` and POSIX APIs |
 | Memory / swap | `/proc/meminfo` | `GetPerformanceInfo` + `EnumPageFilesW` | Mach VM statistics + `hw.memsize` + `vm.swapusage` |
+| vmstat paging / block I/O | `/proc/vmstat` + `/proc/diskstats` + sysfs partition identity | explicitly unavailable when no defensible native equivalent is exposed | Mach page/swap counters; Linux disk modes remain unsupported |
 | CPU activity | `/proc/stat` | `GetSystemTimes` | Mach `host_statistics` |
 | Load average | `/proc/loadavg` | unsupported: no native Unix load-average metric | `getloadavg()` |
 | Uptime | `/proc/uptime` | `GetTickCount64` | `kern.boottime` |

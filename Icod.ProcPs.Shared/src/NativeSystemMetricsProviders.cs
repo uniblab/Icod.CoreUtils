@@ -337,13 +337,23 @@ public sealed class MacOsProcSystemMetricsProvider : IProcSystemMetricsProvider 
 				swapTotal = swap.Total;
 				swapFree = swap.Available;
 			}
+			var fields = new Dictionary<string, ulong>( StringComparer.Ordinal ) {
+				[ "DarwinActive" ] = MultiplyPages( statistics.ActiveCount, pageBytes ),
+				[ "DarwinInactive" ] = MultiplyPages( statistics.InactiveCount, pageBytes ),
+				[ "DarwinPageIns" ] = statistics.PageIns,
+				[ "DarwinPageOuts" ] = statistics.PageOuts,
+				[ "DarwinSwapIns" ] = statistics.SwapIns,
+				[ "DarwinSwapOuts" ] = statistics.SwapOuts,
+				[ "DarwinPageSize" ] = pageBytes
+			};
 			var memory = new ProcMemoryInfo(
 				totalBytes: totalBytes,
 				freeBytes: freeBytes,
 				availableBytes: MultiplyPages( availablePages, pageBytes ),
 				cacheBytes: MultiplyPages( cachePages, pageBytes ),
 				swapTotalBytes: swapTotal,
-				swapFreeBytes: swapFree
+				swapFreeBytes: swapFree,
+				fields: fields
 			);
 			return ProcObservedValue<ProcMemoryInfo>.Available( memory, ProcObservationSource.DarwinMach, ObservationFidelity.Approximated );
 		} catch ( DllNotFoundException exception ) {
