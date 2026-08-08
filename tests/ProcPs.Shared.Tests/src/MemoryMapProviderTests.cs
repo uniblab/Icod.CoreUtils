@@ -27,7 +27,7 @@ public sealed class MemoryMapProviderTests {
 			var region = Assert.Single( observed.Value.Regions );
 			Assert.Equal( "/tmp/na?me.so", region.Map.Path );
 			Assert.Equal( ProcObservationSource.LinuxProcfs, observed.Source );
-			Assert.Equal( ObservationFidelity.Exact, observed.Fidelity );
+			Assert.Equal( Icod.CoreUtils.Shared.Host.ObservationFidelity.Exact, observed.Fidelity );
 		} finally {
 			Directory.Delete( root, true );
 		}
