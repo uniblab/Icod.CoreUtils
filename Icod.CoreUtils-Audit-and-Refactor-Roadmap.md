@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `57`; Batch `58` implementation is ready for validation |
-| Current engineering milestone | Batch 58 — `Icod.ProcPs.Vmstat` implemented; repository/runner validation pending |
+| Completed command batches | `0` through `58`; Batch `59` implementation is ready for validation |
+| Current engineering milestone | Batch 59 — `Icod.ProcPs.Pgrep`, `Icod.ProcPs.Pkill`, and `Icod.ProcPs.PidWait` implemented; repository/runner validation pending |
 | Completed infrastructure milestone | Completion Gates E2 through E6, F1 through F4, and P1 — filesystem, terminal, process-control, and ProcPs provider foundations; three-platform ProcPs provider correction validated and merged |
-| Active infrastructure dependency | Validate Batch 58 sampling, counter-delta, diskstat, unit, and partial-platform behavior against the merged Linux/Windows/macOS ProcPs providers |
-| Next engineering step | Validate Batch 58 on the required runners; then Batch 59 — `Icod.ProcPs.Pgrep`, `Icod.ProcPs.Pkill`, and `Icod.ProcPs.PidWait` |
+| Active infrastructure dependency | Validate Batch 59 shared selection, signal delivery, arbitrary waiting, and Linux-specific selector behavior against the merged three-platform ProcPs providers |
+| Next engineering step | Validate Batch 59 on the required runners; then Batch 60 — `Icod.ProcPs.PidOf` and `Icod.ProcPs.Pwdx` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1543,13 +1543,13 @@ Create the project and tests with assembly name `vmstat`. Implement process, mem
 
 This batch validates deterministic clocks, interval sampling, counter deltas, units, wraparound, and partial provider availability before the full-screen tools depend on them.
 
-Batch 58 implementation is complete and ready for repository validation. `Icod.ProcPs.Vmstat` follows procps-ng 4.0.6 for the default process/memory/swap/I/O/system/CPU report; active/inactive memory; first-sample-since-boot and later interval-delta semantics; `--no-first`; units; wide and timestamp output; forks; cumulative statistics; disk, disk-summary, partition, and slab modes; repeated sampling; cancellation; and help/version/error handling. `Icod.ProcPs.Shared` now owns vmstat-specific capabilities, cumulative process/system/paging counters, Linux `/proc/stat` and `/proc/diskstats` interpretation, sysfs partition identity, and provider dispatch. Linux remains authoritative and exposes the complete profile. macOS reuses Mach page-in/page-out and swap counters added to its neutral memory observation and renders the defensible memory/CPU/paging subset; Windows renders the defensible memory/CPU subset. Both use explicit unavailable placeholders for missing Linux-specific fields, while Linux-only specialized modes return controlled unsupported diagnostics elsewhere. Tests pin first-versus-interval rate semantics, Linux idle-tick debt handling, delay/count and `--no-first`, units, wraparound, partial-platform output, Linux procfs/diskstats fixtures, disk/partition/slab/fork/statistics modes, cancellation, and OS-gated native provider capabilities. The implementation environment used for Batch 58 does not provide a .NET SDK, so the full solution build/test and required runner closure checks remain pending; mark the batch closed after those checks pass. Detailed notes are recorded in `Icod.CoreUtils-Batch-58-ProcPs-Vmstat.md`.
+Batch 58 implementation is complete and ready for repository validation. `Icod.ProcPs.Vmstat` follows procps-ng 4.0.6 for the default process/memory/swap/I/O/system/CPU report; active/inactive memory; first-sample-since-boot and later interval-delta semantics; `--no-first`; units; wide and timestamp output; forks; cumulative statistics; disk, disk-summary, partition, and slab modes; repeated sampling; cancellation; and help/version/error handling. `Icod.ProcPs.Shared` now owns vmstat-specific capabilities, cumulative process/system/paging counters, Linux `/proc/stat` and `/proc/diskstats` interpretation, sysfs partition identity, and provider dispatch. Linux remains authoritative and exposes the complete profile. macOS reuses Mach page-in/page-out and swap counters added to its neutral memory observation and renders the defensible memory/CPU/paging subset; Windows renders the defensible memory/CPU subset. Both use explicit unavailable placeholders for missing Linux-specific fields, while Linux-only specialized modes return controlled unsupported diagnostics elsewhere. Tests pin first-versus-interval rate semantics, Linux idle-tick debt handling, delay/count and `--no-first`, units, wraparound, partial-platform output, Linux procfs/diskstats fixtures, disk/partition/slab/fork/statistics modes, cancellation, and OS-gated native provider capabilities. Batch 58 subsequently passed the repository test suite on the required platforms and was merged to `main`; the batch is closed. Detailed notes are recorded in `Icod.CoreUtils-Batch-58-ProcPs-Vmstat.md`.
 
 ### Batch 59 — Process selection, signaling, and waiting (3 projects)
 
-- [ ] `Icod.ProcPs.Pgrep`
-- [ ] `Icod.ProcPs.Pkill`
-- [ ] `Icod.ProcPs.PidWait`
+- [x] `Icod.ProcPs.Pgrep`
+- [x] `Icod.ProcPs.Pkill`
+- [x] `Icod.ProcPs.PidWait`
 
 Implement one shared process-selection grammar and apply it consistently across selection, signal delivery, and waiting.
 
@@ -1558,6 +1558,8 @@ For `pgrep`, cover names and regular expressions; IDs; ancestry; sessions; group
 For `pkill`, reuse the same selection model and implement signal delivery, queued values, echoing, newest and oldest behavior, process release where supported, partial failure, and exact statuses.
 
 For `pidwait`, implement the pinned procps-ng waiting behavior using pidfd or an equivalent Shared provider where available, including selection, vanished processes, permissions, cancellation, and exact statuses. Procps-ng 4.0.6 installs only `pidwait`; do not add a `pwait` compatibility launcher or a separate `Icod.ProcPs.PWait` project.
+
+Batch 59 implementation is complete and ready for repository validation. The three command projects are thin profiles over one `Icod.ProcPs.Shared` `ProcMatchCommand` engine so selector behavior cannot drift between `pgrep`, `pkill`, and `pidwait`. The shared engine uses the existing managed GNU ERE provider and implements ID, parent, process-group, session, real/effective user, real-group, terminal, state, age, cgroup, namespace, environment, pidfile, signal-handler, ancestor, newest/oldest, exact/full-name, count, delimiter, and shell-quoting behavior with procps-ng exit-status separation. PID files include `-F -` standard-input handling; `-g 0` and `-s 0` resolve against the caller's process group/session where observed; Unix user/group names resolve through native account databases with file fallbacks. Linux additionally supports lightweight-task enumeration and exact procfs environment/namespace observations. `pkill` consumes the Shared signal provider for ordinary and queued delivery, reports partial failures, supports `-m`/`--mrelease` together with queued delivery, and ignores the post-signal ESRCH release race as upstream does. `pidwait` consumes the existing PID-reuse-aware arbitrary-process wait contract, starts all selected waits before blocking on individual completions, treats vanished targets as non-events, emits count/echo text before the blocking phase, and surfaces cancellation as a fatal controlled status. No `pwait` alias is introduced. Dedicated tests cover shared selector behavior, GNU ERE matching, newest tie-breaking, self-relative group/session zero, stdin pidfiles, environment/age criteria, signal-handler selection, shell quoting, queued signals, memory release, partial `pkill` failure and counts, vanished waits, output ordering, and cancellation. Full solution and required-runner validation remain the closure step for this implementation. Detailed notes are recorded in `Icod.CoreUtils-Batch-59-ProcPs-Process-Selection-Signaling-Waiting.md`.
 
 ### Batch 60 — Process lookup and working directories (2 tools)
 

@@ -310,6 +310,7 @@ public sealed class DotNetProcProcessProvider : IProcProcessProvider {
 				CommandName = TryObserve( () => process.ProcessName, ObservationFidelity.Equivalent ),
 				UserCpuTicks = TryObserve( () => checked( (ulong)process.UserProcessorTime.Ticks ), ObservationFidelity.Equivalent ),
 				SystemCpuTicks = TryObserve( () => checked( (ulong)process.PrivilegedProcessorTime.Ticks ), ObservationFidelity.Equivalent ),
+				StartTimeTicks = TryObserve( () => checked( (ulong)process.StartTime.ToUniversalTime().Ticks ), ObservationFidelity.Equivalent ),
 				VirtualMemoryBytes = TryObserve( () => checked( (ulong)process.VirtualMemorySize64 ), ObservationFidelity.Equivalent ),
 				ResidentMemoryBytes = TryObserve( () => checked( (ulong)process.WorkingSet64 ), ObservationFidelity.Equivalent ),
 				NiceValue = TryObserve( () => process.BasePriority, ObservationFidelity.Approximated ),

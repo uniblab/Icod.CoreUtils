@@ -4,7 +4,7 @@
 procps-ng 4.0.6 command set in this repository. It owns process enumeration,
 procps field semantics, Linux `/proc` parsing, native Windows and macOS
 observation providers, conservative fallback observations for other platforms,
-process selection, system metrics, vmstat-specific cumulative counters and disk observations, sampling calculations, personalities,
+process selection, the shared pgrep/pkill/pidwait matching grammar, system metrics, vmstat-specific cumulative counters and disk observations, sampling calculations, personalities,
 sorting, and reusable screen-state models.
 
 Cross-suite mechanics remain in `Icod.CoreUtils.Shared`: process identities and
@@ -43,3 +43,18 @@ instead of being invented as zero.
 A final portable provider remains for platforms without one of the dedicated
 backends. It intentionally exposes only observations whose semantics are
 portable enough to defend.
+
+## Batch 59 process-matching family
+
+`ProcMatchCommand` is the single procps-ng 4.0.6 engine used by `pgrep`,
+`pkill`, and `pidwait`. The command profiles share GNU ERE matching through the
+cross-suite managed regular-expression provider, OR-within/AND-between selector
+semantics, PID/parent/group/session/user/terminal/state/cgroup/namespace/age/
+environment filtering, newest/oldest selection, pidfile policy, ancestor
+exclusion, and signal-handler selection. Linux lightweight-task enumeration and
+environment/namespace observations stay suite-specific here; actual signal
+delivery, queued values, reuse-aware waiting, and signal-disposition observation
+continue to use the cross-suite process-control contracts.
+
+`pidwait` is the only installed waiting executable in the pinned procps-ng
+4.0.6 profile. No `pwait` launcher or project is created.
