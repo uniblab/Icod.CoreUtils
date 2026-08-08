@@ -27,6 +27,7 @@ The primary provider matrix is:
 | Area | Linux | Windows | macOS |
 |---|---|---|---|
 | Process detail | `/proc` + shared identity provider | .NET process data augmented by Tool Help and Terminal Services session APIs | .NET process data augmented by Darwin `libproc` and POSIX APIs |
+| Process memory maps | `/proc/PID/maps` and `/proc/PID/smaps` | explicitly unsupported until a complete address-space contract is implemented | explicitly unsupported until a complete address-space contract is implemented |
 | Memory / swap | `/proc/meminfo` | `GetPerformanceInfo` + `EnumPageFilesW` | Mach VM statistics + `hw.memsize` + `vm.swapusage` |
 | vmstat paging / block I/O | `/proc/vmstat` + `/proc/diskstats` + sysfs partition identity | explicitly unavailable when no defensible native equivalent is exposed | Mach page/swap counters; Linux disk modes remain unsupported |
 | CPU activity | `/proc/stat` | `GetSystemTimes` | Mach `host_statistics` |
@@ -76,3 +77,15 @@ executable/argv identity, script matching, root filtering, omit lists including
 tasks. `pwdx` uses the same reuse-protected path observations for one or more
 processes and reports vanished, denied, and unsupported observations without
 silently substituting the caller's directory or another unrelated pathname.
+
+
+## Batch 61 process memory maps
+
+`SystemProcMemoryMapProvider` owns reuse-protected process address-space observations for `pmap` and dispatches to the dedicated `LinuxProcMemoryMapProvider` where procfs exists. The Linux provider parses `/proc/PID/maps` for basic/device reports and `/proc/PID/smaps` for `-x`, `-X`, and `-XX`, preserving numeric kernel detail fields and `VmFlags` without hard-coding a permanently fixed `smaps` schema. It checks process identity before and after each read so PID reuse cannot silently attach maps to the wrong process. Because the Linux provider is separately injectable, procfs fixtures and reuse races can be exercised on every CI host.
+
+Windows and macOS deliberately report this Linux-equivalent map capability as
+unsupported in Batch 61. Loaded-module lists, working-set summaries, and other
+partial native observations are not substituted for a complete address-space
+map. A future native provider may expose those systems only after a neutral map
+contract can preserve their real protection, backing, region, and naming
+semantics without fabricating Linux `/proc` fields.

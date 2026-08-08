@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `59`; Batch `60` implementation is ready for validation |
-| Current engineering milestone | Batch 60 — `Icod.ProcPs.PidOf` and `Icod.ProcPs.Pwdx` implemented; repository/runner validation pending |
+| Completed command batches | `0` through `60`; Batch `61` implementation is ready for validation |
+| Current engineering milestone | Batch 61 — `Icod.ProcPs.Pmap` implemented; repository/runner validation pending |
 | Completed infrastructure milestone | Completion Gates E2 through E6, F1 through F4, and P1 — filesystem, terminal, process-control, and ProcPs provider foundations; three-platform ProcPs provider correction validated and merged |
-| Active infrastructure dependency | Validate Batch 60 executable-identity, process-root, working-directory, reuse-race, and platform-capability behavior against the merged three-platform ProcPs providers |
-| Next engineering step | Validate Batch 60 on the required runners; then Batch 61 — `Icod.ProcPs.Pmap` |
+| Active infrastructure dependency | Validate Batch 61 reuse-aware memory-map parsing, `smaps` detail handling, range/filter presentation, race behavior, and explicit non-Linux capability boundaries |
+| Next engineering step | Validate Batch 61 on the required runners; then Batch 62 — `Icod.ProcPs.Ps` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1572,13 +1572,16 @@ For `pwdx`, implement one or more process targets, permission and vanished-proce
 
 These commands provide focused validation of executable identity, process roots, namespace-aware path resolution, and short-lived-process races before the larger process-reporting engine.
 
-Batch 60 implementation is complete and ready for repository validation. `Icod.ProcPs.Shared` now owns a reuse-aware `SystemProcProcessPathProvider` and the common `ProcProcessLookupCommand` engine. Linux observes executable, root, and working-directory links through `/proc/PID`; macOS uses Darwin `proc_pidpath` and `PROC_PIDVNODEPATHINFO`; Windows exposes executable identity but deliberately reports arbitrary-process CWD and POSIX-root observations unsupported rather than fabricating equivalents. `pidof` implements procps-ng 4.0.6 executable/argv matching, script matching, root checks, omit lists including `%PPID`, custom separators, single-shot and quiet behavior, lightweight-task selection, descending PID presentation, and deterministic no-match status. `pwdx` accepts numeric and `/proc/PID` targets, preserves the supplied operand in output, continues across vanished/denied/unsupported targets, and reports controlled per-target diagnostics. Dedicated tests cover matching, scripts, root filtering, omissions, lightweight tasks, output/newline policy, multi-target paths, partial failures, unsupported paths, and live system-provider capability policy. Full solution and required-runner validation remain the closure step. Detailed notes are recorded in `Icod.CoreUtils-Batch-60-ProcPs-Process-Lookup-and-Working-Directories.md`.
+Batch 60 passed the repository test suite on the required platforms and was merged to `main`; the batch is closed. `Icod.ProcPs.Shared` now owns a reuse-aware `SystemProcProcessPathProvider` and the common `ProcProcessLookupCommand` engine. Linux observes executable, root, and working-directory links through `/proc/PID`; macOS uses Darwin `proc_pidpath` and `PROC_PIDVNODEPATHINFO`; Windows exposes executable identity but deliberately reports arbitrary-process CWD and POSIX-root observations unsupported rather than fabricating equivalents. `pidof` implements procps-ng 4.0.6 executable/argv matching, script matching, root checks, omit lists including `%PPID`, custom separators, single-shot and quiet behavior, lightweight-task selection, descending PID presentation, and deterministic no-match status. `pwdx` accepts numeric and `/proc/PID` targets, preserves the supplied operand in output, continues across vanished/denied/unsupported targets, and reports controlled per-target diagnostics. Dedicated tests cover matching, scripts, root filtering, omissions, lightweight tasks, output/newline policy, multi-target paths, partial failures, unsupported paths, and live system-provider capability policy. Detailed notes are recorded in `Icod.CoreUtils-Batch-60-ProcPs-Process-Lookup-and-Working-Directories.md`.
 
 ### Batch 61 — Process memory maps (1 tool)
 
-- [ ] `Icod.ProcPs.Pmap`
+- [x] `Icod.ProcPs.Pmap`
 
 Create the project and tests with assembly name `pmap`. Implement basic, extended, device, quiet, range, totals, permissions, offsets, mappings, names, UTF-8 handling, vanished-process behavior, privilege diagnostics, and explicit capability reporting when a platform cannot supply Linux-equivalent maps.
+
+Batch 61 implementation is complete and ready for repository validation. `Icod.ProcPs.Shared` now owns `IProcMemoryMapProvider`, `SystemProcMemoryMapProvider`, the fixture-testable `LinuxProcMemoryMapProvider`, detailed map-region/metric models, and `maps`/`smaps` parsing. Linux reads `/proc/PID/maps` and `/proc/PID/smaps` with process identity checked before and after the observation so a PID-reuse race cannot attach mappings to the wrong process; the Linux provider can also be exercised against procfs fixtures on Windows and macOS without advertising procfs as a host capability. Windows and macOS deliberately report Linux-equivalent complete address-space maps unsupported rather than substituting loaded-module lists or other partial observations.
+`Icod.ProcPs.Pmap` implements procps-ng 4.0.6 basic, `-x`, `-X`/`-XX`, device, quiet, full-path, kernel-name, and hexadecimal range modes; totals, permission normalization, offsets, device identifiers, mapping names, UTF-8 paths, vanished-process status bit 42, controlled access/capability diagnostics, and host-correct generated line endings are covered by dedicated tests. The rc-file modes are recognized but return a controlled unsupported diagnostic because they are outside the Batch 61 roadmap scope. Full solution and required-runner validation remain the closure step. Detailed notes are recorded in `Icod.CoreUtils-Batch-61-ProcPs-Process-Memory-Maps.md`.
 
 ### Batch 62 — Process reporting engine (1 tool)
 
