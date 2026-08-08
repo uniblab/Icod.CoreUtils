@@ -1019,7 +1019,7 @@ Options:
 		public bool ShowUsageOnError = true;
 		public string? Pattern;
 		public ICompiledRegularExpression? PatternExpression;
-		public string Delimiter = "\n";
+		public string Delimiter = Environment.NewLine;
 		public bool ListName;
 		public bool ListFull;
 		public bool Quiet;
