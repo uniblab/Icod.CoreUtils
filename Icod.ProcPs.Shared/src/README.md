@@ -9,6 +9,7 @@ The source is divided by responsibility:
 - `Selection.cs` implements ProcPs process selection and adapters over the shared process-control contracts.
 - `SystemMetrics.cs` models and observes memory, swap, CPU, load, uptime, VM, slab, hugepage, and Linux login-session data.
 - `Sampling.cs` provides counter-delta, wraparound, sampling-window, and refresh helpers over shared monotonic time.
+- `Vmstat.cs` defines vmstat-specific capabilities, cumulative system/paging counters, Linux diskstats rows, and Linux/Windows/macOS provider adapters.
 - `Presentation.cs` supplies field catalogs, sorting, personalities, display configuration, and reusable screen models.
 
 Command-specific option parsing and output syntax remain in the individual ProcPs command projects.
