@@ -329,11 +329,38 @@ These conventions apply to every existing project that is altered and every proj
 15. Co-resident projects whose lowercase executable names collide use suite-specific output directories. Tests and packaging identify the suite explicitly; an assembly name is not changed merely to avoid an incubation-time path collision.
 16. The supported CI platform targets are explicitly `windows-latest`, `ubuntu-latest`, and `macos-latest`. Platform-specific tests may be conditional, but every runner must build the full solution and execute the complete applicable test suite.
 17. Every `if`, `else if`, and `else` body must use braces, even when the body contains only a single statement. One-line unbraced forms such as `if ( foo ) return;` are prohibited.
-18. Do not use `Assert.True` to check for substrings. Use `Assert.StartsWith`, `Assert.EndsWith` instead. (https://xunit.net/xunit.analyzers/rules/xUnit2009).
-19. Do not use `Assert.Equal` to check for boolean conditions. Use `Assert.True` instead. (https://xunit.net/xunit.analyzers/rules/xUnit2004)
-20. Tests must not write directly to process standard output or standard error (`stdout` or `stderr`). Command output must normally be captured through injected streams. The only exception is a test that deliberately uses a real standard stream to communicate with another process.
-21. The eventual extracted repositories retain these conventions unless their own roadmap records a deliberate exception.
-22. Cross-suite compatibility is tested at the public command-line or textual-format boundary unless a dependency has been deliberately classified as cross-suite infrastructure. During the current roadmap such APIs may be incubated in `Icod.CoreUtils.Shared`; their permanent public home is `Icod.CommandFramework` after the final extraction audit.
+18. Conditional (`?:`) expressions use the choice-operator layout shown below. The condition is parenthesized, the `?` and `:` arms are placed on their own indented lines, and the semicolon that terminates the complete expression is placed on its own line like a closing brace. Nested conditional expressions are permitted and use the same layout recursively. Examples:
+
+    ```csharp
+    var foo = ( condition )
+      ? first
+      : second
+    ;
+    ```
+
+    ```csharp
+    var foo = ( condition1 )
+      ? ( condition2 )
+        ? baz
+        : quux
+      : fred
+    ;
+    ```
+
+19. Every `public`, `protected`, or `internal` method validates its parameters at the very start of the method and throws the appropriate argument exception where validation is semantically required, before performing other method work or side effects. Required reference parameters should use the established throw-expression form where applicable. Example:
+
+    ```csharp
+    protected virtual string Foo( File file ) {
+      file = file ?? throw new System.ArgumentNullException( nameof( file ) );
+      // rest of code follows
+    }
+    ```
+
+20. Do not use `Assert.True` to check for substrings. Use `Assert.StartsWith`, `Assert.EndsWith` instead. (https://xunit.net/xunit.analyzers/rules/xUnit2009).
+21. Do not use `Assert.Equal` to check for boolean conditions. Use `Assert.True` instead. (https://xunit.net/xunit.analyzers/rules/xUnit2004)
+22. Tests must not write directly to process standard output or standard error (`stdout` or `stderr`). Command output must normally be captured through injected streams. The only exception is a test that deliberately uses a real standard stream to communicate with another process.
+23. The eventual extracted repositories retain these conventions unless their own roadmap records a deliberate exception.
+24. Cross-suite compatibility is tested at the public command-line or textual-format boundary unless a dependency has been deliberately classified as cross-suite infrastructure. During the current roadmap such APIs may be incubated in `Icod.CoreUtils.Shared`; their permanent public home is `Icod.CommandFramework` after the final extraction audit.
 
 ## Repository-wide engineering rules
 
