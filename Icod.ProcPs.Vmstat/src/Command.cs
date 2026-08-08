@@ -155,7 +155,13 @@ For more details see vmstat(8).
 			if ( memory.Fields.TryGetValue( linux, out var linuxValue ) ) return linuxValue;
 			return memory.Fields.TryGetValue( darwin, out var darwinValue ) ? darwinValue : null;
 		}
-		var swapUsed = null == memory || !memory.SwapTotalBytes.HasValue || !memory.SwapFreeBytes.HasValue ? null : memory.SwapTotalBytes.Value >= memory.SwapFreeBytes.Value ? memory.SwapTotalBytes.Value - memory.SwapFreeBytes.Value : 0UL;
+		ulong? swapUsed =
+		    null == memory || !memory.SwapTotalBytes.HasValue || !memory.SwapFreeBytes.HasValue
+		        ? null
+		        : memory.SwapTotalBytes.Value >= memory.SwapFreeBytes.Value
+		            ? memory.SwapTotalBytes.Value - memory.SwapFreeBytes.Value
+		            : 0UL
+		;
 		var col5 = options.Active ? FieldBytes( "Inactive", "DarwinInactive" ) : memory?.BuffersBytes;
 		var col6 = options.Active ? FieldBytes( "Active", "DarwinActive" ) : memory?.CacheBytes;
 		var rw = options.Wide ? 4 : 2;
