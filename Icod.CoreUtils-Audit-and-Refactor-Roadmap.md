@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `60`; Batch `61` and Batch `62` implementations are ready for validation |
-| Current engineering milestone | Batch 62 — `Icod.ProcPs.Ps` implemented; repository/runner validation pending |
+| Completed command batches | `0` through `60`; Batch `61`, Batch `62`, and Batch `63` implementations are ready for validation |
+| Current engineering milestone | Batch 63 — `Icod.ProcPs.W` implemented; repository/runner validation pending |
 | Completed infrastructure milestone | Completion Gates E2 through E6, F1 through F4, and P1 — filesystem, terminal, process-control, and ProcPs provider foundations; three-platform ProcPs provider correction validated and merged |
-| Active infrastructure dependency | Validate Batch 61 memory-map behavior and Batch 62 ProcPs process reporting, selection, personalities, field/format compatibility, threads/forests, security observations, and three-platform capability behavior |
-| Next engineering step | Validate Batches 61 and 62 on the required runners; then Batch 63 — `Icod.ProcPs.W` |
+| Active infrastructure dependency | Validate Batch 61 memory maps, Batch 62 ProcPs process reporting, and Batch 63 native/equivalent login-session reporting across the required runners |
+| Next engineering step | Validate Batches 61 through 63 on the required runners; then Batch 64 — `Icod.ProcPs.Sysctl` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1628,9 +1628,13 @@ The Batch 62 command covers default and explicit process selection, quick PID or
 
 ### Batch 63 — User and session reporting (1 tool)
 
-- [ ] `Icod.ProcPs.W`
+- [x] `Icod.ProcPs.W`
 
 Create the project and tests with assembly name `w`. Implement logged-in users, terminals, origins, login and idle times, current processes, JCPU and PCPU, load and uptime headings, short and long forms, container behavior, utmp or equivalent provider limitations, and exact diagnostics.
+
+Batch 63 implementation is complete and ready for repository validation. `Icod.ProcPs.Shared` now owns detailed login-session models and providers: Linux uses libc `utmpx`, macOS uses Darwin `utmpx`, and Windows uses Terminal Services session APIs as an explicitly equivalent native source rather than pretending that `utmp` exists there. The session observation carries user, terminal/station, remote origin, login time, last activity, login PID where available, and platform session identity. Unix idle time uses terminal-device activity when observable; Windows uses the documented session last-input time. Unsupported hosts return controlled capability observations rather than fabricated records.
+
+`Icod.ProcPs.W` consumes those shared observations together with the existing process and system-metrics providers. It implements procps-ng 4.0.6 long/short forms, suppression of both heading lines, FROM toggling, old-style idle formatting, login/current PID prefixing beside WHAT, user filtering, current-user-filter suppression, terminal supplementation, container uptime delegation, ProcPs user/origin/command width controls, JCPU accumulation, foreground-process-group-aware PCPU/current-command selection on Linux and macOS, uptime/load headings, numeric origin display where the native provider exposes an address, help/version/error/cancellation behavior, and explicit provider limitations. The shared Linux procfs snapshot now retains `tpgid` for the terminal foreground process group, and the macOS libproc provider carries Darwin’s native terminal foreground process-group observation; platforms without an equivalent fact fall back to the newest associated process. Load averages that are genuinely unavailable on a platform are rendered as `n/a` rather than guessed. Dedicated tests inject all output/error streams and cover the compatibility surface without writing to the test runner's standard streams. Full solution and required-runner validation remain the closure step. Detailed notes are recorded in `Icod.CoreUtils-Batch-63-ProcPs-User-Session-Reporting.md`.
 
 ### Batch 64 — Kernel parameter control (1 tool)
 

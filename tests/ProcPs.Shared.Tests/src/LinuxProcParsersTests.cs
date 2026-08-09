@@ -7,10 +7,11 @@ using Xunit;
 public sealed class LinuxProcParsersTests {
 	[Fact]
 	public void ProcessStatPreservesRightParenthesisInCommandName() {
-		var record = LinuxProcParsers.ParseProcessStat( "123 (weird ) name) S 1 123 123 0 0 0 0 0 0 0 10 20 0 0 20 5 3 0 777 4096 2" );
+		var record = LinuxProcParsers.ParseProcessStat( "123 (weird ) name) S 1 123 123 0 456 0 0 0 0 0 10 20 0 0 20 5 3 0 777 4096 2" );
 		Assert.Equal( "weird ) name", record.CommandName );
 		Assert.Equal( 1, record.ParentProcessId );
 		Assert.Equal( 123, record.ProcessGroupId );
+		Assert.Equal( 456, record.TerminalForegroundProcessGroupId );
 		Assert.Equal( 10UL, record.UserCpuTicks );
 		Assert.Equal( 20UL, record.SystemCpuTicks );
 		Assert.Equal( 5, record.NiceValue );
