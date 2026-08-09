@@ -567,6 +567,22 @@ public static class Command {
 					value
 				);
 				try {
+					var followFromCurrentEnd = (
+						FollowMode.None != settings.FollowMode
+						&& !operand.IsStandardInput
+						&& !settings.StartAt
+						&& 0 == settings.Count
+						&& File.Exists( operand.Value )
+					);
+					if ( followFromCurrentEnd ) {
+						followStates.Add(
+							CreateFollowState(
+								operand.Value,
+								settings
+							)
+						);
+					}
+
 					if ( showHeaders ) {
 						await WriteHeaderAsync(
 							output,
@@ -578,24 +594,27 @@ public static class Command {
 						lastOutputPath = operand.Value;
 					}
 
-					if ( CountKind.Bytes == settings.CountKind ) {
-						await ProcessBytesAsync(
-							operand,
-							settings,
-							context,
-							output
-						).ConfigureAwait( false );
-					} else {
-						await ProcessRecordsAsync(
-							operand,
-							settings,
-							context,
-							output
-						).ConfigureAwait( false );
+					if ( !followFromCurrentEnd ) {
+						if ( CountKind.Bytes == settings.CountKind ) {
+							await ProcessBytesAsync(
+								operand,
+								settings,
+								context,
+								output
+							).ConfigureAwait( false );
+						} else {
+							await ProcessRecordsAsync(
+								operand,
+								settings,
+								context,
+								output
+							).ConfigureAwait( false );
+						}
 					}
 
 					if (
-						FollowMode.None != settings.FollowMode
+						!followFromCurrentEnd
+						&& FollowMode.None != settings.FollowMode
 						&& !operand.IsStandardInput
 					) {
 						followStates.Add(
