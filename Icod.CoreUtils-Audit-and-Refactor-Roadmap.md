@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `60`; Batch `61` through Batch `67` implementations are ready for validation; Batch `68` (`Icod.ProcPs.Top`) is deliberately deferred until after `Icod.ProcPs` extraction; Batch `69` implementation is ready for validation |
-| Current engineering milestone | Batch 69 — `chroot` implemented over an injectable Unix root/identity/exec boundary; repository/runner validation pending |
+| Completed command batches | `0` through `60`; Batch `61` through Batch `67` implementations are ready for validation; Batch `68` (`Icod.ProcPs.Top`) is deliberately deferred until after `Icod.ProcPs` extraction; Batch `69` and Batch `70` implementations are ready for validation |
+| Current engineering milestone | Batch 70 — `chcon` and `runcon` implemented over an injectable native SELinux boundary; repository/runner validation pending |
 | Completed infrastructure milestone | Completion Gates E2 through E6, F1 through F4, and P1 — filesystem, terminal, process-control, and ProcPs provider foundations; three-platform ProcPs provider correction validated and merged |
-| Active infrastructure dependency | Validate Batches 61 through 67 and Batch 69 across the required runners; preserve the ProcPs extraction boundary so deferred Batch 68 can be completed after `Icod.ProcPs` leaves the co-resident solution |
-| Next engineering step | Validate Batch 69 and continue with Batch 70; Batch 68 — `Icod.ProcPs.Top` remains deferred until after `Icod.ProcPs` is migrated out of this repository |
+| Active infrastructure dependency | Validate Batches 61 through 67, Batch 69, and Batch 70 across the required runners; preserve the ProcPs extraction boundary so deferred Batch 68 can be completed after `Icod.ProcPs` leaves the co-resident solution |
+| Next engineering step | Validate Batch 70 and continue with Batch 71; Batch 68 — `Icod.ProcPs.Top` remains deferred until after `Icod.ProcPs` is migrated out of this repository |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -234,11 +234,11 @@ Man7 pages are useful synopses and secondary references, but they must not repla
 1. **Several implementations still silently accept unsupported behavior.**
    Unknown or unsupported options are ignored by some commands. Unsupported platform behavior sometimes returns success. Both patterns are incompatible with a conformance-oriented port.
 
-2. **Several commands still throw unhandled `NotImplementedException`.**
-   The existing `runcon` and `chroot` implementations are examples. Unsupported operations must produce a controlled diagnostic and documented nonzero status.
+2. **Unhandled `NotImplementedException` must not remain in command paths.**
+   Batches 69 and 70 retired the known `chroot` and `runcon` examples. Any remaining unsupported operation must produce a controlled diagnostic and documented nonzero status.
 
 3. **Some commands delegate their defining operation to an installed native utility.**
-   Examples include portions of `link`, `chcon`, `install`, and `stdbuf`. Production implementations must not obtain apparent compatibility by invoking the same host utility. Native utilities may be used only by optional differential tests.
+   Examples include portions of `link`, `install`, and `stdbuf`. Production implementations must not obtain apparent compatibility by invoking the same host utility. Native utilities may be used only by optional differential tests.
 
 4. **Some implementations are not yet the command they claim to be.**
    - The existing `diff` implementation is not a complete difference algorithm and does not yet implement the required result-status model; it will be migrated into `Icod.DiffUtils.Diff` and corrected during the consecutive Diffutils batches.
@@ -1715,6 +1715,8 @@ The native work is isolated behind `IChrootPlatform`, allowing command tests to 
 - [ ] `runcon`
 
 Treat these as Linux and SELinux capability commands. Use native APIs or stable libraries rather than invoking external commands. Implement reference and component contexts, dereference and recursion policy, preserve-root, computed and process context behavior, privilege failures, and explicit diagnostics when SELinux is unavailable.
+
+Implementation is now present behind the shared injectable `ISelinuxPlatform` boundary. `NativeSelinuxPlatform` binds directly to `libselinux.so.1` for current/file/link contexts, context validation, process-transition computation, and `setexeccon`, and uses libc `execvp` for ordinary execution plus `execv` after `--compute`, so successful `runcon` replaces the process image without invoking a shell or host `runcon`. `chcon` now owns full/reference/component context parsing, `-h`/`--dereference`, `-R` with `-H`/`-L`/`-P`, `--preserve-root`, verbose reporting, and per-file failure aggregation while delegating recursive filesystem walking to the established `ReadOnlyPathTraversalEngine` (including stable-identity cycle handling and shared reparse/junction policy). `runcon` implements complete, modified-current, and `--compute` context modes and preserves GNU's 125/126/127 launcher status model. Windows, macOS, missing-libselinux, disabled-SELinux, validation, privilege, and native-operation failures are controlled diagnostics. Dedicated `ChCon.Tests` and `RunCon.Tests` exercise the command layer through a fake provider. Detailed notes are recorded in `Icod.CoreUtils-Batch-70-SELinux-Context-Operations.md`; full solution and required-runner validation remain the closure step.
 
 ### Batch 71 — Standard-stream buffering control (1 tool)
 

@@ -7,7 +7,6 @@ using System.Runtime.InteropServices;
 /// Provides BCL-first platform capability detection and controlled operations.
 /// </summary>
 public static class PlatformCapabilities {
-
 	/// <summary>
 	/// Gets whether the current runtime can attempt the supplied feature.
 	/// </summary>
@@ -19,14 +18,13 @@ public static class PlatformCapabilities {
 			PlatformFeature.SymbolicLinks => true,
 			PlatformFeature.HardLinks => IsHardLinkSupported(),
 			PlatformFeature.FileOwnership => false,
-			PlatformFeature.SecurityContexts => false,
+			PlatformFeature.SecurityContexts => IsSecurityContextSupported(),
 			PlatformFeature.ProcessSignals => false,
 			PlatformFeature.EffectiveUserIdentity => false,
 			PlatformFeature.FileSystemStatistics => true,
 			_ => false
 		};
 	}
-
 
 	/// <summary>
 	/// Attempts to read Unix permission bits through the BCL.
@@ -52,7 +50,6 @@ public static class PlatformCapabilities {
 			);
 		}
 	}
-
 	/// <summary>
 	/// Attempts to set Unix permission bits through the BCL.
 	/// </summary>
@@ -78,7 +75,6 @@ public static class PlatformCapabilities {
 			);
 		}
 	}
-
 	/// <summary>
 	/// Attempts to create a hard link through the native operating-system API.
 	/// </summary>
@@ -91,7 +87,6 @@ public static class PlatformCapabilities {
 				"Hard links are not supported by the current platform layer on this operating system."
 			);
 		}
-
 		try {
 			bool succeeded;
 			if ( OperatingSystem.IsWindows() ) {
@@ -115,7 +110,6 @@ public static class PlatformCapabilities {
 			if ( succeeded ) {
 				return PlatformOperationResult.Success();
 			}
-
 			var error = Marshal.GetLastPInvokeError();
 			var exception = new Win32Exception(
 				error
@@ -143,7 +137,6 @@ public static class PlatformCapabilities {
 			);
 		}
 	}
-
 	/// <summary>
 	/// Attempts to create a symbolic link through the BCL.
 	/// </summary>
@@ -176,7 +169,6 @@ public static class PlatformCapabilities {
 			);
 		}
 	}
-
 	/// <summary>
 	/// Attempts to read a symbolic-link target through the BCL.
 	/// </summary>
@@ -203,7 +195,6 @@ public static class PlatformCapabilities {
 			);
 		}
 	}
-
 
 	/// <summary>
 	/// Attempts to resolve the final symbolic-link target through the BCL.
@@ -234,7 +225,6 @@ public static class PlatformCapabilities {
 			);
 		}
 	}
-
 	/// <summary>
 	/// Returns a controlled unsupported result for ownership changes until a platform implementation is supplied.
 	/// </summary>
@@ -250,21 +240,36 @@ public static class PlatformCapabilities {
 			"File ownership changes are not available through the current shared platform layer."
 		);
 	}
-
 	/// <summary>
-	/// Returns a controlled unsupported result for security-context changes.
+	/// Attempts to set a file security context through the shared SELinux provider.
 	/// </summary>
 	public static PlatformOperationResult TrySetSecurityContext(
 		string path,
 		string context
 	) {
-		_ = path;
-		_ = context;
-		return PlatformOperationResult.Unsupported(
-			"Security contexts are not supported by the current platform layer."
+		var platform = new NativeSelinuxPlatform();
+		if ( !platform.IsSupported )
+			return PlatformOperationResult.Unsupported( platform.UnsupportedReason );
+		if ( !platform.IsEnabled( out var enabledError ) )
+			return PlatformOperationResult.Unsupported(
+				enabledError == 0
+					? "SELinux is disabled on this kernel."
+					: $"SELinux is unavailable: {platform.DescribeError( enabledError )}"
+			);
+		if ( !platform.TryValidateContext( context, out var validationError ) )
+			return PlatformOperationResult.Failure(
+				$"Invalid SELinux security context: {platform.DescribeError( validationError )}"
+			);
+		if ( platform.TrySetFileContext( path, context, true, out var setError ) )
+			return PlatformOperationResult.Success();
+		return PlatformOperationResult.Failure(
+			$"Unable to set SELinux security context: {platform.DescribeError( setError )}"
 		);
 	}
-
+	private static bool IsSecurityContextSupported() {
+		var platform = new NativeSelinuxPlatform();
+		return platform.IsSupported && platform.IsEnabled( out _ );
+	}
 	private static bool IsHardLinkSupported() {
 		return (
 			OperatingSystem.IsWindows()
@@ -273,7 +278,6 @@ public static class PlatformCapabilities {
 			|| OperatingSystem.IsFreeBSD()
 		);
 	}
-
 #pragma warning disable SYSLIB1054 // LibraryImport requires unsafe project settings; keep this helper self-contained.
 
 	[DllImport(
@@ -289,7 +293,6 @@ public static class PlatformCapabilities {
 		string existingFileName,
 		IntPtr securityAttributes
 	);
-
 	[DllImport(
 		"libc",
 		EntryPoint = "link",
@@ -300,7 +303,6 @@ public static class PlatformCapabilities {
 		[MarshalAs( UnmanagedType.LPUTF8Str )] string existingFilePath,
 		[MarshalAs( UnmanagedType.LPUTF8Str )] string linkPath
 	);
-
 	[DllImport(
 		"libSystem.B.dylib",
 		EntryPoint = "link",
@@ -311,7 +313,6 @@ public static class PlatformCapabilities {
 		[MarshalAs( UnmanagedType.LPUTF8Str )] string existingFilePath,
 		[MarshalAs( UnmanagedType.LPUTF8Str )] string linkPath
 	);
-
 #pragma warning restore SYSLIB1054
 
 }
