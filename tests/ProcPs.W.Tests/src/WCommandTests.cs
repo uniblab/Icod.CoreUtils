@@ -173,6 +173,24 @@ public sealed class WCommandTests {
 		Assert.Contains( "host.exa", text, StringComparison.Ordinal );
 	}
 
+	/// <summary>Verifies an explicitly injected terminal width still limits the WHAT field.</summary>
+	[Fact]
+	public async Task ColumnsEnvironmentLimitsWhatWidth() {
+		using var output = new MemoryStream();
+		string? EnvironmentProvider( string name ) {
+			ArgumentNullException.ThrowIfNull( name );
+			if ( "COLUMNS" == name ) {
+				return "50";
+			}
+			return null;
+		}
+		var status = await RunAsync( [ "-h" ], output, environmentProvider: EnvironmentProvider );
+		Assert.Equal( 0, status );
+		var text = Text( output );
+		Assert.Contains( "vim not", text, StringComparison.Ordinal );
+		Assert.DoesNotContain( "vim notes.txt", text, StringComparison.Ordinal );
+	}
+
 	/// <summary>Verifies invalid ProcPs width environment values warn and fall back without touching the test console.</summary>
 	[Fact]
 	public async Task InvalidEnvironmentWidthsReportWarningsAndUseDefaults() {
@@ -309,7 +327,7 @@ public sealed class WCommandTests {
 			accountResolver: new FakeAccountResolver(),
 			timeProvider: new FixedTimeProvider( Now ),
 			cpuUnitsPerSecondProvider: static () => 100d,
-			environmentVariableProvider: environmentProvider 
+			environmentVariableProvider: environmentProvider ?? static _ => null
 		);
 	}
 
