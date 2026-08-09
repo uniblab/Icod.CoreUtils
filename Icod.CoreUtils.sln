@@ -820,6 +820,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.ChCon.Tests"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.RunCon.Tests", "tests\RunCon.Tests\Icod.CoreUtils.RunCon.Tests.csproj", "{B70C0002-70C0-4700-A002-000000000002}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.StdBuf.Tests", "tests\StdBuf.Tests\Icod.CoreUtils.StdBuf.Tests.csproj", "{B71C0001-71C0-4700-A001-000000000001}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -2441,6 +2443,12 @@ Global
 		{B70C0002-70C0-4700-A002-000000000002}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B70C0002-70C0-4700-A002-000000000002}.Staging|Any CPU.ActiveCfg = Staging|Any CPU
 		{B70C0002-70C0-4700-A002-000000000002}.Staging|Any CPU.Build.0 = Staging|Any CPU
+		{B71C0001-71C0-4700-A001-000000000001}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B71C0001-71C0-4700-A001-000000000001}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B71C0001-71C0-4700-A001-000000000001}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B71C0001-71C0-4700-A001-000000000001}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B71C0001-71C0-4700-A001-000000000001}.Staging|Any CPU.ActiveCfg = Staging|Any CPU
+		{B71C0001-71C0-4700-A001-000000000001}.Staging|Any CPU.Build.0 = Staging|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -2716,6 +2724,7 @@ Global
 		{FEDDCE9B-D9F2-4DF7-991B-6C05001CDAE9} = {F05B4136-23C6-4CF5-8A6A-920F20DC0001}
 		{B70C0001-70C0-4700-A001-000000000001} = {F05B4136-23C6-4CF5-8A6A-920F20DC0001}
 		{B70C0002-70C0-4700-A002-000000000002} = {F05B4136-23C6-4CF5-8A6A-920F20DC0001}
+		{B71C0001-71C0-4700-A001-000000000001} = {F05B4136-23C6-4CF5-8A6A-920F20DC0001}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {30D28C3D-CE6B-4262-8EF1-1D4A49129A6C}

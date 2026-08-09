@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<LangVersion>13.0</LangVersion>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<IsPackable>false</IsPackable>
+		<IsTestProject>true</IsTestProject>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<AssemblyName>Icod.CoreUtils.StdBuf.Tests</AssemblyName>
+		<RootNamespace>Icod.CoreUtils.StdBuf.Tests</RootNamespace>
+		<StdBufNativeCompiler Condition=" '$(StdBufNativeCompiler)' == '' ">cc</StdBufNativeCompiler>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
+		<PlatformTarget>AnyCPU</PlatformTarget>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+		<PackageReference Include="xunit" Version="2.9.2" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\stdbuf\Icod.CoreUtils.StdBuf.csproj" />
+		<ProjectReference Include="..\..\Shared\Icod.CoreUtils.Shared.csproj" />
+	</ItemGroup>
+	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+		<WarningLevel>2</WarningLevel>
+		<DebugSymbols>true</DebugSymbols>
+		<DebugType>full</DebugType>
+		<Optimize>false</Optimize>
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)' == 'Staging' ">
+		<WarningLevel>3</WarningLevel>
+		<DebugSymbols>true</DebugSymbols>
+		<DebugType>full</DebugType>
+		<Optimize>false</Optimize>
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+		<WarningLevel>4</WarningLevel>
+		<DebugType>pdbonly</DebugType>
+		<Optimize>true</Optimize>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
+	</PropertyGroup>
+	<Target Name="BuildStdBufNativeTestAssets"
+		AfterTargets="Build"
+		Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+		<Exec Command="&quot;$(StdBufNativeCompiler)&quot; -shared -fPIC -O2 -std=c11 -Wall -Wextra -Werror -o &quot;$(TargetDir)libicodstdbuf.so&quot; &quot;$(MSBuildProjectDirectory)/../../stdbuf/native/icod_stdbuf.c&quot;" />
+		<Exec Command="&quot;$(StdBufNativeCompiler)&quot; -O2 -std=c11 -Wall -Wextra -Werror -o &quot;$(TargetDir)stdbuf-buffering-probe&quot; &quot;$(MSBuildProjectDirectory)/native/buffering_probe.c&quot;" />
+	</Target>
+</Project>

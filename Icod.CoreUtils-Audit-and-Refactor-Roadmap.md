@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `60`; Batch `61` through Batch `67` implementations are ready for validation; Batch `68` (`Icod.ProcPs.Top`) is deliberately deferred until after `Icod.ProcPs` extraction; Batch `69` and Batch `70` implementations are ready for validation |
-| Current engineering milestone | Batch 70 — `chcon` and `runcon` implemented over an injectable native SELinux boundary; repository/runner validation pending |
+| Completed command batches | `0` through `60`; Batch `61` through Batch `67` implementations are ready for validation; Batch `68` (`Icod.ProcPs.Top`) is deliberately deferred until after `Icod.ProcPs` extraction; Batch `69` through Batch `71` implementations are ready for validation |
+| Current engineering milestone | Batch 71 — `stdbuf` implemented with an owned Linux ELF preload shim and controlled unsupported behavior elsewhere; repository/runner validation pending |
 | Completed infrastructure milestone | Completion Gates E2 through E6, F1 through F4, and P1 — filesystem, terminal, process-control, and ProcPs provider foundations; three-platform ProcPs provider correction validated and merged |
-| Active infrastructure dependency | Validate Batches 61 through 67, Batch 69, and Batch 70 across the required runners; preserve the ProcPs extraction boundary so deferred Batch 68 can be completed after `Icod.ProcPs` leaves the co-resident solution |
-| Next engineering step | Validate Batch 70 and continue with Batch 71; Batch 68 — `Icod.ProcPs.Top` remains deferred until after `Icod.ProcPs` is migrated out of this repository |
+| Active infrastructure dependency | Validate Batches 61 through 67 and Batches 69 through 71 across the required runners; preserve the ProcPs extraction boundary so deferred Batch 68 can be completed after `Icod.ProcPs` leaves the co-resident solution |
+| Next engineering step | Validate Batch 71 and continue with Batch 72 (`Icod.Tar`); Batch 68 — `Icod.ProcPs.Top` remains deferred until after `Icod.ProcPs` is migrated out of this repository |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -238,7 +238,7 @@ Man7 pages are useful synopses and secondary references, but they must not repla
    Batches 69 and 70 retired the known `chroot` and `runcon` examples. Any remaining unsupported operation must produce a controlled diagnostic and documented nonzero status.
 
 3. **Some commands delegate their defining operation to an installed native utility.**
-   Examples include portions of `link`, `install`, and `stdbuf`. Production implementations must not obtain apparent compatibility by invoking the same host utility. Native utilities may be used only by optional differential tests.
+   Examples include portions of `link` and `install`. Production implementations must not obtain apparent compatibility by invoking the same host utility. Native utilities may be used only by optional differential tests. Batch 71 retires `stdbuf` from this risk by owning its preload helper and using the shared process-execution foundation.
 
 4. **Some implementations are not yet the command they claim to be.**
    - The existing `diff` implementation is not a complete difference algorithm and does not yet implement the required result-status model; it will be migrated into `Icod.DiffUtils.Diff` and corrected during the consecutive Diffutils batches.
@@ -246,7 +246,6 @@ Man7 pages are useful synopses and secondary references, but they must not repla
    - `link` behaves like a partial `ln` front end rather than the simple two-operand hard-link command.
    - `chmod` does not yet implement GNU/POSIX numeric and symbolic mode semantics correctly.
    - `tar` needs correct entry typing, metadata handling, and extraction-path safety.
-   - `stdbuf` cannot silently run a child without applying the requested buffering mode.
 
 5. **Several text commands use the wrong data model.**
    Common problems include ordinal comparison instead of locale collation, UTF-16 `char` processing where bytes or locale characters are required, line-based processing for commands that must transform delimiters, and whole-input buffering where bounded memory or temporary spill files are required.
@@ -1720,9 +1719,11 @@ Implementation is now present behind the shared injectable `ISelinuxPlatform` bo
 
 ### Batch 71 — Standard-stream buffering control (1 tool)
 
-- [ ] `stdbuf`
+- [x] `stdbuf`
 
-Begin with a documented feasibility decision. The current silent fallback is unacceptable. Implement supported preload or native-shim semantics where reliable; otherwise report controlled unsupported behavior for affected commands and platforms. Test child startup, environment injection, buffering modes, stream behavior, and exit-status propagation.
+Feasibility decision: active `stdbuf` semantics require a native stdio preload hook; a pure managed wrapper cannot alter the C `FILE*` buffering policy of an already launched child. Batch 71 therefore implements the supported path on Linux ELF targets with a repository-owned `libicodstdbuf.so` constructor shim compiled from `stdbuf/native/icod_stdbuf.c`. Windows and macOS retain portable parsing/help/version behavior but return controlled status 125 for requested buffering execution rather than silently launching the child unchanged.
+
+`Icod.CoreUtils.StdBuf` now parses GNU-style `-i`/`-o`/`-e` modes including line/unbuffered and decimal/binary size suffixes, preserves option termination at the first command operand, injects `_STDBUF_I`/`_STDBUF_O`/`_STDBUF_E`, appends the owned shim to `LD_PRELOAD`, and executes the child through the shared `IProcessExecutor` with literal argument vectors and the established 125/126/127 status model. The native shim applies `setvbuf(3)` in a constructor before `main`; explicit full-buffer sizes use an owned allocation so glibc does not silently ignore the requested size. Dedicated `StdBuf.Tests` cover parsing, environment injection, literal child arguments, unsupported behavior, launcher status propagation, and—on Linux—an actual libc buffering probe that writes through a nonblocking pipe after preload. Detailed notes are recorded in `Icod.CoreUtils-Batch-71-Standard-Stream-Buffering.md`; full solution and required-runner validation remain the closure step.
 
 ### Batch 72 — `Icod.Tar` archive engine (1 tool)
 
