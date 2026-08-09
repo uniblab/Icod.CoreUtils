@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `60`; Batch `61`, Batch `62`, Batch `63`, Batch `64`, Batch `65`, and Batch `66` implementations are ready for validation |
-| Current engineering milestone | Batch 66 — `Icod.ProcPs.Watch` implemented; repository/runner validation pending |
+| Completed command batches | `0` through `60`; Batch `61`, Batch `62`, Batch `63`, Batch `64`, Batch `65`, Batch `66`, and Batch `67` implementations are ready for validation |
+| Current engineering milestone | Batch 67 — `Icod.ProcPs.HugeTop` and `Icod.ProcPs.SlabTop` implemented; repository/runner validation pending |
 | Completed infrastructure milestone | Completion Gates E2 through E6, F1 through F4, and P1 — filesystem, terminal, process-control, and ProcPs provider foundations; three-platform ProcPs provider correction validated and merged |
-| Active infrastructure dependency | Validate Batches 61 through 66 across the required runners, including the reusable ProcPs full-screen terminal/refresh lifecycle introduced by Batch 65 and its child-process consumer in Batch 66 |
-| Next engineering step | Validate Batches 61 through 66 on the required runners; then Batch 67 — `Icod.ProcPs.HugeTop` and `Icod.ProcPs.SlabTop` |
+| Active infrastructure dependency | Validate Batches 61 through 67 across the required runners, including the reusable ProcPs full-screen terminal/refresh lifecycle and the Linux kernel-memory providers introduced for Batch 67 |
+| Next engineering step | Validate Batches 61 through 67 on the required runners; then Batch 68 — `Icod.ProcPs.Top` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1682,6 +1682,10 @@ For `hugetop`, implement system and per-process hugepage reporting, sorting, ref
 For `slabtop`, implement slab-cache metrics, sorting, human-readable sizes, refresh, batch and full-screen behavior, resizing, and controlled unsupported diagnostics outside platforms exposing equivalent kernel data.
 
 These commands share the terminal runtime but validate distinct Linux kernel-memory providers. They must not fabricate plausible-looking data on unsupported platforms.
+
+Batch 67 implementation is complete and ready for repository validation. `Icod.ProcPs.HugeTop` implements procps-ng 4.0.6-style system huge-page pools, per-process shared/private hugetlb accounting, NUMA presentation, human-readable sizing, configurable refresh delay, one-shot batch output, resize-aware full-screen refresh, cancellation, suspension/resume, and best-effort terminal restoration. `Icod.ProcPs.SlabTop` implements exact `/proc/slabinfo` cache metrics including active/total objects and slabs, procps-compatible sort criteria, human-readable sizing, configurable refresh delay, one-shot batch output, resize-aware full-screen refresh, cancellation, suspension/resume, and best-effort terminal restoration.
+
+The reusable provider boundary lives in `Icod.ProcPs.Shared`: Linux huge-page pools are observed from sysfs while per-process hugetlb usage is read from detailed `/proc/PID/smaps`, and slab-cache accounting is parsed from `/proc/slabinfo`. Non-Linux hosts return explicit unsupported observations for these Linux kernel interfaces rather than synthesizing approximate values. Dedicated tests inject providers, terminal endpoints, signal sources, clocks/schedulers, and standard streams; they cover batch/interactive rendering, sorting, sizing, refresh cadence, resizing, unsupported hosts, redirection policy, cancellation, command-line validation, and exact slab parsing without writing to the test runner's standard streams. Full solution and required-runner validation remain the closure step. Detailed notes are recorded in `Icod.CoreUtils-Batch-67-ProcPs-Kernel-Memory-Displays.md`.
 
 ### Batch 68 — Interactive process monitor (1 tool)
 
