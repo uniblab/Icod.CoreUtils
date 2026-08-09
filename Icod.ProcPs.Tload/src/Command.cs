@@ -274,7 +274,7 @@ public static class Command {
 			}
 			terminalPath = argument;
 		}
-		return new ParsedArguments( scale, delay, terminalPath, help: false, version: false, error: null );
+		return new ParsedArguments( scale, delay, terminalPath, Help: false, Version: false, Error: null );
 	}
 
 	private static bool TryOptionValue(
