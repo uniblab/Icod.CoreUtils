@@ -12,5 +12,6 @@ The source is divided by responsibility:
 - `Sampling.cs` provides counter-delta, wraparound, sampling-window, and refresh helpers over shared monotonic time.
 - `Vmstat.cs` defines vmstat-specific capabilities, cumulative system/paging counters, Linux diskstats rows, and Linux/Windows/macOS provider adapters.
 - `Presentation.cs` supplies field catalogs, sorting, personalities, display configuration, and reusable screen models.
+- `FullScreen.cs` provides reusable ProcPs full-screen terminal endpoints, geometry observation, selected-terminal output, resize/resume/suspend lifecycle hooks, and restoration-aware signal handling.
 
 Command-specific option parsing and output syntax remain in the individual ProcPs command projects.
