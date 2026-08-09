@@ -1,11 +1,14 @@
-namespace Icod.CoreUtils.Chroot;
+// Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
 
-using System;
+namespace Icod.CoreUtils.ChRoot;
 
-public static class Program
-{
-	public static int Main(string[] args)
-	{
-		return Command.Run(args);
+/// <summary>Provides the <c>chroot</c> executable entry point.</summary>
+public static class Program {
+	/// <summary>Runs the command.</summary>
+	/// <param name="args">Command-line arguments.</param>
+	/// <returns>A task whose result is the process exit status.</returns>
+	public static Task<int> Main( string[] args ) {
+		ArgumentNullException.ThrowIfNull( args );
+		return Command.RunAsync( args );
 	}
 }
