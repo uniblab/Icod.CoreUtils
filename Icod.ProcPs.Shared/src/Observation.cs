@@ -25,7 +25,9 @@ public enum ProcObservationSource {
 	/// <summary>The value came from a Darwin sysctl interface.</summary>
 	DarwinSysctl = 9,
 	/// <summary>The value came from a POSIX/libc API.</summary>
-	PosixLibc = 10
+	PosixLibc = 10,
+	/// <summary>The value came directly from Linux sysfs.</summary>
+	LinuxSysfs = 11
 }
 
 /// <summary>Describes why a ProcPs observation does or does not contain a value.</summary>
