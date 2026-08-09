@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `60`; Batch `61`, Batch `62`, Batch `63`, Batch `64`, and Batch `65` implementations are ready for validation |
-| Current engineering milestone | Batch 65 — `Icod.ProcPs.Tload` implemented; repository/runner validation pending |
+| Completed command batches | `0` through `60`; Batch `61`, Batch `62`, Batch `63`, Batch `64`, Batch `65`, and Batch `66` implementations are ready for validation |
+| Current engineering milestone | Batch 66 — `Icod.ProcPs.Watch` implemented; repository/runner validation pending |
 | Completed infrastructure milestone | Completion Gates E2 through E6, F1 through F4, and P1 — filesystem, terminal, process-control, and ProcPs provider foundations; three-platform ProcPs provider correction validated and merged |
-| Active infrastructure dependency | Validate Batches 61 through 65 across the required runners, including the reusable ProcPs full-screen terminal/refresh lifecycle introduced by Batch 65 |
-| Next engineering step | Validate Batches 61 through 65 on the required runners; then Batch 66 — `Icod.ProcPs.Watch` |
+| Active infrastructure dependency | Validate Batches 61 through 66 across the required runners, including the reusable ProcPs full-screen terminal/refresh lifecycle introduced by Batch 65 and its child-process consumer in Batch 66 |
+| Next engineering step | Validate Batches 61 through 66 on the required runners; then Batch 67 — `Icod.ProcPs.HugeTop` and `Icod.ProcPs.SlabTop` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1662,11 +1662,15 @@ Batch 65 implementation is complete and ready for repository validation. `Icod.P
 
 ### Batch 66 — Periodic command display (1 tool)
 
-- [ ] `Icod.ProcPs.Watch`
+- [x] `Icod.ProcPs.Watch`
 
 Create the project and tests with assembly name `watch`. Implement periodic argument-safe child execution, interval and precision, differences and color, headers, beep, equexit, chgexit and error-exit behavior, terminal resizing, visible-change semantics, command-status propagation, cancellation, suspension and resume, and terminal restoration.
 
 This batch combines the shared terminal refresh model with the child-process infrastructure already established by Completion Gate F4 and Batches 52 through 55.
+
+Batch 66 implementation is complete and ready for repository validation. `Icod.ProcPs.Watch` implements the procps-ng 4.0.6 periodic-display surface over the existing shared process executor and Batch 65 full-screen terminal lifecycle. The command supports the default shell form and argument-safe `--exec` launches, `WATCH_INTERVAL` and `-n` cadence with procps-compatible clamping, `--precise` fixed-rate scheduling, merged child standard output/error, headers, ANSI color preservation/stripping, transient and permanent difference highlighting, beep, `--equexit`, `--chgexit`, `--errexit`, wrapping control, resize-aware visible-screen comparisons, `--no-rerun`, redirected-output rejection, cancellation, suspension/resume, and best-effort terminal restoration.
+
+Visible-change decisions are made from the rendered terminal body rather than raw captured bytes, so off-screen output does not spuriously trigger `--chgexit` and geometry changes reset the comparison baseline. Child status is displayed on every refresh and is propagated when `--errexit` is selected; process-management failures retain the distinct watch execution-failure status. Dedicated tests inject streams, process execution, terminal endpoints, signal sources, monotonic clocks, wall-clock/header providers, and environment lookup; they cover direct argument boundaries, shell mode, fixed versus precise cadence, differences/color, status/beep behavior, equexit/chgexit, resize/no-rerun, merged child output, header suppression, redirection, cancellation, suspension/resume, and help/version without writing to the test runner's standard streams. Interactive keyboard commands and screenshot capture remain outside Batch 66; `--shotsdir` is accepted for command-line compatibility until screenshot-key handling is introduced. Full solution and required-runner validation remain the closure step. Detailed notes are recorded in `Icod.CoreUtils-Batch-66-ProcPs-Periodic-Command-Display.md`.
 
 ### Batch 67 — Specialized kernel-memory displays (2 tools)
 
