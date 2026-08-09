@@ -309,7 +309,7 @@ public sealed class WCommandTests {
 			accountResolver: new FakeAccountResolver(),
 			timeProvider: new FixedTimeProvider( Now ),
 			cpuUnitsPerSecondProvider: static () => 100d,
-			environmentVariableProvider: environmentProvider ?? static _ => null
+			environmentVariableProvider: environmentProvider 
 		);
 	}
 
