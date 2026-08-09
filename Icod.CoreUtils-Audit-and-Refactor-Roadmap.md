@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `60`; Batch `61`, Batch `62`, Batch `63`, and Batch `64` implementations are ready for validation |
-| Current engineering milestone | Batch 64 — `Icod.ProcPs.Sysctl` implemented; repository/runner validation pending |
+| Completed command batches | `0` through `60`; Batch `61`, Batch `62`, Batch `63`, Batch `64`, and Batch `65` implementations are ready for validation |
+| Current engineering milestone | Batch 65 — `Icod.ProcPs.Tload` implemented; repository/runner validation pending |
 | Completed infrastructure milestone | Completion Gates E2 through E6, F1 through F4, and P1 — filesystem, terminal, process-control, and ProcPs provider foundations; three-platform ProcPs provider correction validated and merged |
-| Active infrastructure dependency | Validate Batches 61 through 64 across the required runners, including Linux `/proc/sys` behavior for Batch 64 |
-| Next engineering step | Validate Batches 61 through 64 on the required runners; then Batch 65 — `Icod.ProcPs.Tload` |
+| Active infrastructure dependency | Validate Batches 61 through 65 across the required runners, including the reusable ProcPs full-screen terminal/refresh lifecycle introduced by Batch 65 |
+| Next engineering step | Validate Batches 61 through 65 on the required runners; then Batch 66 — `Icod.ProcPs.Watch` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1650,11 +1650,15 @@ Configuration loading implements `-p`/`-f`, multiple files, standard input, igno
 
 ### Batch 65 — Load display (1 tool)
 
-- [ ] `Icod.ProcPs.Tload`
+- [x] `Icod.ProcPs.Tload`
 
 Create the project and tests with assembly name `tload`. Implement terminal load graphs, scale and delay controls, resize handling, selected terminal output, deterministic sampling clocks, redirected-output policy, cancellation, suspension and resume, and reliable terminal restoration.
 
 `tload` is the first focused validation of the ProcPs full-screen refresh foundation.
+
+Batch 65 implementation is complete and ready for repository validation. `Icod.ProcPs.Tload` implements the procps-ng 4.0.6 `-d`/`--delay`, `-s`/`--scale`, help/version, and optional terminal-operand surface over the shared ProcPs load-average provider. The graph retains procps-style one-minute vertical plotting and one/five/fifteen-minute labels, adapts its geometry when the terminal resizes, and uses the shared monotonic sampler so tests can provide deterministic clocks and fixed-rate schedules.
+
+`Icod.ProcPs.Shared` now also owns the first reusable full-screen terminal lifecycle contract: selected-terminal opening, cross-suite standard-output terminal observation, geometry observation, frame-home writes, redirected-output classification, POSIX resize/continue/suspend signal coordination, interactive termination cancellation, and best-effort restoration of cursor/presentation state. `tload` rejects redirected standard output unless an explicit terminal operand is selected, restores the terminal on normal completion, cancellation, failures, and before POSIX suspension, and re-enters presentation after resume. Platforms without a defensible native load-average observation fail with a controlled diagnostic rather than fabricated values. Dedicated tests inject streams, terminal endpoints, signal sources, system metrics, monotonic clocks, and schedulers; they cover rendering, scale/delay, resize, selected terminals, redirection, unavailable load data, cancellation, frame-write failure restoration, suspension/resume, and help/version without writing to the test runner's standard streams. Full solution and required-runner validation remain the closure step. Detailed notes are recorded in `Icod.CoreUtils-Batch-65-ProcPs-Terminal-Load-Display.md`.
 
 ### Batch 66 — Periodic command display (1 tool)
 
