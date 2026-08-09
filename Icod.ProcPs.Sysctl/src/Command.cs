@@ -623,7 +623,7 @@ For more details see sysctl(8).
 					if ( IsOverriddenOrExcluded( settings, key ) ) {
 						continue;
 					}
-					var expanded = new SysctlSetting( key, ToDisplayKey( key ), setting.Value, setting.IgnoreFailure, globExclude: false );
+					var expanded = new SysctlSetting( key, ToDisplayKey( key ), setting.Value, setting.IgnoreFailure, GlobExclude: false );
 					status |= await WriteSettingAsync( backend, expanded, options, stdout, stderr, cancellationToken ).ConfigureAwait( false );
 				}
 				continue;
