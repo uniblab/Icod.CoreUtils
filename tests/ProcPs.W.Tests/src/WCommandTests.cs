@@ -105,9 +105,9 @@ public sealed class WCommandTests {
 	public async Task NoCurrentOptionDisablesCurrentUserFilter() {
 		var processes = new FakeProcessProvider(
 			[
-				Process( 100, 77, 1000, 10, 100, 50, "login", "login" ),
-				Process( 101, 77, 1000, 20, 200, 100, "vim", "vim", "notes.txt" ),
-				Process( 102, 77, 2000, 30, 10, 10, "other", "other-task" )
+				Process( 100, 77, 1000, 10, 100, 50, "login", [ "login" ] ),
+				Process( 101, 77, 1000, 20, 200, 100, "vim", [ "vim", "notes.txt" ] ),
+				Process( 102, 77, 2000, 30, 10, 10, "other", [ "other-task" ] )
 			]
 		);
 		using var ordinary = new MemoryStream();
@@ -338,8 +338,8 @@ public sealed class WCommandTests {
 
 	private static IReadOnlyList<ProcProcessSnapshot> DefaultProcesses() {
 		return [
-			Process( 100, 77, 1000, 10, 100, 50, "login", "login" ),
-			Process( 101, 77, 1000, 20, 200, 100, "vim", "vim", "notes.txt" )
+			Process( 100, 77, 1000, 10, 100, 50, "login", [ "login" ] ),
+			Process( 101, 77, 1000, 20, 200, 100, "vim", [ "vim", "notes.txt" ] )
 		];
 	}
 
@@ -418,20 +418,6 @@ public sealed class WCommandTests {
 		};
 	}
 
-	private static ProcProcessSnapshot Process(
-		int processId,
-		int sessionId,
-		uint userId,
-		ulong start,
-		ulong userCpu,
-		ulong systemCpu,
-		string commandName,
-		string commandLine,
-		string terminal
-	) {
-		ArgumentNullException.ThrowIfNull( commandLine );
-		return Process( processId, sessionId, userId, start, userCpu, systemCpu, commandName, [ commandLine ], terminal );
-	}
 
 	private static ProcObservedValue<T> Exact<T>( T value ) {
 		return ProcObservedValue<T>.Available( value, ProcObservationSource.Derived, ObservationFidelity.Exact );
