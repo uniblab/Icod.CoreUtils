@@ -35,7 +35,8 @@ public sealed class TloadCommandTests {
 	/// <summary>Verifies delay and vertical-scale options affect sampling and rendering.</summary>
 	[Fact]
 	public async Task DelayAndScaleControlsAreApplied() {
-		var terminal = new FakeTerminal( true, new TerminalDimensions( 40, 10 ) );
+		var dimensions = new TerminalDimensions( 40, 10 );
+		var terminal = new FakeTerminal( true, dimensions );
 		var scheduler = new FiniteScheduler( 1 );
 		var result = await RunAsync(
 			new[] { "--delay", "2", "--scale=2" },
@@ -45,7 +46,9 @@ public sealed class TloadCommandTests {
 		);
 		Assert.Equal( 0, result.ExitCode );
 		Assert.Equal( TimeSpan.FromSeconds( 2d ), scheduler.LastInterval );
-		Assert.True( 2 <= terminal.Frames[ 0 ].Count( character => '*' == character ) );
+		var frame = terminal.Frames[ 0 ];
+		Assert.Equal( '*', frame[ ( dimensions.Height - 1 ) * dimensions.Width ] );
+		Assert.Equal( '=', frame[ ( dimensions.Height - 2 ) * dimensions.Width ] );
 	}
 
 	/// <summary>Verifies an explicit terminal operand is routed to the terminal factory.</summary>
