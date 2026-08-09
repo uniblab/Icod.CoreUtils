@@ -131,7 +131,9 @@ public sealed class CommandTests {
 		var host = GetProcessTestHostPath();
 		Assert.True( File.Exists( host ), $"Process test host was not built at '{host}'." );
 		var dotnet = Environment.GetEnvironmentVariable( "DOTNET_HOST_PATH" ) ?? "dotnet";
-		var status = await Command.RunAsync( new[] { "0.05", dotnet, host, "sleep", "30000" }, stdout: Stream.Null, stderr: Stream.Null );
+		// The POSIX process-group launcher requires inherited standard streams. This real-child
+		// integration test is the deliberate inter-process communication exception to test stream isolation.
+		var status = await Command.RunAsync( new[] { "0.05", dotnet, host, "sleep", "30000" } );
 		Assert.Equal( 124, status );
 	}
 
