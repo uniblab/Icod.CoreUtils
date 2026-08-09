@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `60`; Batch `61`, Batch `62`, and Batch `63` implementations are ready for validation |
-| Current engineering milestone | Batch 63 — `Icod.ProcPs.W` implemented; repository/runner validation pending |
+| Completed command batches | `0` through `60`; Batch `61`, Batch `62`, Batch `63`, and Batch `64` implementations are ready for validation |
+| Current engineering milestone | Batch 64 — `Icod.ProcPs.Sysctl` implemented; repository/runner validation pending |
 | Completed infrastructure milestone | Completion Gates E2 through E6, F1 through F4, and P1 — filesystem, terminal, process-control, and ProcPs provider foundations; three-platform ProcPs provider correction validated and merged |
-| Active infrastructure dependency | Validate Batch 61 memory maps, Batch 62 ProcPs process reporting, and Batch 63 native/equivalent login-session reporting across the required runners |
-| Next engineering step | Validate Batches 61 through 63 on the required runners; then Batch 64 — `Icod.ProcPs.Sysctl` |
+| Active infrastructure dependency | Validate Batches 61 through 64 across the required runners, including Linux `/proc/sys` behavior for Batch 64 |
+| Next engineering step | Validate Batches 61 through 64 on the required runners; then Batch 65 — `Icod.ProcPs.Tload` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1638,11 +1638,15 @@ Batch 63 implementation is complete and ready for repository validation. `Icod.P
 
 ### Batch 64 — Kernel parameter control (1 tool)
 
-- [ ] `Icod.ProcPs.Sysctl`
+- [x] `Icod.ProcPs.Sysctl`
 
 Create the project and tests with assembly name `sysctl`. Implement name and value reads, writes, patterns, exclusions, configuration-file ordering, system mode, deprecated-key forms, privilege behavior, exact statuses, and an explicit Linux-centric capability boundary.
 
 Do not pretend that unrelated Windows, macOS, or BSD settings are Linux sysctl keys. Equivalent native functionality may be exposed only where the mapping is documented and semantically defensible.
+
+Batch 64 implementation is complete and ready for repository validation. `Icod.ProcPs.Sysctl` implements the procps-ng 4.0.6 read/write and presentation surface, including dot/slash key forms, all/names/values/binary output modes, regular-expression filtering, deprecated-key inclusion, dry-run and quiet writes, unknown-key suppression, exact direct-read status accumulation, subtree reads, and controlled privilege diagnostics. The injectable backend keeps Linux `/proc/sys` access behind an explicit capability boundary so help/version remain portable while operational requests on Windows, macOS, BSD, or Linux without procfs fail clearly instead of inventing native mappings.
+
+Configuration loading implements `-p`/`-f`, multiple files, standard input, ignored-failure assignments, glob assignments and exclusions, explicit-key overrides, and `--system`. System mode follows procps ordering: same-named files are selected by directory precedence across `/etc/sysctl.d`, `/run/sysctl.d`, `/usr/local/lib/sysctl.d`, `/usr/lib/sysctl.d`, and `/lib/sysctl.d`; the selected files are then applied in global lexical filename order, followed by `/etc/sysctl.conf`. Dedicated tests inject standard streams and the backend, exercise privilege/failure/status behavior and configuration precedence, and do not write to the test runner's standard streams. Full solution and required-runner validation remain the closure step. Detailed notes are recorded in `Icod.CoreUtils-Batch-64-ProcPs-Kernel-Parameter-Control.md`.
 
 ### Batch 65 — Load display (1 tool)
 
