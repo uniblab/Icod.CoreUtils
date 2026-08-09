@@ -8,8 +8,8 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<OutputPath>..\bin\$(Configuration)\</OutputPath>
-		<AssemblyName>chcon</AssemblyName>
-		<RootNamespace>Icod.CoreUtils.ChCon</RootNamespace>
+		<AssemblyName>runcon</AssemblyName>
+		<RootNamespace>Icod.CoreUtils.RunCon</RootNamespace>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
 		<PlatformTarget>AnyCPU</PlatformTarget>

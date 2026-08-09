@@ -296,7 +296,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.RmDir", "rmd
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "runcon", "runcon", "{2CFB50B3-DC53-42DF-6C7D-DB10916A76D8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.runcon", "runcon\Icod.CoreUtils.runcon.csproj", "{2DA88984-5EFE-41E8-96CB-7570BCC30E56}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.RunCon", "runcon\Icod.CoreUtils.RunCon.csproj", "{2DA88984-5EFE-41E8-96CB-7570BCC30E56}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sed", "sed", "{B090266D-B74C-4DAE-9761-2FD0A8329490}"
 EndProject
@@ -815,6 +815,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Pmap.Tests", "tests\ProcPs.Pmap.Tests\Icod.ProcPs.Pmap.Tests.csproj", "{E2A9977F-ADDB-4E86-A75F-07DBE6BA9F5C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.ChRoot.Tests", "tests\ChRoot.Tests\Icod.CoreUtils.ChRoot.Tests.csproj", "{FEDDCE9B-D9F2-4DF7-991B-6C05001CDAE9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.ChCon.Tests", "tests\ChCon.Tests\Icod.CoreUtils.ChCon.Tests.csproj", "{B70C0001-70C0-4700-A001-000000000001}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.RunCon.Tests", "tests\RunCon.Tests\Icod.CoreUtils.RunCon.Tests.csproj", "{B70C0002-70C0-4700-A002-000000000002}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -2425,6 +2429,18 @@ Global
 		{FEDDCE9B-D9F2-4DF7-991B-6C05001CDAE9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FEDDCE9B-D9F2-4DF7-991B-6C05001CDAE9}.Staging|Any CPU.ActiveCfg = Staging|Any CPU
 		{FEDDCE9B-D9F2-4DF7-991B-6C05001CDAE9}.Staging|Any CPU.Build.0 = Staging|Any CPU
+		{B70C0001-70C0-4700-A001-000000000001}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B70C0001-70C0-4700-A001-000000000001}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B70C0001-70C0-4700-A001-000000000001}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B70C0001-70C0-4700-A001-000000000001}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B70C0001-70C0-4700-A001-000000000001}.Staging|Any CPU.ActiveCfg = Staging|Any CPU
+		{B70C0001-70C0-4700-A001-000000000001}.Staging|Any CPU.Build.0 = Staging|Any CPU
+		{B70C0002-70C0-4700-A002-000000000002}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B70C0002-70C0-4700-A002-000000000002}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B70C0002-70C0-4700-A002-000000000002}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B70C0002-70C0-4700-A002-000000000002}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B70C0002-70C0-4700-A002-000000000002}.Staging|Any CPU.ActiveCfg = Staging|Any CPU
+		{B70C0002-70C0-4700-A002-000000000002}.Staging|Any CPU.Build.0 = Staging|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -2698,6 +2714,8 @@ Global
 		{C0666388-F870-4F8B-AEA5-3CA168DD1C16} = {864C2F91-D088-48B9-AD75-371D6F9F569E}
 		{E2A9977F-ADDB-4E86-A75F-07DBE6BA9F5C} = {F05B4136-23C6-4CF5-8A6A-920F20DC0001}
 		{FEDDCE9B-D9F2-4DF7-991B-6C05001CDAE9} = {F05B4136-23C6-4CF5-8A6A-920F20DC0001}
+		{B70C0001-70C0-4700-A001-000000000001} = {F05B4136-23C6-4CF5-8A6A-920F20DC0001}
+		{B70C0002-70C0-4700-A002-000000000002} = {F05B4136-23C6-4CF5-8A6A-920F20DC0001}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {30D28C3D-CE6B-4262-8EF1-1D4A49129A6C}

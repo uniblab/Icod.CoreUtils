@@ -1,11 +1,11 @@
-namespace Icod.CoreUtils.Runcon;
+namespace Icod.CoreUtils.RunCon;
 
 using System;
 
-public static class Program
-{
-	public static int Main(string[] args)
-	{
-		return Command.Run(args);
+/// <summary>Executable entry point for <c>runcon</c>.</summary>
+public static class Program {
+	/// <summary>Runs the command.</summary>
+	public static int Main( string[] args ) {
+		return Command.Run( args, Console.In, Console.Out, Console.Error );
 	}
 }
