@@ -221,7 +221,7 @@ public sealed class LinuxProcLoginSessionProvider : IProcLoginSessionProvider {
 	}
 
 	private static DateTimeOffset? ObserveTerminalActivity( string deviceRoot, string? terminal ) {
-		if ( string.IsNullOrWhiteSpace( terminal ) || terminal.StartsWith( ':', StringComparison.Ordinal ) ) {
+		if ( string.IsNullOrWhiteSpace( terminal ) || terminal.StartsWith( ":", StringComparison.Ordinal ) ) {
 			return null;
 		}
 		try {
@@ -362,7 +362,7 @@ public sealed class MacOsProcLoginSessionProvider : IProcLoginSessionProvider {
 	}
 
 	private static DateTimeOffset? ObserveTerminalActivity( string deviceRoot, string? terminal ) {
-		if ( string.IsNullOrWhiteSpace( terminal ) || terminal.StartsWith( ':', StringComparison.Ordinal ) ) {
+		if ( string.IsNullOrWhiteSpace( terminal ) || terminal.StartsWith( ":", StringComparison.Ordinal ) ) {
 			return null;
 		}
 		try {
