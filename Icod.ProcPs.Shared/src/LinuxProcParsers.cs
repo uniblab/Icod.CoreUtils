@@ -17,6 +17,8 @@ public sealed class LinuxProcStatRecord {
 	public int SessionId { get; }
 	/// <summary>Gets the raw controlling-terminal device number.</summary>
 	public int TerminalDeviceNumber { get; }
+	/// <summary>Gets the foreground process-group identifier for the controlling terminal.</summary>
+	public int TerminalForegroundProcessGroupId { get; }
 	/// <summary>Gets user CPU ticks.</summary>
 	public ulong UserCpuTicks { get; }
 	/// <summary>Gets system CPU ticks.</summary>
@@ -49,7 +51,8 @@ public sealed class LinuxProcStatRecord {
 		int threadCount,
 		ulong startTimeTicks,
 		ulong virtualMemoryBytes,
-		long residentSetPages
+		long residentSetPages,
+		int terminalForegroundProcessGroupId = 0
 	) {
 		this.CommandName = commandName;
 		this.State = state;
@@ -57,6 +60,7 @@ public sealed class LinuxProcStatRecord {
 		this.ProcessGroupId = processGroupId;
 		this.SessionId = sessionId;
 		this.TerminalDeviceNumber = terminalDeviceNumber;
+		this.TerminalForegroundProcessGroupId = terminalForegroundProcessGroupId;
 		this.UserCpuTicks = userCpuTicks;
 		this.SystemCpuTicks = systemCpuTicks;
 		this.Priority = priority;
@@ -127,7 +131,8 @@ public static class LinuxProcParsers {
 			ParseInt32( fields[ 17 ], "num_threads" ),
 			ParseUInt64( fields[ 19 ], "starttime" ),
 			ParseUInt64( fields[ 20 ], "vsize" ),
-			ParseInt64( fields[ 21 ], "rss" )
+			ParseInt64( fields[ 21 ], "rss" ),
+			ParseInt32( fields[ 5 ], "tpgid" )
 		);
 	}
 

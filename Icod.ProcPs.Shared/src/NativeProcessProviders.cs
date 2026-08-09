@@ -110,6 +110,7 @@ public sealed class WindowsProcProcessProvider : IProcProcessProvider {
 		State = source.State,
 		ParentProcessId = parentProcessId ?? source.ParentProcessId,
 		ProcessGroupId = source.ProcessGroupId,
+		ForegroundProcessGroupId = source.ForegroundProcessGroupId,
 		SessionId = source.SessionId,
 		PlatformSessionId = platformSessionId ?? source.PlatformSessionId,
 		RealUserId = source.RealUserId,
@@ -238,6 +239,7 @@ public sealed class MacOsProcProcessProvider : IProcProcessProvider {
 				State = ProcObservedValue<ProcProcessState>.Available( MapState( bsd.Status ), ProcObservationSource.DarwinLibProc, ObservationFidelity.Equivalent ),
 				ParentProcessId = ProcObservedValue<int>.Available( checked( (int)bsd.ParentProcessId ), ProcObservationSource.DarwinLibProc, ObservationFidelity.Equivalent ),
 				ProcessGroupId = ProcObservedValue<int>.Available( checked( (int)bsd.ProcessGroupId ), ProcObservationSource.DarwinLibProc, ObservationFidelity.Equivalent ),
+				ForegroundProcessGroupId = ProcObservedValue<int>.Available( unchecked( (int)bsd.TerminalProcessGroupId ), ProcObservationSource.DarwinLibProc, ObservationFidelity.Equivalent ),
 				SessionId = 0 <= sessionId
 					? ProcObservedValue<int>.Available( sessionId, ProcObservationSource.PosixLibc, ObservationFidelity.Exact )
 					: ProcObservedValue<int>.Missing( MapDarwinError( sessionError ), $"getsid failed for this process (errno {sessionError})." ),
