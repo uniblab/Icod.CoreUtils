@@ -159,7 +159,7 @@ public sealed class WatchCommandTests {
 		);
 		Assert.Equal( 7, result.ExitCode );
 		Assert.Single( terminal.Frames );
-		Assert.True( terminal.Frames[ 0 ].StartsWith( "\a", StringComparison.Ordinal ) );
+		Assert.StartsWith( "\a", terminal.Frames[ 0 ], StringComparison.Ordinal );
 	}
 	/// <summary>Verifies equexit stops after the requested count of unchanged visible updates.</summary>
 	[Fact]
