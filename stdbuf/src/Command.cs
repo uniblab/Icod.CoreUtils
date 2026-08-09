@@ -66,7 +66,7 @@ public static class Command {
 				index++;
 				break;
 			}
-			if ( "-" == token || !token.StartsWith( '-', StringComparison.Ordinal ) ) {
+			if ( "-" == token || !token.StartsWith( "-", StringComparison.Ordinal ) ) {
 				break;
 			}
 
