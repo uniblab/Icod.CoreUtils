@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `60`; Batch `61`, Batch `62`, Batch `63`, Batch `64`, Batch `65`, Batch `66`, and Batch `67` implementations are ready for validation |
-| Current engineering milestone | Batch 67 — `Icod.ProcPs.HugeTop` and `Icod.ProcPs.SlabTop` implemented; repository/runner validation pending |
+| Completed command batches | `0` through `60`; Batch `61` through Batch `67` implementations are ready for validation; Batch `68` (`Icod.ProcPs.Top`) is deliberately deferred until after `Icod.ProcPs` extraction; Batch `69` implementation is ready for validation |
+| Current engineering milestone | Batch 69 — `chroot` implemented over an injectable Unix root/identity/exec boundary; repository/runner validation pending |
 | Completed infrastructure milestone | Completion Gates E2 through E6, F1 through F4, and P1 — filesystem, terminal, process-control, and ProcPs provider foundations; three-platform ProcPs provider correction validated and merged |
-| Active infrastructure dependency | Validate Batches 61 through 67 across the required runners, including the reusable ProcPs full-screen terminal/refresh lifecycle and the Linux kernel-memory providers introduced for Batch 67 |
-| Next engineering step | Validate Batches 61 through 67 on the required runners; then Batch 68 — `Icod.ProcPs.Top` |
+| Active infrastructure dependency | Validate Batches 61 through 67 and Batch 69 across the required runners; preserve the ProcPs extraction boundary so deferred Batch 68 can be completed after `Icod.ProcPs` leaves the co-resident solution |
+| Next engineering step | Validate Batch 69 and continue with Batch 70; Batch 68 — `Icod.ProcPs.Top` remains deferred until after `Icod.ProcPs` is migrated out of this repository |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -102,7 +102,7 @@ During the co-resident phase:
 
 ### Ultimate architecture
 
-At the end of the implementation roadmap, Completion Gate G performs an evidence-based classification and extraction.
+At the end of the implementation roadmap, Completion Gate G performs the final evidence-based classification and extraction. The deliberate pre-Batch-68 `Icod.ProcPs` migration is the sole early repository-extraction exception; Gate G later verifies that extracted suite against the final package boundaries.
 
 The intended final architecture has three layers:
 
@@ -194,7 +194,7 @@ Each non-Coreutils suite developed in this repository must:
 - classify every new shared API provisionally as cross-suite, Coreutils-specific, suite-specific, or command-local;
 - establish textual compatibility fixtures where public formats cross suite boundaries;
 - document output-path handling for duplicate executable names;
-- defer solution and repository extraction until Completion Gate G;
+- defer solution and repository extraction until Completion Gate G, except for the explicit early `Icod.ProcPs` extraction required before deferred Batch 68 (`Icod.ProcPs.Top`);
 - distinguish completion of an implementation batch from completion of the final repository/package split.
 
 ## Authoritative Source
@@ -379,7 +379,7 @@ These conventions apply to every existing project that is altered and every proj
 13. Native structures and calls are defined per supported operating-system ABI; a Linux structure declaration must not be assumed valid on macOS or Windows.
 14. The exact upstream package and version used as the conformance baseline is recorded for every batch.
 15. `Icod.CoreUtils` command projects do not take production dependencies on `Icod.DiffUtils`, `Icod.Grep`, `Icod.Patch`, `Icod.LineEditor.Ed`, `Icod.LineEditor.Red`, `Icod.UtilLinux`, `Icod.ProcPs`, `Icod.LineEditor.Sed`, or `Icod.Tar`.
-16. Co-resident suite projects remain isolated by namespace, solution folder, tests, and output paths; Completion Gate G performs the final solution, repository, packaging, and CI extraction.
+16. Co-resident suite projects remain isolated by namespace, solution folder, tests, and output paths. `Icod.ProcPs` is the one explicit early-extraction exception: it is migrated out before deferred Batch 68 (`Icod.ProcPs.Top`). Completion Gate G performs the final classification/extraction for the remaining suites and validates the already-extracted ProcPs package boundary.
 17. Until the final framework audit, every substantial Shared API records a provisional classification: cross-suite `Icod.CommandFramework` candidate, Coreutils-only `Icod.CoreUtils.Shared` candidate, suite-specific Shared candidate, or command-local implementation. The classification may change when real consumers provide better evidence.
 18. A type's current assembly is not proof of final ownership. Cross-suite process and processor mechanics may reside temporarily in the current `Icod.CoreUtils.Shared` project, while ProcPs-specific enumeration, `/proc` parsing, field catalogs, selection grammar, metrics, and screen state remain in `Icod.ProcPs.Shared`.
 19. Suite-specific projects must not introduce parallel abstractions for processor availability, process identity, targets, launching, waiting, signals, priorities, clocks, or terminals when the current Shared incubation project already provides the required cross-suite contract.
@@ -1687,21 +1687,27 @@ Batch 67 implementation is complete and ready for repository validation. `Icod.P
 
 The reusable provider boundary lives in `Icod.ProcPs.Shared`: Linux huge-page pools are observed from sysfs while per-process hugetlb usage is read from detailed `/proc/PID/smaps`, and slab-cache accounting is parsed from `/proc/slabinfo`. Non-Linux hosts return explicit unsupported observations for these Linux kernel interfaces rather than synthesizing approximate values. Dedicated tests inject providers, terminal endpoints, signal sources, clocks/schedulers, and standard streams; they cover batch/interactive rendering, sorting, sizing, refresh cadence, resizing, unsupported hosts, redirection policy, cancellation, command-line validation, and exact slab parsing without writing to the test runner's standard streams. Full solution and required-runner validation remain the closure step. Detailed notes are recorded in `Icod.CoreUtils-Batch-67-ProcPs-Kernel-Memory-Displays.md`.
 
-### Batch 68 — Interactive process monitor (1 tool)
+### Batch 68 — Interactive process monitor (1 tool) — **deferred until after `Icod.ProcPs` extraction**
 
 - [ ] `Icod.ProcPs.Top`
 
 Create the project and tests with assembly name `top`. Implement dynamic sampling, process fields, sorting, filtering, forests, threads, CPU and memory summaries, configuration, colors, windows, interactive commands, line editing, signals, batch mode, terminal resize, suspension and resume, and reliable terminal restoration.
 
-Keep the screen model independently testable from rendering. `top` is last in the ProcPs block because it combines almost every provider, metric, process-selection, formatting, signal, sampling, configuration, and terminal capability established by the preceding batches.
+Keep the screen model independently testable from rendering. `top` remains the final ProcPs implementation because it combines almost every provider, metric, process-selection, formatting, signal, sampling, configuration, and terminal capability established by the preceding batches.
 
-Completion of Batches 56 through 68 leaves the selected procps-ng command set implemented as suite-correct projects inside the current solution. Completion Gate P1 records the exact included inventory and the deliberate exclusion of procps-ng `kill`, `skill`, and `snice`; any other discrepancy is corrected in the roadmap rather than silently omitted. Final solution, repository, package, launcher-alias, and executable-collision policy is resolved in Completion Gate G.
+**Scheduling decision (2026-08-09):** Batch 68 no longer blocks Batch 69 or later Coreutils work. The ProcPs implementations through Batch 67 are allowed to stabilize and `Icod.ProcPs` is then migrated out of this co-resident repository before `top` is implemented. Batch 68 is completed in the extracted ProcPs repository, where `top` can be designed against the final package/repository boundary instead of being immediately moved after implementation. This is the explicit exception to the general rule that repository extraction waits for Completion Gate G; Gate G still validates the final dependency/package classification and all remaining suite extractions.
+
+Completion Gate P1 continues to record the intended procps-ng inventory, including deferred `top`, and the deliberate exclusion of procps-ng `kill`, `skill`, and `snice`. Batches 56 through 67 therefore establish the co-resident ProcPs implementation set that precedes extraction; Batch 68 completes that selected set afterward.
 
 ### Batch 69 — Root-directory execution (1 tool)
 
 - [ ] `chroot`
 
 Replace `NotImplementedException` with a real Unix implementation and controlled diagnostics elsewhere. Implement users and groups, supplementary-group initialization, skip-chdir policy, command lookup after root change, privilege handling, and process execution without unsafe shell interpolation.
+
+Batch 69 implementation is complete and ready for repository validation. `Icod.CoreUtils.ChRoot` now follows the GNU Coreutils 9.11 execution order: parse options before `NEWROOT`, validate `--skip-chdir`, resolve user/group information with an outer-root fallback, call the native Unix `chroot(2)` operation, change directory to `/` unless explicitly skipped, initialize or replace supplementary groups, apply group/user IDs, and finally call `execvp` so executable lookup occurs inside the new root and the argument vector is never reconstructed through a shell. If no command is supplied, `$SHELL -i` is used with `/bin/sh -i` as the fallback. Setup failures return 125; failed command invocation distinguishes 126 from command-not-found 127. Windows and other unsupported hosts retain portable help/version behavior and fail root-changing execution with a controlled diagnostic.
+
+The native work is isolated behind `IChrootPlatform`, allowing command tests to validate literal argument preservation, option termination, users/groups, explicit supplementary-group clearing, skip-chdir policy, shell fallback, status propagation, cancellation, and unsupported-host behavior without changing the test runner's root. Detailed notes are recorded in `Icod.CoreUtils-Batch-69-Root-Directory-Execution.md`. Full solution and required-runner validation remain the closure step.
 
 ### Batch 70 — SELinux context operations (2 tools)
 
@@ -1731,7 +1737,7 @@ The project remains co-resident until Completion Gate G, when it is moved into i
 
 ### Completion Gate G — final classification, package extraction, and repository split
 
-This gate is deliberately last. By this point the Coreutils, Diffutils, Grep, Patch, Ed, Sed, selected UtilLinux commands, Tar, and ProcPs projects have been developed together in one solution, providing the consumer evidence needed to choose stable API and repository boundaries.
+This gate is deliberately last. By this point the Coreutils, Diffutils, Grep, Patch, Ed, Sed, selected UtilLinux commands, Tar, and ProcPs projects have supplied the shared consumer evidence needed to choose stable API and repository boundaries. `Icod.ProcPs` may already have been migrated out under the explicit pre-Batch-68 exception; Gate G validates that extracted boundary while performing the remaining final separations.
 
 - [ ] Inventory every public, protected, and internal API in the current Shared incubation project and record its actual consumers by project and suite.
 - [ ] Inventory every API in `Icod.DiffUtils.Shared`, `Icod.LineEditor.Ed.Shared`, `Icod.ProcPs.Shared`, any evidence-based `Icod.LineEditor.Shared`, and any other suite engine to detect duplication or misplaced cross-suite contracts.
@@ -1809,7 +1815,7 @@ Completion of this gate establishes `Icod.CommandFramework` as the neutral cross
 
 - Completion Gate P1 follows Coreutils `env`, `nohup`, `nice`, and `timeout` together with util-linux `kill` and `renice`, audits those shared processor and process APIs against their first large sibling-suite consumer, prohibits duplicate ProcPs abstractions, and then defines the procps-ng-specific observation and provenance layer. Linux `/proc` remains the authoritative semantic source; Windows, macOS, and BSD providers must identify exact, equivalent, approximated, and unavailable data honestly.
 
-- Batches 56 through 68 are consecutive so `Icod.ProcPs.Shared` and the selected procps-ng command set evolve together. The order progresses from narrow system summaries, through sampled statistics and process targeting, to process maps and `ps`, then to user, kernel, terminal, specialized-memory, and finally full-screen process monitoring. Procps-ng `kill`, `skill`, and `snice` are intentionally absent rather than deferred.
+- Batches 56 through 67 remain the consecutive co-resident ProcPs implementation run. Batch 68 (`top`) is deliberately deferred until after `Icod.ProcPs` extraction, so the full-screen process monitor is built against the suite's final repository/package boundary rather than implemented only to be moved immediately. Procps-ng `kill`, `skill`, and `snice` are intentionally absent rather than deferred.
 
 - The architectural boundary is facts and mechanics versus suite interpretation: common processor availability, identity, targeting, launch, wait, signal, priority, clock, status, and terminal contracts remain in the current Shared incubation project, while ProcPs owns `/proc` parsing, process enumeration, detailed snapshots, selection grammar, field catalogs, metric interpretation, personalities, sorting, and screen behavior.
 
@@ -1817,19 +1823,19 @@ Completion of this gate establishes `Icod.CommandFramework` as the neutral cross
 
 - `ps` is deliberately not the ProcPs foundation. It follows smaller provider consumers so process races, fields, namespaces, maps, metrics, and selection behavior can be corrected before they are hidden inside its large personality and formatting surface.
 
-- `tload`, `watch`, `hugetop`, and `slabtop` progressively validate the refresh and terminal runtime. `top` remains last because it combines process snapshots, sampled CPU and memory, fields, sorting, filtering, configuration, signals, interactive input, rendering, resizing, suspension, and terminal restoration.
+- `tload`, `watch`, `hugetop`, and `slabtop` progressively validate the refresh and terminal runtime. `top` remains last in ProcPs scope because it combines process snapshots, sampled CPU and memory, fields, sorting, filtering, configuration, signals, interactive input, rendering, resizing, suspension, and terminal restoration; it is now intentionally implemented only after the suite has been extracted.
 
 - The historical `ps` and `uptime` work remains recorded in Batch 9. Batch 57 replaces the live Coreutils-profile `uptime` project with `Icod.ProcPs.Uptime`; Batch 62 stages `Icod.ProcPs.Ps` alongside the historical `ps` only for green validation, then retires the historical executable and tests. Historical roadmap provenance is retained without permanently retaining duplicate executables. `kill` likewise has one ownership-correct implementation under `Icod.UtilLinux`.
 
 - Procps-ng `kill`, `skill`, and `snice` are explicitly out of scope. Completion Gate P1 confirms that procps-ng 4.0.6 installs `pidwait` but no `pwait` alias, so only `Icod.ProcPs.PidWait` is planned.
 
-- `chroot`, the SELinux commands, and `stdbuf` follow ProcPs because they are specialized privilege, security-context, or preload concerns and provide no foundational provider capability required by the ProcPs family.
+- `chroot`, the SELinux commands, and `stdbuf` follow the co-resident ProcPs run because they are specialized privilege, security-context, or preload concerns and provide no foundational provider capability required by the ProcPs family. Deferring `top` therefore does not block these Coreutils batches.
 
 - `Icod.Tar` remains the final major suite before Completion Gate G. Archive correctness depends on the mature filesystem foundation and also benefits from the completed process, signal, terminal, provider, and capability work. Tar-specific archive formats and extraction state stay outside the general Shared project.
 
-- Completion Gate G is deliberately last. Only after all suites have supplied real consumers can the project reliably separate `Icod.CommandFramework`, any remaining `Icod.CoreUtils.Shared`, suite-specific Shared libraries, and command-local code.
+- Completion Gate G remains the final architecture gate. The early `Icod.ProcPs` extraction before Batch 68 is a deliberate exception intended to let `top` target the final ProcPs boundary; Gate G still classifies and extracts the remaining suites and verifies the already-extracted ProcPs dependency/package relationships.
 
-- The final repository split occurs together with the framework/package extraction. This avoids maintaining multiple repositories against unstable shared APIs during the heaviest refactoring period, while still ensuring that every project already has its final suite namespace and a clean ownership boundary.
+- Except for the explicit pre-Batch-68 `Icod.ProcPs` migration, the final repository split occurs together with the framework/package extraction. This avoids maintaining multiple repositories against unstable shared APIs during the heaviest refactoring period, while still ensuring that every project already has its final suite namespace and a clean ownership boundary.
 
 - Complex parsers, state machines, security boundaries, platform-specialized commands, and shared-library foundations receive focused batches. Commands are grouped only where they share an actual engine or directly validate the same new infrastructure.
 
