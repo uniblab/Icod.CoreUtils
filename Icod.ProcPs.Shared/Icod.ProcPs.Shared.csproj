@@ -58,15 +58,19 @@
 		<IncludeSymbols>True</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	</PropertyGroup>
+	<!--
+		README and LICENSE remain package content but are not copied through ProjectReference.
+		ProcPs executables share an output directory, so transitive copies race during Clean.
+	-->
 	<ItemGroup>
 		<Content Include="README.md">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
 			<TargetPath>$(AssemblyName).README.md</TargetPath>
 			<Pack>true</Pack>
 			<PackagePath>\</PackagePath>
 		</Content>
 		<Content Include="LICENSE">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
 			<TargetPath>$(AssemblyName).LICENSE.txt</TargetPath>
 			<Pack>true</Pack>
 			<PackagePath>\</PackagePath>
