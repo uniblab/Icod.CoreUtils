@@ -348,7 +348,7 @@ internal sealed class TarArchiveEngine {
 		return reader.GetNextEntry()?.Format ?? TarEntryFormat.Pax;
 	}
 
-	private static TarWriterOptions CreateWriterOptions( TarOptions options ) => new() {
+	private static System.Formats.Tar.TarWriterOptions CreateWriterOptions( TarOptions options ) => new() {
 		Format = options.Format,
 		HardLinkMode = TarHardLinkMode.PreserveLink
 	};
