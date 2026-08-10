@@ -1673,8 +1673,8 @@ Visible-change decisions are made from the rendered terminal body rather than ra
 
 ### Batch 67 — Specialized kernel-memory displays (2 tools)
 
-- [ ] `Icod.ProcPs.HugeTop`
-- [ ] `Icod.ProcPs.SlabTop`
+- [x] `Icod.ProcPs.HugeTop`
+- [x] `Icod.ProcPs.SlabTop`
 
 For `hugetop`, implement system and per-process hugepage reporting, sorting, refresh, batch and interactive modes, terminal behavior, and controlled unsupported diagnostics where the platform exposes no equivalent data.
 
@@ -1700,7 +1700,7 @@ Completion Gate P1 continues to record the intended procps-ng inventory, includi
 
 ### Batch 69 — Root-directory execution (1 tool)
 
-- [ ] `chroot`
+- [x] `chroot`
 
 Replace `NotImplementedException` with a real Unix implementation and controlled diagnostics elsewhere. Implement users and groups, supplementary-group initialization, skip-chdir policy, command lookup after root change, privilege handling, and process execution without unsafe shell interpolation.
 
@@ -1710,8 +1710,8 @@ The native work is isolated behind `IChrootPlatform`, allowing command tests to 
 
 ### Batch 70 — SELinux context operations (2 tools)
 
-- [ ] `chcon`
-- [ ] `runcon`
+- [x] `chcon`
+- [x] `runcon`
 
 Treat these as Linux and SELinux capability commands. Use native APIs or stable libraries rather than invoking external commands. Implement reference and component contexts, dereference and recursion policy, preserve-root, computed and process context behavior, privilege failures, and explicit diagnostics when SELinux is unavailable.
 
