@@ -1,109 +1,101 @@
 namespace Icod.Tar;
 
-using System;
-using System.IO;
-using System.Linq;
-using System.Formats.Tar;
-
-/// <summary>
-/// tar: create (-c) or extract (-x) archives. Minimal wrapper around System.Formats.Tar.
-/// Usage:
-///   tar -c -f archive.tar file1 file2 ...
-///   tar -x -f archive.tar
-/// Notes:
-/// - Uses concrete UstarTarEntry factory to create entries (avoid instantiating abstract TarEntry).
-/// - Uses TarWriter(Stream) overloads available on older/newer runtimes.
-/// - Extraction uses the entry.DataStream fallback which is broadly available.
-/// </summary>
+/// <summary>GNU-tar-compatible archive command front end.</summary>
 public static class Command {
+	/// <summary>Executes the command synchronously.</summary>
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) {
+		return RunAsync( args, stdin, stdout, stderr ).GetAwaiter().GetResult();
+	}
+
+	/// <summary>Executes the command asynchronously.</summary>
+	public static async Task<int> RunAsync(
+		string[] args,
+		TextReader? stdin = null,
+		TextWriter? stdout = null,
+		TextWriter? stderr = null,
+		CancellationToken cancellationToken = default
+	) {
+		ArgumentNullException.ThrowIfNull( args );
+		_ = stdin;
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;
-
-		if ( args.Length < 3 ) {
-			stderr.WriteLine( "Usage: tar -c|-x -f <archive> [files...]" );
+		try {
+			var options = TarCommandLine.Parse( args );
+			if ( options.Help ) {
+				await stdout.WriteAsync( HelpText ).ConfigureAwait( false );
+				return 0;
+			}
+			if ( options.Version ) {
+				await stdout.WriteLineAsync( "tar (Icod.CoreUtils) 1.0; GNU tar 1.35 compatibility baseline" ).ConfigureAwait( false );
+				return 0;
+			}
+			var engine = new TarArchiveEngine( stdout, stderr );
+			return await engine.ExecuteAsync( options, cancellationToken ).ConfigureAwait( false );
+		} catch ( TarUsageException exception ) {
+			await stderr.WriteLineAsync( string.Concat( "tar: ", exception.Message ) ).ConfigureAwait( false );
 			return 2;
-		}
-
-		var mode = args[ 0 ];
-		var flag = args[ 1 ];
-		var archive = args[ 2 ];
-
-		if ( mode == "-c" ) {
-			var files = args.Skip( 3 ).ToArray();
-			try {
-				using var fs = File.Open( archive, FileMode.Create, FileAccess.Write );
-				using var writer = new TarWriter( fs, leaveOpen: false );
-
-				foreach ( var file in files ) {
-					if ( Directory.Exists( file ) ) {
-						// create directory entry
-						var dirEntry = new UstarTarEntry( TarEntryType.Directory, file );
-						// option: normalize name to base name if needed:
-						// dirEntry.Name = Path.GetFileName(file);
-						writer.WriteEntry( dirEntry );
-						// write contained files recursively
-						foreach ( var path in Directory.EnumerateFiles( file, "*", SearchOption.AllDirectories ) ) {
-							var entry = new UstarTarEntry( TarEntryType.Directory, path );
-							writer.WriteEntry( entry );
-						}
-					} else if ( File.Exists( file ) ) {
-						var entry = new UstarTarEntry( TarEntryType.Directory, file );
-						writer.WriteEntry( entry );
-					} else {
-						// skip non-existent paths (GNU tar prints warning)
-						stderr.WriteLine( $"tar: {file}: Cannot stat: No such file or directory" );
-					}
-				}
-			} catch ( Exception ex ) {
-				stderr.WriteLine( $"tar: {ex.Message}" );
-				return 1;
-			}
-
-			return 0;
-		} else if ( mode == "-x" ) {
-			try {
-				using var fs = File.OpenRead( archive );
-				using var reader = new TarReader( fs, leaveOpen: false );
-				TarEntry? entry;
-				while ( ( entry = reader.GetNextEntry() ) != null ) {
-					var entryName = entry.Name ?? string.Empty;
-
-					if ( entry.EntryType == TarEntryType.Directory ) {
-						if ( !string.IsNullOrEmpty( entryName ) ) {
-							Directory.CreateDirectory( entryName );
-						}
-
-						continue;
-					}
-
-					if ( entry.EntryType == TarEntryType.RegularFile ) {
-						var outPath = entryName;
-						var dir = Path.GetDirectoryName( outPath );
-						if ( !string.IsNullOrEmpty( dir ) ) {
-							Directory.CreateDirectory( dir );
-						}
-
-						using var outFs = File.Create( outPath );
-						// Use DataStream on the entry which is widely available
-						entry.DataStream?.CopyTo( outFs );
-					} else {
-						// For other entry types (symlink, etc.) best-effort: create directories or skip.
-						if ( entry.EntryType == TarEntryType.SymbolicLink && !string.IsNullOrEmpty( entryName ) ) {
-							// On Windows creating symlinks may require privileges; skip with a warning.
-							stderr.WriteLine( $"tar: warning: skipping symbolic link {entryName}" );
-						}
-					}
-				}
-			} catch ( Exception ex ) {
-				stderr.WriteLine( $"tar: {ex.Message}" );
-				return 1;
-			}
-
-			return 0;
-		} else {
-			stderr.WriteLine( "tar: unknown mode, use -c or -x" );
+		} catch ( OperationCanceledException ) when ( cancellationToken.IsCancellationRequested ) {
+			await stderr.WriteLineAsync( "tar: operation cancelled" ).ConfigureAwait( false );
+			return 130;
+		} catch ( Exception exception ) when (
+			exception is IOException
+				or UnauthorizedAccessException
+				or InvalidDataException
+				or ArgumentException
+				or NotSupportedException
+				or OverflowException
+		) {
+			await stderr.WriteLineAsync( string.Concat( "tar: ", exception.Message ) ).ConfigureAwait( false );
 			return 2;
 		}
 	}
+
+	private const string HelpText = """
+Usage: tar [OPTION...] [FILE]...
+Create or manipulate tar archives.
+
+Main operation mode:
+  -c, --create                 create a new archive
+  -x, --extract, --get         extract files from an archive
+  -t, --list                   list archive contents
+  -r, --append                 append files to an archive
+  -u, --update                 append files newer than archive copies
+      --delete                 delete members from an archive
+  -A, --concatenate            append tar archives to an archive
+  -d, --compare, --diff        compare archive members with the file system
+
+Archive control:
+  -f, --file=ARCHIVE           use ARCHIVE
+  -C, --directory=DIR          change directory for following operands
+      --format=gnu|ustar|pax   select output archive format
+  -z, --gzip                   filter through gzip
+  -j, --bzip2                  filter through bzip2
+  -J, --xz                     filter through xz
+      --zstd                   filter through zstd
+      --use-compress-program=P use external compressor P without a shell
+  -a, --auto-compress          select compression from archive suffix
+
+Selection and extraction:
+      --exclude=PATTERN        exclude matching member names
+      --strip-components=N     remove N leading name components on extraction
+  -h, --dereference            follow file-system links while archiving
+      --no-recursion           do not recurse into directories
+  -S, --sparse                 write GNU sparse 0.1 metadata in pax archives
+  -p, --preserve-permissions   restore archived Unix mode bits
+      --same-owner             restore numeric owner/group when supported
+  -m, --touch                  do not restore modification times
+  -P, --absolute-names         retain leading roots while creating archives
+      --keep-old-files         fail instead of replacing existing files
+      --skip-old-files         skip existing regular files
+      --overwrite              replace existing ordinary files
+  -v, --verbose                list processed member names
+
+Safety extensions:
+      --max-entries=N          maximum archive/traversal entries (default 1000000)
+      --max-extract-bytes=N    maximum logical extraction bytes (default 1 TiB)
+      --max-archive-bytes=N    maximum archive/decompressed bytes (default 1 TiB)
+
+      --help                   display this help and exit
+      --version                output version information and exit
+""";
 }

@@ -4,11 +4,11 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `60`; Batch `61` through Batch `67` implementations are ready for validation; Batch `68` (`Icod.ProcPs.Top`) is deliberately deferred until after `Icod.ProcPs` extraction; Batch `69` through Batch `71` implementations are ready for validation |
-| Current engineering milestone | Batch 71 — `stdbuf` implemented with an owned Linux ELF preload shim and controlled unsupported behavior elsewhere; repository/runner validation pending |
+| Completed command batches | `0` through `60`; Batch `61` through Batch `67` implementations are ready for validation; Batch `68` (`Icod.ProcPs.Top`) is deliberately deferred until after `Icod.ProcPs` extraction; Batch `69` through Batch `72` implementations are ready for validation |
+| Current engineering milestone | Batch 72 — `Icod.Tar` archive engine implemented against GNU tar 1.35 with hardened extraction and transactional archive rewrites; repository/runner validation pending |
 | Completed infrastructure milestone | Completion Gates E2 through E6, F1 through F4, and P1 — filesystem, terminal, process-control, and ProcPs provider foundations; three-platform ProcPs provider correction validated and merged |
-| Active infrastructure dependency | Validate Batches 61 through 67 and Batches 69 through 71 across the required runners; preserve the ProcPs extraction boundary so deferred Batch 68 can be completed after `Icod.ProcPs` leaves the co-resident solution |
-| Next engineering step | Validate Batch 71 and continue with Batch 72 (`Icod.Tar`); Batch 68 — `Icod.ProcPs.Top` remains deferred until after `Icod.ProcPs` is migrated out of this repository |
+| Active infrastructure dependency | Validate Batches 61 through 67 and Batches 69 through 72 across the required runners; preserve the ProcPs extraction boundary so deferred Batch 68 can be completed after `Icod.ProcPs` leaves the co-resident solution |
+| Next engineering step | Validate Batch 72 and continue with Completion Gate G; Batch 68 — `Icod.ProcPs.Top` remains deferred until after `Icod.ProcPs` is migrated out of this repository |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1673,8 +1673,8 @@ Visible-change decisions are made from the rendered terminal body rather than ra
 
 ### Batch 67 — Specialized kernel-memory displays (2 tools)
 
-- [ ] `Icod.ProcPs.HugeTop`
-- [ ] `Icod.ProcPs.SlabTop`
+- [x] `Icod.ProcPs.HugeTop`
+- [x] `Icod.ProcPs.SlabTop`
 
 For `hugetop`, implement system and per-process hugepage reporting, sorting, refresh, batch and interactive modes, terminal behavior, and controlled unsupported diagnostics where the platform exposes no equivalent data.
 
@@ -1700,7 +1700,7 @@ Completion Gate P1 continues to record the intended procps-ng inventory, includi
 
 ### Batch 69 — Root-directory execution (1 tool)
 
-- [ ] `chroot`
+- [x] `chroot`
 
 Replace `NotImplementedException` with a real Unix implementation and controlled diagnostics elsewhere. Implement users and groups, supplementary-group initialization, skip-chdir policy, command lookup after root change, privilege handling, and process execution without unsafe shell interpolation.
 
@@ -1710,8 +1710,8 @@ The native work is isolated behind `IChrootPlatform`, allowing command tests to 
 
 ### Batch 70 — SELinux context operations (2 tools)
 
-- [ ] `chcon`
-- [ ] `runcon`
+- [x] `chcon`
+- [x] `runcon`
 
 Treat these as Linux and SELinux capability commands. Use native APIs or stable libraries rather than invoking external commands. Implement reference and component contexts, dereference and recursion policy, preserve-root, computed and process context behavior, privilege failures, and explicit diagnostics when SELinux is unavailable.
 
@@ -1727,13 +1727,13 @@ Feasibility decision: active `stdbuf` semantics require a native stdio preload h
 
 ### Batch 72 — `Icod.Tar` archive engine (1 tool)
 
-- [ ] `Icod.Tar`
+- [x] `Icod.Tar`
 
-Create the suite-correct project and test project inside the current solution, migrate the existing tar seed implementation into the `Icod.Tar` namespace, and record the pinned GNU tar release as the authoritative baseline.
+GNU tar 1.35 is now pinned as the Batch 72 behavioral reference. `Icod.Tar` owns create, extract, list, append, update, delete, concatenate, and compare semantics; selected GNU, ustar, and POSIX/pax formats; link and metadata behavior; member selection/exclusion; gzip and external compression filters; and GNU/PAX sparse 0.1 handling. `System.Formats.Tar` is deliberately used as the record codec while archive policy remains command-local. Legacy GNU sparse-header members and sparse generations other than 0.1 are rejected rather than being reconstructed from incomplete metadata.
 
-Implement the selected GNU, ustar, and POSIX/pax formats; correct archive entry typing; links; sparse files; metadata; streaming create, list, and extract behavior; member selection and exclusions; compression integration; and every in-scope archive operation. Consume the mature traversal, canonical-path, metadata, temporary-workspace, transactional-replacement, child-process, signal, and platform-capability abstractions already developed in the solution.
+Creation consumes the established `ReadOnlyPathTraversalEngine`; archive rewrites and regular-file extraction consume the E6 transactional-replacement boundary; external compression consumes the shared process executor and private temporary workspace. Because the .NET 10 `TarWriter` surface does not expose the later `TarWriterOptions`/`TarHardLinkMode` API, hard-link preservation is command-owned: stable traversal filesystem/entry identities identify repeated physical files and `Icod.Tar` emits explicit hard-link archive members after the first pathname. Append/update preserve historical duplicate member versions at the archive tail, while mutation of compressed archives is rejected.
 
-Extraction is a security boundary. Add adversarial tests for absolute paths, `..`, platform-root tricks, symlink and hard-link escapes, device creation, metadata restoration, case-folding collisions, overwrite races, malformed sparse maps, integer overflow, archive bombs, decompression failures, cancellation, and resource exhaustion. Archive-format and archive-state behavior remains in `Icod.Tar`, not in the general Shared incubation project.
+Extraction is treated as a security boundary: rooted/platform-root and escaping member paths are rejected, parent symlink/reparse traversal is blocked, symbolic/hard-link targets are containment-checked, special device/FIFO creation is refused, Windows case-fold collisions are detected, sparse arithmetic is checked, and archive/member/extracted-byte ceilings bound hostile inputs. Dedicated `Tar.Tests` cover operations, formats, compression, links, metadata, sparse round trips, malformed sparse maps, integer overflow, path/link escapes, overwrite redirection, decompression failure, cancellation, and resource exhaustion. Detailed notes are recorded in `Icod.CoreUtils-Batch-72-Tar-Archive-Engine.md`; full solution and required-runner validation remain the closure step.
 
 The project remains co-resident until Completion Gate G, when it is moved into its own solution and repository and its cross-suite dependencies are converted to `Icod.CommandFramework` package references.
 
