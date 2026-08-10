@@ -128,7 +128,7 @@ internal sealed class TarExtractionPolicy {
 	}
 
 	private static bool IsArchiveRooted( string value ) {
-		if ( value.StartsWith( '/', StringComparison.Ordinal ) || value.StartsWith( "//", StringComparison.Ordinal ) ) return true;
+		if ( value.StartsWith( '/' ) || value.StartsWith( "//", StringComparison.Ordinal ) ) return true;
 		return value.Length >= 2 && char.IsAsciiLetter( value[0] ) && value[1] == ':';
 	}
 

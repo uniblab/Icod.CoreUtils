@@ -478,7 +478,7 @@ internal sealed class TarArchiveEngine {
 		policy.ValidateSymbolicLinkTarget( resolved, entry.LinkName );
 		policy.EnsureSafeParents( resolved.DestinationPath! );
 		if ( !PrepareLinkDestination( resolved.DestinationPath!, options ) ) return false;
-		var targetIsDirectory = entry.LinkName.EndsWith( '/', StringComparison.Ordinal );
+		var targetIsDirectory = entry.LinkName.EndsWith( '/' );
 		var result = await mutationFileSystem.CreateSymbolicLinkAsync(
 			resolved.DestinationPath!,
 			entry.LinkName,

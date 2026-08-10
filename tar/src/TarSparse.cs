@@ -191,8 +191,8 @@ internal static class TarSparse {
 	}
 
 	private static bool TryReadLong( IReadOnlyDictionary<string, string> values, string key, out long value ) {
-		return values.TryGetValue( key, out var text )
-			&& long.TryParse( text, NumberStyles.None, CultureInfo.InvariantCulture, out value );
+		var ret = values.TryGetValue( key, out var text );
+		return ret && long.TryParse( text, NumberStyles.None, CultureInfo.InvariantCulture, out value );
 	}
 
 	private static string CreateStoredName( string archiveName ) {
