@@ -169,8 +169,7 @@ internal sealed class TarArchiveEngine {
 		await ReplaceArchiveAsync(
 			options,
 			async (destination, token) => {
-				var writerOptions = CreateWriterOptions( options );
-				await using var writer = new TarWriter( destination, writerOptions, leaveOpen: true );
+				await using var writer = new TarWriter( destination, options.Format, leaveOpen: true );
 				await CopyArchiveAsync( archivePath, writer, options, static _ => true, token ).ConfigureAwait( false );
 				hadErrors = await WriteInputsAsync( options, writer, latest, token ).ConfigureAwait( false );
 			},
@@ -187,7 +186,7 @@ internal sealed class TarArchiveEngine {
 		await ReplaceArchiveAsync(
 			options,
 			async (destination, token) => {
-				await using var writer = new TarWriter( destination, CreateWriterOptions( options ), leaveOpen: true );
+				await using var writer = new TarWriter( destination, options.Format, leaveOpen: true );
 				await CopyArchiveAsync( archivePath, writer, options, entry => !TarMemberSelection.IsSelected( options, TarSparse.GetLogicalName( entry ) ), token ).ConfigureAwait( false );
 			},
 			cancellationToken
@@ -203,7 +202,7 @@ internal sealed class TarArchiveEngine {
 		await ReplaceArchiveAsync(
 			options,
 			async (destination, token) => {
-				await using var writer = new TarWriter( destination, CreateWriterOptions( options ), leaveOpen: true );
+				await using var writer = new TarWriter( destination, options.Format, leaveOpen: true );
 				await CopyArchiveAsync( archivePath, writer, options, static _ => true, token ).ConfigureAwait( false );
 				foreach ( var operand in options.Operands ) {
 					var source = Path.GetFullPath( operand.Value, operand.WorkingDirectory );
@@ -244,7 +243,7 @@ internal sealed class TarArchiveEngine {
 	}
 
 	private async Task<bool> WriteInputArchiveAsync( TarOptions options, Stream destination, IReadOnlyDictionary<string, DateTimeOffset>? updateTimes, CancellationToken cancellationToken ) {
-		await using var writer = new TarWriter( destination, CreateWriterOptions( options ), leaveOpen: true );
+		await using var writer = new TarWriter( destination, options.Format, leaveOpen: true );
 		return await WriteInputsAsync( options, writer, updateTimes, cancellationToken ).ConfigureAwait( false );
 	}
 
@@ -265,6 +264,7 @@ internal sealed class TarArchiveEngine {
 		};
 		var hadErrors = false;
 		var count = 0;
+		var hardLinkTargets = new Dictionary<(FileSystemIdentity FileSystem, FileSystemEntryIdentity Entry), string>();
 		var archivePath = options.ArchiveName == "-" ? null : GetArchivePath( options );
 		await foreach ( var item in traversal.TraverseAsync( roots, traversalOptions, cancellationToken ).ConfigureAwait( false ) ) {
 			cancellationToken.ThrowIfCancellationRequested();
@@ -291,14 +291,22 @@ internal sealed class TarArchiveEngine {
 			if ( updateTimes is not null && !ShouldUpdate( entry.AccessPath, archiveName, updateTimes ) ) continue;
 			try {
 				if ( options.Verbose ) await stdout.WriteLineAsync( archiveName ).ConfigureAwait( false );
+				if ( entry.Kind == FileSystemEntryKind.File
+					&& TryGetHardLinkTarget( entry, archiveName, hardLinkTargets, out var hardLinkTarget ) ) {
+					var hardLink = CreateHardLinkEntry( options.Format, entry.AccessPath, archiveName, hardLinkTarget );
+					await writer.WriteEntryAsync( hardLink, cancellationToken ).ConfigureAwait( false );
+					continue;
+				}
 				if ( options.Sparse && entry.Kind == FileSystemEntryKind.File ) {
 					var sparse = await TarSparse.TryCreateEntryAsync( entry.AccessPath, archiveName, cancellationToken ).ConfigureAwait( false );
 					if ( sparse is not null ) {
 						await writer.WriteEntryAsync( sparse, cancellationToken ).ConfigureAwait( false );
+						RememberHardLinkTarget( entry, archiveName, hardLinkTargets );
 						continue;
 					}
 				}
 				await writer.WriteEntryAsync( entry.AccessPath, archiveName, cancellationToken ).ConfigureAwait( false );
+				RememberHardLinkTarget( entry, archiveName, hardLinkTargets );
 			} catch ( Exception exception ) when ( exception is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException ) {
 				hadErrors = true;
 				await WriteMemberErrorAsync( entry.DisplayPath, exception.Message ).ConfigureAwait( false );
@@ -348,10 +356,42 @@ internal sealed class TarArchiveEngine {
 		return reader.GetNextEntry()?.Format ?? TarEntryFormat.Pax;
 	}
 
-	private static System.Formats.Tar.TarWriterOptions CreateWriterOptions( TarOptions options ) => new() {
-		Format = options.Format,
-		HardLinkMode = TarHardLinkMode.PreserveLink
-	};
+	private static bool TryGetHardLinkTarget(
+		PathTraversalEntry entry,
+		string archiveName,
+		IReadOnlyDictionary<(FileSystemIdentity FileSystem, FileSystemEntryIdentity Entry), string> targets,
+		out string target
+	) {
+		target = string.Empty;
+		if ( !entry.FileSystemIdentity.IsAvailable || !entry.EntryIdentity.IsAvailable ) return false;
+		if ( !targets.TryGetValue( (entry.FileSystemIdentity, entry.EntryIdentity), out var firstName ) ) return false;
+		if ( string.Equals( NormalizeMemberName( archiveName ), NormalizeMemberName( firstName ), StringComparison.Ordinal ) ) return false;
+		target = firstName;
+		return true;
+	}
+
+	private static void RememberHardLinkTarget(
+		PathTraversalEntry entry,
+		string archiveName,
+		Dictionary<(FileSystemIdentity FileSystem, FileSystemEntryIdentity Entry), string> targets
+	) {
+		if ( !entry.FileSystemIdentity.IsAvailable || !entry.EntryIdentity.IsAvailable ) return;
+		targets.TryAdd( (entry.FileSystemIdentity, entry.EntryIdentity), archiveName );
+	}
+
+	private static TarEntry CreateHardLinkEntry( TarEntryFormat format, string sourcePath, string archiveName, string targetName ) {
+		TarEntry hardLink = format switch {
+			TarEntryFormat.V7 => new V7TarEntry( TarEntryType.HardLink, archiveName ),
+			TarEntryFormat.Ustar => new UstarTarEntry( TarEntryType.HardLink, archiveName ),
+			TarEntryFormat.Pax => new PaxTarEntry( TarEntryType.HardLink, archiveName ),
+			TarEntryFormat.Gnu => new GnuTarEntry( TarEntryType.HardLink, archiveName ),
+			_ => throw new ArgumentOutOfRangeException( nameof( format ) )
+		};
+		hardLink.LinkName = targetName;
+		hardLink.ModificationTime = File.GetLastWriteTimeUtc( sourcePath );
+		if ( !OperatingSystem.IsWindows() ) hardLink.Mode = File.GetUnixFileMode( sourcePath );
+		return hardLink;
+	}
 
 	private async Task ReplaceArchiveAsync( TarOptions options, Func<Stream, CancellationToken, Task> writer, CancellationToken cancellationToken ) {
 		var path = GetArchivePath( options );

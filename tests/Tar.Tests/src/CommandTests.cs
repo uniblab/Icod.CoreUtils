@@ -1,5 +1,6 @@
 namespace Icod.Tar.Tests;
 
+using System.Diagnostics;
 using System.Formats.Tar;
 using System.Text;
 using Xunit;
@@ -148,6 +149,39 @@ public sealed class CommandTests {
 		var error = new StringWriter();
 		Assert.Equal( 2, Command.Run( new[] { "-xf", archive, "-C", destination }, stderr: error ) );
 		Assert.Contains( "tar:", error.ToString() );
+	}
+
+	[Theory]
+	[InlineData( "gnu" )]
+	[InlineData( "ustar" )]
+	[InlineData( "pax" )]
+	public void CreationPreservesHardLinkIdentityOnUnix( string format ) {
+		if ( OperatingSystem.IsWindows() ) return;
+		using var tree = new TestTree();
+		var source = tree.CreateDirectory( "source" );
+		var original = Path.Combine( source, "original.txt" );
+		var linked = Path.Combine( source, "linked.txt" );
+		File.WriteAllText( original, "linked" );
+		var startInfo = new ProcessStartInfo {
+			FileName = "ln",
+			UseShellExecute = false,
+			RedirectStandardError = true
+		};
+		startInfo.ArgumentList.Add( original );
+		startInfo.ArgumentList.Add( linked );
+		using ( var process = Process.Start( startInfo ) ?? throw new InvalidOperationException( "Unable to start ln." ) ) {
+			process.WaitForExit();
+			Assert.True( process.ExitCode == 0, process.StandardError.ReadToEnd() );
+		}
+		var archive = tree.PathFor( "hardlinks.tar" );
+		Assert.Equal( 0, Command.Run( new[] { "-cf", archive, "--format", format, "-C", source, "original.txt", "linked.txt" } ) );
+		using var stream = File.OpenRead( archive );
+		using var reader = new TarReader( stream );
+		var first = Assert.IsAssignableFrom<TarEntry>( reader.GetNextEntry() );
+		var second = Assert.IsAssignableFrom<TarEntry>( reader.GetNextEntry() );
+		Assert.Equal( TarEntryType.RegularFile, first.EntryType );
+		Assert.Equal( TarEntryType.HardLink, second.EntryType );
+		Assert.Equal( "original.txt", second.LinkName );
 	}
 
 	[Fact]
