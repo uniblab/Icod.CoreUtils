@@ -56,7 +56,7 @@ public sealed record NProcOptions {
 				ignore = ParseIgnore( args[index] );
 				continue;
 			}
-			if ( optionParsing && argument.StartsWith( "-", StringComparison.Ordinal ) ) {
+			if ( optionParsing && argument.StartsWith( '-' ) ) {
 				throw new NProcUsageException( string.Concat( "unrecognized option '", argument, "'" ) );
 			}
 			throw new NProcUsageException( string.Concat( "extra operand '", argument, "'" ) );

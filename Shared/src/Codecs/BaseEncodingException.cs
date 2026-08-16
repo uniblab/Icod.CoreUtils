@@ -8,11 +8,7 @@ public sealed class BaseEncodingException : Exception {
 	/// <summary>
 	/// Initializes an encoding exception.
 	/// </summary>
-	public BaseEncodingException(
-		string message
-	) : base(
-		message
-	) {
+	public BaseEncodingException( string message ) : base( message ) {
 	}
 
 }

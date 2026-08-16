@@ -522,7 +522,7 @@ For more details see vmstat(8).
 			var token = args[ index ];
 			if ( endOptions ) { operands.Add( token ); continue; }
 			if ( "--" == token ) { endOptions = true; continue; }
-			if ( !token.StartsWith( "-", StringComparison.Ordinal ) || "-" == token ) { operands.Add( token ); continue; }
+			if ( !token.StartsWith( '-' ) || "-" == token ) { operands.Add( token ); continue; }
 			if ( token.StartsWith( "--", StringComparison.Ordinal ) ) {
 				var equal = token.IndexOf( '=' ); var name = 0 > equal ? token[ 2.. ] : token[ 2..equal ]; var value = 0 > equal ? null : token[ ( equal + 1 ).. ];
 				var resolution = ResolveLongOption( name, token ); if ( null != resolution.Error ) return Fail( resolution.Error, true ); var option = resolution.Option!;

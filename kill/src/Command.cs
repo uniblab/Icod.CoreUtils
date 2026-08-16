@@ -440,7 +440,7 @@ public static class Command {
 		var index = 0;
 		for ( ; index < args.Length; index++ ) {
 			var token = args[ index ];
-			if ( !token.StartsWith( "-", StringComparison.Ordinal ) || "-" == token ) break;
+			if ( !token.StartsWith( '-' ) || "-" == token ) break;
 			if ( "--" == token ) {
 				index++;
 				break;

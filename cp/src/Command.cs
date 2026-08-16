@@ -136,7 +136,7 @@ public static class Command {
 		var optionsEnded = false;
 		for ( var index = 0; index < args.Length; index++ ) {
 			var argument = args[index];
-			if ( optionsEnded || argument == "-" || !argument.StartsWith( "-", StringComparison.Ordinal ) ) {
+			if ( optionsEnded || argument == "-" || !argument.StartsWith( '-' ) ) {
 				operands.Add( argument );
 				continue;
 			}

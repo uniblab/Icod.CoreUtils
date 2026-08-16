@@ -190,7 +190,7 @@ For more details see free(1).
 			var token = args[ index ];
 			if ( endOfOptions ) { operandSeen = true; continue; }
 			if ( "--" == token ) { endOfOptions = true; continue; }
-			if ( !token.StartsWith( "-", StringComparison.Ordinal ) || "-" == token ) { operandSeen = true; continue; }
+			if ( !token.StartsWith( '-' ) || "-" == token ) { operandSeen = true; continue; }
 			if ( token.StartsWith( "--", StringComparison.Ordinal ) ) {
 				var equal = token.IndexOf( '=' ); var name = 0 > equal ? token[ 2.. ] : token[ 2..equal ]; var value = 0 > equal ? null : token[ ( equal + 1 ).. ];
 				var resolution = ResolveLongOption( name, token );

@@ -131,7 +131,7 @@ could not be invoked, and 127 means COMMAND could not be found.
 		var optionsEnded = false;
 		while ( index < args.Count ) {
 			var token = args[ index ];
-			if ( optionsEnded || "-" == token || !token.StartsWith( "-", StringComparison.Ordinal ) ) {
+			if ( optionsEnded || "-" == token || !token.StartsWith( '-' ) ) {
 				break;
 			}
 			if ( "--" == token ) {
@@ -171,7 +171,7 @@ could not be invoked, and 127 means COMMAND could not be found.
 						index++;
 						attached = args[ index ];
 					}
-					if ( attached.EndsWith( ":", StringComparison.Ordinal ) && 0 < attached.Length ) {
+					if ( attached.EndsWith( ':' ) && 0 < attached.Length ) {
 						attached = attached[ ..^1 ];
 					}
 					parsed.UserSpec = attached;

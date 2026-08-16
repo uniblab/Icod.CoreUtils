@@ -474,7 +474,7 @@ public static class Command {
 				index++;
 				break;
 			}
-			if ( !argument.StartsWith( "-", StringComparison.Ordinal ) || "-" == argument ) {
+			if ( !argument.StartsWith( '-' ) || "-" == argument ) {
 				break;
 			}
 			if ( "--help" == argument || "-h" == argument ) {

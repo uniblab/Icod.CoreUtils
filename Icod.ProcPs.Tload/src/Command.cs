@@ -266,7 +266,7 @@ public static class Command {
 				delay = TimeSpan.FromSeconds( seconds );
 				continue;
 			}
-			if ( argument.StartsWith( "-", StringComparison.Ordinal ) && "-" != argument ) {
+			if ( argument.StartsWith( '-' ) && "-" != argument ) {
 				return ParsedArguments.Failed( $"unrecognized option '{argument}'" );
 			}
 			if ( null != terminalPath ) {

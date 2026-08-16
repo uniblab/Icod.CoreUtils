@@ -45,7 +45,7 @@ public static class Command {
 			}
 			if ( "--" == token ) {
 				operands.AddRange( args.Skip( 1 ) );
-			} else if ( token.StartsWith( "-", StringComparison.Ordinal ) && "-" != token ) {
+			} else if ( token.StartsWith( '-' ) && "-" != token ) {
 				await WriteDiagnosticAsync( stderr, $"nohup: unrecognized option '{token}'", cancellationToken ).ConfigureAwait( false );
 				await WriteDiagnosticAsync( stderr, "Try 'nohup --help' for more information.", cancellationToken ).ConfigureAwait( false );
 				return internalFailure;

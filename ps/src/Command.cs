@@ -259,7 +259,7 @@ Output:
 				ParseLongOption( args, ref index, argument, result, accountResolver );
 				continue;
 			}
-			if ( argument.StartsWith( "-", StringComparison.Ordinal ) && 1 < argument.Length ) {
+			if ( argument.StartsWith( '-' ) && 1 < argument.Length ) {
 				ParseUnixOptions( args, ref index, argument, result, accountResolver );
 				continue;
 			}

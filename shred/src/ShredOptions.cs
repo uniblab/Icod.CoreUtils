@@ -57,7 +57,7 @@ public sealed class ShredOptions {
 
 		for ( var index = 0; index < args.Count; index++ ) {
 			var argument = args[ index ];
-			if ( operandsOnly || argument == "-" || !argument.StartsWith( "-", StringComparison.Ordinal ) ) {
+			if ( operandsOnly || argument == "-" || !argument.StartsWith( '-' ) ) {
 				options.Targets.Add( argument );
 				continue;
 			}

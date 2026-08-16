@@ -558,7 +558,7 @@ public static class Command {
 			if ( flags.Contains( '-' ) ) {
 				content = content.PadRight( width.Value );
 			} else if ( flags.Contains( '0' ) ) {
-				var signLength = content.StartsWith( "+", StringComparison.Ordinal ) || content.StartsWith( "-", StringComparison.Ordinal ) || content.StartsWith( " ", StringComparison.Ordinal ) ? 1 : 0;
+				var signLength = content.StartsWith( "+", StringComparison.Ordinal ) || content.StartsWith( '-' ) || content.StartsWith( " ", StringComparison.Ordinal ) ? 1 : 0;
 				content = string.Concat( content.Substring( 0, signLength ), new string( '0', width.Value - content.Length ), content.Substring( signLength ) );
 			} else {
 				content = content.PadLeft( width.Value );

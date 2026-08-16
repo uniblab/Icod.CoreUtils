@@ -253,7 +253,7 @@ public static class Command {
 				}
 				break;
 			}
-			if ( argument.StartsWith( "-", StringComparison.Ordinal ) ) {
+			if ( argument.StartsWith( '-' ) ) {
 				return ParsedArguments.Failed( $"unrecognized option '{argument}'" );
 			}
 			return ParsedArguments.Failed( $"unexpected operand '{argument}'" );

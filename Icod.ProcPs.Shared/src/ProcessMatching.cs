@@ -748,7 +748,7 @@ public static class ProcMatchCommand {
 				for ( index++; index < args.Length; index++ ) operands.Add( args[ index ] );
 				break;
 			}
-			if ( !arg.StartsWith( "-", StringComparison.Ordinal ) || "-" == arg ) {
+			if ( !arg.StartsWith( '-' ) || "-" == arg ) {
 				operands.Add( arg );
 				continue;
 			}

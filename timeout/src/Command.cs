@@ -311,7 +311,7 @@ public static class Command {
 		while ( index < args.Length ) {
 			var token = args[ index ];
 			if ( "--" == token ) { index++; break; }
-			if ( !token.StartsWith( "-", StringComparison.Ordinal ) || "-" == token ) break;
+			if ( !token.StartsWith( '-' ) || "-" == token ) break;
 			if ( token.StartsWith( "--", StringComparison.Ordinal ) ) {
 				var equal = token.IndexOf( '=' );
 				var name = 0 > equal ? token[ 2.. ] : token[ 2..equal ];
@@ -425,7 +425,7 @@ public static class Command {
 		value = 0d;
 		var sign = 1d;
 		if ( text.StartsWith( "+", StringComparison.Ordinal ) ) text = text[ 1.. ];
-		else if ( text.StartsWith( "-", StringComparison.Ordinal ) ) { sign = -1d; text = text[ 1.. ]; }
+		else if ( text.StartsWith( '-' ) ) { sign = -1d; text = text[ 1.. ]; }
 		if ( 0 == text.Length || char.IsWhiteSpace( text[ 0 ] ) ) return false;
 		if ( text.Equals( "inf", StringComparison.OrdinalIgnoreCase ) || text.Equals( "infinity", StringComparison.OrdinalIgnoreCase ) ) {
 			value = sign * double.PositiveInfinity;

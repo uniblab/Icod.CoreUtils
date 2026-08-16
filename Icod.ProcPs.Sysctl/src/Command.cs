@@ -173,7 +173,7 @@ For more details see sysctl(8).
 		var operandsOnly = false;
 		for ( var index = 0; index < args.Count; index++ ) {
 			var argument = args[index];
-			if ( operandsOnly || "-" == argument || !argument.StartsWith( "-", StringComparison.Ordinal ) ) {
+			if ( operandsOnly || "-" == argument || !argument.StartsWith( '-' ) ) {
 				parsed.Operands.Add( argument );
 				continue;
 			}
@@ -549,7 +549,7 @@ For more details see sysctl(8).
 		}
 		var equals = text.IndexOf( '=' );
 		if ( 0 > equals ) {
-			if ( !text.StartsWith( "-", StringComparison.Ordinal ) ) {
+			if ( !text.StartsWith( '-' ) ) {
 				return null;
 			}
 			var excludedKey = text[1..].Trim();
@@ -560,7 +560,7 @@ For more details see sysctl(8).
 		}
 		var ignoreFailure = false;
 		var keyText = text[..equals].Trim();
-		if ( keyText.StartsWith( "-", StringComparison.Ordinal ) ) {
+		if ( keyText.StartsWith( '-' ) ) {
 			ignoreFailure = true;
 			keyText = keyText[1..].Trim();
 		}
@@ -579,7 +579,7 @@ For more details see sysctl(8).
 		}
 		var key = operand[..equals].Trim();
 		var ignoreFailure = false;
-		if ( key.StartsWith( "-", StringComparison.Ordinal ) ) {
+		if ( key.StartsWith( '-' ) ) {
 			ignoreFailure = true;
 			key = key[1..].Trim();
 		}

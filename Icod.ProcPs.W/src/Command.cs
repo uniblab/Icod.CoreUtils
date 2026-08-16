@@ -634,7 +634,7 @@ For more details see w(1).
 		var endOfOptions = false;
 		for ( var index = 0; index < args.Length; index++ ) {
 			var token = args[ index ];
-			if ( endOfOptions || !token.StartsWith( "-", StringComparison.Ordinal ) || "-" == token ) {
+			if ( endOfOptions || !token.StartsWith( '-' ) || "-" == token ) {
 				if ( null != options.UserName ) {
 					options.Error = "w: too many arguments";
 					return options;
