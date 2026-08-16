@@ -261,7 +261,7 @@ public sealed class SystemChrootPlatform : IChrootPlatform {
 	private static UserResolution ResolveUser( string token ) {
 		ArgumentException.ThrowIfNullOrEmpty( token );
 		var text = token.Trim();
-		var forceNumeric = text.StartsWith( "+", StringComparison.Ordinal );
+		var forceNumeric = text.StartsWith( '+' );
 		if ( forceNumeric ) {
 			text = text[ 1.. ];
 		}
@@ -295,7 +295,7 @@ public sealed class SystemChrootPlatform : IChrootPlatform {
 	private static GroupResolution ResolveGroup( string token ) {
 		ArgumentException.ThrowIfNullOrEmpty( token );
 		var text = token.Trim();
-		var forceNumeric = text.StartsWith( "+", StringComparison.Ordinal );
+		var forceNumeric = text.StartsWith( '+' );
 		if ( forceNumeric ) {
 			text = text[ 1.. ];
 		}
