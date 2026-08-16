@@ -304,7 +304,7 @@ public static class SttyModeEditor {
 		}
 
 		private bool ApplyWindows( string setting ) {
-			var enable = !setting.StartsWith( "-", StringComparison.Ordinal );
+			var enable = !setting.StartsWith( '-' );
 			var name = enable ? setting : setting[ 1.. ];
 			if ( name is "sane" or "cooked" ) {
 				this.RequireWindowsInput( name );
@@ -379,7 +379,7 @@ public static class SttyModeEditor {
 				this.SetCharacterSize( pass ? "cs8" : "cs7" );
 				return true;
 			}
-			var enable = !setting.StartsWith( "-", StringComparison.Ordinal );
+			var enable = !setting.StartsWith( '-' );
 			var name = enable ? setting : setting[ 1.. ];
 			if ( name is "cs5" or "cs6" or "cs7" or "cs8" ) {
 				if ( !enable ) {
@@ -452,7 +452,7 @@ public static class SttyModeEditor {
 		}
 
 		private void ApplyParityAlias( string setting ) {
-			var disable = setting.StartsWith( "-", StringComparison.Ordinal );
+			var disable = setting.StartsWith( '-' );
 			if ( disable ) {
 				this.SetControl( this.ControlMask( "parenb" ), false );
 				this.SetCharacterSize( "cs8" );

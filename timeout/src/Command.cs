@@ -450,7 +450,7 @@ public static class Command {
 		long parsedExponent = 0;
 		if ( null != exponentText ) {
 			var exponentDigits = exponentText;
-			var negativeExponent = exponentDigits.StartsWith( "-", StringComparison.Ordinal );
+			var negativeExponent = exponentDigits.StartsWith( '-' );
 			if ( negativeExponent || exponentDigits.StartsWith( "+", StringComparison.Ordinal ) ) exponentDigits = exponentDigits[ 1.. ];
 			if ( 0 == exponentDigits.Length || exponentDigits.Any( static character => !char.IsAsciiDigit( character ) ) ) return false;
 			if ( !long.TryParse( exponentText, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out parsedExponent ) ) {
