@@ -420,33 +420,33 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "unlink", "unlink", "{0319F1
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Unlink", "unlink\Icod.CoreUtils.Unlink.csproj", "{E9E2211C-DEFA-4440-BB2D-F883059D7823}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Icod.ProcPs.Uptime", "Icod.ProcPs.Uptime", "{E98EB837-825B-ADF9-C2F6-388D356C24B6}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "uptime", "uptime", "{E98EB837-825B-ADF9-C2F6-388D356C24B6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Uptime", "Icod.ProcPs.Uptime\Icod.ProcPs.Uptime.csproj", "{85DD0752-F927-470E-B8F4-B8934EBEF1B5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Uptime", "uptime\Icod.ProcPs.Uptime.csproj", "{85DD0752-F927-470E-B8F4-B8934EBEF1B5}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Icod.ProcPs.W", "Icod.ProcPs.W", "{87D56C3B-DBD8-4028-8161-F55F295EF258}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "w", "w", "{87D56C3B-DBD8-4028-8161-F55F295EF258}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.W", "Icod.ProcPs.W\Icod.ProcPs.W.csproj", "{510A4AB7-EEE4-430A-977E-F5ED9E86232F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.W", "w\Icod.ProcPs.W.csproj", "{510A4AB7-EEE4-430A-977E-F5ED9E86232F}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Icod.ProcPs.Sysctl", "Icod.ProcPs.Sysctl", "{62D5A0F3-2D7B-4C3C-BB65-75A5736C6400}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sysctl", "sysctl", "{62D5A0F3-2D7B-4C3C-BB65-75A5736C6400}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Sysctl", "Icod.ProcPs.Sysctl\Icod.ProcPs.Sysctl.csproj", "{62D5A0F3-2D7B-4C3C-BB65-75A5736C6401}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Sysctl", "sysctl\Icod.ProcPs.Sysctl.csproj", "{62D5A0F3-2D7B-4C3C-BB65-75A5736C6401}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Icod.ProcPs.Tload", "Icod.ProcPs.Tload", "{025A8009-C458-48DF-9BFC-6874017BB915}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tload", "tload", "{025A8009-C458-48DF-9BFC-6874017BB915}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Tload", "Icod.ProcPs.Tload\Icod.ProcPs.Tload.csproj", "{80372E0F-9276-4E5F-939A-610D79F89522}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Tload", "tload\Icod.ProcPs.Tload.csproj", "{80372E0F-9276-4E5F-939A-610D79F89522}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Icod.ProcPs.Watch", "Icod.ProcPs.Watch", "{C62EF5B3-25F8-4AFC-B6EB-AA95C471B6D9}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "watch", "watch", "{C62EF5B3-25F8-4AFC-B6EB-AA95C471B6D9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Watch", "Icod.ProcPs.Watch\Icod.ProcPs.Watch.csproj", "{698FBFB4-96BF-4B7B-A86C-9A14F61D1051}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Watch", "watch\Icod.ProcPs.Watch.csproj", "{698FBFB4-96BF-4B7B-A86C-9A14F61D1051}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Icod.ProcPs.HugeTop", "Icod.ProcPs.HugeTop", "{97752350-D0AE-4E07-BE8B-9872AC062BDB}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "hugetop", "hugetop", "{97752350-D0AE-4E07-BE8B-9872AC062BDB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.HugeTop", "Icod.ProcPs.HugeTop\Icod.ProcPs.HugeTop.csproj", "{DC3A1B4C-B47B-447A-A1F9-E2724FDF34F6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.HugeTop", "hugetop\Icod.ProcPs.HugeTop.csproj", "{DC3A1B4C-B47B-447A-A1F9-E2724FDF34F6}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Icod.ProcPs.SlabTop", "Icod.ProcPs.SlabTop", "{47AB2EBD-E856-420C-B73E-ACB71F9A2D69}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "slabtop", "slabtop", "{47AB2EBD-E856-420C-B73E-ACB71F9A2D69}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.SlabTop", "Icod.ProcPs.SlabTop\Icod.ProcPs.SlabTop.csproj", "{39B5DE8B-F2E6-4557-808A-0DB8241D16FF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.SlabTop", "slabtop\Icod.ProcPs.SlabTop.csproj", "{39B5DE8B-F2E6-4557-808A-0DB8241D16FF}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "users", "users", "{A10C4C97-C1A1-C462-9A04-F253A6FEFC1E}"
 EndProject
@@ -762,51 +762,51 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Shared", "Icod.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Shared.Tests", "tests\ProcPs.Shared.Tests\Icod.ProcPs.Shared.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0121}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Icod.ProcPs.Free", "Icod.ProcPs.Free", "{A3B9C9F1-9E9E-4AF9-B77D-5709E20F5703}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "free", "free", "{A3B9C9F1-9E9E-4AF9-B77D-5709E20F5703}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Free", "Icod.ProcPs.Free\Icod.ProcPs.Free.csproj", "{A3B9C9F1-9E9E-4AF9-B77D-5709E20F5704}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Free", "free\Icod.ProcPs.Free.csproj", "{A3B9C9F1-9E9E-4AF9-B77D-5709E20F5704}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Free.Tests", "tests\ProcPs.Free.Tests\Icod.ProcPs.Free.Tests.csproj", "{F05B4136-23C6-4CF5-8A6A-920F20DC0123}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Icod.ProcPs.Vmstat", "Icod.ProcPs.Vmstat", "{4601353B-738A-48A8-A0F1-66472EAD74D4}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "vmstat", "vmstat", "{4601353B-738A-48A8-A0F1-66472EAD74D4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Vmstat", "Icod.ProcPs.Vmstat\Icod.ProcPs.Vmstat.csproj", "{CCD300C5-FFBC-46E2-8AFB-0B26A2B2D45E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Vmstat", "vmstat\Icod.ProcPs.Vmstat.csproj", "{CCD300C5-FFBC-46E2-8AFB-0B26A2B2D45E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Vmstat.Tests", "tests\ProcPs.Vmstat.Tests\Icod.ProcPs.Vmstat.Tests.csproj", "{A04BAB0E-103A-4554-B98C-38E1F73FE4D3}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Icod.ProcPs.Pgrep", "Icod.ProcPs.Pgrep", "{8F6C00BC-FF31-4E0C-A7C5-C0B78CD839F6}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pgrep", "pgrep", "{8F6C00BC-FF31-4E0C-A7C5-C0B78CD839F6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Pgrep", "Icod.ProcPs.Pgrep\Icod.ProcPs.Pgrep.csproj", "{C93D1480-17A8-4794-B1A4-F10C907D4600}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Pgrep", "pgrep\Icod.ProcPs.Pgrep.csproj", "{C93D1480-17A8-4794-B1A4-F10C907D4600}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Pgrep.Tests", "tests\ProcPs.Pgrep.Tests\Icod.ProcPs.Pgrep.Tests.csproj", "{C0D77FA2-F2EF-4F20-84CE-8644398F6FBD}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Icod.ProcPs.Pkill", "Icod.ProcPs.Pkill", "{2B7265E8-F59F-4268-95B0-5A8B9CE77D78}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pkill", "pkill", "{2B7265E8-F59F-4268-95B0-5A8B9CE77D78}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Pkill", "Icod.ProcPs.Pkill\Icod.ProcPs.Pkill.csproj", "{A98D023E-9E60-4360-8CFE-43386DCF6550}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Pkill", "pkill\Icod.ProcPs.Pkill.csproj", "{A98D023E-9E60-4360-8CFE-43386DCF6550}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Pkill.Tests", "tests\ProcPs.Pkill.Tests\Icod.ProcPs.Pkill.Tests.csproj", "{F77E6730-928A-406F-A295-A4E27112D6B2}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Icod.ProcPs.PidWait", "Icod.ProcPs.PidWait", "{F0BAC4CE-2BE0-4334-8A54-6C5BADAA5293}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pidwait", "pidwait", "{F0BAC4CE-2BE0-4334-8A54-6C5BADAA5293}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.PidWait", "Icod.ProcPs.PidWait\Icod.ProcPs.PidWait.csproj", "{D9D02B26-91E9-4D18-874C-73987DDCF5AB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.PidWait", "pidwait\Icod.ProcPs.PidWait.csproj", "{D9D02B26-91E9-4D18-874C-73987DDCF5AB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.PidWait.Tests", "tests\ProcPs.PidWait.Tests\Icod.ProcPs.PidWait.Tests.csproj", "{6D88FAE7-C80B-4B6B-B39E-F49DB888CF93}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Icod.ProcPs.PidOf", "Icod.ProcPs.PidOf", "{9A06915D-4F2A-421A-861B-D307F565D8AB}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pidof", "pidof", "{9A06915D-4F2A-421A-861B-D307F565D8AB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.PidOf", "Icod.ProcPs.PidOf\Icod.ProcPs.PidOf.csproj", "{0ECA38E8-C9FD-41B2-8197-F792F0425DCE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.PidOf", "pidof\Icod.ProcPs.PidOf.csproj", "{0ECA38E8-C9FD-41B2-8197-F792F0425DCE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.PidOf.Tests", "tests\ProcPs.PidOf.Tests\Icod.ProcPs.PidOf.Tests.csproj", "{DD580036-A2E5-43C8-B9C7-2B8AF394FF9F}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Icod.ProcPs.Pwdx", "Icod.ProcPs.Pwdx", "{A5EA47C3-8CFD-4E9C-ACB4-1E407B4DD615}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pwdx", "pwdx", "{A5EA47C3-8CFD-4E9C-ACB4-1E407B4DD615}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Pwdx", "Icod.ProcPs.Pwdx\Icod.ProcPs.Pwdx.csproj", "{11620782-C444-4B1F-84E2-05F5ABA0C492}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Pwdx", "pwdx\Icod.ProcPs.Pwdx.csproj", "{11620782-C444-4B1F-84E2-05F5ABA0C492}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Pwdx.Tests", "tests\ProcPs.Pwdx.Tests\Icod.ProcPs.Pwdx.Tests.csproj", "{59B7EA36-2601-4C98-9637-C35079D5DC21}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Icod.ProcPs.Pmap", "Icod.ProcPs.Pmap", "{864C2F91-D088-48B9-AD75-371D6F9F569E}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pmap", "pmap", "{864C2F91-D088-48B9-AD75-371D6F9F569E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Pmap", "Icod.ProcPs.Pmap\Icod.ProcPs.Pmap.csproj", "{C0666388-F870-4F8B-AEA5-3CA168DD1C16}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Pmap", "pmap\Icod.ProcPs.Pmap.csproj", "{C0666388-F870-4F8B-AEA5-3CA168DD1C16}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.ProcPs.Pmap.Tests", "tests\ProcPs.Pmap.Tests\Icod.ProcPs.Pmap.Tests.csproj", "{E2A9977F-ADDB-4E86-A75F-07DBE6BA9F5C}"
 EndProject
