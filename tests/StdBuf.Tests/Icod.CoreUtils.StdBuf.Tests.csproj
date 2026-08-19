@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<LangVersion>13.0</LangVersion>
-		<TargetFrameworks>net9.0;net10.0</TargetFrameworks>
+		<TargetFramework>net10.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<IsPackable>false</IsPackable>
@@ -48,9 +48,7 @@
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
 	</PropertyGroup>
-	<Target Name="BuildStdBufNativeTestAssets"
-		AfterTargets="Build"
-		Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+	<Target Name="BuildStdBufNativeTestAssets" AfterTargets="Build" Condition="$([MSBuild]::IsOSPlatform('Linux'))">
 		<Exec Command="&quot;$(StdBufNativeCompiler)&quot; -shared -fPIC -O2 -std=c11 -Wall -Wextra -Werror -o &quot;$(TargetDir)libicodstdbuf.so&quot; &quot;$(MSBuildProjectDirectory)/../../stdbuf/native/icod_stdbuf.c&quot;" />
 		<Exec Command="&quot;$(StdBufNativeCompiler)&quot; -O2 -std=c11 -Wall -Wextra -Werror -o &quot;$(TargetDir)stdbuf-buffering-probe&quot; &quot;$(MSBuildProjectDirectory)/native/buffering_probe.c&quot;" />
 	</Target>

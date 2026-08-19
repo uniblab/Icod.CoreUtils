@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
 		<LangVersion>13.0</LangVersion>
-		<TargetFrameworks>net9.0;net10.0</TargetFrameworks>
+		<TargetFramework>net10.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -48,17 +48,12 @@
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
 	</PropertyGroup>
-	<Target Name="BuildStdBufNativeShim"
-		BeforeTargets="CopyFilesToOutputDirectory"
-		Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+	<Target Name="BuildStdBufNativeShim" BeforeTargets="CopyFilesToOutputDirectory" Condition="$([MSBuild]::IsOSPlatform('Linux'))">
 		<MakeDir Directories="$(IntermediateOutputPath);$(TargetDir)" />
 		<Exec Command="&quot;$(StdBufNativeCompiler)&quot; -shared -fPIC -O2 -std=c11 -Wall -Wextra -Werror -o &quot;$(StdBufNativeShimPath)&quot; &quot;$(MSBuildProjectDirectory)/native/icod_stdbuf.c&quot;" />
 		<Copy SourceFiles="$(StdBufNativeShimPath)" DestinationFiles="$(TargetDir)libicodstdbuf.so" SkipUnchangedFiles="true" />
 	</Target>
-	<Target Name="PublishStdBufNativeShim"
-		BeforeTargets="ComputeFilesToPublish"
-		DependsOnTargets="BuildStdBufNativeShim"
-		Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+	<Target Name="PublishStdBufNativeShim" BeforeTargets="ComputeFilesToPublish" DependsOnTargets="BuildStdBufNativeShim" Condition="$([MSBuild]::IsOSPlatform('Linux'))">
 		<ItemGroup>
 			<ResolvedFileToPublish Include="$(StdBufNativeShimPath)">
 				<RelativePath>libicodstdbuf.so</RelativePath>
