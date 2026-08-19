@@ -19,7 +19,7 @@
 		</PackageReference>
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\..\Icod.ProcPs.Vmstat\Icod.ProcPs.Vmstat.csproj" />
+		<ProjectReference Include="..\..\vmstat\Icod.ProcPs.Vmstat.csproj" />
 		<ProjectReference Include="..\..\Icod.ProcPs.Shared\Icod.ProcPs.Shared.csproj" />
 		<ProjectReference Include="..\..\Shared\Icod.CoreUtils.Shared.csproj" />
 	</ItemGroup>

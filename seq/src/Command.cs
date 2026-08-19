@@ -418,7 +418,7 @@ public static class Command {
 		double value
 	) {
 		return 0 == value
-			&& text.StartsWith( "-", StringComparison.Ordinal )
+			&& text.StartsWith( '-' )
 		;
 	}
 

@@ -128,7 +128,7 @@ public sealed record HostIdOptions {
 				version = true;
 				continue;
 			}
-			if ( optionParsing && argument.StartsWith( "-", StringComparison.Ordinal ) ) {
+			if ( optionParsing && argument.StartsWith( '-' ) ) {
 				throw new HostIdUsageException( string.Concat( "unrecognized option '", argument, "'" ) );
 			}
 			throw new HostIdUsageException( string.Concat( "extra operand '", argument, "'" ) );

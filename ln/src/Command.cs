@@ -133,7 +133,7 @@ public static class Command {
 			if (
 				optionsDone
 				|| ( arg == "-" )
-				|| !arg.StartsWith( "-", StringComparison.Ordinal )
+				|| !arg.StartsWith( '-' )
 			) {
 				operands.Add( arg );
 				continue;

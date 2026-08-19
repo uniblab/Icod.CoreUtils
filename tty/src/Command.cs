@@ -189,7 +189,7 @@ public sealed record TtyOptions {
 				version = true;
 				continue;
 			}
-			if ( parsingOptions && argument.StartsWith( "-", StringComparison.Ordinal ) ) {
+			if ( parsingOptions && argument.StartsWith( '-' ) ) {
 				throw new TtyUsageException( string.Concat( "unrecognized option '", argument, "'" ) );
 			}
 			throw new TtyUsageException( string.Concat( "extra operand '", argument, "'" ) );

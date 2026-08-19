@@ -360,6 +360,8 @@ These conventions apply to every existing project that is altered and every proj
 22. Tests must not write directly to process standard output or standard error (`stdout` or `stderr`). Command output must normally be captured through injected streams. The only exception is a test that deliberately uses a real standard stream to communicate with another process.
 23. The eventual extracted repositories retain these conventions unless their own roadmap records a deliberate exception.
 24. Cross-suite compatibility is tested at the public command-line or textual-format boundary unless a dependency has been deliberately classified as cross-suite infrastructure. During the current roadmap such APIs may be incubated in `Icod.CoreUtils.Shared`; their permanent public home is `Icod.CommandFramework` after the final extraction audit.
+25. When comparing or testing single-character strings, use the `char` override rather than the `string` override, such as `StartsWith( '-' )` rather than `StarsWith( "-" )`.
+26. When comparing or testing strings, prefer use of `StringComparison.Ordinal` or `StringComparison.OrdinalIgnoreCase` rather than culture-sensitive comparisons unless the command's public contract explicitly requires a culture-sensitive comparison.
 
 ## Repository-wide engineering rules
 

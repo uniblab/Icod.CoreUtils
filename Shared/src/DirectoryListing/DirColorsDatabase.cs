@@ -490,7 +490,7 @@ public static class DirColorsCommand {
 				case "--help": await PrintHelpAsync( standardOutput ).ConfigureAwait( false ); return 0;
 				case "--version": await standardOutput.WriteLineAsync( "dircolors (Icod.CoreUtils) 1.0" ).ConfigureAwait( false ); return 0;
 				default:
-					if ( argument.StartsWith( "-", StringComparison.Ordinal ) && "-" != argument ) {
+					if ( argument.StartsWith( '-' ) && "-" != argument ) {
 						return await UsageErrorAsync( standardError, $"unrecognized option '{argument}'" ).ConfigureAwait( false );
 					}
 					if ( operand is not null ) {

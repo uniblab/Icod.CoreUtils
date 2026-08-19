@@ -248,7 +248,7 @@ public static partial class Command {
 				}
 				continue;
 			}
-			if ( parsingOptions && token.StartsWith( "-", StringComparison.Ordinal ) && "-" != token ) {
+			if ( parsingOptions && token.StartsWith( '-' ) && "-" != token ) {
 				if ( "-z" == token ) { options.ZeroTerminated = true; continue; }
 				if ( token.StartsWith( "-d", StringComparison.Ordinal ) ) {
 					var value = 2 < token.Length ? token.Substring( 2 ) : ( index + 1 < args.Count ? args[ ++index ] : null );
@@ -673,7 +673,7 @@ public static partial class Command {
 		if ( value.Length >= length ) { return value; }
 		if ( 0 > width ) { return value.PadRight( length ); }
 		if ( !zeroPad ) { return value.PadLeft( length ); }
-		var signLength = value.StartsWith( "-", StringComparison.Ordinal ) || value.StartsWith( "+", StringComparison.Ordinal ) ? 1 : 0;
+		var signLength = value.StartsWith( '-' ) || value.StartsWith( "+", StringComparison.Ordinal ) ? 1 : 0;
 		return string.Concat( value.Substring( 0, signLength ), new string( '0', length - value.Length ), value.Substring( signLength ) );
 	}
 
@@ -681,7 +681,7 @@ public static partial class Command {
 		var decimalIndex = value.IndexOf( '.', StringComparison.Ordinal );
 		var integer = 0 <= decimalIndex ? value.Substring( 0, decimalIndex ) : value;
 		var fraction = 0 <= decimalIndex ? value.Substring( decimalIndex ) : string.Empty;
-		var sign = integer.StartsWith( "-", StringComparison.Ordinal ) || integer.StartsWith( "+", StringComparison.Ordinal ) ? integer.Substring( 0, 1 ) : string.Empty;
+		var sign = integer.StartsWith( '-' ) || integer.StartsWith( "+", StringComparison.Ordinal ) ? integer.Substring( 0, 1 ) : string.Empty;
 		if ( 0 < sign.Length ) { integer = integer.Substring( 1 ); }
 		var separator = CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator;
 		if ( string.IsNullOrEmpty( separator ) ) { return value; }

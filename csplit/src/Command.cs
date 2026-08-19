@@ -972,7 +972,7 @@ public static class Command {
 				control = new RegexControl( source, '%' == delimiter, offset, expression );
 			} else {
 				if (
-					source.StartsWith( "-", StringComparison.Ordinal )
+					source.StartsWith( '-' )
 					|| !long.TryParse(
 						source,
 						NumberStyles.AllowLeadingSign,
@@ -1014,7 +1014,7 @@ public static class Command {
 			return;
 		}
 		if (
-			content.StartsWith( "-", StringComparison.Ordinal )
+			content.StartsWith( '-' )
 			|| !long.TryParse(
 				content,
 				NumberStyles.AllowLeadingSign,

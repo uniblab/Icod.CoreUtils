@@ -20,7 +20,7 @@
 		</PackageReference>
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\..\Icod.ProcPs.Pmap\Icod.ProcPs.Pmap.csproj" />
+		<ProjectReference Include="..\..\pmap\Icod.ProcPs.Pmap.csproj" />
 		<ProjectReference Include="..\..\Icod.ProcPs.Shared\Icod.ProcPs.Shared.csproj" />
 		<ProjectReference Include="..\..\Shared\Icod.CoreUtils.Shared.csproj" />
 	</ItemGroup>

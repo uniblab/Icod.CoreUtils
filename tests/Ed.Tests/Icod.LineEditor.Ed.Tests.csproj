@@ -23,9 +23,7 @@
 		<ProjectReference Include="..\..\Shared\Icod.CoreUtils.Shared.csproj" />
 	</ItemGroup>
 	<ItemGroup>
-		<None Include="..\Ed.Shared.Tests\fixtures\**\*"
-			Link="fixtures\%(RecursiveDir)%(Filename)%(Extension)"
-			CopyToOutputDirectory="PreserveNewest" />
+		<None Include="..\Ed.Shared.Tests\fixtures\**\*" Link="fixtures\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
 		<ErrorReport>prompt</ErrorReport>

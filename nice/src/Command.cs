@@ -161,7 +161,7 @@ public static class Command {
 				index++;
 				continue;
 			}
-			if ( token.StartsWith( "-", StringComparison.Ordinal ) && "-" != token ) {
+			if ( token.StartsWith( '-' ) && "-" != token ) {
 				return NiceArguments.Failure( $"invalid option -- '{token}'" );
 			}
 			break;

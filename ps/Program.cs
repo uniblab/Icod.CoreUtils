@@ -1,14 +1,18 @@
+// Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
+
 namespace Icod.ProcPs.Ps;
 
-/// <summary>
-/// Provides the executable entry point for the GNU-compatible <c>ps</c> command for reporting process information.
-/// </summary>
-public static class Program
-{
-    /// <summary>
-    /// Runs the <c>ps</c> command with the supplied command-line arguments.
-    /// </summary>
-    /// <param name="args">The command-line arguments supplied to <c>ps</c>.</param>
-    /// <returns>A task whose result is the command exit status.</returns>
-    public static Task<int> Main(string[] args) => Command.RunAsync(args);
+/// <summary>Provides the procps-ng compatible <c>ps</c> executable entry point.</summary>
+public static class Program {
+	/// <summary>Runs the <c>ps</c> command.</summary>
+	/// <param name="args">Command-line arguments.</param>
+	/// <returns>A task whose result is the process exit status.</returns>
+	public static Task<int> Main( string[] args ) {
+		ArgumentNullException.ThrowIfNull( args );
+		return Command.RunAsync(
+			args,
+			stdout: Console.OpenStandardOutput(),
+			stderr: Console.OpenStandardError()
+		);
+	}
 }

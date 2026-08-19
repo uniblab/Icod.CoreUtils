@@ -23,7 +23,7 @@
 		</PackageReference>
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\..\Icod.ProcPs.Sysctl\Icod.ProcPs.Sysctl.csproj" />
+		<ProjectReference Include="..\..\sysctl\Icod.ProcPs.Sysctl.csproj" />
 	</ItemGroup>
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
 		<WarningLevel>2</WarningLevel>
