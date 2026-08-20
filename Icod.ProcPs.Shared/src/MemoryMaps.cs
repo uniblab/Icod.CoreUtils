@@ -191,7 +191,7 @@ public sealed class LinuxProcMemoryMapProvider : IProcMemoryMapProvider {
 		}
 		try {
 			var filename = detailed ? "smaps" : "maps";
-			var path = Path.Combine( this.procRoot, process.ProcessId.ToString( CultureInfo.InvariantCulture ), filename );
+			var path = System.IO.Path.Combine( this.procRoot, process.ProcessId.ToString( CultureInfo.InvariantCulture ), filename );
 			var bytes = await File.ReadAllBytesAsync( path, cancellationToken ).ConfigureAwait( false );
 			var text = ProcfsTextEncoding.GetString( bytes );
 			var maps = detailed ? ProcMemoryMapParsers.ParseSmaps( text ) : ProcMemoryMapParsers.ParseMaps( text );

@@ -249,7 +249,7 @@ Options:
 		if ( string.IsNullOrWhiteSpace( path ) ) return "  [ anon ]";
 		if ( path.Contains( '/' ) ) {
 			if ( options.ShowPath ) return path;
-			var name = Path.GetFileName( path );
+			var name = System.IO.Path.GetFileName( path );
 			return 0 == name.Length ? path : name;
 		}
 		if ( string.Equals( path, "[stack]", StringComparison.Ordinal ) ) return "  [ stack ]";

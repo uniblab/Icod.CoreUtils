@@ -44,8 +44,8 @@ internal sealed class PatchSource : IAsyncDisposable {
 		ArgumentNullException.ThrowIfNull( input );
 		limits ??= PatchScanLimits.Default;
 		limits.Validate();
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			string.Concat( "icod-patch-", Guid.NewGuid().ToString( "N" ), ".tmp" )
 		);
 		FileStream? spool = null;

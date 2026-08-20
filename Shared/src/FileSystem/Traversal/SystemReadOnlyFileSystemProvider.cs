@@ -1,9 +1,8 @@
-extern alias IcodPath;
-
-using IPathIndirectionInspector = IcodPath::Icod.Path.IPathIndirectionInspector;
-using PathIndirectionInfo = IcodPath::Icod.Path.PathIndirectionInfo;
-using PathIndirectionKind = IcodPath::Icod.Path.PathIndirectionKind;
-using SystemPathIndirectionInspector = IcodPath::Icod.Path.SystemPathIndirectionInspector;
+using Path = global::System.IO.Path;
+using IPathIndirectionInspector = Icod.Path.IPathIndirectionInspector;
+using PathIndirectionInfo = Icod.Path.PathIndirectionInfo;
+using PathIndirectionKind = Icod.Path.PathIndirectionKind;
+using SystemPathIndirectionInspector = Icod.Path.SystemPathIndirectionInspector;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
@@ -194,8 +193,8 @@ public sealed class SystemReadOnlyFileSystemProvider : IReadOnlyFileSystemProvid
 	}
 
 	private static string GetName( string path ) {
-		var trimmed = Path.TrimEndingDirectorySeparator( path );
-		var name = Path.GetFileName( trimmed );
+		var trimmed = System.IO.Path.TrimEndingDirectorySeparator( path );
+		var name = System.IO.Path.GetFileName( trimmed );
 		return name.Length > 0 ? name : trimmed;
 	}
 

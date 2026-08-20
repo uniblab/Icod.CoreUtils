@@ -1,3 +1,4 @@
+using Path = global::System.IO.Path;
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.InteropServices;
@@ -105,21 +106,21 @@ public sealed class SystemTransactionalReplacementFileSystem : ITransactionalRep
 			throw new ArgumentOutOfRangeException( nameof( maximumNumberedBackup ) );
 		}
 		cancellationToken.ThrowIfCancellationRequested();
-		var fullPath = Path.GetFullPath( destinationPath );
-		var directory = Path.GetDirectoryName( fullPath );
+		var fullPath = System.IO.Path.GetFullPath( destinationPath );
+		var directory = System.IO.Path.GetDirectoryName( fullPath );
 		if ( string.IsNullOrEmpty( directory ) ) {
 			directory = Directory.GetCurrentDirectory();
 		}
 		if ( !Directory.Exists( directory ) ) {
 			return ValueTask.FromResult( false );
 		}
-		var prefix = string.Concat( Path.GetFileName( fullPath ), ".~" );
+		var prefix = string.Concat( System.IO.Path.GetFileName( fullPath ), ".~" );
 		var comparison = OperatingSystem.IsWindows()
 			? StringComparison.OrdinalIgnoreCase
 			: StringComparison.Ordinal;
 		foreach ( var entryPath in Directory.EnumerateFileSystemEntries( directory ) ) {
 			cancellationToken.ThrowIfCancellationRequested();
-			var name = Path.GetFileName( entryPath );
+			var name = System.IO.Path.GetFileName( entryPath );
 			if ( !name.StartsWith( prefix, comparison ) || !name.EndsWith( '~' ) ) {
 				continue;
 			}
@@ -144,11 +145,11 @@ public sealed class SystemTransactionalReplacementFileSystem : ITransactionalRep
 		if ( purpose.Any( character => !char.IsAsciiLetterOrDigit( character ) && '-' != character ) ) {
 			throw new ArgumentException( "The temporary-file purpose contains an unsafe filename character.", nameof( purpose ) );
 		}
-		var directory = Path.GetDirectoryName( Path.GetFullPath( destinationPath ) );
+		var directory = System.IO.Path.GetDirectoryName( System.IO.Path.GetFullPath( destinationPath ) );
 		if ( string.IsNullOrEmpty( directory ) ) {
 			directory = Directory.GetCurrentDirectory();
 		}
-		var basename = Path.GetFileName( destinationPath );
+		var basename = System.IO.Path.GetFileName( destinationPath );
 		if ( string.IsNullOrEmpty( basename ) ) {
 			basename = "artifact";
 		}
@@ -319,7 +320,7 @@ public sealed class SystemTransactionalReplacementFileSystem : ITransactionalRep
 		CancellationToken cancellationToken = default
 	) {
 		ArgumentException.ThrowIfNullOrWhiteSpace( path );
-		var directory = Path.GetDirectoryName( Path.GetFullPath( path ) );
+		var directory = System.IO.Path.GetDirectoryName( System.IO.Path.GetFullPath( path ) );
 		if ( string.IsNullOrEmpty( directory ) ) {
 			directory = Directory.GetCurrentDirectory();
 		}

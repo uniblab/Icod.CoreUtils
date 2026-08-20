@@ -103,7 +103,7 @@ public sealed class FileSystemOperationsTests {
 
 	[Fact]
 	public async Task FileFlushDistinguishesDataOnlyFromDataAndMetadata() {
-		var path = Path.GetTempFileName();
+		var path = System.IO.Path.GetTempFileName();
 		try {
 			await using var file = OpenTemporaryFile(
 				path
@@ -151,7 +151,7 @@ public sealed class FileSystemOperationsTests {
 
 	[Fact]
 	public async Task InvalidFileFlushModeReturnsControlledFailure() {
-		var path = Path.GetTempFileName();
+		var path = System.IO.Path.GetTempFileName();
 		try {
 			await using var file = OpenTemporaryFile(
 				path
@@ -173,7 +173,7 @@ public sealed class FileSystemOperationsTests {
 
 	[Fact]
 	public async Task PathnameFileFlushDistinguishesDataOnlyFromDataAndMetadata() {
-		var path = Path.GetTempFileName();
+		var path = System.IO.Path.GetTempFileName();
 		try {
 			await File.WriteAllBytesAsync(
 				path,
@@ -219,7 +219,7 @@ public sealed class FileSystemOperationsTests {
 
 	[Fact]
 	public async Task InvalidPathnameFileFlushModeReturnsControlledFailure() {
-		var path = Path.GetTempFileName();
+		var path = System.IO.Path.GetTempFileName();
 		try {
 			var result = await Operations.FlushFileAsync(
 				path,
@@ -237,8 +237,8 @@ public sealed class FileSystemOperationsTests {
 
 	[Fact]
 	public async Task MissingPathnameFileFlushReturnsAControlledFailure() {
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			System.String.Concat(
 				"Icod.CoreUtils-missing-",
 				Guid.NewGuid().ToString( "N" )
@@ -262,7 +262,7 @@ public sealed class FileSystemOperationsTests {
 
 	[Fact]
 	public async Task DisposedFileOperationsReturnControlledResults() {
-		var path = Path.GetTempFileName();
+		var path = System.IO.Path.GetTempFileName();
 		try {
 			var file = OpenTemporaryFile(
 				path
@@ -297,7 +297,7 @@ public sealed class FileSystemOperationsTests {
 
 	[Fact]
 	public async Task FileSystemSpecificFlushUsesSyncFsOnlyWhereAvailable() {
-		var path = Path.GetTempFileName();
+		var path = System.IO.Path.GetTempFileName();
 		try {
 			var result = await Operations.FlushFileSystemAsync(
 				path
@@ -339,7 +339,7 @@ public sealed class FileSystemOperationsTests {
 	[Fact]
 	public async Task SparseExtensionPreservesDataPositionAndLength() {
 		const long requestedLength = 4L * 1024L * 1024L;
-		var path = Path.GetTempFileName();
+		var path = System.IO.Path.GetTempFileName();
 		try {
 			await using var file = OpenTemporaryFile(
 				path
@@ -408,7 +408,7 @@ public sealed class FileSystemOperationsTests {
 
 	[Fact]
 	public async Task SparseExtensionRejectsShrinking() {
-		var path = Path.GetTempFileName();
+		var path = System.IO.Path.GetTempFileName();
 		try {
 			await using var file = OpenTemporaryFile(
 				path
@@ -440,7 +440,7 @@ public sealed class FileSystemOperationsTests {
 
 	[Fact]
 	public async Task SparseExtensionRequiresAWritableSeekableStream() {
-		var path = Path.GetTempFileName();
+		var path = System.IO.Path.GetTempFileName();
 		try {
 			await using var file = new FileStream(
 				path,
@@ -471,7 +471,7 @@ public sealed class FileSystemOperationsTests {
 
 	[Fact]
 	public async Task SameLengthSparseExtensionPreservesPosition() {
-		var path = Path.GetTempFileName();
+		var path = System.IO.Path.GetTempFileName();
 		try {
 			await using var file = OpenTemporaryFile(
 				path
@@ -507,7 +507,7 @@ public sealed class FileSystemOperationsTests {
 
 	[Fact]
 	public async Task AllocatedRangeQueryDoesNotChangeTheFilePosition() {
-		var path = Path.GetTempFileName();
+		var path = System.IO.Path.GetTempFileName();
 		try {
 			await using var file = OpenTemporaryFile(
 				path
@@ -536,7 +536,7 @@ public sealed class FileSystemOperationsTests {
 
 	[Fact]
 	public async Task AllocatedRangeQueryPreservesSynchronousHandlePositionForSubsequentIo() {
-		var path = Path.GetTempFileName();
+		var path = System.IO.Path.GetTempFileName();
 		try {
 			using var file = OpenTemporaryFile(
 				path,
@@ -585,7 +585,7 @@ public sealed class FileSystemOperationsTests {
 
 	[Fact]
 	public async Task AllocatedRangePathOverloadReturnsAControlledResult() {
-		var path = Path.GetTempFileName();
+		var path = System.IO.Path.GetTempFileName();
 		try {
 			await File.WriteAllBytesAsync(
 				path,
@@ -611,7 +611,7 @@ public sealed class FileSystemOperationsTests {
 			return;
 		}
 
-		var path = Path.GetTempFileName();
+		var path = System.IO.Path.GetTempFileName();
 		try {
 			using var file = OpenTemporaryFile(
 				path,
@@ -660,7 +660,7 @@ public sealed class FileSystemOperationsTests {
 			return;
 		}
 
-		var path = Path.GetTempFileName();
+		var path = System.IO.Path.GetTempFileName();
 		try {
 			await using var file = OpenTemporaryFile(
 				path
@@ -701,7 +701,7 @@ public sealed class FileSystemOperationsTests {
 
 	[Fact]
 	public async Task OperationsHonorCancellationBeforeNativeCalls() {
-		var path = Path.GetTempFileName();
+		var path = System.IO.Path.GetTempFileName();
 		try {
 			await using var file = OpenTemporaryFile(
 				path

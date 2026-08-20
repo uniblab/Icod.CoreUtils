@@ -1,3 +1,4 @@
+using Path = global::System.IO.Path;
 namespace Icod.CoreUtils.Shared.FileSystem.Traversal;
 
 /// <summary>
@@ -33,10 +34,10 @@ public static class PathnamePatternMatcher {
 		ArgumentNullException.ThrowIfNull( patternSegment );
 		ArgumentNullException.ThrowIfNull( name );
 		if (
-			patternSegment.Contains( Path.DirectorySeparatorChar )
+			patternSegment.Contains( System.IO.Path.DirectorySeparatorChar )
 			|| (
-				Path.AltDirectorySeparatorChar != Path.DirectorySeparatorChar
-				&& patternSegment.Contains( Path.AltDirectorySeparatorChar )
+				System.IO.Path.AltDirectorySeparatorChar != System.IO.Path.DirectorySeparatorChar
+				&& patternSegment.Contains( System.IO.Path.AltDirectorySeparatorChar )
 			)
 		) {
 			throw new ArgumentException( "A segment pattern cannot contain a pathname separator.", nameof( patternSegment ) );

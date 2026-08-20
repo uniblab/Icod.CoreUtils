@@ -1,6 +1,5 @@
-extern alias IcodPath;
-
-using PathIndirectionInfo = IcodPath::Icod.Path.PathIndirectionInfo;
+using Path = global::System.IO.Path;
+using PathIndirectionInfo = Icod.Path.PathIndirectionInfo;
 
 namespace Icod.CoreUtils.Shared.FileSystem.Traversal;
 
@@ -185,10 +184,10 @@ public sealed class ReadOnlyDirectoryEntry {
 		ArgumentException.ThrowIfNullOrEmpty( accessPath );
 		if (
 			name is "." or ".."
-			|| name.Contains( Path.DirectorySeparatorChar )
+			|| name.Contains( System.IO.Path.DirectorySeparatorChar )
 			|| (
-				Path.AltDirectorySeparatorChar != Path.DirectorySeparatorChar
-				&& name.Contains( Path.AltDirectorySeparatorChar )
+				System.IO.Path.AltDirectorySeparatorChar != System.IO.Path.DirectorySeparatorChar
+				&& name.Contains( System.IO.Path.AltDirectorySeparatorChar )
 			)
 		) {
 			throw new ArgumentException( "A directory child name must be one basename.", nameof( name ) );

@@ -14,9 +14,9 @@ public sealed class PathnamePatternTests {
 	public void MatchesWildcardsAndBracketExpressions() {
 		var pattern = PathnamePattern.Parse( "src/[a-c]?*.cs" );
 
-		Assert.True( pattern.IsMatch( Path.Combine( "src", "ab-file.cs" ) ) );
-		Assert.False( pattern.IsMatch( Path.Combine( "src", "db-file.cs" ) ) );
-		Assert.False( pattern.IsMatch( Path.Combine( "src", "a.cs" ) ) );
+		Assert.True( pattern.IsMatch( System.IO.Path.Combine( "src", "ab-file.cs" ) ) );
+		Assert.False( pattern.IsMatch( System.IO.Path.Combine( "src", "db-file.cs" ) ) );
+		Assert.False( pattern.IsMatch( System.IO.Path.Combine( "src", "a.cs" ) ) );
 	}
 
 	/// <summary>
@@ -26,9 +26,9 @@ public sealed class PathnamePatternTests {
 	public void DoubleStarMatchesZeroOrMoreSegments() {
 		var pattern = PathnamePattern.Parse( "a/**/b.txt" );
 
-		Assert.True( pattern.IsMatch( Path.Combine( "a", "b.txt" ) ) );
-		Assert.True( pattern.IsMatch( Path.Combine( "a", "x", "y", "b.txt" ) ) );
-		Assert.False( pattern.IsMatch( Path.Combine( "a", "x", "b.bin" ) ) );
+		Assert.True( pattern.IsMatch( System.IO.Path.Combine( "a", "b.txt" ) ) );
+		Assert.True( pattern.IsMatch( System.IO.Path.Combine( "a", "x", "y", "b.txt" ) ) );
+		Assert.False( pattern.IsMatch( System.IO.Path.Combine( "a", "x", "b.bin" ) ) );
 	}
 
 	/// <summary>
@@ -38,8 +38,8 @@ public sealed class PathnamePatternTests {
 	public void OrdinaryStarDoesNotCrossSeparator() {
 		var pattern = PathnamePattern.Parse( "a/*.txt" );
 
-		Assert.True( pattern.IsMatch( Path.Combine( "a", "b.txt" ) ) );
-		Assert.False( pattern.IsMatch( Path.Combine( "a", "x", "b.txt" ) ) );
+		Assert.True( pattern.IsMatch( System.IO.Path.Combine( "a", "b.txt" ) ) );
+		Assert.False( pattern.IsMatch( System.IO.Path.Combine( "a", "x", "b.txt" ) ) );
 	}
 
 	/// <summary>
@@ -78,9 +78,9 @@ public sealed class PathnamePatternTests {
 	/// </summary>
 	[Fact]
 	public void IgnoresCurrentDirectorySegmentsForWildcardMatching() {
-		var pattern = PathnamePattern.Parse( Path.Combine( ".", "*.txt" ) );
+		var pattern = PathnamePattern.Parse( System.IO.Path.Combine( ".", "*.txt" ) );
 
-		Assert.True( pattern.IsMatch( Path.Combine( ".", "file.txt" ) ) );
+		Assert.True( pattern.IsMatch( System.IO.Path.Combine( ".", "file.txt" ) ) );
 		Assert.True( pattern.IsMatch( "file.txt" ) );
 	}
 
@@ -90,7 +90,7 @@ public sealed class PathnamePatternTests {
 	[Fact]
 	public void DistinguishesRelativeAndRootedPatterns() {
 		var relative = PathnamePattern.Parse( "file.txt" );
-		var absolutePath = Path.GetFullPath( "file.txt" );
+		var absolutePath = System.IO.Path.GetFullPath( "file.txt" );
 
 		Assert.False( relative.IsMatch( absolutePath ) );
 		Assert.True( PathnamePattern.Parse( absolutePath ).IsMatch( absolutePath ) );
@@ -103,13 +103,13 @@ public sealed class PathnamePatternTests {
 	public void DoubleStarHonorsLeadingPeriodPolicy() {
 		var pattern = PathnamePattern.Parse( "a/**/b.txt" );
 
-		Assert.False( pattern.IsMatch( Path.Combine( "a", ".hidden", "b.txt" ) ) );
+		Assert.False( pattern.IsMatch( System.IO.Path.Combine( "a", ".hidden", "b.txt" ) ) );
 		Assert.True( PathnamePattern.Parse(
 			"a/**/b.txt",
 			new PathnamePatternOptions {
 				LeadingPeriodPolicy = LeadingPeriodPolicy.WildcardMayMatch
 			}
-		).IsMatch( Path.Combine( "a", ".hidden", "b.txt" ) ) );
+		).IsMatch( System.IO.Path.Combine( "a", ".hidden", "b.txt" ) ) );
 	}
 
 	/// <summary>

@@ -20,7 +20,6 @@
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\..\realpath\Icod.CoreUtils.RealPath.csproj" />
-		<ProjectReference Include="..\..\Icod.Path\Icod.Path.csproj" />
 		<ProjectReference Include="..\..\Shared\Icod.CoreUtils.Shared.csproj" />
 	</ItemGroup>
 	<ItemGroup>

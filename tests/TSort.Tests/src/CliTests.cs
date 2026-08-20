@@ -40,7 +40,7 @@ public sealed class CliTests {
 
 	private static async Task<CliResult> RunAsync( string standardInput ) {
 		var executableName = OperatingSystem.IsWindows() ? "tsort.exe" : "tsort";
-		var executablePath = Path.Combine( AppContext.BaseDirectory, executableName );
+		var executablePath = System.IO.Path.Combine( AppContext.BaseDirectory, executableName );
 		Assert.True( File.Exists( executablePath ), string.Concat( "Missing command apphost: ", executablePath ) );
 		using var process = new Process {
 			StartInfo = new ProcessStartInfo {

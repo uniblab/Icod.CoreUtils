@@ -14,7 +14,7 @@ public sealed class SystemOwnershipMutationTests {
 	public async Task ChangesGroupToCurrentEffectiveGroupOnUnix() {
 		if ( !IsUnixLike ) return;
 		var directory = CreateTemporaryDirectory();
-		var path = Path.Combine( directory, "file" );
+		var path = System.IO.Path.Combine( directory, "file" );
 		await File.WriteAllTextAsync( path, "content" );
 		try {
 			var identity = await SystemIdentityProvider.Instance.GetCurrentAsync();
@@ -146,8 +146,8 @@ public sealed class SystemOwnershipMutationTests {
 			|| OperatingSystem.IsFreeBSD();
 
 	private static string CreateTemporaryDirectory() {
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			string.Concat( "Icod-OwnershipMutation-", Guid.NewGuid().ToString( "N" ) )
 		);
 		Directory.CreateDirectory( path );

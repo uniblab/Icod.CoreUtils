@@ -12,10 +12,10 @@ public sealed class ReparsePointTests {
 	[Fact]
 	public async Task FallbackMovePreservesDirectorySymbolicLink() {
 		var root = CreateTemporaryDirectory();
-		var target = Directory.CreateDirectory( Path.Combine( root, "target" ) ).FullName;
-		var source = Path.Combine( root, "source" );
-		var destination = Path.Combine( root, "destination" );
-		await File.WriteAllTextAsync( Path.Combine( target, "sentinel" ), "target" );
+		var target = Directory.CreateDirectory( System.IO.Path.Combine( root, "target" ) ).FullName;
+		var source = System.IO.Path.Combine( root, "source" );
+		var destination = System.IO.Path.Combine( root, "destination" );
+		await File.WriteAllTextAsync( System.IO.Path.Combine( target, "sentinel" ), "target" );
 		try {
 			if ( !await TryCreateDirectorySymbolicLinkAsync( source, target ) ) return;
 			var status = await RunAsync( new[] { "--backup=simple", source, destination } );
@@ -26,7 +26,7 @@ public sealed class ReparsePointTests {
 				PathDereferenceMode.NoFollow
 			);
 			Assert.True( observation.IsSymbolicLink );
-			Assert.True( File.Exists( Path.Combine( target, "sentinel" ) ) );
+			Assert.True( File.Exists( System.IO.Path.Combine( target, "sentinel" ) ) );
 		} finally {
 			RemovePhysicalReparsePoint( source );
 			RemovePhysicalReparsePoint( destination );
@@ -39,10 +39,10 @@ public sealed class ReparsePointTests {
 	public async Task FallbackMovePreservesWindowsJunction() {
 		if ( !OperatingSystem.IsWindows() ) return;
 		var root = CreateTemporaryDirectory();
-		var target = Directory.CreateDirectory( Path.Combine( root, "target" ) ).FullName;
-		var source = Path.Combine( root, "source" );
-		var destination = Path.Combine( root, "destination" );
-		await File.WriteAllTextAsync( Path.Combine( target, "sentinel" ), "target" );
+		var target = Directory.CreateDirectory( System.IO.Path.Combine( root, "target" ) ).FullName;
+		var source = System.IO.Path.Combine( root, "source" );
+		var destination = System.IO.Path.Combine( root, "destination" );
+		await File.WriteAllTextAsync( System.IO.Path.Combine( target, "sentinel" ), "target" );
 		try {
 			if ( !await TryCreateJunctionAsync( source, target ) ) return;
 			var status = await RunAsync( new[] { "--backup=simple", source, destination } );
@@ -53,7 +53,7 @@ public sealed class ReparsePointTests {
 				PathDereferenceMode.NoFollow
 			);
 			Assert.True( observation.IsJunction );
-			Assert.True( File.Exists( Path.Combine( target, "sentinel" ) ) );
+			Assert.True( File.Exists( System.IO.Path.Combine( target, "sentinel" ) ) );
 		} finally {
 			RemovePhysicalReparsePoint( source );
 			RemovePhysicalReparsePoint( destination );
@@ -99,7 +99,7 @@ public sealed class ReparsePointTests {
 	}
 
 	private static string CreateTemporaryDirectory() {
-		var path = Path.Combine( Path.GetTempPath(), string.Concat( "Icod-Mv-Reparse-", Guid.NewGuid().ToString( "N" ) ) );
+		var path = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "Icod-Mv-Reparse-", Guid.NewGuid().ToString( "N" ) ) );
 		Directory.CreateDirectory( path );
 		return path;
 	}

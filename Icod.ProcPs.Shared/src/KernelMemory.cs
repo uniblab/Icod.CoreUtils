@@ -192,22 +192,22 @@ public sealed class LinuxProcHugePageProvider : IProcHugePageProvider {
 		var nodes = new List<ProcHugePageNode>();
 		foreach ( var nodeDirectory in Directory.EnumerateDirectories( this._sysNodeRoot, "node*", SearchOption.TopDirectoryOnly ) ) {
 			cancellationToken.ThrowIfCancellationRequested();
-			var nodeName = Path.GetFileName( nodeDirectory );
+			var nodeName = System.IO.Path.GetFileName( nodeDirectory );
 			if ( !TryParseNodeId( nodeName, out var nodeId ) ) {
 				continue;
 			}
-			var hugePagesDirectory = Path.Combine( nodeDirectory, "hugepages" );
+			var hugePagesDirectory = System.IO.Path.Combine( nodeDirectory, "hugepages" );
 			if ( !Directory.Exists( hugePagesDirectory ) ) {
 				continue;
 			}
 			var pools = new List<ProcHugePagePool>();
 			foreach ( var poolDirectory in Directory.EnumerateDirectories( hugePagesDirectory, "hugepages-*kB", SearchOption.TopDirectoryOnly ) ) {
 				cancellationToken.ThrowIfCancellationRequested();
-				if ( !TryParsePageSize( Path.GetFileName( poolDirectory ), out var pageSizeBytes ) ) {
+				if ( !TryParsePageSize( System.IO.Path.GetFileName( poolDirectory ), out var pageSizeBytes ) ) {
 					continue;
 				}
-				var totalPages = await ReadUnsignedAsync( Path.Combine( poolDirectory, "nr_hugepages" ), cancellationToken ).ConfigureAwait( false );
-				var freePages = await ReadUnsignedAsync( Path.Combine( poolDirectory, "free_hugepages" ), cancellationToken ).ConfigureAwait( false );
+				var totalPages = await ReadUnsignedAsync( System.IO.Path.Combine( poolDirectory, "nr_hugepages" ), cancellationToken ).ConfigureAwait( false );
+				var freePages = await ReadUnsignedAsync( System.IO.Path.Combine( poolDirectory, "free_hugepages" ), cancellationToken ).ConfigureAwait( false );
 				if ( freePages > totalPages ) {
 					throw new FormatException( $"Huge-page pool '{poolDirectory}' reports more free pages than configured pages." );
 				}
@@ -402,7 +402,7 @@ public sealed class LinuxProcSlabProvider : IProcSlabProvider {
 	public async Task<ProcObservedValue<IReadOnlyList<ProcSlabCacheEntry>>> GetSlabsAsync( CancellationToken cancellationToken = default ) {
 		cancellationToken.ThrowIfCancellationRequested();
 		try {
-			var text = await File.ReadAllTextAsync( Path.Combine( this._procRoot, "slabinfo" ), cancellationToken ).ConfigureAwait( false );
+			var text = await File.ReadAllTextAsync( System.IO.Path.Combine( this._procRoot, "slabinfo" ), cancellationToken ).ConfigureAwait( false );
 			var entries = ProcKernelMemoryParsers.ParseSlabInfo( text );
 			return ProcObservedValue<IReadOnlyList<ProcSlabCacheEntry>>.Available(
 				entries,

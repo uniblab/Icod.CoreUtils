@@ -33,7 +33,7 @@ public sealed class SystemMkTempEnvironment : IMkTempEnvironment {
 	/// <returns>The platform default temporary-directory pathname.</returns>
 	public string GetDefaultTemporaryDirectory() {
 		if ( OperatingSystem.IsWindows() ) {
-			return Path.GetTempPath();
+			return System.IO.Path.GetTempPath();
 		}
 		if (
 			OperatingSystem.IsLinux()
@@ -43,6 +43,6 @@ public sealed class SystemMkTempEnvironment : IMkTempEnvironment {
 			// FreeBSD follows the conventional /tmp default as best effort.
 			return "/tmp";
 		}
-		return Path.GetTempPath();
+		return System.IO.Path.GetTempPath();
 	}
 }

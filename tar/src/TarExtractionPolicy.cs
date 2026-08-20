@@ -10,9 +10,9 @@ internal sealed class TarExtractionPolicy {
 	private readonly Dictionary<string, string> caseMap;
 
 	public TarExtractionPolicy( string rootDirectory ) {
-		root = Path.GetFullPath( rootDirectory );
+		root = System.IO.Path.GetFullPath( rootDirectory );
 		Directory.CreateDirectory( root );
-		rootWithSeparator = root.EndsWith( Path.DirectorySeparatorChar ) ? root : string.Concat( root, Path.DirectorySeparatorChar );
+		rootWithSeparator = root.EndsWith( System.IO.Path.DirectorySeparatorChar ) ? root : string.Concat( root, System.IO.Path.DirectorySeparatorChar );
 		pathComparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 		caseMap = new Dictionary<string, string>( OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal );
 	}
@@ -28,8 +28,8 @@ internal sealed class TarExtractionPolicy {
 		var relative = string.Join( '/', components.Skip( stripComponents ) );
 		if ( relative.Length == 0 ) return ResolvedTarPath.Skipped( archiveName );
 		RegisterCaseMapping( archiveName, relative );
-		var platformRelative = relative.Replace( '/', Path.DirectorySeparatorChar );
-		var destination = Path.GetFullPath( Path.Combine( root, platformRelative ) );
+		var platformRelative = relative.Replace( '/', System.IO.Path.DirectorySeparatorChar );
+		var destination = System.IO.Path.GetFullPath( System.IO.Path.Combine( root, platformRelative ) );
 		RequireContained( destination, archiveName );
 		return new ResolvedTarPath( archiveName, relative, destination, false );
 	}
@@ -59,13 +59,13 @@ internal sealed class TarExtractionPolicy {
 
 	public void EnsureSafeParents( string destinationPath ) {
 		RequireContained( destinationPath, destinationPath );
-		var parent = Path.GetDirectoryName( destinationPath );
+		var parent = System.IO.Path.GetDirectoryName( destinationPath );
 		if ( string.IsNullOrEmpty( parent ) ) return;
-		var relative = Path.GetRelativePath( root, parent );
+		var relative = System.IO.Path.GetRelativePath( root, parent );
 		if ( relative == "." ) return;
 		var current = root;
-		foreach ( var component in relative.Split( new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries ) ) {
-			current = Path.Combine( current, component );
+		foreach ( var component in relative.Split( new[] { System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries ) ) {
+			current = System.IO.Path.Combine( current, component );
 			if ( PathObjectExists( current ) ) {
 				var attributes = File.GetAttributes( current );
 				if ( (attributes & FileAttributes.ReparsePoint) != 0 ) {
@@ -95,7 +95,7 @@ internal sealed class TarExtractionPolicy {
 	}
 
 	private void RequireContained( string fullPath, string display ) {
-		var normalized = Path.GetFullPath( fullPath );
+		var normalized = System.IO.Path.GetFullPath( fullPath );
 		if ( string.Equals( normalized, root, pathComparison ) ) return;
 		if ( !normalized.StartsWith( rootWithSeparator, pathComparison ) ) {
 			throw new IOException( string.Concat( "Archive member escapes extraction root: ", display ) );

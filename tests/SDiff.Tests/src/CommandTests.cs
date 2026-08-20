@@ -426,7 +426,7 @@ public sealed class CommandTests {
 	private sealed class FileFixture : IDisposable {
 		/// <summary>Initializes a temporary filesystem fixture.</summary>
 		public FileFixture() {
-			this.Root = Path.Combine( Path.GetTempPath(), $"Icod.DiffUtils.SDiff.Tests-{Guid.NewGuid():N}" );
+			this.Root = System.IO.Path.Combine( System.IO.Path.GetTempPath(), $"Icod.DiffUtils.SDiff.Tests-{Guid.NewGuid():N}" );
 			System.IO.Directory.CreateDirectory( this.Root );
 		}
 
@@ -435,7 +435,7 @@ public sealed class CommandTests {
 
 		/// <summary>Returns a path under the fixture root.</summary>
 		public string PathFor( string relativePath ) {
-			return Path.Combine( this.Root, relativePath.Replace( '/', Path.DirectorySeparatorChar ) );
+			return System.IO.Path.Combine( this.Root, relativePath.Replace( '/', System.IO.Path.DirectorySeparatorChar ) );
 		}
 
 		/// <summary>Creates a directory under the fixture root.</summary>
@@ -448,7 +448,7 @@ public sealed class CommandTests {
 		/// <summary>Writes UTF-8 text under the fixture root.</summary>
 		public string Write( string relativePath, string content ) {
 			var path = this.PathFor( relativePath );
-			System.IO.Directory.CreateDirectory( Path.GetDirectoryName( path )! );
+			System.IO.Directory.CreateDirectory( System.IO.Path.GetDirectoryName( path )! );
 			File.WriteAllText( path, content, new UTF8Encoding( false ) );
 			return path;
 		}
@@ -456,7 +456,7 @@ public sealed class CommandTests {
 		/// <summary>Writes bytes under the fixture root.</summary>
 		public string WriteBytes( string relativePath, byte[] content ) {
 			var path = this.PathFor( relativePath );
-			System.IO.Directory.CreateDirectory( Path.GetDirectoryName( path )! );
+			System.IO.Directory.CreateDirectory( System.IO.Path.GetDirectoryName( path )! );
 			File.WriteAllBytes( path, content );
 			return path;
 		}

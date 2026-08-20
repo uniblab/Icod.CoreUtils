@@ -12,12 +12,12 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task RemovesRequestedAbsoluteChainBeforeNonemptyAncestorFailure() {
 		using var temporary = new TemporaryDirectory();
-		var ancestor = Path.Combine( temporary.Path, "ancestor" );
-		var parent = Path.Combine( ancestor, "parent" );
-		var child = Path.Combine( parent, "child" );
+		var ancestor = System.IO.Path.Combine( temporary.Path, "ancestor" );
+		var parent = System.IO.Path.Combine( ancestor, "parent" );
+		var child = System.IO.Path.Combine( parent, "child" );
 		Directory.CreateDirectory( child );
-		File.WriteAllText( Path.Combine( ancestor, "keep" ), "data" );
-		Assert.True( Path.IsPathFullyQualified( child ) );
+		File.WriteAllText( System.IO.Path.Combine( ancestor, "keep" ), "data" );
+		Assert.True( System.IO.Path.IsPathFullyQualified( child ) );
 		var output = new StringWriter();
 		var error = new StringWriter();
 
@@ -42,9 +42,9 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task IgnoreFailOnNonEmptyLeavesDirectoryAndReturnsSuccess() {
 		using var temporary = new TemporaryDirectory();
-		var directory = Path.Combine( temporary.Path, "nonempty" );
+		var directory = System.IO.Path.Combine( temporary.Path, "nonempty" );
 		Directory.CreateDirectory( directory );
-		File.WriteAllText( Path.Combine( directory, "item" ), "data" );
+		File.WriteAllText( System.IO.Path.Combine( directory, "item" ), "data" );
 		var error = new StringWriter();
 
 		var status = await RmDirCommand.RunAsync(
@@ -61,8 +61,8 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task RefusesDirectorySymbolicLink() {
 		using var temporary = new TemporaryDirectory();
-		var target = Path.Combine( temporary.Path, "target" );
-		var link = Path.Combine( temporary.Path, "link" );
+		var target = System.IO.Path.Combine( temporary.Path, "target" );
+		var link = System.IO.Path.Combine( temporary.Path, "link" );
 		Directory.CreateDirectory( target );
 		var creation = await SystemFileSystemMutationProvider.Instance.CreateSymbolicLinkAsync(
 			link,

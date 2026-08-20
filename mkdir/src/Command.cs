@@ -280,20 +280,20 @@ public static class Command {
 
 	private static IReadOnlyList<string> GetDirectoryChain( string operand ) {
 		ArgumentException.ThrowIfNullOrEmpty( operand );
-		var fullPath = Path.GetFullPath( operand );
-		var rooted = Path.IsPathRooted( operand );
-		var root = Path.GetPathRoot( fullPath ) ?? string.Empty;
+		var fullPath = System.IO.Path.GetFullPath( operand );
+		var rooted = System.IO.Path.IsPathRooted( operand );
+		var root = System.IO.Path.GetPathRoot( fullPath ) ?? string.Empty;
 		var relative = rooted
 			? fullPath[ root.Length.. ]
-			: Path.GetRelativePath( Environment.CurrentDirectory, fullPath );
+			: System.IO.Path.GetRelativePath( Environment.CurrentDirectory, fullPath );
 		var segments = relative.Split(
-			new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar },
+			new[] { System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar },
 			StringSplitOptions.RemoveEmptyEntries
 		);
 		var chain = new List<string>();
 		var current = rooted ? root : string.Empty;
 		foreach ( var segment in segments ) {
-			current = current.Length == 0 ? segment : Path.Combine( current, segment );
+			current = current.Length == 0 ? segment : System.IO.Path.Combine( current, segment );
 			chain.Add( current );
 		}
 		if ( chain.Count == 0 ) {

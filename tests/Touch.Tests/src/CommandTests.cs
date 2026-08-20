@@ -24,7 +24,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task CreatesMissingFileByDefault() {
 		using var workspace = new TemporaryWorkspace();
-		var file = Path.Combine( workspace.Path, "created" );
+		var file = System.IO.Path.Combine( workspace.Path, "created" );
 		var exitCode = await Command.RunAsync(
 			new[] { file }, TextReader.Null, new StringWriter(), new StringWriter()
 		);
@@ -36,7 +36,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task NoCreateLeavesMissingFileAbsent() {
 		using var workspace = new TemporaryWorkspace();
-		var file = Path.Combine( workspace.Path, "absent" );
+		var file = System.IO.Path.Combine( workspace.Path, "absent" );
 		var exitCode = await Command.RunAsync(
 			new[] { "--no-create", file }, TextReader.Null, new StringWriter(), new StringWriter()
 		);
@@ -243,7 +243,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task UpdatesDirectoryModificationTime() {
 		using var workspace = new TemporaryWorkspace();
-		var directory = Path.Combine( workspace.Path, "directory" );
+		var directory = System.IO.Path.Combine( workspace.Path, "directory" );
 		Directory.CreateDirectory( directory );
 		var expected = DateTimeOffset.FromUnixTimeSeconds( 1167609600 );
 		var exitCode = await Command.RunAsync(
@@ -262,7 +262,7 @@ public sealed class CommandTests {
 	public async Task NoDereferenceUpdatesSymbolicLinkObjectWhenSupported() {
 		using var workspace = new TemporaryWorkspace();
 		var target = await workspace.CreateFileAsync( "link-target", "content" );
-		var link = Path.Combine( workspace.Path, "link" );
+		var link = System.IO.Path.Combine( workspace.Path, "link" );
 		try {
 			File.CreateSymbolicLink( link, target );
 		} catch ( Exception exception ) when (
@@ -302,7 +302,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task NoCreateAndNoDereferenceSkipMissingOperand() {
 		using var workspace = new TemporaryWorkspace();
-		var missing = Path.Combine( workspace.Path, "missing-link" );
+		var missing = System.IO.Path.Combine( workspace.Path, "missing-link" );
 		var standardError = new StringWriter();
 		var exitCode = await Command.RunAsync(
 			new[] { "--no-create", "--no-dereference", missing },

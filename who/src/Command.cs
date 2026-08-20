@@ -196,7 +196,7 @@ public static class Command {
 		if ( string.IsNullOrEmpty( line ) )
 			return '?';
 		try {
-			var path = Path.Combine( "/dev", line );
+			var path = System.IO.Path.Combine( "/dev", line );
 			if ( !File.Exists( path ) )
 				return '?';
 			if ( OperatingSystem.IsWindows() )
@@ -212,7 +212,7 @@ public static class Command {
 		if ( string.IsNullOrEmpty( line ) )
 			return "?";
 		try {
-			var path = Path.Combine( "/dev", line );
+			var path = System.IO.Path.Combine( "/dev", line );
 			if ( !File.Exists( path ) )
 				return "?";
 			var idle = DateTime.UtcNow - File.GetLastAccessTimeUtc( path );

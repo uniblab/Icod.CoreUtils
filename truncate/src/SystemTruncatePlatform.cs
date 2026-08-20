@@ -193,7 +193,7 @@ public sealed class SystemTruncatePlatform : ITruncatePlatform {
 	private static PlatformOperationResult<long> GetWindowsIoBlockSize(
 		string path
 	) {
-		var fullPath = Path.GetFullPath(
+		var fullPath = System.IO.Path.GetFullPath(
 			path
 		);
 		var volumePath = new StringBuilder(

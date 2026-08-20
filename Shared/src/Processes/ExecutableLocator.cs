@@ -1,3 +1,4 @@
+using Path = global::System.IO.Path;
 namespace Icod.CoreUtils.Shared.Processes;
 
 /// <summary>
@@ -79,7 +80,7 @@ public sealed class SystemExecutableLocator : IExecutableLocator {
 	) {
 		var baseDirectory = string.IsNullOrWhiteSpace( workingDirectory )
 			? Environment.CurrentDirectory
-			: Path.GetFullPath( workingDirectory )
+			: System.IO.Path.GetFullPath( workingDirectory )
 		;
 		var variables = environment?.Variables;
 		var extensions = GetCandidateExtensions(
@@ -89,10 +90,10 @@ public sealed class SystemExecutableLocator : IExecutableLocator {
 				"PATHEXT"
 			)
 		);
-		if ( Path.IsPathRooted( executable ) || HasDirectoryComponent( executable ) ) {
-			var baseCandidate = Path.IsPathRooted( executable )
-				? Path.GetFullPath( executable )
-				: Path.GetFullPath(
+		if ( System.IO.Path.IsPathRooted( executable ) || HasDirectoryComponent( executable ) ) {
+			var baseCandidate = System.IO.Path.IsPathRooted( executable )
+				? System.IO.Path.GetFullPath( executable )
+				: System.IO.Path.GetFullPath(
 					executable,
 					baseDirectory
 				)
@@ -112,20 +113,20 @@ public sealed class SystemExecutableLocator : IExecutableLocator {
 			"PATH"
 		) ?? GetDefaultSearchPath();
 		var candidates = new List<string>();
-		foreach ( var pathEntry in pathValue.Split( Path.PathSeparator ) ) {
+		foreach ( var pathEntry in pathValue.Split( System.IO.Path.PathSeparator ) ) {
 			var directory = string.IsNullOrEmpty( pathEntry )
 				? baseDirectory
 				: pathEntry
 			;
-			if ( !Path.IsPathRooted( directory ) ) {
-				directory = Path.GetFullPath(
+			if ( !System.IO.Path.IsPathRooted( directory ) ) {
+				directory = System.IO.Path.GetFullPath(
 					directory,
 					baseDirectory
 				);
 			}
 			foreach ( var extension in extensions ) {
 				candidates.Add(
-					Path.Combine(
+					System.IO.Path.Combine(
 						directory,
 						string.Concat(
 							executable,
@@ -167,7 +168,7 @@ public sealed class SystemExecutableLocator : IExecutableLocator {
 
 	private static string GetDefaultSearchPath() => OperatingSystem.IsWindows()
 		? string.Empty
-		: string.Concat( "/bin", Path.PathSeparator, "/usr/bin" )
+		: string.Concat( "/bin", System.IO.Path.PathSeparator, "/usr/bin" )
 	;
 
 	private static IReadOnlyList<string> GetCandidateExtensions(
@@ -177,7 +178,7 @@ public sealed class SystemExecutableLocator : IExecutableLocator {
 		if ( !OperatingSystem.IsWindows() ) {
 			return [ string.Empty ];
 		}
-		if ( !string.IsNullOrEmpty( Path.GetExtension( executable ) ) ) {
+		if ( !string.IsNullOrEmpty( System.IO.Path.GetExtension( executable ) ) ) {
 			return [ string.Empty ];
 		}
 		var extensions = string.IsNullOrWhiteSpace( pathExtensions )
@@ -201,8 +202,8 @@ public sealed class SystemExecutableLocator : IExecutableLocator {
 
 	private static bool HasDirectoryComponent(
 		string executable
-	) => executable.Contains( Path.DirectorySeparatorChar )
-		|| executable.Contains( Path.AltDirectorySeparatorChar )
+	) => executable.Contains( System.IO.Path.DirectorySeparatorChar )
+		|| executable.Contains( System.IO.Path.AltDirectorySeparatorChar )
 	;
 
 	private static ProcessOperationResult<string> LocateCandidates(
@@ -256,7 +257,7 @@ public sealed class SystemExecutableLocator : IExecutableLocator {
 				}
 			}
 			return ProcessOperationResult<string>.Success(
-				Path.GetFullPath( candidate )
+				System.IO.Path.GetFullPath( candidate )
 			);
 		} catch ( UnauthorizedAccessException exception ) {
 			return ProcessOperationResult<string>.Failure(

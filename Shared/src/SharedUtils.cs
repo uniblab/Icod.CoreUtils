@@ -16,12 +16,12 @@ public static class SharedUtils {
 			return ".";
 		}
 
-		var trimmed = path.TrimEnd( Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar );
+		var trimmed = path.TrimEnd( System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar );
 		if ( trimmed.Length == 0 ) {
-			return Path.DirectorySeparatorChar.ToString();
+			return System.IO.Path.DirectorySeparatorChar.ToString();
 		}
 
-		return Path.GetFileName( trimmed );
+		return System.IO.Path.GetFileName( trimmed );
 	}
 
 	/// <summary>Parses the legacy short-option specification used by existing commands.</summary>

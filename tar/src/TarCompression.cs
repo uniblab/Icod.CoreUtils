@@ -127,7 +127,7 @@ internal static class TarCompression {
 		if ( options.ArchiveName == "-" ) {
 			return new NonDisposingStream( Console.OpenStandardInput() );
 		}
-		var path = Path.GetFullPath( options.ArchiveName!, options.InitialDirectory );
+		var path = System.IO.Path.GetFullPath( options.ArchiveName!, options.InitialDirectory );
 		var info = new FileInfo( path );
 		if ( info.Length > options.MaximumArchiveBytes ) {
 			throw new IOException( string.Concat( "Archive exceeds --max-archive-bytes: ", path ) );

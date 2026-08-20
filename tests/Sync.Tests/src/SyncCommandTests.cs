@@ -528,8 +528,8 @@ public sealed class SyncCommandTests {
 		public string PathValue { get; }
 
 		public TemporaryDirectory() {
-			this.PathValue = Path.Combine(
-				Path.GetTempPath(),
+			this.PathValue = System.IO.Path.Combine(
+				System.IO.Path.GetTempPath(),
 				System.String.Concat(
 					"Icod.CoreUtils.Sync.Tests-",
 					Guid.NewGuid().ToString( "N" )
@@ -554,7 +554,7 @@ public sealed class SyncCommandTests {
 
 		public string PathFor(
 			string name
-		) => Path.Combine(
+		) => System.IO.Path.Combine(
 			this.PathValue,
 			name
 		);

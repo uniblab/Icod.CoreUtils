@@ -11,7 +11,7 @@ public sealed class TransactionalReplacementIntegrationTests {
 	[Fact]
 	public async Task InPlaceEditPublishesReplacementAndRetainsRequestedBackup() {
 		using var directory = new TemporaryDirectory();
-		var path = Path.Combine( directory.Path, "input.txt" );
+		var path = System.IO.Path.Combine( directory.Path, "input.txt" );
 		var backupPath = string.Concat( path, ".bak" );
 		await File.WriteAllTextAsync( path, "original\n" );
 		UnixFileMode? originalMode = null;
@@ -58,7 +58,7 @@ public sealed class TransactionalReplacementIntegrationTests {
 	[Fact]
 	public async Task PostCommitFailureRestoresDestinationAndExistingBackup() {
 		using var directory = new TemporaryDirectory();
-		var path = Path.Combine( directory.Path, "input.txt" );
+		var path = System.IO.Path.Combine( directory.Path, "input.txt" );
 		var backupPath = string.Concat( path, ".bak" );
 		await File.WriteAllTextAsync( path, "original\n" );
 		await File.WriteAllTextAsync( backupPath, "previous backup\n" );
@@ -95,7 +95,7 @@ public sealed class TransactionalReplacementIntegrationTests {
 	[Fact]
 	public async Task CanceledInPlaceEditPreservesInputAndCleansArtifacts() {
 		using var directory = new TemporaryDirectory();
-		var path = Path.Combine( directory.Path, "input.txt" );
+		var path = System.IO.Path.Combine( directory.Path, "input.txt" );
 		await File.WriteAllTextAsync( path, "original\n" );
 		using var cancellation = new CancellationTokenSource();
 		cancellation.Cancel();
@@ -123,8 +123,8 @@ public sealed class TransactionalReplacementIntegrationTests {
 	[Fact]
 	public async Task FollowSymlinksEditsResolvedTargetWhileDefaultRejectsTerminalLink() {
 		using var directory = new TemporaryDirectory();
-		var target = Path.Combine( directory.Path, "target.txt" );
-		var link = Path.Combine( directory.Path, "link.txt" );
+		var target = System.IO.Path.Combine( directory.Path, "target.txt" );
+		var link = System.IO.Path.Combine( directory.Path, "link.txt" );
 		await File.WriteAllTextAsync( target, "target\n" );
 		try {
 			File.CreateSymbolicLink( link, target );
@@ -182,7 +182,7 @@ public sealed class TransactionalReplacementIntegrationTests {
 	private static string[] EntryNames(
 		string directory
 	) => Directory.EnumerateFileSystemEntries( directory )
-		.Select( value => Path.GetFileName( value ) ?? string.Empty )
+		.Select( value => System.IO.Path.GetFileName( value ) ?? string.Empty )
 		.OrderBy( value => value, StringComparer.Ordinal )
 		.ToArray();
 

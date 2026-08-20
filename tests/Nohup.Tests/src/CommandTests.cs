@@ -53,7 +53,7 @@ public sealed class CommandTests {
 		var environment = ProcessEnvironment.CreateEmptyBuilder().Set( "HOME", "/home/test" ).Build();
 		var exitCode = await Command.RunAsync( [ "tool" ], stderr: new MemoryStream(), terminalProvider: terminal, processExecutor: executor, outputFileProvider: files, sourceEnvironment: environment );
 		Assert.Equal( 0, exitCode );
-		Assert.Equal( [ "nohup.out", Path.Combine( "/home/test", "nohup.out" ) ], files.Paths );
+		Assert.Equal( [ "nohup.out", System.IO.Path.Combine( "/home/test", "nohup.out" ) ], files.Paths );
 	}
 
 	/// <summary>Verifies terminal stderr follows an already redirected stdout.</summary>
@@ -92,9 +92,9 @@ public sealed class CommandTests {
 	/// <summary>Verifies the system output provider appends rather than truncating an existing destination.</summary>
 	[Fact]
 	public async Task SystemOutputProviderAppends() {
-		var directory = Path.Combine( Path.GetTempPath(), $"icod-nohup-{Guid.NewGuid():N}" );
+		var directory = System.IO.Path.Combine( System.IO.Path.GetTempPath(), $"icod-nohup-{Guid.NewGuid():N}" );
 		Directory.CreateDirectory( directory );
-		var path = Path.Combine( directory, "nohup.out" );
+		var path = System.IO.Path.Combine( directory, "nohup.out" );
 		try {
 			await File.WriteAllTextAsync( path, "first" );
 			await using ( var destination = SystemNohupOutputFileProvider.Instance.OpenAppend( path ) ) {
@@ -110,9 +110,9 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task SystemOutputProviderCreatesPrivatePosixFile() {
 		if ( OperatingSystem.IsWindows() ) return;
-		var directory = Path.Combine( Path.GetTempPath(), $"icod-nohup-mode-{Guid.NewGuid():N}" );
+		var directory = System.IO.Path.Combine( System.IO.Path.GetTempPath(), $"icod-nohup-mode-{Guid.NewGuid():N}" );
 		Directory.CreateDirectory( directory );
-		var path = Path.Combine( directory, "nohup.out" );
+		var path = System.IO.Path.Combine( directory, "nohup.out" );
 		try {
 			await using ( var destination = SystemNohupOutputFileProvider.Instance.OpenAppend( path ) ) {
 				await destination.Stream.WriteAsync( Encoding.UTF8.GetBytes( "x" ) );

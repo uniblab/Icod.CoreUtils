@@ -10,8 +10,8 @@ public sealed class CommandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task PastesFilesInParallel() {
-		var first = Path.GetTempFileName();
-		var second = Path.GetTempFileName();
+		var first = System.IO.Path.GetTempFileName();
+		var second = System.IO.Path.GetTempFileName();
 		try {
 			await File.WriteAllBytesAsync( first, "a\nb\n"u8.ToArray() );
 			await File.WriteAllBytesAsync( second, "1\n2\n"u8.ToArray() );
@@ -27,8 +27,8 @@ public sealed class CommandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task HandlesUnevenParallelInputs() {
-		var first = Path.GetTempFileName();
-		var second = Path.GetTempFileName();
+		var first = System.IO.Path.GetTempFileName();
+		var second = System.IO.Path.GetTempFileName();
 		try {
 			await File.WriteAllBytesAsync( first, "a\n"u8.ToArray() );
 			await File.WriteAllBytesAsync( second, "1\n2\n"u8.ToArray() );
@@ -44,7 +44,7 @@ public sealed class CommandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task PastesOneFileAtATime() {
-		var file = Path.GetTempFileName();
+		var file = System.IO.Path.GetTempFileName();
 		try {
 			await File.WriteAllBytesAsync( file, "a\nb\nc\n"u8.ToArray() );
 			var result = await RunAsync( [ "-s", file ], [] );
@@ -58,7 +58,7 @@ public sealed class CommandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task CyclesDelimitersPerOutputRow() {
-		var files = Enumerable.Range( 0, 3 ).Select( _ => Path.GetTempFileName() ).ToArray();
+		var files = Enumerable.Range( 0, 3 ).Select( _ => System.IO.Path.GetTempFileName() ).ToArray();
 		try {
 			await File.WriteAllBytesAsync( files[0], "a\nd\n"u8.ToArray() );
 			await File.WriteAllBytesAsync( files[1], "b\ne\n"u8.ToArray() );

@@ -1,13 +1,11 @@
-extern alias IcodPath;
-
 using System.Buffers.Binary;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Win32.SafeHandles;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
-using PathIndirectionKind = IcodPath::Icod.Path.PathIndirectionKind;
-using WindowsReparseTags = IcodPath::Icod.Path.WindowsReparseTags;
+using PathIndirectionKind = Icod.Path.PathIndirectionKind;
+using WindowsReparseTags = Icod.Path.WindowsReparseTags;
 using Xunit;
 
 namespace Icod.CoreUtils.Shared.Tests.FileSystem.Traversal;
@@ -24,8 +22,8 @@ public sealed partial class SystemReadOnlyFileSystemProviderTests {
 	public async Task ObservesAndEnumeratesHostEntries() {
 		var path = CreateTemporaryDirectory();
 		try {
-			var childDirectory = Directory.CreateDirectory( Path.Combine( path, "child" ) ).FullName;
-			var childFile = Path.Combine( path, "file.txt" );
+			var childDirectory = Directory.CreateDirectory( System.IO.Path.Combine( path, "child" ) ).FullName;
+			var childFile = System.IO.Path.Combine( path, "file.txt" );
 			await File.WriteAllTextAsync( childFile, "data" );
 			var provider = SystemReadOnlyFileSystemProvider.Instance;
 
@@ -55,8 +53,8 @@ public sealed partial class SystemReadOnlyFileSystemProviderTests {
 	public async Task DistinguishesLinkFromFollowedTargetWhenSupported() {
 		var path = CreateTemporaryDirectory();
 		try {
-			var target = Directory.CreateDirectory( Path.Combine( path, "target" ) ).FullName;
-			var link = Path.Combine( path, "link" );
+			var target = Directory.CreateDirectory( System.IO.Path.Combine( path, "target" ) ).FullName;
+			var link = System.IO.Path.Combine( path, "link" );
 			try {
 				_ = Directory.CreateSymbolicLink( link, target );
 			} catch ( Exception exception ) when (
@@ -91,8 +89,8 @@ public sealed partial class SystemReadOnlyFileSystemProviderTests {
 	public async Task DistinguishesFileLinkFromFollowedFileWhenSupported() {
 		var path = CreateTemporaryDirectory();
 		try {
-			var target = Path.Combine( path, "target.txt" );
-			var link = Path.Combine( path, "link.txt" );
+			var target = System.IO.Path.Combine( path, "target.txt" );
+			var link = System.IO.Path.Combine( path, "link.txt" );
 			await File.WriteAllTextAsync( target, "data" );
 			try {
 				_ = File.CreateSymbolicLink( link, target );
@@ -128,7 +126,7 @@ public sealed partial class SystemReadOnlyFileSystemProviderTests {
 		}
 
 		var path = CreateTemporaryDirectory();
-		var restricted = Directory.CreateDirectory( Path.Combine( path, "restricted" ) ).FullName;
+		var restricted = Directory.CreateDirectory( System.IO.Path.Combine( path, "restricted" ) ).FullName;
 		try {
 			File.SetUnixFileMode( restricted, UnixFileMode.None );
 			var provider = SystemReadOnlyFileSystemProvider.Instance;
@@ -164,8 +162,8 @@ public sealed partial class SystemReadOnlyFileSystemProviderTests {
 	public async Task ReportsSameIdentityForHardLinksWhenSupported() {
 		var path = CreateTemporaryDirectory();
 		try {
-			var original = Path.Combine( path, "original.txt" );
-			var link = Path.Combine( path, "hard-link.txt" );
+			var original = System.IO.Path.Combine( path, "original.txt" );
+			var link = System.IO.Path.Combine( path, "hard-link.txt" );
 			await File.WriteAllTextAsync( original, "data" );
 			if ( !TryCreateHardLink( link, original ) ) {
 				return;
@@ -189,8 +187,8 @@ public sealed partial class SystemReadOnlyFileSystemProviderTests {
 	public async Task ObservesBrokenLinkObjectWhenSupported() {
 		var path = CreateTemporaryDirectory();
 		try {
-			var missingTarget = Path.Combine( path, "missing-target" );
-			var link = Path.Combine( path, "broken-link" );
+			var missingTarget = System.IO.Path.Combine( path, "missing-target" );
+			var link = System.IO.Path.Combine( path, "broken-link" );
 			try {
 				_ = File.CreateSymbolicLink( link, missingTarget );
 			} catch ( Exception exception ) when (
@@ -221,8 +219,8 @@ public sealed partial class SystemReadOnlyFileSystemProviderTests {
 	public async Task TraversalDetectsRealDirectoryLinkCycleWhenSupported() {
 		var path = CreateTemporaryDirectory();
 		try {
-			var child = Directory.CreateDirectory( Path.Combine( path, "child" ) ).FullName;
-			var link = Path.Combine( child, "up" );
+			var child = Directory.CreateDirectory( System.IO.Path.Combine( path, "child" ) ).FullName;
+			var link = System.IO.Path.Combine( child, "up" );
 			try {
 				_ = Directory.CreateSymbolicLink( link, path );
 			} catch ( Exception exception ) when (
@@ -271,8 +269,8 @@ public sealed partial class SystemReadOnlyFileSystemProviderTests {
 
 		var path = CreateTemporaryDirectory();
 		try {
-			var target = Directory.CreateDirectory( Path.Combine( path, "target" ) ).FullName;
-			var junction = Path.Combine( path, "junction" );
+			var target = Directory.CreateDirectory( System.IO.Path.Combine( path, "target" ) ).FullName;
+			var junction = System.IO.Path.Combine( path, "junction" );
 			if ( !TryCreateWindowsJunction( junction, target ) ) {
 				return;
 			}
@@ -294,7 +292,7 @@ public sealed partial class SystemReadOnlyFileSystemProviderTests {
 			Assert.True( followed.WasDereferenced );
 			Assert.Equal( (await provider.ObserveAsync( target, false )).EntryIdentity, followed.EntryIdentity );
 		} finally {
-			var junction = Path.Combine( path, "junction" );
+			var junction = System.IO.Path.Combine( path, "junction" );
 			if ( Directory.Exists( junction ) ) {
 				Directory.Delete( junction );
 			}
@@ -361,7 +359,7 @@ public sealed partial class SystemReadOnlyFileSystemProviderTests {
 		const uint ioReparseTagMountPoint = 0xA0000003;
 
 		try {
-			var absoluteTarget = Path.TrimEndingDirectorySeparator( Path.GetFullPath( targetPath ) );
+			var absoluteTarget = System.IO.Path.TrimEndingDirectorySeparator( System.IO.Path.GetFullPath( targetPath ) );
 			var substituteName = absoluteTarget.StartsWith( @"\\", StringComparison.Ordinal )
 				? string.Concat( @"\??\UNC\", absoluteTarget[2..] )
 				: string.Concat( @"\??\", absoluteTarget );
@@ -483,8 +481,8 @@ public sealed partial class SystemReadOnlyFileSystemProviderTests {
 	}
 
 	public static string CreateTemporaryDirectory() {
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			string.Concat( "icod-e1-system-", Guid.NewGuid().ToString( "N" ) )
 		);
 		Directory.CreateDirectory( path );

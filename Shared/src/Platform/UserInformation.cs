@@ -1,3 +1,4 @@
+using Path = global::System.IO.Path;
 using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -382,7 +383,7 @@ public sealed class SystemUserInformationProvider : IUserInformationProvider
     {
         try
         {
-            var path = Path.Combine("/dev", terminal);
+            var path = System.IO.Path.Combine("/dev", terminal);
             var lastAccess = File.GetLastAccessTimeUtc(path);
             if (lastAccess == DateTime.MinValue)
             {

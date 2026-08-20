@@ -15,7 +15,7 @@ public sealed class PhaseP11BTransactionTests {
 	[Fact]
 	public async Task ProductionFactoryCreatesSharedE6Adapter() {
 		var directory = CreateTemporaryDirectory();
-		var target = Path.Combine( directory, "target.txt" );
+		var target = System.IO.Path.Combine( directory, "target.txt" );
 		await File.WriteAllTextAsync( target, "old\n" );
 		try {
 			var fileSystem = new SystemPatchFileSystem();
@@ -41,7 +41,7 @@ public sealed class PhaseP11BTransactionTests {
 	[Fact]
 	public async Task PreferredAtomicityReportsNonAtomicFallback() {
 		var directory = CreateTemporaryDirectory();
-		var target = Path.Combine( directory, "target.txt" );
+		var target = System.IO.Path.Combine( directory, "target.txt" );
 		await File.WriteAllTextAsync( target, "old\n" );
 		try {
 			var replacementFileSystem = new ReportingFallbackFileSystem(
@@ -94,8 +94,8 @@ public sealed class PhaseP11BTransactionTests {
 	}
 
 	private static string CreateTemporaryDirectory() {
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			string.Concat( "icod-patch-p11b-", Guid.NewGuid().ToString( "N" ) )
 		);
 		Directory.CreateDirectory( path );
@@ -105,7 +105,7 @@ public sealed class PhaseP11BTransactionTests {
 	private static void AssertNoE6TemporaryFiles( string directory ) {
 		Assert.DoesNotContain(
 			Directory.EnumerateFileSystemEntries( directory ),
-			path => Path.GetFileName( path ).Contains( ".icod-e6-", StringComparison.Ordinal )
+			path => System.IO.Path.GetFileName( path ).Contains( ".icod-e6-", StringComparison.Ordinal )
 		);
 	}
 

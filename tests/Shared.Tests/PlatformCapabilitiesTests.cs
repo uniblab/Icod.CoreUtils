@@ -41,11 +41,11 @@ public sealed class PlatformCapabilitiesTests {
 			"icod-hardlink-"
 		);
 		try {
-			var target = Path.Combine(
+			var target = System.IO.Path.Combine(
 				directory.FullName,
 				"target.txt"
 			);
-			var link = Path.Combine(
+			var link = System.IO.Path.Combine(
 				directory.FullName,
 				"link.txt"
 			);
@@ -74,7 +74,7 @@ public sealed class PlatformCapabilitiesTests {
 
 	[Fact]
 	public void LinkTargetInspectionIsControlledForOrdinaryFiles() {
-		var path = Path.GetTempFileName();
+		var path = System.IO.Path.GetTempFileName();
 		try {
 			var result = PlatformCapabilities.TryGetLinkTarget(
 				path,
@@ -91,7 +91,7 @@ public sealed class PlatformCapabilitiesTests {
 
 	[Fact]
 	public void UnixModeReadIsSupportedOrFailsCleanly() {
-		var path = Path.GetTempFileName();
+		var path = System.IO.Path.GetTempFileName();
 		try {
 			var result = PlatformCapabilities.TryGetUnixFileMode(
 				path
@@ -112,7 +112,7 @@ public sealed class PlatformCapabilitiesTests {
 
 	[Fact]
 	public void UnixModeOperationIsSupportedOrFailsCleanly() {
-		var path = Path.GetTempFileName();
+		var path = System.IO.Path.GetTempFileName();
 		try {
 			var result = PlatformCapabilities.TrySetUnixFileMode(
 				path,

@@ -20,8 +20,8 @@ public sealed class BinaryAndOperandTests {
 	public async Task UnterminatedOperandsShareLogicalLineState() {
 		var directory = Directory.CreateTempSubdirectory();
 		try {
-			var first = Path.Combine( directory.FullName, "first" );
-			var second = Path.Combine( directory.FullName, "second" );
+			var first = System.IO.Path.Combine( directory.FullName, "first" );
+			var second = System.IO.Path.Combine( directory.FullName, "second" );
 			await File.WriteAllBytesAsync( first, "1234"u8.ToArray() );
 			await File.WriteAllBytesAsync( second, "\tX"u8.ToArray() );
 			var result = await RunAsync( [ first, second ], [ ] );
@@ -35,7 +35,7 @@ public sealed class BinaryAndOperandTests {
 	/// <returns>A task that represents the asynchronous test.</returns>
 	[Fact]
 	public async Task MissingFileReportsFailureButLaterOperandsContinue() {
-		var file = Path.GetTempFileName();
+		var file = System.IO.Path.GetTempFileName();
 		try {
 			await File.WriteAllTextAsync( file, "x" );
 			var result = await RunAsync( [ string.Concat( file, ".missing" ), file ], [ ] );
@@ -51,7 +51,7 @@ public sealed class BinaryAndOperandTests {
 	/// <returns>A task that represents the asynchronous test.</returns>
 	[Fact]
 	public async Task FileOnlyExecutionDoesNotRequireStandardInputStream() {
-		var file = Path.GetTempFileName();
+		var file = System.IO.Path.GetTempFileName();
 		try {
 			await File.WriteAllBytesAsync( file, "x\ty"u8.ToArray() );
 			using var output = new MemoryStream();

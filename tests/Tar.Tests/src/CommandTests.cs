@@ -20,9 +20,9 @@ public sealed class CommandTests {
 	public void CreatesListsAndExtractsDirectoryTree() {
 		using var tree = new TestTree();
 		var source = tree.CreateDirectory( "source" );
-		File.WriteAllText( Path.Combine( source, "one.txt" ), "one" );
-		Directory.CreateDirectory( Path.Combine( source, "nested" ) );
-		File.WriteAllText( Path.Combine( source, "nested", "two.txt" ), "two" );
+		File.WriteAllText( System.IO.Path.Combine( source, "one.txt" ), "one" );
+		Directory.CreateDirectory( System.IO.Path.Combine( source, "nested" ) );
+		File.WriteAllText( System.IO.Path.Combine( source, "nested", "two.txt" ), "two" );
 		var archive = tree.PathFor( "roundtrip.tar" );
 		var verbose = new StringWriter();
 		Assert.Equal( 0, Command.Run( new[] { "cvf", archive, "-C", source, "one.txt", "nested" }, stdout: verbose ) );
@@ -32,8 +32,8 @@ public sealed class CommandTests {
 		Assert.Contains( "nested/two.txt", NormalizeLines( listing.ToString() ) );
 		var destination = tree.CreateDirectory( "destination" );
 		Assert.Equal( 0, Command.Run( new[] { "-xf", archive, "-C", destination } ) );
-		Assert.Equal( "one", File.ReadAllText( Path.Combine( destination, "one.txt" ) ) );
-		Assert.Equal( "two", File.ReadAllText( Path.Combine( destination, "nested", "two.txt" ) ) );
+		Assert.Equal( "one", File.ReadAllText( System.IO.Path.Combine( destination, "one.txt" ) ) );
+		Assert.Equal( "two", File.ReadAllText( System.IO.Path.Combine( destination, "nested", "two.txt" ) ) );
 	}
 
 	[Theory]
@@ -44,7 +44,7 @@ public sealed class CommandTests {
 	public void WritesRequestedArchiveFormat( string format, TarEntryFormat expected ) {
 		using var tree = new TestTree();
 		var source = tree.CreateDirectory( "source" );
-		File.WriteAllText( Path.Combine( source, "file.txt" ), "format" );
+		File.WriteAllText( System.IO.Path.Combine( source, "file.txt" ), "format" );
 		var archive = tree.PathFor( string.Concat( format, ".tar" ) );
 		Assert.Equal( 0, Command.Run( new[] { "-cf", archive, "--format", format, "-C", source, "file.txt" } ) );
 		using var stream = File.OpenRead( archive );
@@ -56,7 +56,7 @@ public sealed class CommandTests {
 	public void AppendAndUpdateKeepHistoricalMemberVersions() {
 		using var tree = new TestTree();
 		var source = tree.CreateDirectory( "source" );
-		var file = Path.Combine( source, "value.txt" );
+		var file = System.IO.Path.Combine( source, "value.txt" );
 		File.WriteAllText( file, "one" );
 		var stableTime = DateTime.UtcNow.AddMinutes( -1 );
 		stableTime = new DateTime( stableTime.Ticks - (stableTime.Ticks % TimeSpan.TicksPerSecond), DateTimeKind.Utc );
@@ -80,8 +80,8 @@ public sealed class CommandTests {
 	public void DeleteAndConcatenateRewriteArchives() {
 		using var tree = new TestTree();
 		var source = tree.CreateDirectory( "source" );
-		File.WriteAllText( Path.Combine( source, "a.txt" ), "a" );
-		File.WriteAllText( Path.Combine( source, "b.txt" ), "b" );
+		File.WriteAllText( System.IO.Path.Combine( source, "a.txt" ), "a" );
+		File.WriteAllText( System.IO.Path.Combine( source, "b.txt" ), "b" );
 		var first = tree.PathFor( "first.tar" );
 		var second = tree.PathFor( "second.tar" );
 		Assert.Equal( 0, Command.Run( new[] { "-cf", first, "-C", source, "a.txt", "b.txt" } ) );
@@ -96,7 +96,7 @@ public sealed class CommandTests {
 	public void CompareReportsDifferences() {
 		using var tree = new TestTree();
 		var source = tree.CreateDirectory( "source" );
-		var file = Path.Combine( source, "file.txt" );
+		var file = System.IO.Path.Combine( source, "file.txt" );
 		File.WriteAllText( file, "same" );
 		var archive = tree.PathFor( "compare.tar" );
 		Assert.Equal( 0, Command.Run( new[] { "-cf", archive, "-C", source, "file.txt" } ) );
@@ -111,7 +111,7 @@ public sealed class CommandTests {
 	public void GzipRoundTripsAndAutodetectsNamedArchiveOnRead() {
 		using var tree = new TestTree();
 		var source = tree.CreateDirectory( "source" );
-		File.WriteAllText( Path.Combine( source, "file.txt" ), "gzip" );
+		File.WriteAllText( System.IO.Path.Combine( source, "file.txt" ), "gzip" );
 		var archive = tree.PathFor( "archive.tar.gz" );
 		Assert.Equal( 0, Command.Run( new[] { "-czf", archive, "-C", source, "file.txt" } ) );
 		var listing = new StringWriter();
@@ -119,15 +119,15 @@ public sealed class CommandTests {
 		Assert.Contains( "file.txt", listing.ToString() );
 		var destination = tree.CreateDirectory( "destination" );
 		Assert.Equal( 0, Command.Run( new[] { "-xf", archive, "-C", destination } ) );
-		Assert.Equal( "gzip", File.ReadAllText( Path.Combine( destination, "file.txt" ) ) );
+		Assert.Equal( "gzip", File.ReadAllText( System.IO.Path.Combine( destination, "file.txt" ) ) );
 	}
 
 	[Fact]
 	public void ExclusionsAndMemberSelectionAreApplied() {
 		using var tree = new TestTree();
 		var source = tree.CreateDirectory( "source" );
-		File.WriteAllText( Path.Combine( source, "keep.txt" ), "keep" );
-		File.WriteAllText( Path.Combine( source, "drop.log" ), "drop" );
+		File.WriteAllText( System.IO.Path.Combine( source, "keep.txt" ), "keep" );
+		File.WriteAllText( System.IO.Path.Combine( source, "drop.log" ), "drop" );
 		var archive = tree.PathFor( "select.tar" );
 		Assert.Equal( 0, Command.Run( new[] { "-cf", archive, "--exclude=*.log", "-C", source, "keep.txt", "drop.log" } ) );
 		Assert.Equal( new[] { "keep.txt" }, ReadMemberNames( archive ) );
@@ -159,8 +159,8 @@ public sealed class CommandTests {
 		if ( OperatingSystem.IsWindows() ) return;
 		using var tree = new TestTree();
 		var source = tree.CreateDirectory( "source" );
-		var original = Path.Combine( source, "original.txt" );
-		var linked = Path.Combine( source, "linked.txt" );
+		var original = System.IO.Path.Combine( source, "original.txt" );
+		var linked = System.IO.Path.Combine( source, "linked.txt" );
 		File.WriteAllText( original, "linked" );
 		var startInfo = new ProcessStartInfo {
 			FileName = "ln",
@@ -194,8 +194,8 @@ public sealed class CommandTests {
 		WriteArchive( archive, symlink, hardlink );
 		var destination = tree.CreateDirectory( "destination" );
 		Assert.Equal( 2, Command.Run( new[] { "-xf", archive, "-C", destination } ) );
-		Assert.False( File.Exists( Path.Combine( destination, "sub", "link" ) ) );
-		Assert.False( File.Exists( Path.Combine( destination, "hard" ) ) );
+		Assert.False( File.Exists( System.IO.Path.Combine( destination, "sub", "link" ) ) );
+		Assert.False( File.Exists( System.IO.Path.Combine( destination, "hard" ) ) );
 	}
 
 	[Fact]
@@ -209,8 +209,8 @@ public sealed class CommandTests {
 		WriteArchive( archive, target, symlink, hardlink );
 		var destination = tree.CreateDirectory( "destination" );
 		Assert.Equal( 0, Command.Run( new[] { "-xf", archive, "-C", destination } ) );
-		Assert.Equal( "linked", File.ReadAllText( Path.Combine( destination, "symbolic.txt" ) ) );
-		Assert.Equal( "linked", File.ReadAllText( Path.Combine( destination, "hard.txt" ) ) );
+		Assert.Equal( "linked", File.ReadAllText( System.IO.Path.Combine( destination, "symbolic.txt" ) ) );
+		Assert.Equal( "linked", File.ReadAllText( System.IO.Path.Combine( destination, "hard.txt" ) ) );
 	}
 
 	[Fact]
@@ -221,9 +221,9 @@ public sealed class CommandTests {
 		WriteArchive( archive, RegularEntry( "redirect/file.txt", "archive" ) );
 		var destination = tree.CreateDirectory( "destination" );
 		var outside = tree.CreateDirectory( "outside" );
-		Directory.CreateSymbolicLink( Path.Combine( destination, "redirect" ), outside );
+		Directory.CreateSymbolicLink( System.IO.Path.Combine( destination, "redirect" ), outside );
 		Assert.Equal( 2, Command.Run( new[] { "-xf", archive, "-C", destination } ) );
-		Assert.False( File.Exists( Path.Combine( outside, "file.txt" ) ) );
+		Assert.False( File.Exists( System.IO.Path.Combine( outside, "file.txt" ) ) );
 	}
 
 	[Fact]
@@ -235,7 +235,7 @@ public sealed class CommandTests {
 		var destination = tree.CreateDirectory( "destination" );
 		var outside = tree.PathFor( "outside.txt" );
 		File.WriteAllText( outside, "outside" );
-		File.CreateSymbolicLink( Path.Combine( destination, "victim" ), outside );
+		File.CreateSymbolicLink( System.IO.Path.Combine( destination, "victim" ), outside );
 		Assert.Equal( 2, Command.Run( new[] { "-xf", archive, "-C", destination } ) );
 		Assert.Equal( "outside", File.ReadAllText( outside ) );
 	}
@@ -248,7 +248,7 @@ public sealed class CommandTests {
 		WriteArchive( archive, new PaxTarEntry( TarEntryType.Fifo, "pipe" ) );
 		var destination = tree.CreateDirectory( "destination" );
 		Assert.Equal( 2, Command.Run( new[] { "-xf", archive, "-C", destination } ) );
-		Assert.False( File.Exists( Path.Combine( destination, "pipe" ) ) );
+		Assert.False( File.Exists( System.IO.Path.Combine( destination, "pipe" ) ) );
 	}
 
 	[Fact]
@@ -262,7 +262,7 @@ public sealed class CommandTests {
 		WriteArchive( archive, entry );
 		var destination = tree.CreateDirectory( "destination" );
 		Assert.Equal( 0, Command.Run( new[] { "-xf", archive, "--preserve-permissions", "-C", destination } ) );
-		var path = Path.Combine( destination, "metadata.txt" );
+		var path = System.IO.Path.Combine( destination, "metadata.txt" );
 		Assert.Equal( expectedTime.UtcDateTime, File.GetLastWriteTimeUtc( path ) );
 		if ( !OperatingSystem.IsWindows() ) {
 			Assert.Equal( entry.Mode, File.GetUnixFileMode( path ) );
@@ -295,14 +295,14 @@ public sealed class CommandTests {
 		WriteArchive( archive, entry );
 		var destination = tree.CreateDirectory( "destination" );
 		Assert.Equal( 2, Command.Run( new[] { "-xf", archive, "-C", destination } ) );
-		Assert.False( File.Exists( Path.Combine( destination, "sparse.bin" ) ) );
+		Assert.False( File.Exists( System.IO.Path.Combine( destination, "sparse.bin" ) ) );
 	}
 
 	[Fact]
 	public void SparsePaxRoundTripRestoresLogicalContent() {
 		using var tree = new TestTree();
 		var source = tree.CreateDirectory( "source" );
-		var sparse = Path.Combine( source, "sparse.bin" );
+		var sparse = System.IO.Path.Combine( source, "sparse.bin" );
 		using ( var stream = new FileStream( sparse, FileMode.Create, FileAccess.Write ) ) {
 			stream.SetLength( 512 * 1024 );
 			stream.Position = 128 * 1024 + 7;
@@ -315,7 +315,7 @@ public sealed class CommandTests {
 		Assert.Equal( "sparse.bin", listing.ToString().Trim() );
 		var destination = tree.CreateDirectory( "destination" );
 		Assert.Equal( 0, Command.Run( new[] { "-xf", archive, "-C", destination } ) );
-		Assert.Equal( File.ReadAllBytes( sparse ), File.ReadAllBytes( Path.Combine( destination, "sparse.bin" ) ) );
+		Assert.Equal( File.ReadAllBytes( sparse ), File.ReadAllBytes( System.IO.Path.Combine( destination, "sparse.bin" ) ) );
 	}
 
 	[Fact]
@@ -325,10 +325,10 @@ public sealed class CommandTests {
 		WriteArchive( archive, RegularEntry( "large.txt", "12" ) );
 		var destination = tree.CreateDirectory( "destination" );
 		Assert.Equal( 2, Command.Run( new[] { "-xf", archive, "--max-extract-bytes=1", "-C", destination } ) );
-		Assert.False( File.Exists( Path.Combine( destination, "large.txt" ) ) );
+		Assert.False( File.Exists( System.IO.Path.Combine( destination, "large.txt" ) ) );
 		var compressed = tree.PathFor( "limited.tar.gz" );
 		var source = tree.CreateDirectory( "source" );
-		File.WriteAllText( Path.Combine( source, "payload.txt" ), new string( 'x', 64 * 1024 ) );
+		File.WriteAllText( System.IO.Path.Combine( source, "payload.txt" ), new string( 'x', 64 * 1024 ) );
 		Assert.Equal( 0, Command.Run( new[] { "-czf", compressed, "-C", source, "payload.txt" } ) );
 		Assert.Equal( 2, Command.Run( new[] { "-tf", compressed, "--max-archive-bytes=1024" } ) );
 		var invalidGzip = tree.PathFor( "invalid.tar.gz" );
@@ -374,9 +374,9 @@ public sealed class CommandTests {
 	private static string NormalizeLines( string value ) => value.Replace( "\\", "/", StringComparison.Ordinal );
 
 	private sealed class TestTree : IDisposable {
-		private readonly string root = Path.Combine( Path.GetTempPath(), string.Concat( "icod-tar-tests-", Guid.NewGuid().ToString( "N" ) ) );
+		private readonly string root = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "icod-tar-tests-", Guid.NewGuid().ToString( "N" ) ) );
 		public TestTree() => Directory.CreateDirectory( root );
-		public string PathFor( string relative ) => Path.Combine( root, relative );
+		public string PathFor( string relative ) => System.IO.Path.Combine( root, relative );
 		public string CreateDirectory( string relative ) {
 			var path = PathFor( relative );
 			Directory.CreateDirectory( path );

@@ -56,7 +56,7 @@ public sealed class UsersCommandTests {
 	[Fact]
 	public async Task LinuxProviderReadsAStreamingUtmpRecord() {
 		if ( !OperatingSystem.IsLinux() ) return;
-		var path = Path.GetTempFileName();
+		var path = System.IO.Path.GetTempFileName();
 		try {
 			var bytes = new byte[ 384 ];
 			BitConverter.TryWriteBytes( bytes.AsSpan( 0, 2 ), (short)LoginRecordType.UserProcess );

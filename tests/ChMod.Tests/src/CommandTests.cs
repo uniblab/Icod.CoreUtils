@@ -103,7 +103,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task RecursivelyChangesDirectoryTree() {
 		var root = CreateTemporaryDirectory();
-		var child = Path.Combine( root, "child" );
+		var child = System.IO.Path.Combine( root, "child" );
 		await File.WriteAllTextAsync( child, "content" );
 		try {
 			var metadata = new TestMetadataProvider( SystemReadOnlyFileSystemProvider.Instance ) {
@@ -136,7 +136,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies preserve-root fails in E5 preflight before mutation.</summary>
 	[Fact]
 	public async Task PreserveRootRefusesFileSystemRoot() {
-		var root = Path.GetPathRoot( Path.GetFullPath( "." ) )!;
+		var root = System.IO.Path.GetPathRoot( System.IO.Path.GetFullPath( "." ) )!;
 		var mutation = new RecordingMutationProvider();
 		var error = new StringWriter();
 		var status = await ChModCommand.RunAsync(
@@ -204,7 +204,7 @@ public sealed class CommandTests {
 	public async Task WindowsDoesNotMapModeToReadOnlyAttribute() {
 		if ( !OperatingSystem.IsWindows() ) return;
 		var directory = CreateTemporaryDirectory();
-		var path = Path.Combine( directory, "file" );
+		var path = System.IO.Path.Combine( directory, "file" );
 		await File.WriteAllTextAsync( path, "content" );
 		try {
 			File.SetAttributes( path, FileAttributes.Normal );
@@ -263,7 +263,7 @@ public sealed class CommandTests {
 	}
 
 	private static string CreateTemporaryDirectory() {
-		var path = Path.Combine( Path.GetTempPath(), string.Concat( "Icod-ChMod-", Guid.NewGuid().ToString( "N" ) ) );
+		var path = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "Icod-ChMod-", Guid.NewGuid().ToString( "N" ) ) );
 		Directory.CreateDirectory( path );
 		return path;
 	}

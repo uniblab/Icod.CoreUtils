@@ -291,7 +291,7 @@ A lightweight finger program.
             {
                 await WriteOptionalFileAsync(
                     "Project",
-                    Path.Combine(account.HomeDirectory, ".project"),
+                    System.IO.Path.Combine(account.HomeDirectory, ".project"),
                     context
                 ).ConfigureAwait(false);
             }
@@ -300,7 +300,7 @@ A lightweight finger program.
             {
                 await WriteOptionalFileAsync(
                     "Plan",
-                    Path.Combine(account.HomeDirectory, ".plan"),
+                    System.IO.Path.Combine(account.HomeDirectory, ".plan"),
                     context
                 ).ConfigureAwait(false);
             }

@@ -366,7 +366,7 @@ public sealed class LinuxProcSystemMetricsProvider : IProcSystemMetricsProvider 
 		if ( !OperatingSystem.IsLinux() ) return ProcObservedValue<ProcUptimeInfo>.Missing( ProcObservationAvailability.Unsupported, "Container uptime with procps-ng semantics is available only on Linux." );
 		var system = await ObserveFileAsync( "uptime", ParseUptime, cancellationToken ).ConfigureAwait( false );
 		if ( !system.HasValue ) return system;
-		var init = await ObserveFileAsync( Path.Combine( "1", "stat" ), LinuxProcParsers.ParseProcessStat, cancellationToken ).ConfigureAwait( false );
+		var init = await ObserveFileAsync( System.IO.Path.Combine( "1", "stat" ), LinuxProcParsers.ParseProcessStat, cancellationToken ).ConfigureAwait( false );
 		if ( !init.HasValue ) return ProcObservedValue<ProcUptimeInfo>.Missing( init.Availability, init.Diagnostic );
 		try {
 			var ticksPerSecond = LinuxSystemNative.SysConf( LinuxSystemNative.ClockTicksPerSecond );
@@ -480,7 +480,7 @@ public sealed class LinuxProcSystemMetricsProvider : IProcSystemMetricsProvider 
 	}
 	private async Task<ProcObservedValue<T>> ObserveFileAsync<T>( string fileName, Func<string, T> parser, CancellationToken cancellationToken ) {
 		try {
-			var text = await File.ReadAllTextAsync( Path.Combine( this._procRoot, fileName ), cancellationToken ).ConfigureAwait( false );
+			var text = await File.ReadAllTextAsync( System.IO.Path.Combine( this._procRoot, fileName ), cancellationToken ).ConfigureAwait( false );
 			return ProcObservedValue<T>.Available( parser( text ), ProcObservationSource.LinuxProcfs, ObservationFidelity.Exact );
 		} catch ( UnauthorizedAccessException exception ) {
 			return ProcObservedValue<T>.Missing( ProcObservationAvailability.AccessDenied, exception.Message );

@@ -187,10 +187,10 @@ public sealed class SystemProcMatchSupplementProvider : IProcMatchSupplementProv
 			"Process security labels are available only where the host exposes them."
 		);
 		if ( OperatingSystem.IsLinux() ) {
-			var processRoot = Path.Combine( this.procRoot, process.ProcessId.ToString( CultureInfo.InvariantCulture ) );
+			var processRoot = System.IO.Path.Combine( this.procRoot, process.ProcessId.ToString( CultureInfo.InvariantCulture ) );
 			try {
 				var bytes = await File.ReadAllBytesAsync(
-					Path.Combine( processRoot, "environ" ),
+					System.IO.Path.Combine( processRoot, "environ" ),
 					cancellationToken
 				).ConfigureAwait( false );
 				environment = ProcObservedValue<IReadOnlyList<string>>.Available(
@@ -204,7 +204,7 @@ public sealed class SystemProcMatchSupplementProvider : IProcMatchSupplementProv
 				environment = ProcObservedValue<IReadOnlyList<string>>.Missing( ProcObservationAvailability.Unavailable, exception.Message );
 			}
 			try {
-				var text = await File.ReadAllTextAsync( Path.Combine( processRoot, "status" ), cancellationToken ).ConfigureAwait( false );
+				var text = await File.ReadAllTextAsync( System.IO.Path.Combine( processRoot, "status" ), cancellationToken ).ConfigureAwait( false );
 				statusFields = ProcObservedValue<IReadOnlyDictionary<string, string>>.Available(
 					ParseStatusFields( text ),
 					ProcObservationSource.LinuxProcfs,
@@ -216,7 +216,7 @@ public sealed class SystemProcMatchSupplementProvider : IProcMatchSupplementProv
 				statusFields = ProcObservedValue<IReadOnlyDictionary<string, string>>.Missing( ProcObservationAvailability.Unavailable, exception.Message );
 			}
 			try {
-				var text = await File.ReadAllTextAsync( Path.Combine( processRoot, "attr", "current" ), cancellationToken ).ConfigureAwait( false );
+				var text = await File.ReadAllTextAsync( System.IO.Path.Combine( processRoot, "attr", "current" ), cancellationToken ).ConfigureAwait( false );
 				securityLabel = ProcObservedValue<string>.Available(
 					text.Trim(),
 					ProcObservationSource.LinuxProcfs,
@@ -242,20 +242,20 @@ public sealed class SystemProcMatchSupplementProvider : IProcMatchSupplementProv
 		CancellationToken cancellationToken
 	) {
 		var result = new List<ProcMatchCandidate>();
-		var taskRoot = Path.Combine( this.procRoot, process.ProcessId.ToString( CultureInfo.InvariantCulture ), "task" );
+		var taskRoot = System.IO.Path.Combine( this.procRoot, process.ProcessId.ToString( CultureInfo.InvariantCulture ), "task" );
 		IEnumerable<string> directories;
 		try { directories = Directory.EnumerateDirectories( taskRoot ).ToArray(); }
 		catch ( IOException ) { return result; }
 		catch ( UnauthorizedAccessException ) { return result; }
 		foreach ( var directory in directories ) {
 			cancellationToken.ThrowIfCancellationRequested();
-			if ( !int.TryParse( Path.GetFileName( directory ), NumberStyles.None, CultureInfo.InvariantCulture, out var taskId ) || 0 >= taskId ) continue;
+			if ( !int.TryParse( System.IO.Path.GetFileName( directory ), NumberStyles.None, CultureInfo.InvariantCulture, out var taskId ) || 0 >= taskId ) continue;
 			try {
 				var stat = LinuxProcParsers.ParseProcessStat(
-					await File.ReadAllTextAsync( Path.Combine( directory, "stat" ), cancellationToken ).ConfigureAwait( false )
+					await File.ReadAllTextAsync( System.IO.Path.Combine( directory, "stat" ), cancellationToken ).ConfigureAwait( false )
 				);
 				var status = LinuxProcParsers.ParseProcessStatus(
-					await File.ReadAllTextAsync( Path.Combine( directory, "status" ), cancellationToken ).ConfigureAwait( false )
+					await File.ReadAllTextAsync( System.IO.Path.Combine( directory, "status" ), cancellationToken ).ConfigureAwait( false )
 				);
 				var identity = new ProcessIdentity(
 					taskId,

@@ -1,6 +1,4 @@
-extern alias IcodPath;
-
-using PathIndirectionInfo = IcodPath::Icod.Path.PathIndirectionInfo;
+using PathIndirectionInfo = Icod.Path.PathIndirectionInfo;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
 
 namespace Icod.CoreUtils.Shared.FileSystem.Metadata;

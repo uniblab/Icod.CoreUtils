@@ -1,3 +1,4 @@
+using Path = global::System.IO.Path;
 namespace Icod.CoreUtils.Shared.DirectoryListing;
 
 using System.Globalization;
@@ -285,7 +286,7 @@ internal sealed class DirectoryListingEngine {
 				if ( dot is not null ) {
 					entries.Add( dot );
 				}
-				var parentPath = Path.GetFullPath( Path.Combine( directory, ".." ) );
+				var parentPath = System.IO.Path.GetFullPath( System.IO.Path.Combine( directory, ".." ) );
 				var dotDot = await this.TryObserveAsync( parentPath, "..", false, this.options.DereferenceMode == DirectoryListingDereferenceMode.Always, cancellationToken ).ConfigureAwait( false );
 				if ( dotDot is not null ) {
 					entries.Add( dotDot );
@@ -299,7 +300,7 @@ internal sealed class DirectoryListingEngine {
 			};
 			foreach ( var path in Directory.EnumerateFileSystemEntries( directory, "*", enumeration ) ) {
 				cancellationToken.ThrowIfCancellationRequested();
-				var name = Path.GetFileName( path );
+				var name = System.IO.Path.GetFileName( path );
 				if ( this.ShouldIgnore( path, name ) ) {
 					continue;
 				}
@@ -396,7 +397,7 @@ internal sealed class DirectoryListingEngine {
 			DirectoryListingSort.None => ordered.ThenBy( _ => 0 ),
 			DirectoryListingSort.Size => ordered.ThenByDescending( GetLogicalSize ).ThenBy( entry => entry, ListingNameComparer.Instance ),
 			DirectoryListingSort.Time => ordered.ThenByDescending( this.GetSelectedTime ).ThenBy( entry => entry, ListingNameComparer.Instance ),
-			DirectoryListingSort.Extension => ordered.ThenBy( entry => Path.GetExtension( entry.Name ), StringComparer.Create( CultureInfo.CurrentCulture, false ) ).ThenBy( entry => entry, ListingNameComparer.Instance ),
+			DirectoryListingSort.Extension => ordered.ThenBy( entry => System.IO.Path.GetExtension( entry.Name ), StringComparer.Create( CultureInfo.CurrentCulture, false ) ).ThenBy( entry => entry, ListingNameComparer.Instance ),
 			DirectoryListingSort.Version => ordered.ThenBy( entry => entry, VersionListingComparer.Instance ),
 			DirectoryListingSort.Width => ordered.ThenByDescending( entry => DisplayWidth.Measure( entry.Name, this.options.TabSize ) ).ThenBy( entry => entry, ListingNameComparer.Instance ),
 			_ => ordered.ThenBy( entry => entry, ListingNameComparer.Instance )
@@ -656,7 +657,7 @@ internal sealed class DirectoryListingEngine {
 
 	private static bool TargetExists( string path, string target ) {
 		try {
-			var resolved = Path.IsPathRooted( target ) ? target : Path.Combine( Path.GetDirectoryName( path ) ?? string.Empty, target );
+			var resolved = System.IO.Path.IsPathRooted( target ) ? target : System.IO.Path.Combine( System.IO.Path.GetDirectoryName( path ) ?? string.Empty, target );
 			return File.Exists( resolved ) || Directory.Exists( resolved );
 		} catch ( Exception exception ) when ( exception is IOException or ArgumentException or NotSupportedException or System.Security.SecurityException ) {
 			return false;
@@ -669,7 +670,7 @@ internal sealed class DirectoryListingEngine {
 			return true;
 		}
 		if ( OperatingSystem.IsWindows() ) {
-			var extension = Path.GetExtension( entry.Name );
+			var extension = System.IO.Path.GetExtension( entry.Name );
 			return extension.Equals( ".exe", StringComparison.OrdinalIgnoreCase )
 				|| extension.Equals( ".com", StringComparison.OrdinalIgnoreCase )
 				|| extension.Equals( ".bat", StringComparison.OrdinalIgnoreCase )
@@ -836,7 +837,7 @@ internal sealed class DirectoryListingEngine {
 
 	private static string GetIdentityKey( ListingEntry entry ) {
 		var identity = entry.Metadata.EntryIdentity.ToString();
-		return string.IsNullOrWhiteSpace( identity ) ? Path.GetFullPath( entry.Path ) : identity;
+		return string.IsNullOrWhiteSpace( identity ) ? System.IO.Path.GetFullPath( entry.Path ) : identity;
 	}
 
 	private static string QuoteDiagnostic( string value ) {

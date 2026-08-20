@@ -360,8 +360,8 @@ internal sealed class PatchTargetContent : IAsyncDisposable {
 	}
 
 	private static string CreateTemporaryPath() {
-		return Path.Combine(
-			Path.GetTempPath(),
+		return System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			string.Concat( "icod-patch-target-", Guid.NewGuid().ToString( "N" ), ".tmp" )
 		);
 	}

@@ -359,7 +359,7 @@ public sealed class CommandTests {
 	public async Task AppliesDiffutilsEdScripts(
 		string fixtureName
 	) {
-		var fixtureDirectory = Path.Combine(
+		var fixtureDirectory = System.IO.Path.Combine(
 			AppContext.BaseDirectory,
 			"fixtures",
 			fixtureName
@@ -367,15 +367,15 @@ public sealed class CommandTests {
 		var inputPath = CreateTemporaryPath();
 		var outputPath = CreateTemporaryPath();
 		try {
-			File.Copy( Path.Combine( fixtureDirectory, "original.txt" ), inputPath, overwrite: true );
-			var script = await File.ReadAllTextAsync( Path.Combine( fixtureDirectory, "change.ed" ) );
+			File.Copy( System.IO.Path.Combine( fixtureDirectory, "original.txt" ), inputPath, overwrite: true );
+			var script = await File.ReadAllTextAsync( System.IO.Path.Combine( fixtureDirectory, "change.ed" ) );
 			script = string.Concat( script.TrimEnd( '\r', '\n' ), "\nw ", outputPath, "\nQ\n" );
 			var result = await RunAsync( script, "-s", inputPath );
 
 			Assert.Equal( 0, result.Status );
 			Assert.Equal( string.Empty, result.StandardError );
 			Assert.Equal(
-				await File.ReadAllLinesAsync( Path.Combine( fixtureDirectory, "expected.txt" ) ),
+				await File.ReadAllLinesAsync( System.IO.Path.Combine( fixtureDirectory, "expected.txt" ) ),
 				await File.ReadAllLinesAsync( outputPath )
 			);
 		} finally {
@@ -414,8 +414,8 @@ public sealed class CommandTests {
 		);
 	}
 
-	private static string CreateTemporaryPath() => Path.Combine(
-		Path.GetTempPath(),
+	private static string CreateTemporaryPath() => System.IO.Path.Combine(
+		System.IO.Path.GetTempPath(),
 		string.Concat( ".icod-ed-test-", Guid.NewGuid().ToString( "N" ) )
 	);
 

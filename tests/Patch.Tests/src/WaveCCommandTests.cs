@@ -13,8 +13,8 @@ public sealed class WaveCCommandTests {
 		try {
 			var result = await RunAsync( directory, new[] { "-b", "target.txt", "change.patch" } );
 			Assert.Equal( 0, result.Status );
-			Assert.Equal( "new\n", await File.ReadAllTextAsync( Path.Combine( directory, "target.txt" ) ) );
-			Assert.Equal( "old\n", await File.ReadAllTextAsync( Path.Combine( directory, "target.txt.orig" ) ) );
+			Assert.Equal( "new\n", await File.ReadAllTextAsync( System.IO.Path.Combine( directory, "target.txt" ) ) );
+			Assert.Equal( "old\n", await File.ReadAllTextAsync( System.IO.Path.Combine( directory, "target.txt.orig" ) ) );
 		} finally {
 			Directory.Delete( directory, recursive: true );
 		}
@@ -30,7 +30,7 @@ public sealed class WaveCCommandTests {
 				new[] { "-b", "-V", "numbered", "target.txt", "change.patch" }
 			);
 			Assert.Equal( 0, result.Status );
-			Assert.Equal( "old\n", await File.ReadAllTextAsync( Path.Combine( directory, "target.txt.~1~" ) ) );
+			Assert.Equal( "old\n", await File.ReadAllTextAsync( System.IO.Path.Combine( directory, "target.txt.~1~" ) ) );
 		} finally {
 			Directory.Delete( directory, recursive: true );
 		}
@@ -40,15 +40,15 @@ public sealed class WaveCCommandTests {
 	[Fact]
 	public async Task BackupPrefixHonorsExplicitSuffix() {
 		var directory = await CreatePatchDirectoryAsync();
-		Directory.CreateDirectory( Path.Combine( directory, "backups" ) );
+		Directory.CreateDirectory( System.IO.Path.Combine( directory, "backups" ) );
 		try {
 			var result = await RunAsync(
 				directory,
-				new[] { "-b", "-B", string.Concat( "backups", Path.DirectorySeparatorChar ), "-z", ".ignored", "target.txt", "change.patch" }
+				new[] { "-b", "-B", string.Concat( "backups", System.IO.Path.DirectorySeparatorChar ), "-z", ".ignored", "target.txt", "change.patch" }
 			);
 			Assert.Equal( 0, result.Status );
-			Assert.Equal( "old\n", await File.ReadAllTextAsync( Path.Combine( directory, "backups", "target.txt.ignored" ) ) );
-			Assert.False( File.Exists( Path.Combine( directory, "backups", "target.txt" ) ) );
+			Assert.Equal( "old\n", await File.ReadAllTextAsync( System.IO.Path.Combine( directory, "backups", "target.txt.ignored" ) ) );
+			Assert.False( File.Exists( System.IO.Path.Combine( directory, "backups", "target.txt" ) ) );
 		} finally {
 			Directory.Delete( directory, recursive: true );
 		}
@@ -58,7 +58,7 @@ public sealed class WaveCCommandTests {
 	[Fact]
 	public async Task OutputModeDoesNotBackUpInputOrOutput() {
 		var directory = await CreatePatchDirectoryAsync();
-		var outputPath = Path.Combine( directory, "result.txt" );
+		var outputPath = System.IO.Path.Combine( directory, "result.txt" );
 		await File.WriteAllTextAsync( outputPath, "previous\n" );
 		try {
 			var result = await RunAsync(
@@ -66,10 +66,10 @@ public sealed class WaveCCommandTests {
 				new[] { "-b", "-o", "result.txt", "target.txt", "change.patch" }
 			);
 			Assert.Equal( 0, result.Status );
-			Assert.Equal( "old\n", await File.ReadAllTextAsync( Path.Combine( directory, "target.txt" ) ) );
+			Assert.Equal( "old\n", await File.ReadAllTextAsync( System.IO.Path.Combine( directory, "target.txt" ) ) );
 			Assert.Equal( "new\n", await File.ReadAllTextAsync( outputPath ) );
 			Assert.False( File.Exists( string.Concat( outputPath, ".orig" ) ) );
-			Assert.False( File.Exists( Path.Combine( directory, "target.txt.orig" ) ) );
+			Assert.False( File.Exists( System.IO.Path.Combine( directory, "target.txt.orig" ) ) );
 		} finally {
 			Directory.Delete( directory, recursive: true );
 		}
@@ -85,8 +85,8 @@ public sealed class WaveCCommandTests {
 				new[] { "--dry-run", "-b", "target.txt", "change.patch" }
 			);
 			Assert.Equal( 0, result.Status );
-			Assert.Equal( "old\n", await File.ReadAllTextAsync( Path.Combine( directory, "target.txt" ) ) );
-			Assert.False( File.Exists( Path.Combine( directory, "target.txt.orig" ) ) );
+			Assert.Equal( "old\n", await File.ReadAllTextAsync( System.IO.Path.Combine( directory, "target.txt" ) ) );
+			Assert.False( File.Exists( System.IO.Path.Combine( directory, "target.txt.orig" ) ) );
 			Assert.Contains( "dry run", result.Error, StringComparison.OrdinalIgnoreCase );
 		} finally {
 			Directory.Delete( directory, recursive: true );
@@ -99,7 +99,7 @@ public sealed class WaveCCommandTests {
 		var directory = await CreatePatchDirectoryAsync(
 			"--- target.txt\n+++ target.txt\n@@ -1 +1 @@\n-missing\n+new\n"
 		);
-		var target = Path.Combine( directory, "target.txt" );
+		var target = System.IO.Path.Combine( directory, "target.txt" );
 		var originalTime = new DateTimeOffset( 2002, 3, 4, 5, 6, 7, TimeSpan.Zero );
 		File.SetLastWriteTimeUtc( target, originalTime.UtcDateTime );
 		try {
@@ -110,7 +110,7 @@ public sealed class WaveCCommandTests {
 			Assert.Equal( 1, result.Status );
 			Assert.Equal( "old\n", await File.ReadAllTextAsync( target ) );
 			Assert.Equal( originalTime.UtcDateTime, File.GetLastWriteTimeUtc( target ) );
-			var reject = await File.ReadAllTextAsync( Path.Combine( directory, "target.txt.rej" ) );
+			var reject = await File.ReadAllTextAsync( System.IO.Path.Combine( directory, "target.txt.rej" ) );
 			Assert.StartsWith( "--- ", reject, StringComparison.Ordinal );
 			Assert.Contains( "@@ -1 +1 @@", reject, StringComparison.Ordinal );
 		} finally {
@@ -122,14 +122,14 @@ public sealed class WaveCCommandTests {
 	[Fact]
 	public async Task ReverseRejectSwapsHunkSides() {
 		var directory = await CreatePatchDirectoryAsync();
-		await File.WriteAllTextAsync( Path.Combine( directory, "target.txt" ), "other\n" );
+		await File.WriteAllTextAsync( System.IO.Path.Combine( directory, "target.txt" ), "other\n" );
 		try {
 			var result = await RunAsync(
 				directory,
 				new[] { "-R", "-f", "target.txt", "change.patch" }
 			);
 			Assert.Equal( 1, result.Status );
-			var reject = await File.ReadAllTextAsync( Path.Combine( directory, "target.txt.rej" ) );
+			var reject = await File.ReadAllTextAsync( System.IO.Path.Combine( directory, "target.txt.rej" ) );
 			Assert.Contains( "-new\n+old\n", reject, StringComparison.Ordinal );
 		} finally {
 			Directory.Delete( directory, recursive: true );
@@ -148,8 +148,8 @@ public sealed class WaveCCommandTests {
 				new[] { "-f", "-r", "-", "target.txt", "change.patch" }
 			);
 			Assert.Equal( 1, result.Status );
-			Assert.False( File.Exists( Path.Combine( directory, "-" ) ) );
-			Assert.False( File.Exists( Path.Combine( directory, "target.txt.rej" ) ) );
+			Assert.False( File.Exists( System.IO.Path.Combine( directory, "-" ) ) );
+			Assert.False( File.Exists( System.IO.Path.Combine( directory, "target.txt.rej" ) ) );
 		} finally {
 			Directory.Delete( directory, recursive: true );
 		}
@@ -159,7 +159,7 @@ public sealed class WaveCCommandTests {
 	[Fact]
 	public async Task ForwardOnlySkipDoesNotRewriteOrBackUpTarget() {
 		var directory = await CreatePatchDirectoryAsync();
-		var target = Path.Combine( directory, "target.txt" );
+		var target = System.IO.Path.Combine( directory, "target.txt" );
 		await File.WriteAllTextAsync( target, "new\n" );
 		var originalTime = new DateTimeOffset( 2003, 4, 5, 6, 7, 8, TimeSpan.Zero );
 		File.SetLastWriteTimeUtc( target, originalTime.UtcDateTime );
@@ -182,8 +182,8 @@ public sealed class WaveCCommandTests {
 	[Fact]
 	public async Task ForwardOnlySkipLeavesAlternateOutputEmpty() {
 		var directory = await CreatePatchDirectoryAsync();
-		var target = Path.Combine( directory, "target.txt" );
-		var output = Path.Combine( directory, "result.txt" );
+		var target = System.IO.Path.Combine( directory, "target.txt" );
+		var output = System.IO.Path.Combine( directory, "result.txt" );
 		await File.WriteAllTextAsync( target, "new\n" );
 		try {
 			var result = await RunAsync(
@@ -211,7 +211,7 @@ public sealed class WaveCCommandTests {
 			);
 			Assert.Equal( 0, result.Status );
 			Assert.Equal( "new\n", Encoding.UTF8.GetString( binaryOutput.ToArray() ) );
-			Assert.Equal( "old\n", await File.ReadAllTextAsync( Path.Combine( directory, "target.txt" ) ) );
+			Assert.Equal( "old\n", await File.ReadAllTextAsync( System.IO.Path.Combine( directory, "target.txt" ) ) );
 		} finally {
 			Directory.Delete( directory, recursive: true );
 		}
@@ -230,7 +230,7 @@ public sealed class WaveCCommandTests {
 			);
 			Assert.Equal( 2, result.Status );
 			Assert.Contains( "broken output", result.Error, StringComparison.OrdinalIgnoreCase );
-			Assert.Equal( "old\n", await File.ReadAllTextAsync( Path.Combine( directory, "target.txt" ) ) );
+			Assert.Equal( "old\n", await File.ReadAllTextAsync( System.IO.Path.Combine( directory, "target.txt" ) ) );
 		} finally {
 			Directory.Delete( directory, recursive: true );
 		}
@@ -240,7 +240,7 @@ public sealed class WaveCCommandTests {
 	[Fact]
 	public async Task InteractiveReversePromptMayBeAccepted() {
 		var directory = await CreatePatchDirectoryAsync();
-		await File.WriteAllTextAsync( Path.Combine( directory, "target.txt" ), "new\n" );
+		await File.WriteAllTextAsync( System.IO.Path.Combine( directory, "target.txt" ), "new\n" );
 		try {
 			var result = await RunAsync(
 				directory,
@@ -248,7 +248,7 @@ public sealed class WaveCCommandTests {
 				promptInput: "yes\n"
 			);
 			Assert.Equal( 0, result.Status );
-			Assert.Equal( "old\n", await File.ReadAllTextAsync( Path.Combine( directory, "target.txt" ) ) );
+			Assert.Equal( "old\n", await File.ReadAllTextAsync( System.IO.Path.Combine( directory, "target.txt" ) ) );
 			Assert.Contains( "Assume -R?", result.Error, StringComparison.Ordinal );
 		} finally {
 			Directory.Delete( directory, recursive: true );
@@ -300,7 +300,7 @@ public sealed class WaveCCommandTests {
 	[Fact]
 	public async Task DefaultReplacementDoesNotPreserveOldModificationTime() {
 		var directory = await CreatePatchDirectoryAsync();
-		var target = Path.Combine( directory, "target.txt" );
+		var target = System.IO.Path.Combine( directory, "target.txt" );
 		var oldTime = new DateTimeOffset( 2001, 2, 3, 4, 5, 6, TimeSpan.Zero );
 		File.SetLastWriteTimeUtc( target, oldTime.UtcDateTime );
 		try {
@@ -325,7 +325,7 @@ public sealed class WaveCCommandTests {
 				"@@ -1 +1 @@\n-old\n+new\n"
 			)
 		);
-		var target = Path.Combine( directory, "target.txt" );
+		var target = System.IO.Path.Combine( directory, "target.txt" );
 		var sourceTime = DateTimeOffset.Parse( sourceStamp, System.Globalization.CultureInfo.InvariantCulture );
 		var destinationTime = DateTimeOffset.Parse( destinationStamp, System.Globalization.CultureInfo.InvariantCulture );
 		File.SetLastWriteTimeUtc( target, sourceTime.UtcDateTime );
@@ -346,7 +346,7 @@ public sealed class WaveCCommandTests {
 			return;
 		}
 		var directory = await CreatePatchDirectoryAsync();
-		var target = Path.Combine( directory, "target.txt" );
+		var target = System.IO.Path.Combine( directory, "target.txt" );
 		const UnixFileMode expected = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.GroupRead;
 		File.SetUnixFileMode( target, expected );
 		try {
@@ -365,7 +365,7 @@ public sealed class WaveCCommandTests {
 			return;
 		}
 		var directory = await CreatePatchDirectoryAsync();
-		var output = Path.Combine( directory, "result.txt" );
+		var output = System.IO.Path.Combine( directory, "result.txt" );
 		try {
 			var result = await RunAsync(
 				directory,
@@ -385,8 +385,8 @@ public sealed class WaveCCommandTests {
 	[Fact]
 	public async Task OutputSymbolicLinkRequiresFollowOption() {
 		var directory = await CreatePatchDirectoryAsync();
-		var actualOutput = Path.Combine( directory, "actual-output.txt" );
-		var linkOutput = Path.Combine( directory, "result-link.txt" );
+		var actualOutput = System.IO.Path.Combine( directory, "actual-output.txt" );
+		var linkOutput = System.IO.Path.Combine( directory, "result-link.txt" );
 		await File.WriteAllTextAsync( actualOutput, "previous\n" );
 		try {
 			try {
@@ -433,13 +433,13 @@ public sealed class WaveCCommandTests {
 	private static async Task<string> CreatePatchDirectoryAsync(
 		string patchText = "--- target.txt\n+++ target.txt\n@@ -1 +1 @@\n-old\n+new\n"
 	) {
-		var directory = Path.Combine(
-			Path.GetTempPath(),
+		var directory = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			string.Concat( "icod-patch-p8-", Guid.NewGuid().ToString( "N" ) )
 		);
 		Directory.CreateDirectory( directory );
-		await File.WriteAllTextAsync( Path.Combine( directory, "target.txt" ), "old\n" );
-		await File.WriteAllTextAsync( Path.Combine( directory, "change.patch" ), patchText );
+		await File.WriteAllTextAsync( System.IO.Path.Combine( directory, "target.txt" ), "old\n" );
+		await File.WriteAllTextAsync( System.IO.Path.Combine( directory, "change.patch" ), patchText );
 		return directory;
 	}
 

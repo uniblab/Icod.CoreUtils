@@ -72,7 +72,7 @@ public static class Command {
 			}
 			var status = 0;
 			foreach ( var source in sources ) {
-				var linkPath = destinationIsDirectory ? Path.Combine( destination, Basename( source ) ) : destination;
+				var linkPath = destinationIsDirectory ? System.IO.Path.Combine( destination, Basename( source ) ) : destination;
 				if ( !await CreateOneAsync( source, linkPath, parsing.Options, context, mutationProvider ).ConfigureAwait( false ) ) status = 1;
 			}
 			return status;
@@ -171,8 +171,8 @@ public static class Command {
 	private static bool DestinationExists( string path ) { try { _ = File.GetAttributes( path ); return true; } catch ( FileNotFoundException ) { return false; } catch ( DirectoryNotFoundException ) { return false; } }
 	private static bool IsDirectoryTarget( string path, bool noDereference ) { try { var info = new DirectoryInfo( path ); return info.Exists && !( noDereference && info.LinkTarget is not null ); } catch { return false; } }
 	private static bool TargetIsDirectory( string path ) { try { return File.GetAttributes( path ).HasFlag( FileAttributes.Directory ); } catch { return false; } }
-	private static string Basename( string path ) => Path.GetFileName( path.TrimEnd( Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar ) );
-	private static string MakeRelativeTarget( string source, string linkPath ) { var sourceFull = Path.GetFullPath( source ); var parent = Path.GetDirectoryName( Path.GetFullPath( linkPath ) ) ?? Directory.GetCurrentDirectory(); return Path.GetRelativePath( parent, sourceFull ); }
+	private static string Basename( string path ) => System.IO.Path.GetFileName( path.TrimEnd( System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar ) );
+	private static string MakeRelativeTarget( string source, string linkPath ) { var sourceFull = System.IO.Path.GetFullPath( source ); var parent = System.IO.Path.GetDirectoryName( System.IO.Path.GetFullPath( linkPath ) ) ?? Directory.GetCurrentDirectory(); return System.IO.Path.GetRelativePath( parent, sourceFull ); }
 	private static string ChooseBackupName( string path, string control, string suffix ) { if ( control is "numbered" or "t" || control is "existing" or "nil" && File.Exists( string.Concat( path, ".~1~" ) ) ) { for ( var n = 1; ; n++ ) { var candidate = string.Concat( path, ".~", n.ToString( System.Globalization.CultureInfo.InvariantCulture ), "~" ); if ( !DestinationExists( candidate ) ) return candidate; } } return string.Concat( path, suffix ); }
 	private static void MovePhysical( string source, string destination ) { if ( DestinationExists( destination ) ) throw new IOException( "backup file already exists" ); var attributes = File.GetAttributes( source ); if ( attributes.HasFlag( FileAttributes.Directory ) ) Directory.Move( source, destination ); else File.Move( source, destination ); }
 	private static string Describe( FileSystemMutationResult result ) => result.ErrorCode switch { FileSystemMutationErrorCode.AlreadyExists => "File exists", FileSystemMutationErrorCode.NotFound or FileSystemMutationErrorCode.ParentNotFound => "No such file or directory", FileSystemMutationErrorCode.CrossDevice => "Invalid cross-device link", FileSystemMutationErrorCode.WrongObjectKind => "hard link not allowed for directory", FileSystemMutationErrorCode.AccessDenied => "Permission denied", FileSystemMutationErrorCode.PrivilegeRequired => "Operation not permitted", _ => result.Message ?? "Input/output error" };

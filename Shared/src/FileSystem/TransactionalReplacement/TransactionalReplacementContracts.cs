@@ -1,3 +1,4 @@
+using Path = global::System.IO.Path;
 using System.Collections.ObjectModel;
 using Icod.CoreUtils.Shared.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
@@ -192,8 +193,8 @@ public sealed class TransactionalReplacementBackupPolicy {
 			throw new ArgumentOutOfRangeException( nameof( MaximumNumberedBackup ) );
 		}
 		if ( string.IsNullOrEmpty( SimpleSuffix )
-			|| 0 <= SimpleSuffix.IndexOf( Path.DirectorySeparatorChar )
-			|| 0 <= SimpleSuffix.IndexOf( Path.AltDirectorySeparatorChar ) ) {
+			|| 0 <= SimpleSuffix.IndexOf( System.IO.Path.DirectorySeparatorChar )
+			|| 0 <= SimpleSuffix.IndexOf( System.IO.Path.AltDirectorySeparatorChar ) ) {
 			throw new ArgumentException( "The simple backup suffix must be a nonempty filename suffix.", nameof( SimpleSuffix ) );
 		}
 		if ( TransactionalReplacementBackupRetention.RetainAfterSuccess == Retention

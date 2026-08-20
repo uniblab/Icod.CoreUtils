@@ -48,8 +48,8 @@ public sealed class PathTraversalRuleSelectorTests {
 	[Fact]
 	public void SupportsAllDocumentedMatchingScopes() {
 		var entry = CreateEntry(
-			Path.Combine( "src", "generated", "file.g.cs" ),
-			Path.Combine( "operand", "src", "generated", "file.g.cs" ),
+			System.IO.Path.Combine( "src", "generated", "file.g.cs" ),
+			System.IO.Path.Combine( "operand", "src", "generated", "file.g.cs" ),
 			FileSystemEntryKind.File
 		);
 		var accessPath = entry.AccessPath;
@@ -57,7 +57,7 @@ public sealed class PathTraversalRuleSelectorTests {
 		Assert.False( SelectsYield( entry, "*.g.cs", PathMatchScope.BaseName, PathTraversalRuleAction.Exclude ) );
 		Assert.False( SelectsYield(
 			entry,
-			Path.Combine( "src", "**", "*.g.cs" ),
+			System.IO.Path.Combine( "src", "**", "*.g.cs" ),
 			PathMatchScope.RootRelativePath,
 			PathTraversalRuleAction.Exclude
 		) );
@@ -69,7 +69,7 @@ public sealed class PathTraversalRuleSelectorTests {
 		) );
 		Assert.False( SelectsYield(
 			entry,
-			Path.Combine( "generated", "*.g.cs" ),
+			System.IO.Path.Combine( "generated", "*.g.cs" ),
 			PathMatchScope.MatchingNameSuffix,
 			PathTraversalRuleAction.Exclude
 		) );
@@ -80,7 +80,7 @@ public sealed class PathTraversalRuleSelectorTests {
 	/// </summary>
 	[Fact]
 	public void TrailingSeparatorRuleMatchesDirectoriesOnly() {
-		var pattern = string.Concat( "build", Path.DirectorySeparatorChar );
+		var pattern = string.Concat( "build", System.IO.Path.DirectorySeparatorChar );
 		var selector = new PathTraversalRuleSelector(
 			new[] {
 				new PathTraversalFilterRule(
@@ -134,8 +134,8 @@ public sealed class PathTraversalRuleSelectorTests {
 		string displayPath,
 		FileSystemEntryKind kind
 	) {
-		var rootPath = Path.Combine(
-			Path.GetTempPath(),
+		var rootPath = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			string.Concat( "icod-e1-selector-", Guid.NewGuid().ToString( "N" ) )
 		);
 		var root = new PathTraversalRoot(
@@ -146,10 +146,10 @@ public sealed class PathTraversalRuleSelectorTests {
 			"operand",
 			PathTraversalRootKind.Literal
 		);
-		var name = Path.GetFileName( relativePath );
+		var name = System.IO.Path.GetFileName( relativePath );
 		return new PathTraversalEntry(
 			root,
-			Path.Combine( rootPath, relativePath ),
+			System.IO.Path.Combine( rootPath, relativePath ),
 			displayPath,
 			relativePath,
 			name,

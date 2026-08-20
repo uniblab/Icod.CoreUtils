@@ -262,7 +262,7 @@ public sealed class CompletionGateDTests {
 			Assert.False( File.Exists( path ) );
 			Assert.Throws<ArgumentException>(
 				() => workspace.CreateFile(
-					Path.Combine( "nested", "record-XXXXXXXX.bin" )
+					System.IO.Path.Combine( "nested", "record-XXXXXXXX.bin" )
 				)
 			);
 			Assert.Throws<ArgumentException>(

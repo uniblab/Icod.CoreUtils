@@ -11,16 +11,16 @@ public sealed class ReparsePointTests {
 	[Fact]
 	public async Task RecursiveRemovalDoesNotTraverseDirectorySymbolicLink() {
 		var root = CreateTemporaryDirectory();
-		var removalRoot = Directory.CreateDirectory( Path.Combine( root, "remove" ) ).FullName;
-		var target = Directory.CreateDirectory( Path.Combine( root, "target" ) ).FullName;
-		var link = Path.Combine( removalRoot, "link" );
-		await File.WriteAllTextAsync( Path.Combine( target, "sentinel" ), "target" );
+		var removalRoot = Directory.CreateDirectory( System.IO.Path.Combine( root, "remove" ) ).FullName;
+		var target = Directory.CreateDirectory( System.IO.Path.Combine( root, "target" ) ).FullName;
+		var link = System.IO.Path.Combine( removalRoot, "link" );
+		await File.WriteAllTextAsync( System.IO.Path.Combine( target, "sentinel" ), "target" );
 		try {
 			if ( !await TryCreateDirectorySymbolicLinkAsync( link, target ) ) return;
 			var status = await RunAsync( new[] { "--recursive", removalRoot } );
 			Assert.Equal( CommandExitCodes.Success, status );
 			Assert.False( Directory.Exists( removalRoot ) );
-			Assert.True( File.Exists( Path.Combine( target, "sentinel" ) ) );
+			Assert.True( File.Exists( System.IO.Path.Combine( target, "sentinel" ) ) );
 		} finally {
 			RemovePhysicalReparsePoint( link );
 			DeleteTree( root );
@@ -31,15 +31,15 @@ public sealed class ReparsePointTests {
 	[Fact]
 	public async Task RemovesDirectorySymbolicLinkWithoutFollowingTarget() {
 		var root = CreateTemporaryDirectory();
-		var target = Directory.CreateDirectory( Path.Combine( root, "target" ) ).FullName;
-		var link = Path.Combine( root, "link" );
-		await File.WriteAllTextAsync( Path.Combine( target, "sentinel" ), "target" );
+		var target = Directory.CreateDirectory( System.IO.Path.Combine( root, "target" ) ).FullName;
+		var link = System.IO.Path.Combine( root, "link" );
+		await File.WriteAllTextAsync( System.IO.Path.Combine( target, "sentinel" ), "target" );
 		try {
 			if ( !await TryCreateDirectorySymbolicLinkAsync( link, target ) ) return;
 			var status = await RunAsync( new[] { link } );
 			Assert.Equal( CommandExitCodes.Success, status );
 			Assert.False( PathObjectExists( link ) );
-			Assert.True( File.Exists( Path.Combine( target, "sentinel" ) ) );
+			Assert.True( File.Exists( System.IO.Path.Combine( target, "sentinel" ) ) );
 		} finally {
 			RemovePhysicalReparsePoint( link );
 			DeleteTree( root );
@@ -51,15 +51,15 @@ public sealed class ReparsePointTests {
 	public async Task RemovesWindowsJunctionWithoutFollowingTarget() {
 		if ( !OperatingSystem.IsWindows() ) return;
 		var root = CreateTemporaryDirectory();
-		var target = Directory.CreateDirectory( Path.Combine( root, "target" ) ).FullName;
-		var junction = Path.Combine( root, "junction" );
-		await File.WriteAllTextAsync( Path.Combine( target, "sentinel" ), "target" );
+		var target = Directory.CreateDirectory( System.IO.Path.Combine( root, "target" ) ).FullName;
+		var junction = System.IO.Path.Combine( root, "junction" );
+		await File.WriteAllTextAsync( System.IO.Path.Combine( target, "sentinel" ), "target" );
 		try {
 			if ( !await TryCreateJunctionAsync( junction, target ) ) return;
 			var status = await RunAsync( new[] { junction } );
 			Assert.Equal( CommandExitCodes.Success, status );
 			Assert.False( PathObjectExists( junction ) );
-			Assert.True( File.Exists( Path.Combine( target, "sentinel" ) ) );
+			Assert.True( File.Exists( System.IO.Path.Combine( target, "sentinel" ) ) );
 		} finally {
 			RemovePhysicalReparsePoint( junction );
 			DeleteTree( root );
@@ -71,16 +71,16 @@ public sealed class ReparsePointTests {
 	public async Task RecursiveRemovalDoesNotTraverseWindowsJunction() {
 		if ( !OperatingSystem.IsWindows() ) return;
 		var root = CreateTemporaryDirectory();
-		var removalRoot = Directory.CreateDirectory( Path.Combine( root, "remove" ) ).FullName;
-		var target = Directory.CreateDirectory( Path.Combine( root, "target" ) ).FullName;
-		var junction = Path.Combine( removalRoot, "junction" );
-		await File.WriteAllTextAsync( Path.Combine( target, "sentinel" ), "target" );
+		var removalRoot = Directory.CreateDirectory( System.IO.Path.Combine( root, "remove" ) ).FullName;
+		var target = Directory.CreateDirectory( System.IO.Path.Combine( root, "target" ) ).FullName;
+		var junction = System.IO.Path.Combine( removalRoot, "junction" );
+		await File.WriteAllTextAsync( System.IO.Path.Combine( target, "sentinel" ), "target" );
 		try {
 			if ( !await TryCreateJunctionAsync( junction, target ) ) return;
 			var status = await RunAsync( new[] { "--recursive", removalRoot } );
 			Assert.Equal( CommandExitCodes.Success, status );
 			Assert.False( Directory.Exists( removalRoot ) );
-			Assert.True( File.Exists( Path.Combine( target, "sentinel" ) ) );
+			Assert.True( File.Exists( System.IO.Path.Combine( target, "sentinel" ) ) );
 		} finally {
 			RemovePhysicalReparsePoint( junction );
 			DeleteTree( root );
@@ -128,7 +128,7 @@ public sealed class ReparsePointTests {
 	}
 
 	private static string CreateTemporaryDirectory() {
-		var path = Path.Combine( Path.GetTempPath(), string.Concat( "Icod-Rm-Reparse-", Guid.NewGuid().ToString( "N" ) ) );
+		var path = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "Icod-Rm-Reparse-", Guid.NewGuid().ToString( "N" ) ) );
 		Directory.CreateDirectory( path );
 		return path;
 	}

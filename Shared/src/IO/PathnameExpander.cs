@@ -1,3 +1,4 @@
+using Path = global::System.IO.Path;
 namespace Icod.CoreUtils.Shared.IO;
 
 using System.IO.Enumeration;
@@ -93,10 +94,10 @@ public static class PathnameExpander {
 		var normalized = NormalizeSeparators(
 			operand
 		);
-		var rooted = Path.IsPathRooted(
+		var rooted = System.IO.Path.IsPathRooted(
 			normalized
 		);
-		var root = Path.GetPathRoot(
+		var root = System.IO.Path.GetPathRoot(
 			normalized
 		) ?? string.Empty;
 		var remainder = rooted
@@ -106,7 +107,7 @@ public static class PathnameExpander {
 			: normalized
 		;
 		var segments = remainder.Split(
-			Path.DirectorySeparatorChar,
+			System.IO.Path.DirectorySeparatorChar,
 			StringSplitOptions.RemoveEmptyEntries
 		);
 		if ( 0 == segments.Length ) {
@@ -121,7 +122,7 @@ public static class PathnameExpander {
 			return Array.Empty<string>();
 		}
 
-		var baseDirectory = Path.GetFullPath(
+		var baseDirectory = System.IO.Path.GetFullPath(
 			options.BaseDirectory
 		);
 		var searchRoot = rooted
@@ -133,7 +134,7 @@ public static class PathnameExpander {
 			index < firstWildcard;
 			index++
 		) {
-			searchRoot = Path.Combine(
+			searchRoot = System.IO.Path.Combine(
 				searchRoot,
 				segments[ index ]
 			);
@@ -166,7 +167,7 @@ public static class PathnameExpander {
 		var preserveDotPrefix = operand.StartsWith(
 			string.Concat(
 				".",
-				Path.DirectorySeparatorChar
+				System.IO.Path.DirectorySeparatorChar
 			),
 			StringComparison.Ordinal
 		) || operand.StartsWith(
@@ -175,12 +176,12 @@ public static class PathnameExpander {
 		);
 		return matches.Select(
 			match => {
-				var relative = Path.GetRelativePath(
+				var relative = System.IO.Path.GetRelativePath(
 					baseDirectory,
 					match
 				);
 				return preserveDotPrefix
-					? Path.Combine(
+					? System.IO.Path.Combine(
 						".",
 						relative
 					)
@@ -203,7 +204,7 @@ public static class PathnameExpander {
 				&& File.Exists( currentPath )
 			) {
 				matches.Add(
-					Path.GetFullPath(
+					System.IO.Path.GetFullPath(
 						currentPath
 					)
 				);
@@ -212,7 +213,7 @@ public static class PathnameExpander {
 				&& Directory.Exists( currentPath )
 			) {
 				matches.Add(
-					Path.GetFullPath(
+					System.IO.Path.GetFullPath(
 						currentPath
 					)
 				);
@@ -236,7 +237,7 @@ public static class PathnameExpander {
 						&& options.IncludeFiles
 					) {
 						matches.Add(
-							Path.GetFullPath(
+							System.IO.Path.GetFullPath(
 								entry
 							)
 						);
@@ -251,7 +252,7 @@ public static class PathnameExpander {
 					&& options.IncludeDirectories
 				) {
 					matches.Add(
-						Path.GetFullPath(
+						System.IO.Path.GetFullPath(
 							entry
 						)
 					);
@@ -277,7 +278,7 @@ public static class PathnameExpander {
 
 		var lastSegment = segmentIndex == segments.Count - 1;
 		if ( !ContainsWildcard( segment ) ) {
-			var candidate = Path.Combine(
+			var candidate = System.IO.Path.Combine(
 				currentPath,
 				segment
 			);
@@ -299,7 +300,7 @@ public static class PathnameExpander {
 		}
 
 		foreach ( var entry in EnumerateEntries( currentPath ) ) {
-			var name = Path.GetFileName(
+			var name = System.IO.Path.GetFileName(
 				entry
 			);
 			if (
@@ -386,7 +387,7 @@ public static class PathnameExpander {
 	private static string NormalizeSeparators(
 		string value
 	) {
-		if ( Path.DirectorySeparatorChar == '\\' ) {
+		if ( System.IO.Path.DirectorySeparatorChar == '\\' ) {
 			return value.Replace(
 				'/',
 				'\\'

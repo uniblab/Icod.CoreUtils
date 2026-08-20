@@ -65,8 +65,8 @@ public sealed class BinaryAndOperandTests {
 	public async Task OperandColumnStateResetsButLastCharacterWidthPersists() {
 		var directory = Directory.CreateTempSubdirectory();
 		try {
-			var first = Path.Combine( directory.FullName, "first" );
-			var second = Path.Combine( directory.FullName, "second" );
+			var first = System.IO.Path.Combine( directory.FullName, "first" );
+			var second = System.IO.Path.Combine( directory.FullName, "second" );
 			await File.WriteAllBytesAsync( first, Encoding.UTF8.GetBytes( "界" ) );
 			await File.WriteAllBytesAsync( second, "\t\bX"u8.ToArray() );
 			var result = await RunAsync( [ "--width=8", first, second ], [ ] );
@@ -80,7 +80,7 @@ public sealed class BinaryAndOperandTests {
 	/// <returns>A task that represents the asynchronous test.</returns>
 	[Fact]
 	public async Task MissingFileReportsFailureButLaterOperandsContinue() {
-		var file = Path.GetTempFileName();
+		var file = System.IO.Path.GetTempFileName();
 		try {
 			await File.WriteAllTextAsync( file, "x" );
 			var result = await RunAsync( [ string.Concat( file, ".missing" ), file ], [ ] );
@@ -96,7 +96,7 @@ public sealed class BinaryAndOperandTests {
 	/// <returns>A task that represents the asynchronous test.</returns>
 	[Fact]
 	public async Task FileOnlyInvocationDoesNotRequireStandardInput() {
-		var file = Path.GetTempFileName();
+		var file = System.IO.Path.GetTempFileName();
 		try {
 			await File.WriteAllTextAsync( file, "abcdef" );
 			using var output = new MemoryStream();

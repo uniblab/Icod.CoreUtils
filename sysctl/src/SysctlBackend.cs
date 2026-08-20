@@ -205,7 +205,7 @@ internal sealed class SystemSysctlBackend : ISysctlBackend {
 					continue;
 				}
 				if ( File.Exists( entry ) ) {
-					var relative = Path.GetRelativePath( ProcRoot, entry ).Replace( Path.DirectorySeparatorChar, '/' );
+					var relative = System.IO.Path.GetRelativePath( ProcRoot, entry ).Replace( System.IO.Path.DirectorySeparatorChar, '/' );
 					keys.Add( relative );
 				}
 			}
@@ -308,9 +308,9 @@ internal sealed class SystemSysctlBackend : ISysctlBackend {
 				throw new SysctlBackendException( SysctlBackendFailureKind.NotFound, "No such file or directory" );
 			}
 		}
-		var root = Path.GetFullPath( ProcRoot );
-		var candidate = Path.GetFullPath( Path.Combine( root, key.Replace( '/', Path.DirectorySeparatorChar ) ) );
-		var rootPrefix = string.Concat( root.TrimEnd( Path.DirectorySeparatorChar ), Path.DirectorySeparatorChar );
+		var root = System.IO.Path.GetFullPath( ProcRoot );
+		var candidate = System.IO.Path.GetFullPath( System.IO.Path.Combine( root, key.Replace( '/', System.IO.Path.DirectorySeparatorChar ) ) );
+		var rootPrefix = string.Concat( root.TrimEnd( System.IO.Path.DirectorySeparatorChar ), System.IO.Path.DirectorySeparatorChar );
 		if ( !candidate.StartsWith( rootPrefix, StringComparison.Ordinal ) ) {
 			throw new SysctlBackendException( SysctlBackendFailureKind.NotFound, "No such file or directory" );
 		}
@@ -363,7 +363,7 @@ internal sealed class SystemSysctlBackend : ISysctlBackend {
 		ArgumentNullException.ThrowIfNull( pattern );
 		var wildcard = pattern.IndexOfAny( GlobCharacters );
 		if ( 0 > wildcard ) {
-			var literalDirectory = Path.GetDirectoryName( pattern );
+			var literalDirectory = System.IO.Path.GetDirectoryName( pattern );
 			if ( string.IsNullOrEmpty( literalDirectory ) ) {
 				return Directory.GetCurrentDirectory();
 			}
@@ -374,7 +374,7 @@ internal sealed class SystemSysctlBackend : ISysctlBackend {
 			return Directory.GetCurrentDirectory();
 		}
 		if ( 0 == separator ) {
-			return Path.GetPathRoot( pattern ) ?? Path.DirectorySeparatorChar.ToString();
+			return System.IO.Path.GetPathRoot( pattern ) ?? System.IO.Path.DirectorySeparatorChar.ToString();
 		}
 		return pattern[..separator];
 	}

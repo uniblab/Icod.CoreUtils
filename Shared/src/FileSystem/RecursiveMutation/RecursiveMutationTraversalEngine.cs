@@ -1,3 +1,4 @@
+using Path = global::System.IO.Path;
 using System.Runtime.CompilerServices;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
@@ -203,7 +204,7 @@ public sealed class RecursiveMutationTraversalEngine {
 			? null
 			: entry.RelativePath.Length == 0
 				? options.DestinationPath
-				: Path.Combine( options.DestinationPath, entry.RelativePath );
+				: System.IO.Path.Combine( options.DestinationPath, entry.RelativePath );
 		HardLinkIdentityAnchor? firstHardLink = null;
 		if ( entry.Kind != FileSystemEntryKind.Directory ) {
 			_ = hardLinks.Track(

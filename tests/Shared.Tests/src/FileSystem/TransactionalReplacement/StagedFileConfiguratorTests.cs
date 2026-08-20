@@ -10,10 +10,10 @@ public sealed class StagedFileConfiguratorTests {
 	/// <summary>Verifies configuration runs against the private stage before it is published.</summary>
 	[Fact]
 	public async Task ConfiguresPrivateStageBeforePublication() {
-		var root = Path.Combine( Path.GetTempPath(), string.Concat( "Icod-E6-Configure-", Guid.NewGuid().ToString( "N" ) ) );
+		var root = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "Icod-E6-Configure-", Guid.NewGuid().ToString( "N" ) ) );
 		Directory.CreateDirectory( root );
 		try {
-			var destination = Path.Combine( root, "destination" );
+			var destination = System.IO.Path.Combine( root, "destination" );
 			var artifact = new TransactionalReplacementArtifact(
 				"unit",
 				destination,
@@ -44,10 +44,10 @@ public sealed class StagedFileConfiguratorTests {
 	/// <summary>Verifies a configurator failure removes the private stage and publishes nothing.</summary>
 	[Fact]
 	public async Task ConfiguratorFailureCleansStageBeforePublication() {
-		var root = Path.Combine( Path.GetTempPath(), string.Concat( "Icod-E6-Configure-Fail-", Guid.NewGuid().ToString( "N" ) ) );
+		var root = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "Icod-E6-Configure-Fail-", Guid.NewGuid().ToString( "N" ) ) );
 		Directory.CreateDirectory( root );
 		try {
-			var destination = Path.Combine( root, "destination" );
+			var destination = System.IO.Path.Combine( root, "destination" );
 			var artifact = new TransactionalReplacementArtifact(
 				"unit",
 				destination,

@@ -1,3 +1,4 @@
+using Path = global::System.IO.Path;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text;
@@ -231,24 +232,24 @@ public sealed class SystemProcessInformationProvider : IProcessInformationProvid
         var directory = String.Concat("/proc/", pid.ToString(CultureInfo.InvariantCulture));
         try
         {
-            var stat = await File.ReadAllTextAsync(Path.Combine(directory, "stat"), cancellationToken)
+            var stat = await File.ReadAllTextAsync( System.IO.Path.Combine(directory, "stat"), cancellationToken)
                 .ConfigureAwait(false);
             if (!TryParseStat(stat, out var parsed))
             {
                 return null;
             }
 
-            var status = File.Exists(Path.Combine(directory, "status"))
-                ? await File.ReadAllLinesAsync(Path.Combine(directory, "status"), cancellationToken)
+            var status = File.Exists( System.IO.Path.Combine(directory, "status"))
+                ? await File.ReadAllLinesAsync( System.IO.Path.Combine(directory, "status"), cancellationToken)
                     .ConfigureAwait(false)
                 : [];
             var ids = ParseStatus(status);
             var commandLine = await ReadNullDelimitedFileAsync(
-                Path.Combine(directory, "cmdline"),
+                System.IO.Path.Combine(directory, "cmdline"),
                 cancellationToken
             ).ConfigureAwait(false);
             var environment = await ReadNullDelimitedFileAsync(
-                Path.Combine(directory, "environ"),
+                System.IO.Path.Combine(directory, "environ"),
                 cancellationToken
             ).ConfigureAwait(false);
             var command = parsed.Command;

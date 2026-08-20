@@ -647,9 +647,9 @@ public static class Command {
 				PathDereferenceMode.NoFollow,
 				context.CancellationToken
 			).ConfigureAwait( false );
-			var fullPath = Path.GetFullPath( root.AccessPath );
-			var trimmed = Path.TrimEndingDirectorySeparator( fullPath );
-			var parentPath = Path.GetDirectoryName( trimmed );
+			var fullPath = System.IO.Path.GetFullPath( root.AccessPath );
+			var trimmed = System.IO.Path.TrimEndingDirectorySeparator( fullPath );
+			var parentPath = System.IO.Path.GetDirectoryName( trimmed );
 			if ( string.IsNullOrEmpty( parentPath ) ) return true;
 			var parent = await readOnlyProvider.ObserveAsync(
 				parentPath,
@@ -797,7 +797,7 @@ public static class Command {
 		if ( string.IsNullOrEmpty( operand ) ) return false;
 		var value = operand;
 		while ( 1 < value.Length && IsDirectorySeparator( value[^1] ) ) value = value[..^1];
-		var final = Path.GetFileName( value );
+		var final = System.IO.Path.GetFileName( value );
 		return final is "." or "..";
 	}
 
@@ -805,14 +805,14 @@ public static class Command {
 		0 < path.Length && IsDirectorySeparator( path[^1] );
 
 	private static string TrimTrailingDirectorySeparatorsPreservingRoot( string path ) {
-		var rootLength = Path.GetPathRoot( path )?.Length ?? 0;
+		var rootLength = System.IO.Path.GetPathRoot( path )?.Length ?? 0;
 		var length = path.Length;
 		while ( rootLength < length && IsDirectorySeparator( path[length - 1] ) ) length--;
 		return length == path.Length ? path : path[..length];
 	}
 
 	private static bool IsDirectorySeparator( char value ) =>
-		value == Path.DirectorySeparatorChar || value == Path.AltDirectorySeparatorChar;
+		value == System.IO.Path.DirectorySeparatorChar || value == System.IO.Path.AltDirectorySeparatorChar;
 
 	private static void MarkCurrentDirectoryRetained( Stack<DirectoryRemovalState> directoryStates ) {
 		if ( directoryStates.TryPeek( out var state ) ) state.HasRetainedDescendant = true;

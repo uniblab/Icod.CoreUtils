@@ -1,4 +1,4 @@
-﻿namespace Icod.CoreUtils.Cat.Tests;
+namespace Icod.CoreUtils.Cat.Tests;
 
 using System.Text;
 using Icod.CoreUtils.Shared.Diagnostics;
@@ -126,8 +126,8 @@ public sealed class CatCommandTests {
 		var existing = await CreateFileAsync(
 			"present\n"
 		);
-		var missing = Path.Combine(
-			Path.GetTempPath(),
+		var missing = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			$"icod-cat-missing-{Guid.NewGuid():N}"
 		);
 		try {
@@ -226,8 +226,8 @@ public sealed class CatCommandTests {
 	private static async Task<string> CreateFileAsync(
 		string contents
 	) {
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			$"icod-cat-{Guid.NewGuid():N}.txt"
 		);
 		await File.WriteAllTextAsync(

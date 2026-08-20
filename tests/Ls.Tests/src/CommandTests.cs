@@ -9,9 +9,9 @@ public sealed class CommandTests {
 	public async Task ListsDirectoryThroughSharedEngine() {
 		var root = CreateTemporaryDirectory();
 		try {
-			await File.WriteAllTextAsync( Path.Combine( root, "alpha.txt" ), "a" );
-			await File.WriteAllTextAsync( Path.Combine( root, "beta.txt" ), "b" );
-			Directory.CreateDirectory( Path.Combine( root, "nested" ) );
+			await File.WriteAllTextAsync( System.IO.Path.Combine( root, "alpha.txt" ), "a" );
+			await File.WriteAllTextAsync( System.IO.Path.Combine( root, "beta.txt" ), "b" );
+			Directory.CreateDirectory( System.IO.Path.Combine( root, "nested" ) );
 			var output = new StringWriter();
 			var error = new StringWriter();
 
@@ -43,7 +43,7 @@ public sealed class CommandTests {
 	}
 
 	private static string CreateTemporaryDirectory() {
-		var path = Path.Combine( Path.GetTempPath(), "icod-ls-" + Guid.NewGuid().ToString( "N" ) );
+		var path = System.IO.Path.Combine( System.IO.Path.GetTempPath(), "icod-ls-" + Guid.NewGuid().ToString( "N" ) );
 		Directory.CreateDirectory( path );
 		return path;
 	}

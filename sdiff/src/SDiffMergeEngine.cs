@@ -29,11 +29,11 @@ internal static class SDiffMergeEngine {
 		ArgumentNullException.ThrowIfNull( context );
 		ArgumentNullException.ThrowIfNull( editor );
 		var outputPath = options.OutputPath ?? throw new InvalidOperationException( "An output path is required." );
-		var fullPath = Path.GetFullPath( outputPath );
-		var directory = Path.GetDirectoryName( fullPath ) ?? Directory.GetCurrentDirectory();
-		var temporaryPath = Path.Combine(
+		var fullPath = System.IO.Path.GetFullPath( outputPath );
+		var directory = System.IO.Path.GetDirectoryName( fullPath ) ?? Directory.GetCurrentDirectory();
+		var temporaryPath = System.IO.Path.Combine(
 			directory,
-			$".{Path.GetFileName( fullPath )}.sdiff-{Guid.NewGuid():N}.tmp"
+			$".{System.IO.Path.GetFileName( fullPath )}.sdiff-{Guid.NewGuid():N}.tmp"
 		);
 		var committed = false;
 		try {

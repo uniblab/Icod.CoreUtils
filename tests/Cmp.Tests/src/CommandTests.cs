@@ -94,7 +94,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies that quiet mode suppresses operational diagnostics.</summary>
 	[Fact]
 	public async Task QuietModeSuppressesOperationalErrors() {
-		var missing = Path.Combine( Path.GetTempPath(), Guid.NewGuid().ToString( "N" ) );
+		var missing = System.IO.Path.Combine( System.IO.Path.GetTempPath(), Guid.NewGuid().ToString( "N" ) );
 		var result = await RunAsync( new[] { "-s", missing, missing } );
 		Assert.Equal( (int)ComparisonStatus.Trouble, result.Status );
 		Assert.Empty( result.Output );
@@ -262,7 +262,7 @@ public sealed class CommandTests {
 	}
 
 	private static async Task WithFileAsync( byte[] bytes, Func<string, Task> action ) {
-		var path = Path.Combine( Path.GetTempPath(), string.Concat( "cmp-", Guid.NewGuid().ToString( "N" ) ) );
+		var path = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "cmp-", Guid.NewGuid().ToString( "N" ) ) );
 		try {
 			await File.WriteAllBytesAsync( path, bytes );
 			await action( path );

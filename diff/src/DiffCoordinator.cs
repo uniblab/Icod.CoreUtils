@@ -52,13 +52,13 @@ internal sealed class DiffCoordinator {
 				if ( PathKind.StandardInput == newKind ) {
 					throw new DiffUsageException( "standard input cannot be compared to a directory" );
 				}
-				oldPath = Path.Combine( oldPath, GetFileNameRequired( newPath ) );
+				oldPath = System.IO.Path.Combine( oldPath, GetFileNameRequired( newPath ) );
 				oldKind = GetPathKind( oldPath, this.options.NoDereference );
 			} else if ( PathKind.Directory == newKind ) {
 				if ( PathKind.StandardInput == oldKind ) {
 					throw new DiffUsageException( "standard input cannot be compared to a directory" );
 				}
-				newPath = Path.Combine( newPath, GetFileNameRequired( oldPath ) );
+				newPath = System.IO.Path.Combine( newPath, GetFileNameRequired( oldPath ) );
 				newKind = GetPathKind( newPath, this.options.NoDereference );
 			}
 			return await this.CompareLeafAsync( oldPath, oldKind, newPath, newKind ).ConfigureAwait( false );
@@ -98,8 +98,8 @@ internal sealed class DiffCoordinator {
 			PathKind newKind;
 			if ( !hasOld || !hasNew ) {
 				if ( this.options.NewFile || ( this.options.UnidirectionalNewFile && !hasOld ) ) {
-					oldPath ??= Path.Combine( oldDirectory, name );
-					newPath ??= Path.Combine( newDirectory, name );
+					oldPath ??= System.IO.Path.Combine( oldDirectory, name );
+					newPath ??= System.IO.Path.Combine( newDirectory, name );
 					oldKind = hasOld ? GetPathKind( oldPath, this.options.NoDereference ) : PathKind.Missing;
 					newKind = hasNew ? GetPathKind( newPath, this.options.NoDereference ) : PathKind.Missing;
 					ComparisonStatus pairStatus;
@@ -322,7 +322,7 @@ internal sealed class DiffCoordinator {
 	}
 
 	private static string GetFileNameRequired( string path ) {
-		var name = Path.GetFileName( path );
+		var name = System.IO.Path.GetFileName( path );
 		if ( string.IsNullOrEmpty( name ) ) {
 			throw new IOException( $"cannot determine a file name for '{path}'" );
 		}

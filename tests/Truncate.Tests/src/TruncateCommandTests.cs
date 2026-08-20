@@ -105,7 +105,7 @@ public sealed class TruncateCommandTests {
 	[Fact]
 	public async Task NoCreateSilentlyIgnoresAMissingParentDirectory() {
 		using var temporary = new TemporaryDirectory();
-		var path = temporary.PathFor( Path.Combine( "missing", "target.bin" ) );
+		var path = temporary.PathFor( System.IO.Path.Combine( "missing", "target.bin" ) );
 		var result = await RunAsync(
 			[ "-c", "--size=10", path ]
 		);
@@ -728,8 +728,8 @@ public sealed class TruncateCommandTests {
 		}
 
 		public TemporaryDirectory() {
-			this.PathValue = Path.Combine(
-				Path.GetTempPath(),
+			this.PathValue = System.IO.Path.Combine(
+				System.IO.Path.GetTempPath(),
 				String.Concat( "Icod.CoreUtils.Truncate.Tests-", Guid.NewGuid().ToString( "N" ) )
 			);
 			Directory.CreateDirectory(
@@ -759,7 +759,7 @@ public sealed class TruncateCommandTests {
 		public string PathFor(
 			string name
 		) {
-			return Path.Combine(
+			return System.IO.Path.Combine(
 				this.PathValue,
 				name
 			);

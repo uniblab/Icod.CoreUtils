@@ -336,8 +336,8 @@ internal sealed class ShredEngine {
 		}
 
 		var currentPath = originalPath;
-		var directory = Path.GetDirectoryName( Path.GetFullPath( originalPath ) ) ?? Directory.GetCurrentDirectory();
-		var currentName = Path.GetFileName( currentPath );
+		var directory = System.IO.Path.GetDirectoryName( System.IO.Path.GetFullPath( originalPath ) ) ?? Directory.GetCurrentDirectory();
+		var currentName = System.IO.Path.GetFileName( currentPath );
 		try {
 			foreach ( var length in GetWipeNameLengths( currentName.Length ) ) {
 				cancellationToken.ThrowIfCancellationRequested();
@@ -400,7 +400,7 @@ internal sealed class ShredEngine {
 			for ( var index = 0; index < name.Length; index++ ) {
 				name[ index ] = WipeNameAlphabet[ random[ index ] % WipeNameAlphabet.Length ];
 			}
-			var candidate = Path.Combine( directory, new string( name ) );
+			var candidate = System.IO.Path.Combine( directory, new string( name ) );
 			if ( File.Exists( candidate ) || Directory.Exists( candidate ) ) {
 				continue;
 			}

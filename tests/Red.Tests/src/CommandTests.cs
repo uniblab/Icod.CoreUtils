@@ -125,8 +125,8 @@ public sealed class CommandTests {
 	public async Task AllowsSimpleNamesInCapturedWorkingDirectory() {
 		var inputName = string.Concat( ".icod-red-input-", Guid.NewGuid().ToString( "N" ), ".txt" );
 		var outputName = string.Concat( ".icod-red-output-", Guid.NewGuid().ToString( "N" ), ".txt" );
-		var inputPath = Path.Combine( Directory.GetCurrentDirectory(), inputName );
-		var outputPath = Path.Combine( Directory.GetCurrentDirectory(), outputName );
+		var inputPath = System.IO.Path.Combine( Directory.GetCurrentDirectory(), inputName );
+		var outputPath = System.IO.Path.Combine( Directory.GetCurrentDirectory(), outputName );
 		try {
 			await File.WriteAllTextAsync( inputPath, "one\ntwo\n" );
 			var result = await RunRedAsync(

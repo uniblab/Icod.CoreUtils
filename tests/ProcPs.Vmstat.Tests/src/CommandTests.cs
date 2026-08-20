@@ -237,18 +237,18 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task LinuxProviderParsesStatDiskAndPartitionFixtures() {
 		var root = CreateTempDirectory();
-		var proc = Path.Combine( root, "proc" );
-		var sys = Path.Combine( root, "sys" );
+		var proc = System.IO.Path.Combine( root, "proc" );
+		var sys = System.IO.Path.Combine( root, "sys" );
 		Directory.CreateDirectory( proc );
-		var partitionMarker = Path.Combine( sys, "dev", "block", "8:1", "partition" );
+		var partitionMarker = System.IO.Path.Combine( sys, "dev", "block", "8:1", "partition" );
 		bool FileExists( string path ) => string.Equals( path, partitionMarker, StringComparison.Ordinal );
 		try {
-			await File.WriteAllTextAsync( Path.Combine( proc, "stat" ), "cpu 1 2 3 4 5 6 7 8 9 10\nintr 100 1 2\nctxt 200\nbtime 300\nprocesses 400\nprocs_running 5\nprocs_blocked 6\n" );
-			await File.WriteAllTextAsync( Path.Combine( proc, "diskstats" ), "8 0 sda 1 2 3 4 5 6 7 8 9 10 11\n8 1 sda1 12 13 14 15 16 17 18 19 20 21 22\n" );
-			var counters = LinuxProcVmstatProvider.ParseSystemCounters( await File.ReadAllTextAsync( Path.Combine( proc, "stat" ) ) );
+			await File.WriteAllTextAsync( System.IO.Path.Combine( proc, "stat" ), "cpu 1 2 3 4 5 6 7 8 9 10\nintr 100 1 2\nctxt 200\nbtime 300\nprocesses 400\nprocs_running 5\nprocs_blocked 6\n" );
+			await File.WriteAllTextAsync( System.IO.Path.Combine( proc, "diskstats" ), "8 0 sda 1 2 3 4 5 6 7 8 9 10 11\n8 1 sda1 12 13 14 15 16 17 18 19 20 21 22\n" );
+			var counters = LinuxProcVmstatProvider.ParseSystemCounters( await File.ReadAllTextAsync( System.IO.Path.Combine( proc, "stat" ) ) );
 			Assert.Equal( 5UL, counters.RunningProcesses );
 			Assert.Equal( 400UL, counters.Forks );
-			var rows = LinuxProcVmstatProvider.ParseDiskStats( await File.ReadAllTextAsync( Path.Combine( proc, "diskstats" ) ), sys, FileExists );
+			var rows = LinuxProcVmstatProvider.ParseDiskStats( await File.ReadAllTextAsync( System.IO.Path.Combine( proc, "diskstats" ) ), sys, FileExists );
 			Assert.Equal( 2, rows.Count );
 			Assert.False( rows[ 0 ].IsPartition );
 			Assert.True( rows[ 1 ].IsPartition );
@@ -271,7 +271,7 @@ public sealed class CommandTests {
 		var count = 0; var offset = 0;
 		while ( true ) { var index = text.IndexOf( value, offset, StringComparison.Ordinal ); if ( 0 > index ) return count; count++; offset = index + value.Length; }
 	}
-	private static string CreateTempDirectory() { var path = Path.Combine( Path.GetTempPath(), string.Concat( "icod-procps-vmstat-", Guid.NewGuid().ToString( "N" ) ) ); Directory.CreateDirectory( path ); return path; }
+	private static string CreateTempDirectory() { var path = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "icod-procps-vmstat-", Guid.NewGuid().ToString( "N" ) ) ); Directory.CreateDirectory( path ); return path; }
 	private static ProcObservedValue<T> Available<T>( T value ) => ProcObservedValue<T>.Available( value, ProcObservationSource.Configuration, ObservationFidelity.Exact );
 	private static ProcVmstatSnapshot FullSnapshot( ulong interrupts = 1000, ulong contextSwitches = 2000, ulong pageIn = 500, ulong pageOut = 600, ulong swapIn = 10, ulong swapOut = 20, ulong uptimeSeconds = 100, ulong forks = 1234, ProcCpuTimes? cpuTimes = null ) {
 		static ulong KiB( ulong value ) => value * 1024UL;

@@ -62,7 +62,7 @@ internal static class InstallArgumentParser {
 			error = "option --strip-program requires a nonempty program name";
 			return false;
 		}
-		if ( options.BackupSuffix.Length == 0 || options.BackupSuffix.IndexOfAny( new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar } ) >= 0 ) {
+		if ( options.BackupSuffix.Length == 0 || options.BackupSuffix.IndexOfAny( new[] { System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar } ) >= 0 ) {
 			error = "backup suffix must be one nonempty filename suffix";
 			return false;
 		}

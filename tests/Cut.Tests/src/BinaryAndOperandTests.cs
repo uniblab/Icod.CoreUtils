@@ -17,8 +17,8 @@ public sealed class BinaryAndOperandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task ProcessesFilesAndStandardInputInOrder() {
-		var first = Path.GetTempFileName();
-		var second = Path.GetTempFileName();
+		var first = System.IO.Path.GetTempFileName();
+		var second = System.IO.Path.GetTempFileName();
 		try {
 			await File.WriteAllBytesAsync( first, "a1\n"u8.ToArray() );
 			await File.WriteAllBytesAsync( second, "c3\n"u8.ToArray() );
@@ -42,7 +42,7 @@ public sealed class BinaryAndOperandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task MissingFileDoesNotSuppressLaterOutput() {
-		var file = Path.GetTempFileName();
+		var file = System.IO.Path.GetTempFileName();
 		try {
 			await File.WriteAllBytesAsync( file, "later\n"u8.ToArray() );
 			var result = await RunAsync( [ "-b", "1-", string.Concat( file, ".missing" ), file ], [] );

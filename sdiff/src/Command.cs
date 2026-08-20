@@ -276,9 +276,9 @@ public static class Command {
 			throw new SDiffUsageException( "both files to be compared are directories" );
 		}
 		if ( leftDirectory ) {
-			left = Path.Combine( left, Path.GetFileName( right ) );
+			left = System.IO.Path.Combine( left, System.IO.Path.GetFileName( right ) );
 		} else if ( rightDirectory ) {
-			right = Path.Combine( right, Path.GetFileName( left ) );
+			right = System.IO.Path.Combine( right, System.IO.Path.GetFileName( left ) );
 		}
 		return new[] { left, right };
 	}
@@ -306,11 +306,11 @@ public static class Command {
 		ReadOnlyMemory<byte> bytes,
 		CancellationToken cancellationToken
 	) {
-		var fullPath = Path.GetFullPath( outputPath );
-		var directory = Path.GetDirectoryName( fullPath ) ?? Directory.GetCurrentDirectory();
-		var temporaryPath = Path.Combine(
+		var fullPath = System.IO.Path.GetFullPath( outputPath );
+		var directory = System.IO.Path.GetDirectoryName( fullPath ) ?? Directory.GetCurrentDirectory();
+		var temporaryPath = System.IO.Path.Combine(
 			directory,
-			$".{Path.GetFileName( fullPath )}.sdiff-{Guid.NewGuid():N}.tmp"
+			$".{System.IO.Path.GetFileName( fullPath )}.sdiff-{Guid.NewGuid():N}.tmp"
 		);
 		var committed = false;
 		try {

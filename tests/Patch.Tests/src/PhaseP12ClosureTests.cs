@@ -74,8 +74,8 @@ public sealed class PhaseP12ClosureTests {
 		string fixture
 	) {
 		var directory = CreateTemporaryDirectory();
-		var target = Path.Combine( directory, "target.txt" );
-		var fixturePath = Path.Combine(
+		var target = System.IO.Path.Combine( directory, "target.txt" );
+		var fixturePath = System.IO.Path.Combine(
 			AppContext.BaseDirectory,
 			"fixtures",
 			"icod-diffutils",
@@ -107,12 +107,12 @@ public sealed class PhaseP12ClosureTests {
 	[Fact]
 	public async Task HeaderSelectedParentEscapeCannotMutateOutsideWorkingRoot() {
 		var parent = CreateTemporaryDirectory();
-		var root = Path.Combine( parent, "root" );
-		var outside = Path.Combine( parent, "outside.txt" );
+		var root = System.IO.Path.Combine( parent, "root" );
+		var outside = System.IO.Path.Combine( parent, "outside.txt" );
 		Directory.CreateDirectory( root );
 		await File.WriteAllTextAsync( outside, "old\n" );
 		await File.WriteAllTextAsync(
-			Path.Combine( root, "change.patch" ),
+			System.IO.Path.Combine( root, "change.patch" ),
 			"--- ../outside.txt\n+++ ../outside.txt\n@@ -1 +1 @@\n-old\n+new\n"
 		);
 		try {
@@ -190,8 +190,8 @@ public sealed class PhaseP12ClosureTests {
 	}
 
 	private static string CreateTemporaryDirectory() {
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			string.Concat( "icod-patch-p12-", Guid.NewGuid().ToString( "N" ) )
 		);
 		Directory.CreateDirectory( path );

@@ -1,3 +1,4 @@
+using Path = global::System.IO.Path;
 namespace Icod.CoreUtils.Shared.Host;
 
 using Microsoft.Win32;
@@ -637,14 +638,14 @@ public sealed class SystemHostResourceProvider : IHostResourceProvider {
 			const string cpuRoot = "/sys/devices/system/cpu";
 			if ( Directory.Exists( cpuRoot ) ) {
 				foreach ( var directory in Directory.EnumerateDirectories( cpuRoot, "cpu*" ) ) {
-					var name = Path.GetFileName( directory );
+					var name = System.IO.Path.GetFileName( directory );
 					if ( name.Length <= 3 || !int.TryParse( name[3..], NumberStyles.None, CultureInfo.InvariantCulture, out _ ) ) {
 						continue;
 					}
 					logicalCount++;
 					if (
-						TryReadInt32( Path.Combine( directory, "topology", "physical_package_id" ), out var package )
-						&& TryReadInt32( Path.Combine( directory, "topology", "core_id" ), out var core )
+						TryReadInt32( System.IO.Path.Combine( directory, "topology", "physical_package_id" ), out var package )
+						&& TryReadInt32( System.IO.Path.Combine( directory, "topology", "core_id" ), out var core )
 					) {
 						packages.Add( package );
 						cores.Add( (package, core) );
@@ -822,10 +823,10 @@ public sealed class SystemHostResourceProvider : IHostResourceProvider {
 		string membershipPath,
 		string fileName
 	) {
-		var rootPath = Path.GetFullPath( root );
+		var rootPath = System.IO.Path.GetFullPath( root );
 		var relative = membershipPath.Trim().TrimStart( '/', '\\' );
-		var candidate = Path.GetFullPath( Path.Combine( rootPath, relative, fileName ) );
-		var rootPrefix = string.Concat( rootPath.TrimEnd( Path.DirectorySeparatorChar ), Path.DirectorySeparatorChar );
+		var candidate = System.IO.Path.GetFullPath( System.IO.Path.Combine( rootPath, relative, fileName ) );
+		var rootPrefix = string.Concat( rootPath.TrimEnd( System.IO.Path.DirectorySeparatorChar ), System.IO.Path.DirectorySeparatorChar );
 		if ( !candidate.StartsWith( rootPrefix, StringComparison.Ordinal ) ) {
 			throw new InvalidDataException( "The cgroup membership path escapes its controller root." );
 		}
@@ -841,7 +842,7 @@ public sealed class SystemHostResourceProvider : IHostResourceProvider {
 		}
 		var count = 0;
 		foreach ( var directory in Directory.EnumerateDirectories( root, string.Concat( prefix, "*" ) ) ) {
-			var name = Path.GetFileName( directory );
+			var name = System.IO.Path.GetFileName( directory );
 			if (
 				name.Length > prefix.Length
 				&& int.TryParse( name[prefix.Length..], NumberStyles.None, CultureInfo.InvariantCulture, out _ )

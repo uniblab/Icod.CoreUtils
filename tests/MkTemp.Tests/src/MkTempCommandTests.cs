@@ -64,7 +64,7 @@ public sealed class MkTempCommandTests {
 	[Fact]
 	public async Task ExplicitTmpDirOverridesEnvironment() {
 		using var workspace = new Workspace();
-		var other = Directory.CreateDirectory( Path.Combine( workspace.Root, "other" ) ).FullName;
+		var other = Directory.CreateDirectory( System.IO.Path.Combine( workspace.Root, "other" ) ).FullName;
 		var result = await RunAsync(
 			workspace,
 			[ "--tmpdir=" + other, "name.XXXX" ]
@@ -76,7 +76,7 @@ public sealed class MkTempCommandTests {
 	[Fact]
 	public async Task TraditionalModeGivesTmpDirPrecedenceOverP() {
 		using var workspace = new Workspace();
-		var other = Directory.CreateDirectory( Path.Combine( workspace.Root, "other" ) ).FullName;
+		var other = Directory.CreateDirectory( System.IO.Path.Combine( workspace.Root, "other" ) ).FullName;
 		var result = await RunAsync(
 			workspace,
 			[ "-t", "-p", other, "name.XXXX" ]
@@ -88,10 +88,10 @@ public sealed class MkTempCommandTests {
 	[Fact]
 	public async Task TmpDirAllowsRelativeSubdirectoriesButCreatesOnlyFinalComponent() {
 		using var workspace = new Workspace();
-		var existing = Directory.CreateDirectory( Path.Combine( workspace.Root, "existing" ) ).FullName;
+		var existing = Directory.CreateDirectory( System.IO.Path.Combine( workspace.Root, "existing" ) ).FullName;
 		var result = await RunAsync(
 			workspace,
-			[ "-p", workspace.Root, Path.Combine( "existing", "name.XXXX" ) ]
+			[ "-p", workspace.Root, System.IO.Path.Combine( "existing", "name.XXXX" ) ]
 		);
 		Assert.Equal( 0, result.Status );
 		Assert.StartsWith( existing, result.Path, StringComparison.Ordinal );
@@ -99,10 +99,10 @@ public sealed class MkTempCommandTests {
 
 		var missingResult = await RunAsync(
 			workspace,
-			[ "-p", workspace.Root, Path.Combine( "missing", "name.XXXX" ) ]
+			[ "-p", workspace.Root, System.IO.Path.Combine( "missing", "name.XXXX" ) ]
 		);
 		Assert.Equal( 1, missingResult.Status );
-		Assert.False( Directory.Exists( Path.Combine( workspace.Root, "missing" ) ) );
+		Assert.False( Directory.Exists( System.IO.Path.Combine( workspace.Root, "missing" ) ) );
 	}
 
 	[Fact]
@@ -110,7 +110,7 @@ public sealed class MkTempCommandTests {
 		using var workspace = new Workspace();
 		var result = await RunAsync(
 			workspace,
-			[ "-p", workspace.Root, Path.Combine( workspace.Root, "name.XXXX" ) ]
+			[ "-p", workspace.Root, System.IO.Path.Combine( workspace.Root, "name.XXXX" ) ]
 		);
 		Assert.Equal( 1, result.Status );
 		Assert.Contains( "may not be absolute", result.Error );
@@ -119,7 +119,7 @@ public sealed class MkTempCommandTests {
 	[Fact]
 	public async Task TraditionalModeRejectsDirectorySeparators() {
 		using var workspace = new Workspace();
-		var result = await RunAsync( workspace, [ "-t", Path.Combine( "sub", "name.XXXX" ) ] );
+		var result = await RunAsync( workspace, [ "-t", System.IO.Path.Combine( "sub", "name.XXXX" ) ] );
 		Assert.Equal( 1, result.Status );
 		Assert.Contains( "contains directory separator", result.Error );
 	}
@@ -146,7 +146,7 @@ public sealed class MkTempCommandTests {
 	[Fact]
 	public async Task SuffixMayNotContainDirectorySeparator() {
 		using var workspace = new Workspace();
-		var suffix = string.Concat( ".a", Path.DirectorySeparatorChar, "b" );
+		var suffix = string.Concat( ".a", System.IO.Path.DirectorySeparatorChar, "b" );
 		var result = await RunAsync(
 			workspace,
 			[ "-p", workspace.Root, "--suffix=" + suffix, "name.XXXX" ]
@@ -180,24 +180,24 @@ public sealed class MkTempCommandTests {
 		using var workspace = new Workspace();
 		var result = await RunAsync(
 			workspace,
-			[ "-u", "-p", workspace.Root, Path.Combine( "missing", "name.XXXX" ) ]
+			[ "-u", "-p", workspace.Root, System.IO.Path.Combine( "missing", "name.XXXX" ) ]
 		);
 		Assert.Equal( 0, result.Status );
 		Assert.StartsWith( 
-			Path.Combine( workspace.Root, "missing" ),
+			System.IO.Path.Combine( workspace.Root, "missing" ),
 			result.Path, 
 			StringComparison.Ordinal
 		);
-		Assert.False( Directory.Exists( Path.Combine( workspace.Root, "missing" ) ) );
+		Assert.False( Directory.Exists( System.IO.Path.Combine( workspace.Root, "missing" ) ) );
 	}
 
 	[Fact]
 	public async Task DryRunRejectsAnExistingNonDirectoryPathComponent() {
 		using var workspace = new Workspace();
-		await File.WriteAllTextAsync( Path.Combine( workspace.Root, "parent" ), "file" );
+		await File.WriteAllTextAsync( System.IO.Path.Combine( workspace.Root, "parent" ), "file" );
 		var result = await RunAsync(
 			workspace,
-			[ "-u", "-p", workspace.Root, Path.Combine( "parent", "name.XXXX" ) ]
+			[ "-u", "-p", workspace.Root, System.IO.Path.Combine( "parent", "name.XXXX" ) ]
 		);
 		Assert.Equal( 1, result.Status );
 		Assert.Contains( "not a directory", result.Error.ToLowerInvariant() );
@@ -208,7 +208,7 @@ public sealed class MkTempCommandTests {
 		using var workspace = new Workspace();
 		var result = await RunAsync(
 			workspace,
-			[ "-q", "-p", Path.Combine( workspace.Root, "missing" ), "name.XXXX" ]
+			[ "-q", "-p", System.IO.Path.Combine( workspace.Root, "missing" ), "name.XXXX" ]
 		);
 		Assert.Equal( 1, result.Status );
 		Assert.Empty( result.Error );
@@ -217,7 +217,7 @@ public sealed class MkTempCommandTests {
 	[Fact]
 	public async Task CollisionsAreRetriedWithNewRandomCharacters() {
 		using var workspace = new Workspace();
-		var collision = Path.Combine( workspace.Root, "name.aaaa" );
+		var collision = System.IO.Path.Combine( workspace.Root, "name.aaaa" );
 		await File.WriteAllTextAsync( collision, "existing" );
 		var random = new SequenceRandomSource(
 			[ 0, 0, 0, 0, 1, 1, 1, 1 ]
@@ -235,8 +235,8 @@ public sealed class MkTempCommandTests {
 	[Fact]
 	public async Task ExistingSymbolicLinkIsANameCollisionAndIsNotFollowed() {
 		using var workspace = new Workspace();
-		var target = Path.Combine( workspace.Root, "target" );
-		var link = Path.Combine( workspace.Root, "name.aaaa" );
+		var target = System.IO.Path.Combine( workspace.Root, "target" );
+		var link = System.IO.Path.Combine( workspace.Root, "name.aaaa" );
 		await File.WriteAllTextAsync( target, "preserve" );
 		try {
 			File.CreateSymbolicLink( link, target );
@@ -480,8 +480,8 @@ public sealed class MkTempCommandTests {
 
 	private sealed class Workspace : IDisposable {
 		public Workspace() {
-			Root = Path.Combine(
-				Path.GetTempPath(),
+			Root = System.IO.Path.Combine(
+				System.IO.Path.GetTempPath(),
 				string.Concat( "Icod.CoreUtils.MkTemp.Tests-", Guid.NewGuid().ToString( "N" ) )
 			);
 			Directory.CreateDirectory( Root );

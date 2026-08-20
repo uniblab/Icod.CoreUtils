@@ -205,10 +205,10 @@ public sealed class SecurityAndCompatibilityTests {
 	[Fact]
 	public async Task RestrictedFactoryConstrainsInjectedFileCapabilityToCapturedDirectory() {
 		var files = new MemoryFileAccess();
-		var directory = Path.GetFullPath( Path.Combine( Path.GetTempPath(), Guid.NewGuid().ToString( "N" ) ) );
+		var directory = System.IO.Path.GetFullPath( System.IO.Path.Combine( System.IO.Path.GetTempPath(), Guid.NewGuid().ToString( "N" ) ) );
 		Directory.CreateDirectory( directory );
 		try {
-			var expected = Path.Combine( directory, "input.txt" );
+			var expected = System.IO.Path.Combine( directory, "input.txt" );
 			files.Files[ expected ] = new EditorFileReadResult( Lines( "value" ), true, 6 );
 			var engine = EditorEngine.CreateRestricted( directory, files );
 
@@ -229,10 +229,10 @@ public sealed class SecurityAndCompatibilityTests {
 	[Fact]
 	public async Task RestrictedFileCapabilityMapsSimpleNamesIntoCapturedDirectory() {
 		var inner = new MemoryFileAccess();
-		var directory = Path.GetFullPath( Path.Combine( Path.GetTempPath(), Guid.NewGuid().ToString( "N" ) ) );
+		var directory = System.IO.Path.GetFullPath( System.IO.Path.Combine( System.IO.Path.GetTempPath(), Guid.NewGuid().ToString( "N" ) ) );
 		Directory.CreateDirectory( directory );
 		try {
-			var expected = Path.Combine( directory, "file.txt" );
+			var expected = System.IO.Path.Combine( directory, "file.txt" );
 			inner.Files[ expected ] = new EditorFileReadResult( Lines( "value" ), true, 6 );
 			var restricted = new RestrictedEditorFileAccess( directory, inner );
 
@@ -248,8 +248,8 @@ public sealed class SecurityAndCompatibilityTests {
 	[Fact]
 	public async Task RestrictedCapabilityCapturesDirectoryAndStatesItsPathnameOnlyBoundary() {
 		var inner = new MemoryFileAccess();
-		var directory = Path.GetFullPath( Path.Combine( Path.GetTempPath(), Guid.NewGuid().ToString( "N" ) ) );
-		var expected = Path.Combine( directory, "leaf.txt" );
+		var directory = System.IO.Path.GetFullPath( System.IO.Path.Combine( System.IO.Path.GetTempPath(), Guid.NewGuid().ToString( "N" ) ) );
+		var expected = System.IO.Path.Combine( directory, "leaf.txt" );
 		inner.Files[ expected ] = new EditorFileReadResult( Lines( "value" ), true, 6 );
 		var restricted = new RestrictedEditorFileAccess( directory, inner );
 
@@ -284,13 +284,13 @@ public sealed class SecurityAndCompatibilityTests {
 
 	[Fact]
 	public async Task RestrictedPathnamePolicyCharacterizesLinkAndReparseBehaviorWhenSupported() {
-		var root = Path.Combine( Path.GetTempPath(), string.Concat( ".icod-red-links-", Guid.NewGuid().ToString( "N" ) ) );
-		var outside = Path.Combine( Path.GetTempPath(), string.Concat( ".icod-red-targets-", Guid.NewGuid().ToString( "N" ) ) );
+		var root = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( ".icod-red-links-", Guid.NewGuid().ToString( "N" ) ) );
+		var outside = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( ".icod-red-targets-", Guid.NewGuid().ToString( "N" ) ) );
 		Directory.CreateDirectory( root );
 		Directory.CreateDirectory( outside );
-		var target = Path.Combine( outside, "target.txt" );
-		var symbolicLeaf = Path.Combine( root, "symbolic.txt" );
-		var hardLeaf = Path.Combine( root, "hard.txt" );
+		var target = System.IO.Path.Combine( outside, "target.txt" );
+		var symbolicLeaf = System.IO.Path.Combine( root, "symbolic.txt" );
+		var hardLeaf = System.IO.Path.Combine( root, "hard.txt" );
 		await File.WriteAllTextAsync( target, "outside-through-link\n" );
 		var restricted = new RestrictedEditorFileAccess( root, new StandardEditorFileAccess() );
 		var exercised = 0;
@@ -318,13 +318,13 @@ public sealed class SecurityAndCompatibilityTests {
 
 	[Fact]
 	public async Task RestrictedPathnamePolicyLeavesValidationOpenRacesToUnderlyingCapabilityWhenSupported() {
-		var root = Path.Combine( Path.GetTempPath(), string.Concat( ".icod-red-race-", Guid.NewGuid().ToString( "N" ) ) );
-		var outside = Path.Combine( Path.GetTempPath(), string.Concat( ".icod-red-race-targets-", Guid.NewGuid().ToString( "N" ) ) );
+		var root = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( ".icod-red-race-", Guid.NewGuid().ToString( "N" ) ) );
+		var outside = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( ".icod-red-race-targets-", Guid.NewGuid().ToString( "N" ) ) );
 		Directory.CreateDirectory( root );
 		Directory.CreateDirectory( outside );
-		var first = Path.Combine( outside, "first.txt" );
-		var second = Path.Combine( outside, "second.txt" );
-		var leaf = Path.Combine( root, "alias.txt" );
+		var first = System.IO.Path.Combine( outside, "first.txt" );
+		var second = System.IO.Path.Combine( outside, "second.txt" );
+		var leaf = System.IO.Path.Combine( root, "alias.txt" );
 		await File.WriteAllTextAsync( first, "first\n" );
 		await File.WriteAllTextAsync( second, "second\n" );
 		try {
@@ -354,10 +354,10 @@ public sealed class SecurityAndCompatibilityTests {
 	public async Task AppliesDiffutilsEdScriptCompatibilityFixture(
 		string fixtureName
 	) {
-		var root = Path.Combine( AppContext.BaseDirectory, "fixtures", fixtureName );
-		var original = await ReadLfLinesAsync( Path.Combine( root, "original.txt" ) );
-		var expected = await ReadLfLinesAsync( Path.Combine( root, "expected.txt" ) );
-		await using var script = File.OpenRead( Path.Combine( root, "change.ed" ) );
+		var root = System.IO.Path.Combine( AppContext.BaseDirectory, "fixtures", fixtureName );
+		var original = await ReadLfLinesAsync( System.IO.Path.Combine( root, "original.txt" ) );
+		var expected = await ReadLfLinesAsync( System.IO.Path.Combine( root, "expected.txt" ) );
+		await using var script = File.OpenRead( System.IO.Path.Combine( root, "change.ed" ) );
 		var engine = new EditorEngine(
 			EditorSecurityPolicy.Standard,
 			new MemoryFileAccess(),
@@ -370,7 +370,7 @@ public sealed class SecurityAndCompatibilityTests {
 			script,
 			new MemoryStream(),
 			new MemoryStream(),
-			Path.Combine( fixtureName, "change.ed" )
+			System.IO.Path.Combine( fixtureName, "change.ed" )
 		);
 
 		Assert.True( result.IsSuccess, result.Diagnostic?.Message );

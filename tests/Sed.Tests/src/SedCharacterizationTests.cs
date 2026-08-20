@@ -149,8 +149,8 @@ public sealed class SedCharacterizationTests {
 	private static async Task<string> CreateFileAsync(
 		string contents
 	) {
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			$"icod-sed-characterization-{Guid.NewGuid():N}.txt"
 		);
 		await File.WriteAllTextAsync(

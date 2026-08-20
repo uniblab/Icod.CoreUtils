@@ -16,9 +16,9 @@ public sealed class ReadOnlyPathTraversalEngineTests {
 		var paths = CreatePaths();
 		var provider = new SyntheticReadOnlyFileSystemProvider()
 			.AddDirectory( paths.Root )
-			.AddFile( Path.Combine( paths.Root, "z.txt" ) )
-			.AddDirectory( Path.Combine( paths.Root, "a" ) )
-			.AddFile( Path.Combine( paths.Root, "a", "inside.txt" ) );
+			.AddFile( System.IO.Path.Combine( paths.Root, "z.txt" ) )
+			.AddDirectory( System.IO.Path.Combine( paths.Root, "a" ) )
+			.AddFile( System.IO.Path.Combine( paths.Root, "a", "inside.txt" ) );
 		var engine = new ReadOnlyPathTraversalEngine( provider );
 
 		var events = await CollectAsync( engine.TraverseAsync(
@@ -42,7 +42,7 @@ public sealed class ReadOnlyPathTraversalEngineTests {
 			events,
 			item => Assert.Equal( "operand-root", item.Root.OriginalOperand )
 		);
-		Assert.Equal( Path.Combine( "a", "inside.txt" ), events[3].Entry!.RelativePath );
+		Assert.Equal( System.IO.Path.Combine( "a", "inside.txt" ), events[3].Entry!.RelativePath );
 	}
 
 	/// <summary>
@@ -52,12 +52,12 @@ public sealed class ReadOnlyPathTraversalEngineTests {
 	[Fact]
 	public async Task SelectorCanYieldDirectoryWhilePruningItsChildren() {
 		var paths = CreatePaths();
-		var skipped = Path.Combine( paths.Root, "skip" );
+		var skipped = System.IO.Path.Combine( paths.Root, "skip" );
 		var provider = new SyntheticReadOnlyFileSystemProvider()
 			.AddDirectory( paths.Root )
 			.AddDirectory( skipped )
-			.AddFile( Path.Combine( skipped, "hidden.txt" ) )
-			.AddFile( Path.Combine( paths.Root, "visible.txt" ) );
+			.AddFile( System.IO.Path.Combine( skipped, "hidden.txt" ) )
+			.AddFile( System.IO.Path.Combine( paths.Root, "visible.txt" ) );
 		var selector = new PathTraversalRuleSelector(
 			new[] {
 				new PathTraversalFilterRule(
@@ -93,13 +93,13 @@ public sealed class ReadOnlyPathTraversalEngineTests {
 	[Fact]
 	public async Task DistinguishesRootOnlyAndDescendantLinkFollowing() {
 		var paths = CreatePaths();
-		var target = Path.Combine( paths.Base, "target" );
-		var link = Path.Combine( paths.Root, "link" );
+		var target = System.IO.Path.Combine( paths.Base, "target" );
+		var link = System.IO.Path.Combine( paths.Root, "link" );
 		var provider = new SyntheticReadOnlyFileSystemProvider()
 			.AddDirectory( paths.Base )
 			.AddDirectory( paths.Root )
 			.AddDirectory( target )
-			.AddFile( Path.Combine( target, "through-link.txt" ) )
+			.AddFile( System.IO.Path.Combine( target, "through-link.txt" ) )
 			.AddLink( link, target );
 		var engine = new ReadOnlyPathTraversalEngine( provider );
 
@@ -125,9 +125,9 @@ public sealed class ReadOnlyPathTraversalEngineTests {
 	[Fact]
 	public async Task DetectsAncestorCycleButAllowsIndependentRepeatedIdentity() {
 		var paths = CreatePaths();
-		var first = Path.Combine( paths.Root, "first" );
-		var second = Path.Combine( paths.Root, "second" );
-		var up = Path.Combine( first, "up" );
+		var first = System.IO.Path.Combine( paths.Root, "first" );
+		var second = System.IO.Path.Combine( paths.Root, "second" );
+		var up = System.IO.Path.Combine( first, "up" );
 		var provider = new SyntheticReadOnlyFileSystemProvider()
 			.AddDirectory( paths.Root, "root-id" )
 			.AddDirectory( first, "shared-id" )
@@ -156,11 +156,11 @@ public sealed class ReadOnlyPathTraversalEngineTests {
 	[Fact]
 	public async Task StopsAtRootFileSystemBoundary() {
 		var paths = CreatePaths();
-		var mounted = Path.Combine( paths.Root, "mounted" );
+		var mounted = System.IO.Path.Combine( paths.Root, "mounted" );
 		var provider = new SyntheticReadOnlyFileSystemProvider()
 			.AddDirectory( paths.Root, fileSystemIdentity: "fs-root" )
 			.AddDirectory( mounted, fileSystemIdentity: "fs-other" )
-			.AddFile( Path.Combine( mounted, "inside.txt" ), fileSystemIdentity: "fs-other" );
+			.AddFile( System.IO.Path.Combine( mounted, "inside.txt" ), fileSystemIdentity: "fs-other" );
 		var engine = new ReadOnlyPathTraversalEngine( provider );
 
 		var events = await CollectAsync( engine.TraverseAsync(
@@ -182,11 +182,11 @@ public sealed class ReadOnlyPathTraversalEngineTests {
 	[Fact]
 	public async Task ReportsEnumerationErrorAndContinuesWithSibling() {
 		var paths = CreatePaths();
-		var bad = Path.Combine( paths.Root, "bad" );
+		var bad = System.IO.Path.Combine( paths.Root, "bad" );
 		var provider = new SyntheticReadOnlyFileSystemProvider()
 			.AddDirectory( paths.Root )
 			.AddDirectory( bad )
-			.AddFile( Path.Combine( paths.Root, "good.txt" ) );
+			.AddFile( System.IO.Path.Combine( paths.Root, "good.txt" ) );
 		provider.SetEnumerationException( bad, new UnauthorizedAccessException( "synthetic" ) );
 		var engine = new ReadOnlyPathTraversalEngine( provider );
 
@@ -209,12 +209,12 @@ public sealed class ReadOnlyPathTraversalEngineTests {
 	[Fact]
 	public async Task RootsOnlyFollowsLinkedRoot() {
 		var paths = CreatePaths();
-		var target = Path.Combine( paths.Base, "target" );
-		var linkedRoot = Path.Combine( paths.Base, "linked-root" );
+		var target = System.IO.Path.Combine( paths.Base, "target" );
+		var linkedRoot = System.IO.Path.Combine( paths.Base, "linked-root" );
 		var provider = new SyntheticReadOnlyFileSystemProvider()
 			.AddDirectory( paths.Base )
 			.AddDirectory( target )
-			.AddFile( Path.Combine( target, "inside.txt" ) )
+			.AddFile( System.IO.Path.Combine( target, "inside.txt" ) )
 			.AddLink( linkedRoot, target );
 		var engine = new ReadOnlyPathTraversalEngine( provider );
 
@@ -235,13 +235,13 @@ public sealed class ReadOnlyPathTraversalEngineTests {
 	[Fact]
 	public async Task IndependentlyReachedDirectoryIdentityRemainsObservable() {
 		var paths = CreatePaths();
-		var target = Path.Combine( paths.Base, "target" );
+		var target = System.IO.Path.Combine( paths.Base, "target" );
 		var provider = new SyntheticReadOnlyFileSystemProvider()
 			.AddDirectory( paths.Root )
 			.AddDirectory( target, "shared-target" )
-			.AddFile( Path.Combine( target, "inside.txt" ) )
-			.AddLink( Path.Combine( paths.Root, "first" ), target )
-			.AddLink( Path.Combine( paths.Root, "second" ), target );
+			.AddFile( System.IO.Path.Combine( target, "inside.txt" ) )
+			.AddLink( System.IO.Path.Combine( paths.Root, "first" ), target )
+			.AddLink( System.IO.Path.Combine( paths.Root, "second" ), target );
 		var engine = new ReadOnlyPathTraversalEngine( provider );
 
 		var events = await CollectAsync( engine.TraverseAsync(
@@ -266,7 +266,7 @@ public sealed class ReadOnlyPathTraversalEngineTests {
 		var provider = new SyntheticReadOnlyFileSystemProvider()
 			.AddDirectory( paths.Root )
 			.AddPhantomChild( paths.Root, "gone.txt" )
-			.AddFile( Path.Combine( paths.Root, "present.txt" ) );
+			.AddFile( System.IO.Path.Combine( paths.Root, "present.txt" ) );
 		var engine = new ReadOnlyPathTraversalEngine( provider );
 
 		var events = await CollectAsync( engine.TraverseAsync(
@@ -289,8 +289,8 @@ public sealed class ReadOnlyPathTraversalEngineTests {
 		var paths = CreatePaths();
 		var provider = new SyntheticReadOnlyFileSystemProvider()
 			.AddDirectory( paths.Root )
-			.AddFile( Path.Combine( paths.Root, "one.txt" ) )
-			.AddFile( Path.Combine( paths.Root, "two.txt" ) );
+			.AddFile( System.IO.Path.Combine( paths.Root, "one.txt" ) )
+			.AddFile( System.IO.Path.Combine( paths.Root, "two.txt" ) );
 		var engine = new ReadOnlyPathTraversalEngine( provider );
 
 		var events = await CollectAsync( engine.TraverseAsync(
@@ -356,7 +356,7 @@ public sealed class ReadOnlyPathTraversalEngineTests {
 	[Fact]
 	public async Task TraversesAsynchronousRootStreamInOrder() {
 		var paths = CreatePaths();
-		var second = Path.Combine( paths.Base, "second" );
+		var second = System.IO.Path.Combine( paths.Base, "second" );
 		var provider = new SyntheticReadOnlyFileSystemProvider()
 			.AddDirectory( paths.Root )
 			.AddDirectory( second );
@@ -408,7 +408,7 @@ public sealed class ReadOnlyPathTraversalEngineTests {
 	[Fact]
 	public async Task FailFastStopsAsynchronousRootStream() {
 		var paths = CreatePaths();
-		var second = Path.Combine( paths.Base, "second" );
+		var second = System.IO.Path.Combine( paths.Base, "second" );
 		var provider = new SyntheticReadOnlyFileSystemProvider().AddDirectory( second );
 		var engine = new ReadOnlyPathTraversalEngine( provider );
 
@@ -479,11 +479,11 @@ public sealed class ReadOnlyPathTraversalEngineTests {
 	}
 
 	private static (string Base, string Root) CreatePaths() {
-		var basePath = Path.Combine(
-			Path.GetTempPath(),
+		var basePath = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			string.Concat( "icod-e1-traversal-", Guid.NewGuid().ToString( "N" ) )
 		);
-		return (basePath, Path.Combine( basePath, "root" ));
+		return (basePath, System.IO.Path.Combine( basePath, "root" ));
 	}
 
 	private static PathTraversalRoot CreateRoot(

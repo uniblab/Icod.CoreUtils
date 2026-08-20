@@ -181,7 +181,7 @@ public sealed class CommandTests {
 			return;
 		}
 
-		var probe = Path.Combine(
+		var probe = System.IO.Path.Combine(
 			AppContext.BaseDirectory,
 			"stdbuf-buffering-probe"
 		);

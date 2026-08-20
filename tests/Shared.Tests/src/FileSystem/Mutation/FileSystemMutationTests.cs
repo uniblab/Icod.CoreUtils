@@ -17,8 +17,8 @@ public sealed class FileSystemMutationTests {
 		var root = CreateTemporaryDirectory();
 		try {
 			var provider = SystemFileSystemMutationProvider.Instance;
-			var file = Path.Combine( root, "sample.txt" );
-			var directory = Path.Combine( root, "sample-directory" );
+			var file = System.IO.Path.Combine( root, "sample.txt" );
+			var directory = System.IO.Path.Combine( root, "sample-directory" );
 
 			var fileCreation = await provider.CreateFileAsync(
 				file,
@@ -67,8 +67,8 @@ public sealed class FileSystemMutationTests {
 		var root = CreateTemporaryDirectory();
 		try {
 			var provider = SystemFileSystemMutationProvider.Instance;
-			var file = Path.Combine( root, "existing.txt" );
-			var directory = Path.Combine( root, "existing-directory" );
+			var file = System.IO.Path.Combine( root, "existing.txt" );
+			var directory = System.IO.Path.Combine( root, "existing-directory" );
 			await File.WriteAllTextAsync( file, "original" );
 			Directory.CreateDirectory( directory );
 
@@ -101,8 +101,8 @@ public sealed class FileSystemMutationTests {
 		var root = CreateTemporaryDirectory();
 		try {
 			var provider = SystemFileSystemMutationProvider.Instance;
-			var source = Path.Combine( root, "source.txt" );
-			var link = Path.Combine( root, "link.txt" );
+			var source = System.IO.Path.Combine( root, "source.txt" );
+			var link = System.IO.Path.Combine( root, "link.txt" );
 			await File.WriteAllTextAsync( source, "content" );
 
 			var sourceMetadata = await SystemFileSystemMetadataProvider.Instance.GetMetadataAsync(
@@ -143,7 +143,7 @@ public sealed class FileSystemMutationTests {
 		var root = CreateTemporaryDirectory();
 		try {
 			var provider = SystemFileSystemMutationProvider.Instance;
-			var link = Path.Combine( root, "dangling-link" );
+			var link = System.IO.Path.Combine( root, "dangling-link" );
 			var result = await provider.CreateSymbolicLinkAsync( link, "missing-target", false );
 
 			if ( !result.Succeeded ) {
@@ -173,8 +173,8 @@ public sealed class FileSystemMutationTests {
 		var root = CreateTemporaryDirectory();
 		try {
 			var provider = SystemFileSystemMutationProvider.Instance;
-			var target = Path.Combine( root, "junction-target" );
-			var junction = Path.Combine( root, "junction" );
+			var target = System.IO.Path.Combine( root, "junction-target" );
+			var junction = System.IO.Path.Combine( root, "junction" );
 			Directory.CreateDirectory( target );
 
 			var result = await provider.CreateJunctionAsync( junction, target );
@@ -194,18 +194,18 @@ public sealed class FileSystemMutationTests {
 			Assert.True( metadata.IsJunction );
 			Assert.False( metadata.WasDereferenced );
 
-			var child = Path.Combine( junction, "child.txt" );
+			var child = System.IO.Path.Combine( junction, "child.txt" );
 			await File.WriteAllTextAsync( child, "through-junction" );
 			Assert.Equal(
 				"through-junction",
-				await File.ReadAllTextAsync( Path.Combine( target, "child.txt" ) )
+				await File.ReadAllTextAsync( System.IO.Path.Combine( target, "child.txt" ) )
 			);
 
 			var removal = await provider.RemoveFileAsync( junction );
 			Assert.True( removal.Succeeded, removal.Message );
 			Assert.False( Directory.Exists( junction ) );
 			Assert.True( Directory.Exists( target ) );
-			Assert.True( File.Exists( Path.Combine( target, "child.txt" ) ) );
+			Assert.True( File.Exists( System.IO.Path.Combine( target, "child.txt" ) ) );
 		} finally {
 			DeleteTree( root );
 		}
@@ -218,7 +218,7 @@ public sealed class FileSystemMutationTests {
 		var root = CreateTemporaryDirectory();
 		try {
 			var provider = SystemFileSystemMutationProvider.Instance;
-			var fifo = Path.Combine( root, "channel" );
+			var fifo = System.IO.Path.Combine( root, "channel" );
 			var result = await provider.CreateFifoAsync(
 				fifo,
 				new PosixFileMode( 0x01b6 ),
@@ -252,7 +252,7 @@ public sealed class FileSystemMutationTests {
 		var root = CreateTemporaryDirectory();
 		try {
 			var provider = SystemFileSystemMutationProvider.Instance;
-			var file = Path.Combine( root, "mode.txt" );
+			var file = System.IO.Path.Combine( root, "mode.txt" );
 			await File.WriteAllTextAsync( file, "mode" );
 			var observed = await SystemFileSystemMetadataProvider.Instance.GetMetadataAsync(
 				file,
@@ -283,8 +283,8 @@ public sealed class FileSystemMutationTests {
 		var root = CreateTemporaryDirectory();
 		try {
 			var provider = SystemFileSystemMutationProvider.Instance;
-			var path = Path.Combine( root, "target.txt" );
-			var replacement = Path.Combine( root, "replacement.txt" );
+			var path = System.IO.Path.Combine( root, "target.txt" );
+			var replacement = System.IO.Path.Combine( root, "replacement.txt" );
 			await File.WriteAllTextAsync( path, "original" );
 			await File.WriteAllTextAsync( replacement, "replacement" );
 
@@ -328,11 +328,11 @@ public sealed class FileSystemMutationTests {
 		var root = CreateTemporaryDirectory();
 		try {
 			var provider = SystemFileSystemMutationProvider.Instance;
-			var file = Path.Combine( root, "file.txt" );
-			var directory = Path.Combine( root, "directory" );
+			var file = System.IO.Path.Combine( root, "file.txt" );
+			var directory = System.IO.Path.Combine( root, "directory" );
 			await File.WriteAllTextAsync( file, "file" );
 			Directory.CreateDirectory( directory );
-			await File.WriteAllTextAsync( Path.Combine( directory, "child.txt" ), "child" );
+			await File.WriteAllTextAsync( System.IO.Path.Combine( directory, "child.txt" ), "child" );
 
 			var wrongKind = await provider.RemoveDirectoryAsync( file );
 			var nonempty = await provider.RemoveDirectoryAsync( directory );
@@ -370,8 +370,8 @@ public sealed class FileSystemMutationTests {
 	}
 
 	private static string CreateTemporaryDirectory() {
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			string.Concat( "Icod.CoreUtils.E4.", Guid.NewGuid().ToString( "N" ) )
 		);
 		Directory.CreateDirectory( path );

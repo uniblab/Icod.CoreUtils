@@ -274,7 +274,7 @@ internal sealed class PatchE6Transaction : IPatchTransaction {
 	}
 
 	private static string GetFileSystemKey( string path ) {
-		return Path.GetPathRoot( Path.GetFullPath( path ) ) ?? Directory.GetCurrentDirectory();
+		return System.IO.Path.GetPathRoot( System.IO.Path.GetFullPath( path ) ) ?? Directory.GetCurrentDirectory();
 	}
 
 	private static PatchTransactionOutcome MapOutcome( TransactionalReplacementOutcome outcome ) {
@@ -293,7 +293,7 @@ internal sealed class PatchE6Transaction : IPatchTransaction {
 
 	private static string NormalizePath( string path ) {
 		try {
-			return Path.GetFullPath( path );
+			return System.IO.Path.GetFullPath( path );
 		} catch ( Exception exception ) when ( exception is ArgumentException or NotSupportedException or PathTooLongException ) {
 			return path;
 		}

@@ -7,10 +7,10 @@ public sealed class CommandTests {
 	/// <summary>Verifies the profile defaults to metadata-backed long output.</summary>
 	[Fact]
 	public async Task DefaultsToLongListing() {
-		var root = Path.Combine( Path.GetTempPath(), "icod-vdir-" + Guid.NewGuid().ToString( "N" ) );
+		var root = System.IO.Path.Combine( System.IO.Path.GetTempPath(), "icod-vdir-" + Guid.NewGuid().ToString( "N" ) );
 		Directory.CreateDirectory( root );
 		try {
-			await File.WriteAllTextAsync( Path.Combine( root, "entry.txt" ), "payload" );
+			await File.WriteAllTextAsync( System.IO.Path.Combine( root, "entry.txt" ), "payload" );
 			var output = new StringWriter();
 			var error = new StringWriter();
 

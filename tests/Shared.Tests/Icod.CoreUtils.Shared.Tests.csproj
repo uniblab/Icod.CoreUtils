@@ -20,9 +20,6 @@
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\..\Shared\Icod.CoreUtils.Shared.csproj" />
-		<ProjectReference Include="..\..\Icod.Path\Icod.Path.csproj">
-			<Aliases>IcodPath</Aliases>
-		</ProjectReference>
 		<ProjectReference Include="..\ProcessTestHost\Icod.CoreUtils.ProcessTestHost.csproj" ReferenceOutputAssembly="false" />
 	</ItemGroup>
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

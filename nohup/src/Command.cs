@@ -167,7 +167,7 @@ public static class Command {
 			currentFailure = exception;
 		}
 		if ( environment.Variables.TryGetValue( "HOME", out var home ) && !string.IsNullOrEmpty( home ) ) {
-			var fallback = Path.Combine( home, "nohup.out" );
+			var fallback = System.IO.Path.Combine( home, "nohup.out" );
 			try {
 				return files.OpenAppend( fallback );
 			} catch ( Exception exception ) when ( exception is IOException or UnauthorizedAccessException or NotSupportedException ) {

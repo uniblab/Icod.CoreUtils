@@ -183,7 +183,7 @@ public sealed class CommandTests {
 		var targetFrameworkDirectory = new DirectoryInfo( AppContext.BaseDirectory );
 		var configurationDirectory = targetFrameworkDirectory.Parent ?? throw new InvalidOperationException();
 		var testsDirectory = configurationDirectory.Parent?.Parent?.Parent ?? throw new InvalidOperationException();
-		return Path.Combine(
+		return System.IO.Path.Combine(
 			testsDirectory.FullName,
 			"ProcessTestHost", "bin", configurationDirectory.Name, targetFrameworkDirectory.Name,
 			"Icod.CoreUtils.ProcessTestHost.dll"
