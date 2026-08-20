@@ -1,7 +1,7 @@
 namespace Icod.ProcPs.Shared;
 
 using System.Runtime.CompilerServices;
-using Icod.CoreUtils.Shared.Time;
+using Icod.CommandFramework.Time;
 
 /// <summary>Provides counter-delta calculations with explicit unsigned wraparound semantics.</summary>
 public static class ProcCounterMath {

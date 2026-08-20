@@ -3,7 +3,7 @@ namespace Icod.CoreUtils.Shared.Tests.Processes;
 using Xunit;
 using System.Text;
 using Icod.CoreUtils.Shared.Processes;
-using Icod.CoreUtils.Shared.Time;
+using Icod.CommandFramework.Time;
 
 /// <summary>
 /// Exercises argument-safe launch, stream forwarding, environment construction, working directories, and timeout cleanup.

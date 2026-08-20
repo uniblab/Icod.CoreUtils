@@ -2,7 +2,7 @@ namespace Icod.CoreUtils.Timeout.Tests;
 
 using System.Text;
 using Icod.CoreUtils.Shared.Processes;
-using Icod.CoreUtils.Shared.Time;
+using Icod.CommandFramework.Time;
 using Xunit;
 
 /// <summary>Exercises GNU Coreutils 9.11 <c>timeout</c> parsing and F4 orchestration.</summary>

@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using Icod.CoreUtils.Shared.Host;
 using Icod.CoreUtils.Shared.Terminal;
-using Icod.CoreUtils.Shared.Time;
+using Icod.CommandFramework.Time;
 using Icod.ProcPs.Shared;
 using Xunit;
 
