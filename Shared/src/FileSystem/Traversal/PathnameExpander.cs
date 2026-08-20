@@ -1,3 +1,4 @@
+using System.IO;
 using System.Runtime.CompilerServices;
 
 namespace Icod.CoreUtils.Shared.FileSystem.Traversal;

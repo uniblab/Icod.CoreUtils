@@ -1,8 +1,6 @@
-extern alias IcodPath;
-
 using System.Runtime.InteropServices;
-using PathIndirectionInfo = IcodPath::Icod.Path.PathIndirectionInfo;
-using PathIndirectionKind = IcodPath::Icod.Path.PathIndirectionKind;
+using PathIndirectionInfo = Icod.Path.PathIndirectionInfo;
+using PathIndirectionKind = Icod.Path.PathIndirectionKind;
 using Icod.CoreUtils.Shared.FileSystem;
 using Icod.CoreUtils.Shared.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;

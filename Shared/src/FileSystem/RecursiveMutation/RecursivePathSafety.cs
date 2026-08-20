@@ -1,8 +1,6 @@
-extern alias IcodPath;
-
-using CanonicalPathResolutionOptions = IcodPath::Icod.Path.CanonicalPathResolutionOptions;
-using CanonicalPathResolver = IcodPath::Icod.Path.CanonicalPathResolver;
-using MissingPathComponentPolicy = IcodPath::Icod.Path.MissingPathComponentPolicy;
+using CanonicalPathResolutionOptions = Icod.Path.CanonicalPathResolutionOptions;
+using CanonicalPathResolver = Icod.Path.CanonicalPathResolver;
+using MissingPathComponentPolicy = Icod.Path.MissingPathComponentPolicy;
 
 namespace Icod.CoreUtils.Shared.FileSystem.RecursiveMutation;
 

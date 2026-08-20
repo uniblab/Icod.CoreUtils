@@ -1,9 +1,7 @@
-extern alias IcodPath;
-
-using IPathIndirectionInspector = IcodPath::Icod.Path.IPathIndirectionInspector;
-using PathIndirectionInfo = IcodPath::Icod.Path.PathIndirectionInfo;
-using PathIndirectionKind = IcodPath::Icod.Path.PathIndirectionKind;
-using SystemPathIndirectionInspector = IcodPath::Icod.Path.SystemPathIndirectionInspector;
+using IPathIndirectionInspector = Icod.Path.IPathIndirectionInspector;
+using PathIndirectionInfo = Icod.Path.PathIndirectionInfo;
+using PathIndirectionKind = Icod.Path.PathIndirectionKind;
+using SystemPathIndirectionInspector = Icod.Path.SystemPathIndirectionInspector;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;

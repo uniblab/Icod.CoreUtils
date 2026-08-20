@@ -70,4 +70,7 @@
 			<PackagePath>\</PackagePath>
 		</Content>
 	</ItemGroup>
+	<ItemGroup>
+	  <PackageReference Include="Icod.Path" Version="1.0.0" />
+	</ItemGroup>
 </Project>

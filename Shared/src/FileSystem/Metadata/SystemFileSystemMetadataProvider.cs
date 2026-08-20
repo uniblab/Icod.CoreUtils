@@ -1,6 +1,4 @@
-extern alias IcodPath;
-
-using PathIndirectionKind = IcodPath::Icod.Path.PathIndirectionKind;
+using PathIndirectionKind = Icod.Path.PathIndirectionKind;
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.InteropServices;
