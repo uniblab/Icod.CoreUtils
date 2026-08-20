@@ -1,0 +1,9 @@
+<Project>
+	<ItemGroup>
+		<!--
+			Icod.Path is a sibling namespace beneath Icod.  Make unqualified Path
+			references consistently mean the BCL System.IO.Path type repository-wide.
+		-->
+		<Using Include="System.IO.Path" Alias="Path" />
+	</ItemGroup>
+</Project>
