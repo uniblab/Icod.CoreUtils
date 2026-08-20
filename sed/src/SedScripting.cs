@@ -12,7 +12,7 @@ using Icod.CoreUtils.Shared.CommandLine;
 using Icod.CoreUtils.Shared.Diagnostics;
 using Icod.CoreUtils.Shared.IO;
 using Icod.CoreUtils.Shared.Processes;
-using Icod.CoreUtils.Shared.Text;
+using Icod.CommandFramework.Text;
 
 // Responsibility: script instruction model and parser.
 public static partial class Command {

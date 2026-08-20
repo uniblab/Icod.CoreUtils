@@ -2,7 +2,7 @@ namespace Icod.CoreUtils.Unexpand;
 
 using Icod.CoreUtils.Shared.Diagnostics;
 using Icod.CoreUtils.Shared.IO;
-using Icod.CoreUtils.Shared.Text;
+using Icod.CommandFramework.Text;
 
 /// <summary>Performs the byte-preserving <c>unexpand</c> transformation.</summary>
 internal sealed class UnexpandProcessor {

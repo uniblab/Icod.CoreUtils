@@ -1,7 +1,7 @@
 using System.Buffers;
 using System.Globalization;
 using System.Text;
-using Icod.CoreUtils.Shared.Text;
+using Icod.CommandFramework.Text;
 
 namespace Icod.CoreUtils.Shared.RegularExpressions;
 

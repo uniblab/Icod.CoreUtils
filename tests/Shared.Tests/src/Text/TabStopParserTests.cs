@@ -1,5 +1,6 @@
 namespace Icod.CoreUtils.Shared.Tests.Text;
 
+using Icod.CommandFramework.Text;
 using Icod.CoreUtils.Shared.Text;
 using Xunit;
 

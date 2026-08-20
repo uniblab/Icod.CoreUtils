@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Unexpand;
 
-using Icod.CoreUtils.Shared.Text;
+using Icod.CommandFramework.Text;
 
 /// <summary>Retains exact blank units until GNU <c>unexpand</c> can decide their replacement.</summary>
 internal sealed class PendingBlankBuffer {

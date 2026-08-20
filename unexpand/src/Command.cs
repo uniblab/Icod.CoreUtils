@@ -3,7 +3,8 @@ namespace Icod.CoreUtils.Unexpand;
 using Icod.CoreUtils.Shared.CommandLine;
 using Icod.CoreUtils.Shared.Diagnostics;
 using Icod.CoreUtils.Shared.IO;
-using Icod.CoreUtils.Shared.Text;
+using Icod.CommandFramework.Text;
+using TabStopParser = Icod.CoreUtils.Shared.Text.TabStopParser;
 
 /// <summary>Implements GNU <c>unexpand</c> for .NET.</summary>
 /// <remarks>

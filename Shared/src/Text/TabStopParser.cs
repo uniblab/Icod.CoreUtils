@@ -1,5 +1,7 @@
 namespace Icod.CoreUtils.Shared.Text;
 
+using Icod.CommandFramework.Text;
+
 /// <summary>Parses the reusable GNU tab-stop grammar used by text-layout utilities.</summary>
 public static class TabStopParser {
 	/// <summary>Parses one tab-stop specification.</summary>

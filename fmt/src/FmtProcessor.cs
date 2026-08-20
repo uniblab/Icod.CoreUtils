@@ -2,7 +2,7 @@ namespace Icod.CoreUtils.Fmt;
 
 using Icod.CoreUtils.Shared.Diagnostics;
 using Icod.CoreUtils.Shared.IO;
-using Icod.CoreUtils.Shared.Text;
+using Icod.CommandFramework.Text;
 
 /// <summary>Processes byte-preserving <c>fmt</c> input operands.</summary>
 internal sealed class FmtProcessor {

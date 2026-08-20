@@ -3,7 +3,7 @@ namespace Icod.CoreUtils.Fold;
 using Icod.CoreUtils.Shared.CommandLine;
 using Icod.CoreUtils.Shared.Diagnostics;
 using Icod.CoreUtils.Shared.IO;
-using Icod.CoreUtils.Shared.Text;
+using Icod.CommandFramework.Text;
 
 /// <summary>Implements GNU <c>fold</c> for .NET.</summary>
 /// <remarks>
