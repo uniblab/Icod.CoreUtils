@@ -1,3 +1,4 @@
+using Path = global::System.IO.Path;
 using System.Runtime.CompilerServices;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;

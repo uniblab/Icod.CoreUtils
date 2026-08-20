@@ -1,3 +1,4 @@
+using Path = global::System.IO.Path;
 using System.Collections.ObjectModel;
 using Icod.CoreUtils.Shared.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;

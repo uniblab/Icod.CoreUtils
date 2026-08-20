@@ -1,3 +1,4 @@
+using Path = global::System.IO.Path;
 namespace Icod.CoreUtils.Shared.Temporary;
 
 /// <summary>Owns one secure temporary directory and the regular files created within it.</summary>

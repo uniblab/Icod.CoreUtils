@@ -1,3 +1,4 @@
+using Path = global::System.IO.Path;
 using System.Collections.ObjectModel;
 
 namespace Icod.CoreUtils.Shared.FileSystem.Traversal;

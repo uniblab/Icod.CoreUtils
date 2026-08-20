@@ -1,3 +1,4 @@
+using Path = global::System.IO.Path;
 using System.IO;
 using System.Runtime.CompilerServices;
 

@@ -1,3 +1,4 @@
+using Path = global::System.IO.Path;
 using System.Runtime.InteropServices;
 using Icod.CoreUtils.Shared.FileSystem.Metadata;
 

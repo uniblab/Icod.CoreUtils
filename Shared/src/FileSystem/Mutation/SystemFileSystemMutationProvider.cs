@@ -1,3 +1,4 @@
+using Path = global::System.IO.Path;
 using System.Buffers.Binary;
 using System.ComponentModel;
 using System.Runtime.InteropServices;

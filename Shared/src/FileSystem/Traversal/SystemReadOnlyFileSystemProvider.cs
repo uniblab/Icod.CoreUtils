@@ -1,3 +1,4 @@
+using Path = global::System.IO.Path;
 using IPathIndirectionInspector = Icod.Path.IPathIndirectionInspector;
 using PathIndirectionInfo = Icod.Path.PathIndirectionInfo;
 using PathIndirectionKind = Icod.Path.PathIndirectionKind;

@@ -1,3 +1,4 @@
+using Path = global::System.IO.Path;
 namespace Icod.CoreUtils.Shared.Temporary;
 
 using System.ComponentModel;

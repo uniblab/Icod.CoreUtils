@@ -1,3 +1,4 @@
+using Path = global::System.IO.Path;
 using CanonicalPathResolutionOptions = Icod.Path.CanonicalPathResolutionOptions;
 using CanonicalPathResolver = Icod.Path.CanonicalPathResolver;
 using MissingPathComponentPolicy = Icod.Path.MissingPathComponentPolicy;

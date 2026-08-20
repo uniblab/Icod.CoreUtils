@@ -1,3 +1,4 @@
+using Path = global::System.IO.Path;
 namespace Icod.CoreUtils.Shared.Temporary;
 
 /// <summary>Represents a parsed temporary-name template and its final replaceable run of <c>X</c> characters.</summary>

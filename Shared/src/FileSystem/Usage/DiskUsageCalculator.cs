@@ -1,3 +1,4 @@
+using Path = global::System.IO.Path;
 using System.IO.Enumeration;
 using Icod.CoreUtils.Shared.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;

@@ -1,3 +1,4 @@
+using Path = global::System.IO.Path;
 using PathIndirectionKind = Icod.Path.PathIndirectionKind;
 using System.ComponentModel;
 using System.Globalization;

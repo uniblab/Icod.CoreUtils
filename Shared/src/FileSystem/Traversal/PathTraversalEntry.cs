@@ -1,3 +1,4 @@
+using Path = global::System.IO.Path;
 using PathIndirectionInfo = Icod.Path.PathIndirectionInfo;
 
 namespace Icod.CoreUtils.Shared.FileSystem.Traversal;
