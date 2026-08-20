@@ -228,8 +228,8 @@ public sealed class SedCommandTests {
 	[Fact]
 	public async Task ReadAndWriteCommandsStreamAuxiliaryFiles() {
 		var readPath = await CreateFileAsync( "extra\n" );
-		var writePath = Path.Combine(
-			Path.GetTempPath(),
+		var writePath = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			$"icod-sed-write-{Guid.NewGuid():N}.txt"
 		);
 		try {
@@ -390,12 +390,12 @@ public sealed class SedCommandTests {
 
 	[Fact]
 	public async Task InPlaceBackupSuffixMayContainWildcard() {
-		var directory = Path.Combine(
-			Path.GetTempPath(),
+		var directory = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			$"icod-sed-dir-{Guid.NewGuid():N}"
 		);
 		Directory.CreateDirectory( directory );
-		var path = Path.Combine( directory, "input.txt" );
+		var path = System.IO.Path.Combine( directory, "input.txt" );
 		await File.WriteAllTextAsync( path, "alpha\n", new UTF8Encoding( false ) );
 		var backup = path + ".orig";
 		try {
@@ -412,13 +412,13 @@ public sealed class SedCommandTests {
 
 	[Fact]
 	public async Task FollowSymlinksEditsTargetWhenSupported() {
-		var directory = Path.Combine(
-			Path.GetTempPath(),
+		var directory = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			$"icod-sed-link-{Guid.NewGuid():N}"
 		);
 		Directory.CreateDirectory( directory );
-		var target = Path.Combine( directory, "target.txt" );
-		var link = Path.Combine( directory, "link.txt" );
+		var target = System.IO.Path.Combine( directory, "target.txt" );
+		var link = System.IO.Path.Combine( directory, "link.txt" );
 		await File.WriteAllTextAsync( target, "alpha\n", new UTF8Encoding( false ) );
 		try {
 			try {
@@ -472,8 +472,8 @@ public sealed class SedCommandTests {
 	private static async Task<string> CreateFileAsync(
 		string contents
 	) {
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			$"icod-sed-test-{Guid.NewGuid():N}.txt"
 		);
 		await File.WriteAllTextAsync(

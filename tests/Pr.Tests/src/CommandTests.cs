@@ -26,7 +26,7 @@ public sealed class CommandTests {
 	public async Task DateFormatUsesSharedGnuFormatter() {
 		var directory = CreateTemporaryDirectory();
 		try {
-			var path = Path.Combine( directory, "dated.txt" );
+			var path = System.IO.Path.Combine( directory, "dated.txt" );
 			await File.WriteAllTextAsync( path, Lines( "x" ) );
 			File.SetLastWriteTime( path, new DateTime( 2001, 2, 3, 4, 5, 0, DateTimeKind.Local ) );
 			var result = await RunAsync( [ "-l", "12", "-D", "%F %R", path ], string.Empty );
@@ -73,8 +73,8 @@ public sealed class CommandTests {
 	public async Task MergePrintsFilesInParallel() {
 		var directory = CreateTemporaryDirectory();
 		try {
-			var left = Path.Combine( directory, "left.txt" );
-			var right = Path.Combine( directory, "right.txt" );
+			var left = System.IO.Path.Combine( directory, "left.txt" );
+			var right = System.IO.Path.Combine( directory, "right.txt" );
 			await File.WriteAllTextAsync( left, Lines( "a", "b" ) );
 			await File.WriteAllTextAsync( right, Lines( "c" ) );
 			var result = await RunAsync( [ "-T", "-m", "-s|", left, right ], string.Empty );
@@ -204,7 +204,7 @@ public sealed class CommandTests {
 	/// <returns>A task representing the asynchronous test.</returns>
 	[Fact]
 	public async Task NoFileWarningsSuppressesOnlyTheDiagnostic() {
-		var missing = Path.Combine( Path.GetTempPath(), string.Concat( Guid.NewGuid(), ".missing" ) );
+		var missing = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( Guid.NewGuid(), ".missing" ) );
 		var ordinary = await RunAsync( [ missing ], string.Empty );
 		var quiet = await RunAsync( [ "-r", missing ], string.Empty );
 		Assert.Equal( CommandExitCodes.Failure, ordinary.Status );
@@ -249,7 +249,7 @@ public sealed class CommandTests {
 	}
 
 	private static string CreateTemporaryDirectory() {
-		var result = Path.Combine( Path.GetTempPath(), string.Concat( "Icod.CoreUtils.Pr.Tests-", Guid.NewGuid() ) );
+		var result = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "Icod.CoreUtils.Pr.Tests-", Guid.NewGuid() ) );
 		Directory.CreateDirectory( result );
 		return result;
 	}

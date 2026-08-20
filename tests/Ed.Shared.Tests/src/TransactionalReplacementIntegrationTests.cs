@@ -12,7 +12,7 @@ public sealed class TransactionalReplacementIntegrationTests {
 	[Fact]
 	public async Task OverwriteUsesTransactionAndPreservesMetadata() {
 		using var directory = new TemporaryDirectory();
-		var path = Path.Combine( directory.Path, "buffer.txt" );
+		var path = System.IO.Path.Combine( directory.Path, "buffer.txt" );
 		await File.WriteAllTextAsync( path, "original\n" );
 		UnixFileMode? originalMode = null;
 		if ( !OperatingSystem.IsWindows() ) {
@@ -52,7 +52,7 @@ public sealed class TransactionalReplacementIntegrationTests {
 	[Fact]
 	public async Task WriteCreatesAbsentDestinationTransactionally() {
 		using var directory = new TemporaryDirectory();
-		var path = Path.Combine( directory.Path, "new.txt" );
+		var path = System.IO.Path.Combine( directory.Path, "new.txt" );
 		var injector = new RecordingFailureInjector();
 		var access = new StandardEditorFileAccess(
 			SystemTransactionalReplacementFileSystem.Instance,
@@ -77,7 +77,7 @@ public sealed class TransactionalReplacementIntegrationTests {
 	[Fact]
 	public async Task PostCommitFailureRollsBackAndCleansTransactionArtifacts() {
 		using var directory = new TemporaryDirectory();
-		var path = Path.Combine( directory.Path, "buffer.txt" );
+		var path = System.IO.Path.Combine( directory.Path, "buffer.txt" );
 		await File.WriteAllTextAsync( path, "original\n" );
 		var injector = new ThrowAtStageFailureInjector(
 			TransactionalReplacementStage.ApplyMetadata
@@ -106,7 +106,7 @@ public sealed class TransactionalReplacementIntegrationTests {
 	[Fact]
 	public async Task CanceledOverwritePreservesOriginalAndCleansArtifacts() {
 		using var directory = new TemporaryDirectory();
-		var path = Path.Combine( directory.Path, "buffer.txt" );
+		var path = System.IO.Path.Combine( directory.Path, "buffer.txt" );
 		await File.WriteAllTextAsync( path, "original\n" );
 		using var cancellation = new CancellationTokenSource();
 		cancellation.Cancel();
@@ -130,7 +130,7 @@ public sealed class TransactionalReplacementIntegrationTests {
 	[Fact]
 	public async Task AppendBypassesTransactionalReplacement() {
 		using var directory = new TemporaryDirectory();
-		var path = Path.Combine( directory.Path, "buffer.txt" );
+		var path = System.IO.Path.Combine( directory.Path, "buffer.txt" );
 		await File.WriteAllTextAsync( path, "original\n" );
 		var injector = new ThrowAtStageFailureInjector(
 			TransactionalReplacementStage.Validate
@@ -156,8 +156,8 @@ public sealed class TransactionalReplacementIntegrationTests {
 	[Fact]
 	public async Task TransactionalOverwriteFollowsTerminalSymbolicLink() {
 		using var directory = new TemporaryDirectory();
-		var target = Path.Combine( directory.Path, "target.txt" );
-		var link = Path.Combine( directory.Path, "link.txt" );
+		var target = System.IO.Path.Combine( directory.Path, "target.txt" );
+		var link = System.IO.Path.Combine( directory.Path, "link.txt" );
 		await File.WriteAllTextAsync( target, "target\n" );
 		try {
 			File.CreateSymbolicLink( link, target );
@@ -190,7 +190,7 @@ public sealed class TransactionalReplacementIntegrationTests {
 	private static string[] EntryNames(
 		string directory
 	) => Directory.EnumerateFileSystemEntries( directory )
-		.Select( value => Path.GetFileName( value ) ?? string.Empty )
+		.Select( value => System.IO.Path.GetFileName( value ) ?? string.Empty )
 		.OrderBy( value => value, StringComparer.Ordinal )
 		.ToArray();
 

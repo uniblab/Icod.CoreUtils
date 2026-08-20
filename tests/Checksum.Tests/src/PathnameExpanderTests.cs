@@ -9,21 +9,21 @@ public sealed class PathnameExpanderTests {
 	public void ExpandsAsteriskAndQuestionMarkWithinOneSegment() {
 		using var directory = new TemporaryDirectory();
 		File.WriteAllText(
-			Path.Combine(
+			System.IO.Path.Combine(
 				directory.Path,
 				"alpha.txt"
 			),
 			string.Empty
 		);
 		File.WriteAllText(
-			Path.Combine(
+			System.IO.Path.Combine(
 				directory.Path,
 				"beta.txt"
 			),
 			string.Empty
 		);
 		File.WriteAllText(
-			Path.Combine(
+			System.IO.Path.Combine(
 				directory.Path,
 				"beta.bin"
 			),
@@ -66,33 +66,33 @@ public sealed class PathnameExpanderTests {
 	public void DoubleAsteriskMatchesZeroAndMultipleDirectories() {
 		using var directory = new TemporaryDirectory();
 		File.WriteAllText(
-			Path.Combine(
+			System.IO.Path.Combine(
 				directory.Path,
 				"root.txt"
 			),
 			string.Empty
 		);
 		var first = Directory.CreateDirectory(
-			Path.Combine(
+			System.IO.Path.Combine(
 				directory.Path,
 				"one"
 			)
 		);
 		var second = Directory.CreateDirectory(
-			Path.Combine(
+			System.IO.Path.Combine(
 				first.FullName,
 				"two"
 			)
 		);
 		File.WriteAllText(
-			Path.Combine(
+			System.IO.Path.Combine(
 				first.FullName,
 				"first.txt"
 			),
 			string.Empty
 		);
 		File.WriteAllText(
-			Path.Combine(
+			System.IO.Path.Combine(
 				second.FullName,
 				"deep.txt"
 			),
@@ -101,7 +101,7 @@ public sealed class PathnameExpanderTests {
 
 		var matches = PathnameExpander.Expand(
 			new string[] {
-				Path.Combine(
+				System.IO.Path.Combine(
 					"**",
 					"*.txt"
 				)
@@ -113,8 +113,8 @@ public sealed class PathnameExpanderTests {
 
 		Assert.Equal(
 			new string[] {
-				Path.Combine( "one", "first.txt" ),
-				Path.Combine( "one", "two", "deep.txt" ),
+				System.IO.Path.Combine( "one", "first.txt" ),
+				System.IO.Path.Combine( "one", "two", "deep.txt" ),
 				"root.txt"
 			}.OrderBy(
 				value => value,
@@ -130,20 +130,20 @@ public sealed class PathnameExpanderTests {
 	public void TerminalDoubleAsteriskReturnsFilesRecursively() {
 		using var directory = new TemporaryDirectory();
 		File.WriteAllText(
-			Path.Combine(
+			System.IO.Path.Combine(
 				directory.Path,
 				"root.bin"
 			),
 			string.Empty
 		);
 		var nested = Directory.CreateDirectory(
-			Path.Combine(
+			System.IO.Path.Combine(
 				directory.Path,
 				"nested"
 			)
 		);
 		File.WriteAllText(
-			Path.Combine(
+			System.IO.Path.Combine(
 				nested.FullName,
 				"deep.bin"
 			),
@@ -161,7 +161,7 @@ public sealed class PathnameExpanderTests {
 
 		Assert.Equal(
 			new string[] {
-				Path.Combine( "nested", "deep.bin" ),
+				System.IO.Path.Combine( "nested", "deep.bin" ),
 				"root.bin"
 			},
 			matches
@@ -171,7 +171,7 @@ public sealed class PathnameExpanderTests {
 	[Fact]
 	public void PreservesUnmatchedPatternsByDefault() {
 		using var directory = new TemporaryDirectory();
-		var pattern = Path.Combine(
+		var pattern = System.IO.Path.Combine(
 			"missing",
 			"**",
 			"*.txt"
@@ -194,9 +194,9 @@ public sealed class PathnameExpanderTests {
 	[Fact]
 	public void KeepsOperandOrderAndSortsMatchesPerOperand() {
 		using var directory = new TemporaryDirectory();
-		File.WriteAllText( Path.Combine( directory.Path, "b.txt" ), string.Empty );
-		File.WriteAllText( Path.Combine( directory.Path, "a.txt" ), string.Empty );
-		File.WriteAllText( Path.Combine( directory.Path, "z.bin" ), string.Empty );
+		File.WriteAllText( System.IO.Path.Combine( directory.Path, "b.txt" ), string.Empty );
+		File.WriteAllText( System.IO.Path.Combine( directory.Path, "a.txt" ), string.Empty );
+		File.WriteAllText( System.IO.Path.Combine( directory.Path, "z.bin" ), string.Empty );
 
 		var matches = PathnameExpander.Expand(
 			new string[] {
@@ -222,19 +222,19 @@ public sealed class PathnameExpanderTests {
 	public void DoesNotTraverseDirectorySymlinksByDefault() {
 		using var directory = new TemporaryDirectory();
 		var target = Directory.CreateDirectory(
-			Path.Combine(
+			System.IO.Path.Combine(
 				directory.Path,
 				"target"
 			)
 		);
 		File.WriteAllText(
-			Path.Combine(
+			System.IO.Path.Combine(
 				target.FullName,
 				"inside.txt"
 			),
 			string.Empty
 		);
-		var link = Path.Combine(
+		var link = System.IO.Path.Combine(
 			directory.Path,
 			"link"
 		);
@@ -255,7 +255,7 @@ public sealed class PathnameExpanderTests {
 
 		var matches = PathnameExpander.Expand(
 			new string[] {
-				Path.Combine(
+				System.IO.Path.Combine(
 					"**",
 					"*.txt"
 				)
@@ -266,11 +266,11 @@ public sealed class PathnameExpanderTests {
 		);
 
 		Assert.Contains(
-			Path.Combine( "target", "inside.txt" ),
+			System.IO.Path.Combine( "target", "inside.txt" ),
 			matches
 		);
 		Assert.DoesNotContain(
-			Path.Combine( "link", "inside.txt" ),
+			System.IO.Path.Combine( "link", "inside.txt" ),
 			matches
 		);
 	}

@@ -10,8 +10,8 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task CreatesHardLink() {
 		using var temporary = new TemporaryDirectory();
-		var source = Path.Combine( temporary.Path, "source" );
-		var destination = Path.Combine( temporary.Path, "destination" );
+		var source = System.IO.Path.Combine( temporary.Path, "source" );
+		var destination = System.IO.Path.Combine( temporary.Path, "destination" );
 		File.WriteAllText( source, "data" );
 		var error = new StringWriter();
 		var status = await LinkCommand.RunAsync( new[] { source, destination }, new CommandContext( "link", TextReader.Null, TextWriter.Null, error ) );

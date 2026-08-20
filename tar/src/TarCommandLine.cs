@@ -270,7 +270,7 @@ internal static class TarCommandLine {
 
 	private static string ResolveWorkingDirectory( string current, string value ) {
 		try {
-			return Path.IsPathRooted( value ) ? Path.GetFullPath( value ) : Path.GetFullPath( value, current );
+			return System.IO.Path.IsPathRooted( value ) ? System.IO.Path.GetFullPath( value ) : System.IO.Path.GetFullPath( value, current );
 		}
 		catch ( Exception exception ) when ( exception is ArgumentException or NotSupportedException or PathTooLongException ) {
 			throw new TarUsageException( string.Concat( "Invalid directory '", value, "': ", exception.Message ) );

@@ -7,8 +7,8 @@ using Xunit;
 public sealed class MemoryMapProviderTests {
 	[Fact]
 	public async Task LinuxProviderFixtureRunsOnEveryHostAndReplacesInvalidUtf8() {
-		var root = Path.Combine( Path.GetTempPath(), "icod-procps-pmap-" + Guid.NewGuid().ToString( "N" ) );
-		var processRoot = Path.Combine( root, "101" );
+		var root = System.IO.Path.Combine( System.IO.Path.GetTempPath(), "icod-procps-pmap-" + Guid.NewGuid().ToString( "N" ) );
+		var processRoot = System.IO.Path.Combine( root, "101" );
 		Directory.CreateDirectory( processRoot );
 		try {
 			var prefix = System.Text.Encoding.UTF8.GetBytes( "00001000-00002000 r-xp 00000000 08:01 123 /tmp/na" );
@@ -17,7 +17,7 @@ public sealed class MemoryMapProviderTests {
 			prefix.CopyTo( bytes, 0 );
 			bytes[ prefix.Length ] = 0xff;
 			suffix.CopyTo( bytes, prefix.Length + 1 );
-			await File.WriteAllBytesAsync( Path.Combine( processRoot, "maps" ), bytes );
+			await File.WriteAllBytesAsync( System.IO.Path.Combine( processRoot, "maps" ), bytes );
 
 			var identity = Identity( 101, "first" );
 			var provider = new LinuxProcMemoryMapProvider( new SequenceInspector( identity, identity ), root );
@@ -35,11 +35,11 @@ public sealed class MemoryMapProviderTests {
 
 	[Fact]
 	public async Task LinuxProviderRejectsPidReuseAfterMapRead() {
-		var root = Path.Combine( Path.GetTempPath(), "icod-procps-pmap-" + Guid.NewGuid().ToString( "N" ) );
-		var processRoot = Path.Combine( root, "101" );
+		var root = System.IO.Path.Combine( System.IO.Path.GetTempPath(), "icod-procps-pmap-" + Guid.NewGuid().ToString( "N" ) );
+		var processRoot = System.IO.Path.Combine( root, "101" );
 		Directory.CreateDirectory( processRoot );
 		try {
-			await File.WriteAllTextAsync( Path.Combine( processRoot, "maps" ), "00001000-00002000 r-xp 00000000 08:01 123 /tmp/demo\n" );
+			await File.WriteAllTextAsync( System.IO.Path.Combine( processRoot, "maps" ), "00001000-00002000 r-xp 00000000 08:01 123 /tmp/demo\n" );
 			var expected = Identity( 101, "first" );
 			var reused = Identity( 101, "second" );
 			var provider = new LinuxProcMemoryMapProvider( new SequenceInspector( expected, reused ), root );

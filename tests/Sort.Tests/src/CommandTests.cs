@@ -287,8 +287,8 @@ public sealed class CommandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task MergesSortedInputs() {
-		var first = Path.GetTempFileName();
-		var second = Path.GetTempFileName();
+		var first = System.IO.Path.GetTempFileName();
+		var second = System.IO.Path.GetTempFileName();
 		try {
 			await File.WriteAllBytesAsync( first, Bytes( "a\nc\n" ) );
 			await File.WriteAllBytesAsync( second, Bytes( "b\nd\n" ) );
@@ -304,7 +304,7 @@ public sealed class CommandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task MergeModeUsesBoundedMultiPassFanIn() {
-		var files = Enumerable.Range( 0, 5 ).Select( _ => Path.GetTempFileName() ).ToArray();
+		var files = Enumerable.Range( 0, 5 ).Select( _ => System.IO.Path.GetTempFileName() ).ToArray();
 		try {
 			await File.WriteAllBytesAsync( files[ 0 ], Bytes( "a\nf\n" ) );
 			await File.WriteAllBytesAsync( files[ 1 ], Bytes( "b\ng\n" ) );
@@ -359,7 +359,7 @@ public sealed class CommandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task ExternalRunWorkspaceIsCleanedAfterSuccess() {
-		var directory = Path.Combine( Path.GetTempPath(), string.Concat( "sort-tests-", Guid.NewGuid().ToString( "N" ) ) );
+		var directory = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "sort-tests-", Guid.NewGuid().ToString( "N" ) ) );
 		Directory.CreateDirectory( directory );
 		try {
 			var result = await RunAsync(
@@ -377,7 +377,7 @@ public sealed class CommandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task SortsSafelyInPlace() {
-		var file = Path.GetTempFileName();
+		var file = System.IO.Path.GetTempFileName();
 		try {
 			await File.WriteAllBytesAsync( file, Bytes( "b\na\n" ) );
 			var result = await RunAsync( [ "-o", file, file ], [] );
@@ -392,8 +392,8 @@ public sealed class CommandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task ReadsFileNamesFromNullDelimitedList() {
-		var input = Path.GetTempFileName();
-		var list = Path.GetTempFileName();
+		var input = System.IO.Path.GetTempFileName();
+		var list = System.IO.Path.GetTempFileName();
 		try {
 			await File.WriteAllBytesAsync( input, Bytes( "b\na\n" ) );
 			await File.WriteAllBytesAsync( list, [ .. Encoding.UTF8.GetBytes( input ), 0 ] );
@@ -409,7 +409,7 @@ public sealed class CommandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task ReadsFileNamesFromStandardInput() {
-		var input = Path.GetTempFileName();
+		var input = System.IO.Path.GetTempFileName();
 		try {
 			await File.WriteAllBytesAsync( input, Bytes( "b\na\n" ) );
 			byte[] names = [ .. Encoding.UTF8.GetBytes( input ), 0 ];
@@ -425,7 +425,7 @@ public sealed class CommandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task EmptyFileNameListDoesNotFallBackToStandardInput() {
-		var list = Path.GetTempFileName();
+		var list = System.IO.Path.GetTempFileName();
 		try {
 			var result = await RunAsync( [ "--files0-from", list ], Bytes( "must-not-be-read\n" ) );
 			Assert.Equal( CommandExitCodes.Success, result.Status );
@@ -439,7 +439,7 @@ public sealed class CommandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task RandomOrderingIsRepeatableAndGroupsEqualKeys() {
-		var seed = Path.GetTempFileName();
+		var seed = System.IO.Path.GetTempFileName();
 		try {
 			await File.WriteAllBytesAsync( seed, Bytes( "fixed random seed" ) );
 			var arguments = new[] { "-s", "-R", "-t", ":", "-k", "1,1", "--random-source", seed };
@@ -459,7 +459,7 @@ public sealed class CommandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task IgnoresRandomSourceWithoutRandomOrdering() {
-		var missing = Path.Combine( Path.GetTempPath(), string.Concat( "missing-seed-", Guid.NewGuid().ToString( "N" ) ) );
+		var missing = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "missing-seed-", Guid.NewGuid().ToString( "N" ) ) );
 		var result = await RunAsync( [ "--random-source", missing ], Bytes( "b\na\n" ) );
 		Assert.Equal( CommandExitCodes.Success, result.Status );
 		Assert.Equal( Bytes( "a\nb\n" ), result.Output );
@@ -484,7 +484,7 @@ public sealed class CommandTests {
 		var keyCharacterNumeric = await RunAsync( [ "-k", "1,1dn" ], [] );
 		var checks = await RunAsync( [ "-c", "-C" ], [] );
 		var separators = await RunAsync( [ "-t", ":", "-t", "," ], [] );
-		var temporaryDirectories = await RunAsync( [ "-T", Path.GetTempPath(), "-T", Path.GetTempPath() ], [] );
+		var temporaryDirectories = await RunAsync( [ "-T", System.IO.Path.GetTempPath(), "-T", System.IO.Path.GetTempPath() ], [] );
 		Assert.Equal( CommandExitCodes.UsageError, modes.Status );
 		Assert.Equal( CommandExitCodes.UsageError, keyModes.Status );
 		Assert.Equal( CommandExitCodes.UsageError, characterNumeric.Status );

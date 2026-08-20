@@ -13,25 +13,25 @@ public sealed class ReparseAndSparseTests {
 	[Fact]
 	public async Task RecursiveCopyPreservesDirectorySymbolicLink() {
 		var root = CreateTemporaryDirectory();
-		var source = Directory.CreateDirectory( Path.Combine( root, "source" ) ).FullName;
-		var target = Directory.CreateDirectory( Path.Combine( root, "target" ) ).FullName;
-		var sourceLink = Path.Combine( source, "link" );
-		var destination = Path.Combine( root, "destination" );
-		await File.WriteAllTextAsync( Path.Combine( target, "sentinel" ), "target" );
+		var source = Directory.CreateDirectory( System.IO.Path.Combine( root, "source" ) ).FullName;
+		var target = Directory.CreateDirectory( System.IO.Path.Combine( root, "target" ) ).FullName;
+		var sourceLink = System.IO.Path.Combine( source, "link" );
+		var destination = System.IO.Path.Combine( root, "destination" );
+		await File.WriteAllTextAsync( System.IO.Path.Combine( target, "sentinel" ), "target" );
 		try {
 			if ( !await TryCreateDirectorySymbolicLinkAsync( sourceLink, target ) ) return;
 			var status = await RunAsync( new[] { "--recursive", source, destination } );
 			Assert.Equal( 0, status );
-			var copiedLink = Path.Combine( destination, "link" );
+			var copiedLink = System.IO.Path.Combine( destination, "link" );
 			var observation = await SystemReadOnlyFileSystemProvider.Instance.ObserveAsync(
 				copiedLink,
 				PathDereferenceMode.NoFollow
 			);
 			Assert.True( observation.IsSymbolicLink );
-			Assert.True( File.Exists( Path.Combine( target, "sentinel" ) ) );
+			Assert.True( File.Exists( System.IO.Path.Combine( target, "sentinel" ) ) );
 		} finally {
 			RemovePhysicalReparsePoint( sourceLink );
-			RemovePhysicalReparsePoint( Path.Combine( destination, "link" ) );
+			RemovePhysicalReparsePoint( System.IO.Path.Combine( destination, "link" ) );
 			DeleteTree( root );
 		}
 	}
@@ -41,25 +41,25 @@ public sealed class ReparseAndSparseTests {
 	public async Task RecursiveCopyPreservesWindowsJunction() {
 		if ( !OperatingSystem.IsWindows() ) return;
 		var root = CreateTemporaryDirectory();
-		var source = Directory.CreateDirectory( Path.Combine( root, "source" ) ).FullName;
-		var target = Directory.CreateDirectory( Path.Combine( root, "target" ) ).FullName;
-		var sourceJunction = Path.Combine( source, "junction" );
-		var destination = Path.Combine( root, "destination" );
-		await File.WriteAllTextAsync( Path.Combine( target, "sentinel" ), "target" );
+		var source = Directory.CreateDirectory( System.IO.Path.Combine( root, "source" ) ).FullName;
+		var target = Directory.CreateDirectory( System.IO.Path.Combine( root, "target" ) ).FullName;
+		var sourceJunction = System.IO.Path.Combine( source, "junction" );
+		var destination = System.IO.Path.Combine( root, "destination" );
+		await File.WriteAllTextAsync( System.IO.Path.Combine( target, "sentinel" ), "target" );
 		try {
 			if ( !await TryCreateJunctionAsync( sourceJunction, target ) ) return;
 			var status = await RunAsync( new[] { "--recursive", source, destination } );
 			Assert.Equal( 0, status );
-			var copiedJunction = Path.Combine( destination, "junction" );
+			var copiedJunction = System.IO.Path.Combine( destination, "junction" );
 			var observation = await SystemReadOnlyFileSystemProvider.Instance.ObserveAsync(
 				copiedJunction,
 				PathDereferenceMode.NoFollow
 			);
 			Assert.True( observation.IsJunction );
-			Assert.True( File.Exists( Path.Combine( target, "sentinel" ) ) );
+			Assert.True( File.Exists( System.IO.Path.Combine( target, "sentinel" ) ) );
 		} finally {
 			RemovePhysicalReparsePoint( sourceJunction );
-			RemovePhysicalReparsePoint( Path.Combine( destination, "junction" ) );
+			RemovePhysicalReparsePoint( System.IO.Path.Combine( destination, "junction" ) );
 			DeleteTree( root );
 		}
 	}
@@ -72,8 +72,8 @@ public sealed class ReparseAndSparseTests {
 		var root = CreateTemporaryDirectory();
 		try {
 			const long length = 16L * 1024L * 1024L;
-			var source = Path.Combine( root, "source" );
-			var destination = Path.Combine( root, "destination" );
+			var source = System.IO.Path.Combine( root, "source" );
+			var destination = System.IO.Path.Combine( root, "destination" );
 			await using ( var stream = new FileStream(
 				source,
 				FileMode.CreateNew,
@@ -137,7 +137,7 @@ public sealed class ReparseAndSparseTests {
 	}
 
 	private static string CreateTemporaryDirectory() {
-		var path = Path.Combine( Path.GetTempPath(), string.Concat( "Icod-Cp-Reparse-", Guid.NewGuid().ToString( "N" ) ) );
+		var path = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "Icod-Cp-Reparse-", Guid.NewGuid().ToString( "N" ) ) );
 		Directory.CreateDirectory( path );
 		return path;
 	}

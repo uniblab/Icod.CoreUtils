@@ -88,7 +88,7 @@ public sealed class LinuxProcProcessProvider : IProcProcessProvider {
 		}
 		foreach ( var directory in directories ) {
 			cancellationToken.ThrowIfCancellationRequested();
-			if ( !int.TryParse( Path.GetFileName( directory ), NumberStyles.None, CultureInfo.InvariantCulture, out var processId ) || 0 >= processId ) continue;
+			if ( !int.TryParse( System.IO.Path.GetFileName( directory ), NumberStyles.None, CultureInfo.InvariantCulture, out var processId ) || 0 >= processId ) continue;
 			var observed = await this.GetProcessAsync( processId, cancellationToken ).ConfigureAwait( false );
 			if ( observed.HasValue ) {
 				processes.Add( observed.Value );
@@ -105,12 +105,12 @@ public sealed class LinuxProcProcessProvider : IProcProcessProvider {
 		if ( 0 >= processId ) return ProcObservedValue<ProcProcessSnapshot>.Missing( ProcObservationAvailability.Malformed, "A positive process identifier is required." );
 		var before = this._inspector.ObserveIdentity( processId );
 		if ( !before.Succeeded ) return MissingFromOperation<ProcProcessSnapshot>( before.Status, before.Message );
-		var directory = Path.Combine( this._procRoot, processId.ToString( CultureInfo.InvariantCulture ) );
+		var directory = System.IO.Path.Combine( this._procRoot, processId.ToString( CultureInfo.InvariantCulture ) );
 		try {
-			var statTask = File.ReadAllTextAsync( Path.Combine( directory, "stat" ), cancellationToken );
-			var statusTask = File.ReadAllTextAsync( Path.Combine( directory, "status" ), cancellationToken );
-			var commandLineTask = File.ReadAllBytesAsync( Path.Combine( directory, "cmdline" ), cancellationToken );
-			var cgroupTask = ReadOptionalTextAsync( Path.Combine( directory, "cgroup" ), cancellationToken );
+			var statTask = File.ReadAllTextAsync( System.IO.Path.Combine( directory, "stat" ), cancellationToken );
+			var statusTask = File.ReadAllTextAsync( System.IO.Path.Combine( directory, "status" ), cancellationToken );
+			var commandLineTask = File.ReadAllBytesAsync( System.IO.Path.Combine( directory, "cmdline" ), cancellationToken );
+			var cgroupTask = ReadOptionalTextAsync( System.IO.Path.Combine( directory, "cgroup" ), cancellationToken );
 			await Task.WhenAll( statTask, statusTask, commandLineTask, cgroupTask ).ConfigureAwait( false );
 			var stat = LinuxProcParsers.ParseProcessStat( statTask.Result );
 			var status = LinuxProcParsers.ParseProcessStatus( statusTask.Result );
@@ -172,7 +172,7 @@ public sealed class LinuxProcProcessProvider : IProcProcessProvider {
 		var before = this._inspector.ObserveIdentity( processId );
 		if ( !before.Succeeded ) return MissingFromOperation<IReadOnlyList<ProcMemoryMapEntry>>( before.Status, before.Message );
 		try {
-			var lines = await File.ReadAllLinesAsync( Path.Combine( this._procRoot, processId.ToString( CultureInfo.InvariantCulture ), "maps" ), cancellationToken ).ConfigureAwait( false );
+			var lines = await File.ReadAllLinesAsync( System.IO.Path.Combine( this._procRoot, processId.ToString( CultureInfo.InvariantCulture ), "maps" ), cancellationToken ).ConfigureAwait( false );
 			var entries = lines.Select( LinuxProcParsers.ParseMemoryMapLine ).ToArray();
 			var second = this._inspector.ObserveIdentity( processId );
 			if ( !second.Succeeded ) return MissingFromOperation<IReadOnlyList<ProcMemoryMapEntry>>( second.Status, second.Message );
@@ -206,8 +206,8 @@ public sealed class LinuxProcProcessProvider : IProcProcessProvider {
 	private static ProcObservedValue<IReadOnlyDictionary<string, ProcNamespaceInfo>> ReadNamespaces( string processDirectory ) {
 		try {
 			var result = new Dictionary<string, ProcNamespaceInfo>( StringComparer.Ordinal );
-			foreach ( var path in Directory.EnumerateFiles( Path.Combine( processDirectory, "ns" ) ) ) {
-				var name = Path.GetFileName( path );
+			foreach ( var path in Directory.EnumerateFiles( System.IO.Path.Combine( processDirectory, "ns" ) ) ) {
+				var name = System.IO.Path.GetFileName( path );
 				var target = new FileInfo( path ).LinkTarget;
 				if ( string.IsNullOrWhiteSpace( name ) || string.IsNullOrWhiteSpace( target ) ) continue;
 				result[ name ] = new ProcNamespaceInfo( name, target, ParseNamespaceIdentifier( target ) );
@@ -229,7 +229,7 @@ public sealed class LinuxProcProcessProvider : IProcProcessProvider {
 	private static ProcTerminalInfo ReadTerminal( string directory, int deviceNumber ) {
 		string? name = null;
 		try {
-			var target = new FileInfo( Path.Combine( directory, "fd", "0" ) ).LinkTarget;
+			var target = new FileInfo( System.IO.Path.Combine( directory, "fd", "0" ) ).LinkTarget;
 			if ( null != target && target.StartsWith( "/dev/", StringComparison.Ordinal ) ) name = target;
 		} catch ( IOException ) { }
 		catch ( UnauthorizedAccessException ) { }

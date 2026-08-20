@@ -26,7 +26,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task RemovesFileWithIdentityPrecondition() {
 		var root = CreateTemporaryDirectory();
-		var path = Path.Combine( root, "file" );
+		var path = System.IO.Path.Combine( root, "file" );
 		await File.WriteAllTextAsync( path, "content" );
 		var mutation = new RecordingForwardingMutationProvider();
 		try {
@@ -66,8 +66,8 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task RecursivelyRemovesInPostorder() {
 		var root = CreateTemporaryDirectory();
-		var nested = Directory.CreateDirectory( Path.Combine( root, "nested" ) ).FullName;
-		var child = Path.Combine( nested, "child" );
+		var nested = Directory.CreateDirectory( System.IO.Path.Combine( root, "nested" ) ).FullName;
+		var child = System.IO.Path.Combine( nested, "child" );
 		await File.WriteAllTextAsync( child, "content" );
 		var mutation = new RecordingForwardingMutationProvider();
 		try {
@@ -84,7 +84,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies force suppresses missing recursive operands.</summary>
 	[Fact]
 	public async Task ForceSuppressesMissingRecursiveOperand() {
-		var missing = Path.Combine( Path.GetTempPath(), string.Concat( "Icod-Rm-Missing-", Guid.NewGuid().ToString( "N" ) ) );
+		var missing = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "Icod-Rm-Missing-", Guid.NewGuid().ToString( "N" ) ) );
 		var error = new StringWriter();
 		var status = await RunAsync( new[] { "--force", "--recursive", missing }, TextReader.Null, new StringWriter(), error );
 		Assert.Equal( CommandExitCodes.Success, status );
@@ -95,7 +95,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task InteractiveRefusalRetainsFile() {
 		var root = CreateTemporaryDirectory();
-		var path = Path.Combine( root, "file" );
+		var path = System.IO.Path.Combine( root, "file" );
 		await File.WriteAllTextAsync( path, "content" );
 		try {
 			var status = await RunAsync( new[] { "--interactive=always", path }, new StringReader( "n" + Environment.NewLine ), new StringWriter(), new StringWriter() );
@@ -110,8 +110,8 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task InteractiveAliasesAndPrecedenceAreHonored() {
 		var root = CreateTemporaryDirectory();
-		var first = Path.Combine( root, "first" );
-		var second = Path.Combine( root, "second" );
+		var first = System.IO.Path.Combine( root, "first" );
+		var second = System.IO.Path.Combine( root, "second" );
 		await File.WriteAllTextAsync( first, "one" );
 		await File.WriteAllTextAsync( second, "two" );
 		try {
@@ -129,7 +129,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies interactive-never does not undo an earlier force missing-file policy.</summary>
 	[Fact]
 	public async Task InteractiveNeverRetainsEarlierForceMissingPolicy() {
-		var missing = Path.Combine( Path.GetTempPath(), string.Concat( "Icod-Rm-Missing-", Guid.NewGuid().ToString( "N" ) ) );
+		var missing = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "Icod-Rm-Missing-", Guid.NewGuid().ToString( "N" ) ) );
 		var status = await RunAsync(
 			new[] { "--force", "--interactive=never", missing },
 			TextReader.Null,
@@ -143,7 +143,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task InteractiveOnceCanRejectRecursiveOperation() {
 		var root = CreateTemporaryDirectory();
-		await File.WriteAllTextAsync( Path.Combine( root, "child" ), "content" );
+		await File.WriteAllTextAsync( System.IO.Path.Combine( root, "child" ), "content" );
 		try {
 			var status = await RunAsync( new[] { "-I", "--recursive", root }, new StringReader( "n" + Environment.NewLine ), new StringWriter(), new StringWriter() );
 			Assert.Equal( CommandExitCodes.Success, status );
@@ -157,7 +157,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task InteractiveOnceStillPromptsForWriteProtectedFile() {
 		var root = CreateTemporaryDirectory();
-		var path = Path.Combine( root, "file" );
+		var path = System.IO.Path.Combine( root, "file" );
 		await File.WriteAllTextAsync( path, "content" );
 		SetWriteProtected( path, true );
 		try {
@@ -183,7 +183,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task DeclinedRecursiveChildRetainsParentDirectory() {
 		var root = CreateTemporaryDirectory();
-		var child = Path.Combine( root, "child" );
+		var child = System.IO.Path.Combine( root, "child" );
 		await File.WriteAllTextAsync( child, "content" );
 		var mutation = new RecordingForwardingMutationProvider();
 		try {
@@ -207,14 +207,14 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task ExpandsPathnamePatterns() {
 		var root = CreateTemporaryDirectory();
-		var first = Path.Combine( root, "one.tmp" );
-		var second = Path.Combine( root, "two.tmp" );
-		var retained = Path.Combine( root, "three.txt" );
+		var first = System.IO.Path.Combine( root, "one.tmp" );
+		var second = System.IO.Path.Combine( root, "two.tmp" );
+		var retained = System.IO.Path.Combine( root, "three.txt" );
 		await File.WriteAllTextAsync( first, "one" );
 		await File.WriteAllTextAsync( second, "two" );
 		await File.WriteAllTextAsync( retained, "three" );
 		try {
-			var status = await RunAsync( new[] { Path.Combine( root, "*.tmp" ) }, TextReader.Null, new StringWriter(), new StringWriter() );
+			var status = await RunAsync( new[] { System.IO.Path.Combine( root, "*.tmp" ) }, TextReader.Null, new StringWriter(), new StringWriter() );
 			Assert.Equal( CommandExitCodes.Success, status );
 			Assert.False( File.Exists( first ) );
 			Assert.False( File.Exists( second ) );
@@ -228,10 +228,10 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task ExpandsThroughExplicitIntermediateSymbolicLink() {
 		var root = CreateTemporaryDirectory();
-		var target = Directory.CreateDirectory( Path.Combine( root, "target" ) ).FullName;
-		var link = Path.Combine( root, "link" );
-		var matched = Path.Combine( target, "matched.tmp" );
-		var retained = Path.Combine( target, "retained.txt" );
+		var target = Directory.CreateDirectory( System.IO.Path.Combine( root, "target" ) ).FullName;
+		var link = System.IO.Path.Combine( root, "link" );
+		var matched = System.IO.Path.Combine( target, "matched.tmp" );
+		var retained = System.IO.Path.Combine( target, "retained.txt" );
 		await File.WriteAllTextAsync( matched, "matched" );
 		await File.WriteAllTextAsync( retained, "retained" );
 		try {
@@ -241,7 +241,7 @@ public sealed class CommandTests {
 				return;
 			}
 			var status = await RunAsync(
-				new[] { Path.Combine( link, "*.tmp" ) },
+				new[] { System.IO.Path.Combine( link, "*.tmp" ) },
 				TextReader.Null,
 				new StringWriter(),
 				new StringWriter()
@@ -260,8 +260,8 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task ContinuesAfterOperandFailure() {
 		var root = CreateTemporaryDirectory();
-		var existing = Path.Combine( root, "existing" );
-		var missing = Path.Combine( root, "missing" );
+		var existing = System.IO.Path.Combine( root, "existing" );
+		var missing = System.IO.Path.Combine( root, "missing" );
 		await File.WriteAllTextAsync( existing, "content" );
 		try {
 			var status = await RunAsync( new[] { missing, existing }, TextReader.Null, new StringWriter(), new StringWriter() );
@@ -275,7 +275,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies preserve-root blocks a filesystem root before any mutation request.</summary>
 	[Fact]
 	public async Task PreservesFileSystemRootByDefault() {
-		var root = Path.GetPathRoot( Path.GetFullPath( Path.GetTempPath() ) )!;
+		var root = System.IO.Path.GetPathRoot( System.IO.Path.GetFullPath( System.IO.Path.GetTempPath() ) )!;
 		var mutation = new RecordingOnlyMutationProvider();
 		var error = new StringWriter();
 		var status = await RunInjectedAsync( new[] { "--recursive", root }, TextReader.Null, new StringWriter(), error, mutation );
@@ -288,8 +288,8 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task TrailingSeparatorDoesNotFollowSymbolicLink() {
 		var root = CreateTemporaryDirectory();
-		var target = Path.Combine( root, "target" );
-		var link = Path.Combine( root, "link" );
+		var target = System.IO.Path.Combine( root, "target" );
+		var link = System.IO.Path.Combine( root, "link" );
 		await File.WriteAllTextAsync( target, "content" );
 		try {
 			try {
@@ -299,7 +299,7 @@ public sealed class CommandTests {
 			}
 			var mutation = new RecordingOnlyMutationProvider();
 			var status = await RunInjectedAsync(
-				new[] { "--recursive", string.Concat( link, Path.DirectorySeparatorChar ) },
+				new[] { "--recursive", string.Concat( link, System.IO.Path.DirectorySeparatorChar ) },
 				TextReader.Null,
 				new StringWriter(),
 				new StringWriter(),
@@ -318,7 +318,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task PromptsForWriteProtectedFileOnTerminal() {
 		var root = CreateTemporaryDirectory();
-		var path = Path.Combine( root, "file" );
+		var path = System.IO.Path.Combine( root, "file" );
 		await File.WriteAllTextAsync( path, "content" );
 		SetWriteProtected( path, true );
 		try {
@@ -344,7 +344,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task VerboseReportsRemoval() {
 		var root = CreateTemporaryDirectory();
-		var path = Path.Combine( root, "file" );
+		var path = System.IO.Path.Combine( root, "file" );
 		await File.WriteAllTextAsync( path, "content" );
 		try {
 			var output = new StringWriter();
@@ -406,7 +406,7 @@ public sealed class CommandTests {
 	);
 
 	private static string CreateTemporaryDirectory() {
-		var path = Path.Combine( Path.GetTempPath(), string.Concat( "Icod-Rm-", Guid.NewGuid().ToString( "N" ) ) );
+		var path = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "Icod-Rm-", Guid.NewGuid().ToString( "N" ) ) );
 		Directory.CreateDirectory( path );
 		return path;
 	}

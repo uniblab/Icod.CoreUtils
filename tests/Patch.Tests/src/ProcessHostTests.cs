@@ -56,7 +56,7 @@ public sealed class ProcessHostTests {
 			return loaded;
 		}
 		var directory = new DirectoryInfo( AppContext.BaseDirectory );
-		while ( null != directory && !File.Exists( Path.Combine( directory.FullName, "Icod.CoreUtils.sln" ) ) ) {
+		while ( null != directory && !File.Exists( System.IO.Path.Combine( directory.FullName, "Icod.CoreUtils.sln" ) ) ) {
 			directory = directory.Parent;
 		}
 		if ( null == directory ) {
@@ -70,7 +70,7 @@ public sealed class ProcessHostTests {
 		if ( null == runtimeConfig ) {
 			throw new FileNotFoundException( "unable to locate patch.runtimeconfig.json" );
 		}
-		var assembly = Path.Combine(
+		var assembly = System.IO.Path.Combine(
 			Path.GetDirectoryName( runtimeConfig )!,
 			"patch.dll"
 		);

@@ -152,8 +152,8 @@ public sealed class Base64CommandTests {
 
 	[Fact]
 	public async Task ReadsOneNamedFile() {
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			$"icod-base64-{Guid.NewGuid():N}.bin"
 		);
 		await File.WriteAllBytesAsync(

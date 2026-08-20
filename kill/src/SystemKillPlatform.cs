@@ -235,7 +235,7 @@ public sealed class SystemKillPlatform : IKillPlatform {
 			var ownUid = GetUid();
 			var processIds = new List<int>();
 			foreach ( var directory in Directory.EnumerateDirectories( "/proc" ) ) {
-				if ( !int.TryParse( Path.GetFileName( directory ), NumberStyles.None, CultureInfo.InvariantCulture, out var processId ) ) continue;
+				if ( !int.TryParse( System.IO.Path.GetFileName( directory ), NumberStyles.None, CultureInfo.InvariantCulture, out var processId ) ) continue;
 				try {
 					if ( !allUsers && ReadRealUid( processId ) != ownUid ) continue;
 					var processName = File.ReadAllText( $"/proc/{processId}/comm" ).TrimEnd( '\r', '\n' );

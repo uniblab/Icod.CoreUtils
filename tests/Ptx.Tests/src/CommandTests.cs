@@ -76,8 +76,8 @@ public sealed class CommandTests {
 	public async Task IgnoreAndOnlyFilesFilterWords() {
 		var directory = CreateDirectory();
 		try {
-			var ignore = Path.Combine( directory, "ignore" );
-			var only = Path.Combine( directory, "only" );
+			var ignore = System.IO.Path.Combine( directory, "ignore" );
+			var only = System.IO.Path.Combine( directory, "only" );
 			await File.WriteAllTextAsync( ignore, "the\n" );
 			await File.WriteAllTextAsync( only, "brown\nfox\n" );
 			var result = await RunAsync( [ "-i", ignore, "-o", only ], "the quick brown fox\n" );
@@ -98,7 +98,7 @@ public sealed class CommandTests {
 	public async Task BreakFileDefinesWordSeparators() {
 		var directory = CreateDirectory();
 		try {
-			var breaks = Path.Combine( directory, "breaks" );
+			var breaks = System.IO.Path.Combine( directory, "breaks" );
 			await File.WriteAllTextAsync( breaks, " -\n" );
 			var result = await RunAsync( [ "-b", breaks, "-O" ], "alpha-beta gamma\n" );
 			Assert.Contains( "\"alpha-\" \"beta gamma\"", result.Output, StringComparison.Ordinal );
@@ -180,7 +180,7 @@ public sealed class CommandTests {
 	public async Task IgnoreCaseFoldsAsciiWords() {
 		var directory = CreateDirectory();
 		try {
-			var ignore = Path.Combine( directory, "ignore" );
+			var ignore = System.IO.Path.Combine( directory, "ignore" );
 			await File.WriteAllTextAsync( ignore, "ALPHA\n" );
 			var result = await RunAsync( [ "-f", "-i", ignore, "-O" ], "alpha Beta\n" );
 			Assert.Equal( Lines( ".xx \"\" \"alpha\" \"Beta\" \"\"" ), result.Output );
@@ -230,7 +230,7 @@ public sealed class CommandTests {
 	public async Task AutoReferencesContainPathAndLine() {
 		var directory = CreateDirectory();
 		try {
-			var input = Path.Combine( directory, "input.txt" );
+			var input = System.IO.Path.Combine( directory, "input.txt" );
 			await File.WriteAllTextAsync( input, "alpha\nbeta\n" );
 			var result = await RunAsync( [ "-A", "-O", input ], string.Empty );
 			Assert.Contains( string.Concat( "\"", input, ":1\"" ), result.Output, StringComparison.Ordinal );
@@ -314,8 +314,8 @@ public sealed class CommandTests {
 	public async Task TraditionalOutputOperandIsWritten() {
 		var directory = CreateDirectory();
 		try {
-			var input = Path.Combine( directory, "input" );
-			var output = Path.Combine( directory, "output" );
+			var input = System.IO.Path.Combine( directory, "input" );
+			var output = System.IO.Path.Combine( directory, "output" );
 			await File.WriteAllTextAsync( input, "alpha beta\n" );
 			var result = await RunAsync( [ "-G", input, output ], string.Empty );
 			Assert.Equal( string.Empty, result.Output );
@@ -330,8 +330,8 @@ public sealed class CommandTests {
 	public async Task MultipleInputFilesAreCombined() {
 		var directory = CreateDirectory();
 		try {
-			var one = Path.Combine( directory, "one" );
-			var two = Path.Combine( directory, "two" );
+			var one = System.IO.Path.Combine( directory, "one" );
+			var two = System.IO.Path.Combine( directory, "two" );
 			await File.WriteAllTextAsync( one, "zeta\n" );
 			await File.WriteAllTextAsync( two, "alpha\n" );
 			var result = await RunAsync( [ "-O", one, two ], string.Empty );
@@ -469,7 +469,7 @@ public sealed class CommandTests {
 	}
 
 	private static string CreateDirectory() {
-		var path = Path.Combine( Path.GetTempPath(), string.Concat( "ptx-tests-", Guid.NewGuid().ToString( "N" ) ) );
+		var path = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "ptx-tests-", Guid.NewGuid().ToString( "N" ) ) );
 		Directory.CreateDirectory( path );
 		return path;
 	}

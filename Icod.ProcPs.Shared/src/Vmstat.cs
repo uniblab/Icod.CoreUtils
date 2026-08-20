@@ -213,7 +213,7 @@ public sealed class LinuxProcVmstatProvider : IProcVmstatProvider {
 	}
 	private async Task<ProcObservedValue<ProcVmstatSystemCounters>> ObserveSystemCountersAsync( CancellationToken cancellationToken ) {
 		try {
-			var text = await File.ReadAllTextAsync( Path.Combine( this._procRoot, "stat" ), cancellationToken ).ConfigureAwait( false );
+			var text = await File.ReadAllTextAsync( System.IO.Path.Combine( this._procRoot, "stat" ), cancellationToken ).ConfigureAwait( false );
 			return ProcObservedValue<ProcVmstatSystemCounters>.Available( ParseSystemCounters( text ), ProcObservationSource.LinuxProcfs, ObservationFidelity.Exact );
 		} catch ( UnauthorizedAccessException exception ) {
 			return ProcObservedValue<ProcVmstatSystemCounters>.Missing( ProcObservationAvailability.AccessDenied, exception.Message );
@@ -229,7 +229,7 @@ public sealed class LinuxProcVmstatProvider : IProcVmstatProvider {
 	}
 	private async Task<ProcObservedValue<IReadOnlyList<ProcDiskStatEntry>>> ObserveDisksAsync( CancellationToken cancellationToken ) {
 		try {
-			var text = await File.ReadAllTextAsync( Path.Combine( this._procRoot, "diskstats" ), cancellationToken ).ConfigureAwait( false );
+			var text = await File.ReadAllTextAsync( System.IO.Path.Combine( this._procRoot, "diskstats" ), cancellationToken ).ConfigureAwait( false );
 			return ProcObservedValue<IReadOnlyList<ProcDiskStatEntry>>.Available( ParseDiskStats( text, this._sysRoot ), ProcObservationSource.LinuxProcfs, ObservationFidelity.Exact );
 		} catch ( UnauthorizedAccessException exception ) {
 			return ProcObservedValue<IReadOnlyList<ProcDiskStatEntry>>.Missing( ProcObservationAvailability.AccessDenied, exception.Message );
@@ -275,7 +275,7 @@ public sealed class LinuxProcVmstatProvider : IProcVmstatProvider {
 			if ( 14 > fields.Length ) continue;
 			if ( !int.TryParse( fields[ 0 ], NumberStyles.None, CultureInfo.InvariantCulture, out var major ) || !int.TryParse( fields[ 1 ], NumberStyles.None, CultureInfo.InvariantCulture, out var minor ) ) throw new FormatException( "Invalid /proc/diskstats device number." );
 			ulong Read( int index ) => ulong.TryParse( fields[ index ], NumberStyles.None, CultureInfo.InvariantCulture, out var value ) ? value : throw new FormatException( $"Invalid /proc/diskstats counter at field {index}." );
-			var isPartition = partitionFileExists( Path.Combine( sysRoot, "dev", "block", string.Concat( major.ToString( CultureInfo.InvariantCulture ), ":", minor.ToString( CultureInfo.InvariantCulture ) ), "partition" ) );
+			var isPartition = partitionFileExists( System.IO.Path.Combine( sysRoot, "dev", "block", string.Concat( major.ToString( CultureInfo.InvariantCulture ), ":", minor.ToString( CultureInfo.InvariantCulture ) ), "partition" ) );
 			rows.Add( new ProcDiskStatEntry( major, minor, fields[ 2 ], isPartition, Read( 3 ), Read( 4 ), Read( 5 ), Read( 6 ), Read( 7 ), Read( 8 ), Read( 9 ), Read( 10 ), Read( 11 ), Read( 12 ), Read( 13 ) ) );
 		}
 		return rows;

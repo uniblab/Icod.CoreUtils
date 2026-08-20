@@ -1181,7 +1181,7 @@ public sealed class TransactionalFileReplacementTransaction : IAsyncDisposable {
 	}
 
 	private static string NormalizePath( string path ) {
-		return Path.TrimEndingDirectorySeparator( System.IO.Path.GetFullPath( path ) );
+		return System.IO.Path.TrimEndingDirectorySeparator( System.IO.Path.GetFullPath( path ) );
 	}
 
 	private static void ValidateDistinctDestinations( IReadOnlyList<TransactionalReplacementArtifact> artifacts ) {

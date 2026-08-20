@@ -10,7 +10,7 @@ public sealed class CommandTests {
 	public async Task ReportsApparentBytesAndSummarizesRoot() {
 		var root = CreateTemporaryDirectory();
 		try {
-			await File.WriteAllBytesAsync( Path.Combine( root, "payload.bin" ), new byte[ 37 ] );
+			await File.WriteAllBytesAsync( System.IO.Path.Combine( root, "payload.bin" ), new byte[ 37 ] );
 			var output = new StringWriter();
 			var error = new StringWriter();
 
@@ -35,8 +35,8 @@ public sealed class CommandTests {
 	public async Task ReadsFilesZeroFromStandardInput() {
 		var root = CreateTemporaryDirectory();
 		try {
-			var first = Path.Combine( root, "first.bin" );
-			var second = Path.Combine( root, "second.bin" );
+			var first = System.IO.Path.Combine( root, "first.bin" );
+			var second = System.IO.Path.Combine( root, "second.bin" );
 			await File.WriteAllBytesAsync( first, new byte[ 3 ] );
 			await File.WriteAllBytesAsync( second, new byte[ 5 ] );
 			var input = new StringReader( string.Concat( first, "\0", second, "\0" ) );
@@ -127,7 +127,7 @@ public sealed class CommandTests {
 	}
 
 	private static string CreateTemporaryDirectory() {
-		var path = Path.Combine( Path.GetTempPath(), string.Concat( "icod-du-", Guid.NewGuid().ToString( "N" ) ) );
+		var path = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "icod-du-", Guid.NewGuid().ToString( "N" ) ) );
 		Directory.CreateDirectory( path );
 		return path;
 	}

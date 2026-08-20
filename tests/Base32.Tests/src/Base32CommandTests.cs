@@ -115,8 +115,8 @@ public sealed class Base32CommandTests {
 
 	[Fact]
 	public async Task ReadsOneNamedFile() {
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			$"icod-base32-{Guid.NewGuid():N}.bin"
 		);
 		await File.WriteAllBytesAsync(
@@ -148,8 +148,8 @@ public sealed class Base32CommandTests {
 
 	[Fact]
 	public async Task MissingInputFileProducesAnOperandDiagnostic() {
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			$"icod-base32-missing-{Guid.NewGuid():N}.bin"
 		);
 		var result = await RunAsync(

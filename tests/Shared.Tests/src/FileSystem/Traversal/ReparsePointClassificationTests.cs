@@ -1,9 +1,7 @@
-extern alias IcodPath;
-
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
-using IPathIndirectionInspector = IcodPath::Icod.Path.IPathIndirectionInspector;
-using PathIndirectionInfo = IcodPath::Icod.Path.PathIndirectionInfo;
-using WindowsReparseTags = IcodPath::Icod.Path.WindowsReparseTags;
+using IPathIndirectionInspector = Icod.Path.IPathIndirectionInspector;
+using PathIndirectionInfo = Icod.Path.PathIndirectionInfo;
+using WindowsReparseTags = Icod.Path.WindowsReparseTags;
 using Xunit;
 
 namespace Icod.CoreUtils.Shared.Tests.FileSystem.Traversal;
@@ -61,8 +59,8 @@ public sealed class ReparsePointClassificationTests {
 	}
 
 	private static string CreateTemporaryFile() {
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			string.Concat( "icod-reparse-file-", Guid.NewGuid().ToString( "N" ) )
 		);
 		using ( File.Create( path ) ) {
@@ -71,8 +69,8 @@ public sealed class ReparsePointClassificationTests {
 	}
 
 	private static string CreateTemporaryDirectory() {
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			string.Concat( "icod-reparse-directory-", Guid.NewGuid().ToString( "N" ) )
 		);
 		Directory.CreateDirectory( path );

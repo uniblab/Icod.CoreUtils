@@ -710,7 +710,7 @@ public static class Command {
 					|| 0 == (metadata.Attributes.GetRequiredValue() & FileAttributes.ReadOnly);
 			}
 			if ( metadata.Kind == FileSystemEntryKind.Directory ) return true;
-			var extension = Path.GetExtension( path );
+			var extension = System.IO.Path.GetExtension( path );
 			var configured = Environment.GetEnvironmentVariable( "PATHEXT" );
 			var extensions = string.IsNullOrWhiteSpace( configured )
 				? DefaultExecutableExtensions

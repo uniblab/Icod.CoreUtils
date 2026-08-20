@@ -69,9 +69,9 @@ public sealed class CommandTests {
 
 	[Fact]
 	public void RecursivePhysicalTraversalUsesNoDereferenceAndPostOrder() {
-		var root = Path.Combine( Path.GetTempPath(), $"icod-chcon-{System.Guid.NewGuid():N}" );
+		var root = System.IO.Path.Combine( System.IO.Path.GetTempPath(), $"icod-chcon-{System.Guid.NewGuid():N}" );
 		Directory.CreateDirectory( root );
-		var child = Path.Combine( root, "child.txt" );
+		var child = System.IO.Path.Combine( root, "child.txt" );
 		File.WriteAllText( child, "content" );
 		try {
 			var platform = new FakeSelinuxPlatform();
@@ -88,7 +88,7 @@ public sealed class CommandTests {
 
 	[Fact]
 	public void RecursiveCommandLineTraversalDefaultsToDereference() {
-		var root = Path.Combine( Path.GetTempPath(), $"icod-chcon-{System.Guid.NewGuid():N}" );
+		var root = System.IO.Path.Combine( System.IO.Path.GetTempPath(), $"icod-chcon-{System.Guid.NewGuid():N}" );
 		Directory.CreateDirectory( root );
 		try {
 			var platform = new FakeSelinuxPlatform();
@@ -103,7 +103,7 @@ public sealed class CommandTests {
 
 	[Fact]
 	public void PreserveRootRejectsRecursiveRootOperand() {
-		var root = Path.GetPathRoot( Path.GetFullPath( "." ) )!;
+		var root = System.IO.Path.GetPathRoot( System.IO.Path.GetFullPath( "." ) )!;
 		var error = new StringWriter();
 		var platform = new FakeSelinuxPlatform();
 		var status = Command.Run( new[] { "-R", "--preserve-root", "system_u:object_r:tmp_t:s0", root }, stderr: error, platform: platform );

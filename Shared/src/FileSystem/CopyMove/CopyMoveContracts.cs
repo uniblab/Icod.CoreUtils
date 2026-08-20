@@ -119,7 +119,7 @@ public sealed class CopyMoveOptions {
 		if ( !Enum.IsDefined( typeof( TransactionalReplacementBackupMode ), BackupMode ) ) throw new ArgumentOutOfRangeException( nameof( BackupMode ) );
 		if ( (MetadataFields & ~RecursiveMetadataFields.All) != 0 ) throw new ArgumentOutOfRangeException( nameof( MetadataFields ) );
 		if ( (RequiredMetadataFields & ~MetadataFields) != 0 ) throw new ArgumentException( "Required metadata fields must also be requested." );
-		if ( string.IsNullOrEmpty( BackupSuffix ) || BackupSuffix.IndexOfAny( new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar } ) >= 0 ) {
+		if ( string.IsNullOrEmpty( BackupSuffix ) || BackupSuffix.IndexOfAny( new[] { System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar } ) >= 0 ) {
 			throw new ArgumentException( "The backup suffix must be one nonempty filename suffix.", nameof( BackupSuffix ) );
 		}
 		if ( CopyMoveOverwriteMode.Interactive == OverwriteMode && Prompt is null ) throw new ArgumentException( "Interactive overwrite mode requires a prompt callback.", nameof( Prompt ) );

@@ -8,18 +8,18 @@ public sealed class TransactionalReplacementPathSafetyTests {
 	/// <summary>Verifies that a normalized descendant remains inside the transaction root.</summary>
 	[Fact]
 	public async Task AcceptsContainedDescendant() {
-		var root = Path.GetFullPath( Path.Combine( "root", "scope" ) );
-		var child = Path.Combine( root, "nested", "file" );
+		var root = System.IO.Path.GetFullPath( System.IO.Path.Combine( "root", "scope" ) );
+		var child = System.IO.Path.Combine( root, "nested", "file" );
 		var safety = new TransactionalReplacementPathSafety( HostComparison() );
 		var result = await safety.RequireContainedAsync( root, child );
-		Assert.Equal( Path.GetFullPath( child ), result );
+		Assert.Equal( System.IO.Path.GetFullPath( child ), result );
 	}
 
 	/// <summary>Verifies that lexical parent traversal cannot escape the transaction root.</summary>
 	[Fact]
 	public async Task RejectsEscapingDestination() {
-		var root = Path.GetFullPath( Path.Combine( "root", "scope" ) );
-		var escaped = Path.GetFullPath( Path.Combine( root, "..", "outside" ) );
+		var root = System.IO.Path.GetFullPath( System.IO.Path.Combine( "root", "scope" ) );
+		var escaped = System.IO.Path.GetFullPath( System.IO.Path.Combine( root, "..", "outside" ) );
 		var safety = new TransactionalReplacementPathSafety( HostComparison() );
 		await Assert.ThrowsAsync<InvalidOperationException>(
 			async () => {

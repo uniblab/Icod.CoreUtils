@@ -7,7 +7,7 @@ Thank you for contributing to the Icod command-suite ports. The repository conta
 - Target framework: `net10.0`.
 - Language version: C# 13, declared as `<LangVersion>13.0</LangVersion>` in every project.
 - Nullable reference types and implicit global usings remain enabled where the existing project enables them.
-- Supported CI runners are `windows-latest`, `ubuntu-latest`, and `macos-latest`; best-effort BSD portability remains a project goal.
+- Supported CI runners are `windows-latest`, `ubuntu-latest`, and `macos-latest`; best-effort BSD portability is also a project goal.
 - Repository text files use UTF-8 with LF line endings. Configure editors and Git to preserve LF; do not commit CRLF-only churn.
 - Runtime command output should use `Environment.NewLine` unless the command contract requires a byte delimiter or preserves input record terminators.
 

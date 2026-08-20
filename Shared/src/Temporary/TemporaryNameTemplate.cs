@@ -101,7 +101,7 @@ public sealed class TemporaryNameTemplate {
 	/// <returns>The combined template.</returns>
 	public TemporaryNameTemplate WithDirectory( string directory ) {
 		ArgumentNullException.ThrowIfNull( directory );
-		var combined = Path.Combine( directory, Pattern );
+		var combined = System.IO.Path.Combine( directory, Pattern );
 		var shift = combined.Length - Pattern.Length;
 		return new TemporaryNameTemplate(
 			combined,
@@ -130,7 +130,7 @@ public sealed class TemporaryNameTemplate {
 	}
 
 	private static bool ContainsDirectorySeparator( ReadOnlySpan<char> value ) {
-		return ( 0 <= value.IndexOf( Path.DirectorySeparatorChar ) )
-			|| ( 0 <= value.IndexOf( Path.AltDirectorySeparatorChar ) );
+		return ( 0 <= value.IndexOf( System.IO.Path.DirectorySeparatorChar ) )
+			|| ( 0 <= value.IndexOf( System.IO.Path.AltDirectorySeparatorChar ) );
 	}
 }

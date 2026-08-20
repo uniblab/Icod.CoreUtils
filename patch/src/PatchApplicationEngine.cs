@@ -927,8 +927,8 @@ internal static class PatchApplicationEngine {
 				cancellationToken
 			).ConfigureAwait( false );
 		}
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			string.Concat( "icod-patch-result-", Guid.NewGuid().ToString( "N" ), ".tmp" )
 		);
 		try {

@@ -32,8 +32,8 @@ public sealed class WaveDTransactionTests {
 	[Fact]
 	public async Task LaterFileFailurePreservesEarlierFileUnit() {
 		var directory = CreateTemporaryDirectory();
-		var first = Path.Combine( directory, "first.txt" );
-		var second = Path.Combine( directory, "second.txt" );
+		var first = System.IO.Path.Combine( directory, "first.txt" );
+		var second = System.IO.Path.Combine( directory, "second.txt" );
 		await File.WriteAllTextAsync( first, "first-old\n" );
 		await File.WriteAllTextAsync( second, "second-old\n" );
 		try {
@@ -75,7 +75,7 @@ public sealed class WaveDTransactionTests {
 	[InlineData( PatchTransactionStage.Commit )]
 	internal async Task PreCommitFailureMatrixPreservesDestination( PatchTransactionStage stage ) {
 		var directory = CreateTemporaryDirectory();
-		var target = Path.Combine( directory, "target.txt" );
+		var target = System.IO.Path.Combine( directory, "target.txt" );
 		await File.WriteAllTextAsync( target, "old\n" );
 		try {
 			var fileSystem = new SystemPatchFileSystem();
@@ -102,7 +102,7 @@ public sealed class WaveDTransactionTests {
 	[Fact]
 	public async Task CancellationAfterReplacementRollsBackActiveUnit() {
 		var directory = CreateTemporaryDirectory();
-		var target = Path.Combine( directory, "target.txt" );
+		var target = System.IO.Path.Combine( directory, "target.txt" );
 		await File.WriteAllTextAsync( target, "old\n" );
 		using var cancellation = new CancellationTokenSource();
 		try {
@@ -130,8 +130,8 @@ public sealed class WaveDTransactionTests {
 	[Fact]
 	public async Task FileUnitFailureRollsBackEarlierArtifactInSameUnit() {
 		var directory = CreateTemporaryDirectory();
-		var target = Path.Combine( directory, "target.txt" );
-		var backup = Path.Combine( directory, "target.txt.orig" );
+		var target = System.IO.Path.Combine( directory, "target.txt" );
+		var backup = System.IO.Path.Combine( directory, "target.txt.orig" );
 		await File.WriteAllTextAsync( target, "old\n" );
 		try {
 			var fileSystem = new SystemPatchFileSystem();
@@ -174,7 +174,7 @@ public sealed class WaveDTransactionTests {
 	[Fact]
 	public async Task FlushFailureOccursBeforeDestinationMutation() {
 		var directory = CreateTemporaryDirectory();
-		var target = Path.Combine( directory, "target.txt" );
+		var target = System.IO.Path.Combine( directory, "target.txt" );
 		await File.WriteAllTextAsync( target, "old\n" );
 		try {
 			var fileSystem = new SystemPatchFileSystem();
@@ -201,8 +201,8 @@ public sealed class WaveDTransactionTests {
 	[Fact]
 	public async Task RollbackFailureIsReportedAndCleanupContinues() {
 		var directory = CreateTemporaryDirectory();
-		var target = Path.Combine( directory, "target.txt" );
-		var companion = Path.Combine( directory, "companion.txt" );
+		var target = System.IO.Path.Combine( directory, "target.txt" );
+		var companion = System.IO.Path.Combine( directory, "companion.txt" );
 		await File.WriteAllTextAsync( target, "old\n" );
 		await File.WriteAllTextAsync( companion, "companion-old\n" );
 		try {
@@ -238,8 +238,8 @@ public sealed class WaveDTransactionTests {
 	[Fact]
 	public async Task MetadataRestoreFailureReportsIncompleteRecovery() {
 		var directory = CreateTemporaryDirectory();
-		var target = Path.Combine( directory, "target.txt" );
-		var companion = Path.Combine( directory, "companion.txt" );
+		var target = System.IO.Path.Combine( directory, "target.txt" );
+		var companion = System.IO.Path.Combine( directory, "companion.txt" );
 		await File.WriteAllTextAsync( target, "old\n" );
 		await File.WriteAllTextAsync( companion, "companion-old\n" );
 		try {
@@ -279,7 +279,7 @@ public sealed class WaveDTransactionTests {
 	[Fact]
 	public async Task CleanupFailureDoesNotUndoCommittedFileUnit() {
 		var directory = CreateTemporaryDirectory();
-		var target = Path.Combine( directory, "target.txt" );
+		var target = System.IO.Path.Combine( directory, "target.txt" );
 		await File.WriteAllTextAsync( target, "old\n" );
 		try {
 			var fileSystem = new SystemPatchFileSystem();
@@ -331,8 +331,8 @@ public sealed class WaveDTransactionTests {
 	}
 
 	private static string CreateTemporaryDirectory() {
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			string.Concat( "icod-patch-wave-d-", Guid.NewGuid().ToString( "N" ) )
 		);
 		Directory.CreateDirectory( path );
@@ -342,7 +342,7 @@ public sealed class WaveDTransactionTests {
 	private static void AssertNoTemporaryFiles( string directory ) {
 		Assert.DoesNotContain(
 			Directory.EnumerateFiles( directory ),
-			path => Path.GetFileName( path ).Contains( ".patch-", StringComparison.Ordinal )
+			path => System.IO.Path.GetFileName( path ).Contains( ".patch-", StringComparison.Ordinal )
 		);
 	}
 

@@ -49,7 +49,7 @@ public sealed class TemporaryWorkspace : IDisposable, IAsyncDisposable {
 		CancellationToken cancellationToken = default
 	) {
 		var selectedCreator = creator ?? SecureTemporaryObjectCreator.System;
-		var parent = Path.GetFullPath( parentDirectory ?? Path.GetTempPath() );
+		var parent = System.IO.Path.GetFullPath( parentDirectory ?? System.IO.Path.GetTempPath() );
 		if ( !Directory.Exists( parent ) ) {
 			throw new ArgumentException(
 				"The temporary-workspace parent directory does not exist.",
@@ -200,10 +200,10 @@ public sealed class TemporaryWorkspace : IDisposable, IAsyncDisposable {
 	) {
 		ArgumentException.ThrowIfNullOrWhiteSpace( template );
 		if (
-			Path.IsPathRooted( template )
+			System.IO.Path.IsPathRooted( template )
 			|| template.Contains( '/' )
 			|| template.Contains( '\\' )
-			|| !string.Equals( Path.GetFileName( template ), template, StringComparison.Ordinal )
+			|| !string.Equals( System.IO.Path.GetFileName( template ), template, StringComparison.Ordinal )
 		) {
 			throw new ArgumentException(
 				"A temporary-workspace template must be a leaf name.",

@@ -236,8 +236,8 @@ public static class Command {
 		var aliasesInput = !outputIsStandard
 			&& options.InputPath != "-"
 			&& string.Equals(
-				Path.GetFullPath( options.InputPath ),
-				Path.GetFullPath( options.OutputPath! ),
+				System.IO.Path.GetFullPath( options.InputPath ),
+				System.IO.Path.GetFullPath( options.OutputPath! ),
 				OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal
 			);
 		if ( aliasesInput ) {

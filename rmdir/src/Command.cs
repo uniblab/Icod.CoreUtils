@@ -112,7 +112,7 @@ public static class Command {
 			var exitStatus = CommandExitCodes.Success;
 			foreach ( var operand in parsed.Operands ) {
 				context.CancellationToken.ThrowIfCancellationRequested();
-				var current = Path.TrimEndingDirectorySeparator( operand );
+				var current = System.IO.Path.TrimEndingDirectorySeparator( operand );
 				if ( current.Length == 0 ) {
 					current = operand;
 				}
@@ -222,15 +222,15 @@ public static class Command {
 
 	private static string? GetParentOperand( string path ) {
 		try {
-			var trimmed = Path.TrimEndingDirectorySeparator( path );
-			var parent = Path.GetDirectoryName( trimmed );
+			var trimmed = System.IO.Path.TrimEndingDirectorySeparator( path );
+			var parent = System.IO.Path.GetDirectoryName( trimmed );
 			if ( string.IsNullOrEmpty( parent ) ) {
 				return null;
 			}
-			var root = Path.GetPathRoot( Path.GetFullPath( trimmed ) );
+			var root = System.IO.Path.GetPathRoot( System.IO.Path.GetFullPath( trimmed ) );
 			if ( root is not null && string.Equals(
-				Path.TrimEndingDirectorySeparator( Path.GetFullPath( parent ) ),
-				Path.TrimEndingDirectorySeparator( root ),
+				System.IO.Path.TrimEndingDirectorySeparator( System.IO.Path.GetFullPath( parent ) ),
+				System.IO.Path.TrimEndingDirectorySeparator( root ),
 				OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal
 			) ) {
 				return null;

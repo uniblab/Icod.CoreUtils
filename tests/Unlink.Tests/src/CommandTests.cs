@@ -11,7 +11,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task RemovesOrdinaryFile() {
 		using var temporary = new TemporaryDirectory();
-		var file = Path.Combine( temporary.Path, "file" );
+		var file = System.IO.Path.Combine( temporary.Path, "file" );
 		File.WriteAllText( file, "data" );
 
 		var status = await UnlinkCommand.RunAsync(
@@ -27,8 +27,8 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task RemovesSymbolicLinkWithoutRemovingTarget() {
 		using var temporary = new TemporaryDirectory();
-		var target = Path.Combine( temporary.Path, "target" );
-		var link = Path.Combine( temporary.Path, "link" );
+		var target = System.IO.Path.Combine( temporary.Path, "target" );
+		var link = System.IO.Path.Combine( temporary.Path, "link" );
 		File.WriteAllText( target, "data" );
 		var creation = await SystemFileSystemMutationProvider.Instance.CreateSymbolicLinkAsync(
 			link,
@@ -53,10 +53,10 @@ public sealed class CommandTests {
 	public async Task RemovesWindowsDirectorySymbolicLinkWithoutRemovingTarget() {
 		if ( !OperatingSystem.IsWindows() ) return;
 		using var temporary = new TemporaryDirectory();
-		var target = Path.Combine( temporary.Path, "directory-target" );
-		var link = Path.Combine( temporary.Path, "directory-link" );
+		var target = System.IO.Path.Combine( temporary.Path, "directory-target" );
+		var link = System.IO.Path.Combine( temporary.Path, "directory-link" );
 		Directory.CreateDirectory( target );
-		File.WriteAllText( Path.Combine( target, "item" ), "data" );
+		File.WriteAllText( System.IO.Path.Combine( target, "item" ), "data" );
 		var creation = await SystemFileSystemMutationProvider.Instance.CreateSymbolicLinkAsync(
 			link,
 			target,
@@ -71,7 +71,7 @@ public sealed class CommandTests {
 
 		Assert.Equal( CommandExitCodes.Success, status );
 		Assert.True( Directory.Exists( target ) );
-		Assert.True( File.Exists( Path.Combine( target, "item" ) ) );
+		Assert.True( File.Exists( System.IO.Path.Combine( target, "item" ) ) );
 		Assert.False( Directory.Exists( link ) );
 	}
 
@@ -80,10 +80,10 @@ public sealed class CommandTests {
 	public async Task RemovesWindowsJunctionWithoutRemovingTarget() {
 		if ( !OperatingSystem.IsWindows() ) return;
 		using var temporary = new TemporaryDirectory();
-		var target = Path.Combine( temporary.Path, "target" );
-		var junction = Path.Combine( temporary.Path, "junction" );
+		var target = System.IO.Path.Combine( temporary.Path, "target" );
+		var junction = System.IO.Path.Combine( temporary.Path, "junction" );
 		Directory.CreateDirectory( target );
-		File.WriteAllText( Path.Combine( target, "item" ), "data" );
+		File.WriteAllText( System.IO.Path.Combine( target, "item" ), "data" );
 		var creation = await SystemFileSystemMutationProvider.Instance.CreateJunctionAsync(
 			junction,
 			target
@@ -98,7 +98,7 @@ public sealed class CommandTests {
 
 		Assert.Equal( CommandExitCodes.Success, status );
 		Assert.True( Directory.Exists( target ) );
-		Assert.True( File.Exists( Path.Combine( target, "item" ) ) );
+		Assert.True( File.Exists( System.IO.Path.Combine( target, "item" ) ) );
 		Assert.False( Directory.Exists( junction ) );
 	}
 
@@ -106,7 +106,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task RefusesOrdinaryDirectory() {
 		using var temporary = new TemporaryDirectory();
-		var directory = Path.Combine( temporary.Path, "directory" );
+		var directory = System.IO.Path.Combine( temporary.Path, "directory" );
 		Directory.CreateDirectory( directory );
 		var error = new StringWriter();
 

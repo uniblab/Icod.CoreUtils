@@ -121,7 +121,7 @@ public static partial class Command {
 			ArgumentNullException.ThrowIfNull( request );
 			ArgumentNullException.ThrowIfNull( transformAsync );
 			cancellationToken.ThrowIfCancellationRequested();
-			var editPath = Path.GetFullPath(
+			var editPath = System.IO.Path.GetFullPath(
 				ResolveInPlacePath( request.Path, request.FollowSymlinks )
 			);
 			var observation = await this.myFileSystem.ObserveAsync(

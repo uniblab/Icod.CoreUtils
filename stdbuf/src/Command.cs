@@ -507,8 +507,8 @@ public sealed class SystemStdBufPlatform : IStdBufPlatform {
 			return false;
 		}
 
-		var libraryPath = Path.GetFullPath(
-			Path.Combine(
+		var libraryPath = System.IO.Path.GetFullPath(
+			System.IO.Path.Combine(
 				AppContext.BaseDirectory,
 				NativeShimName
 			)

@@ -1,4 +1,4 @@
-﻿namespace Icod.CoreUtils.Checksum.Tests;
+namespace Icod.CoreUtils.Checksum.Tests;
 
 using System.Text;
 using CksumCommandWrapper = Icod.CoreUtils.Cksum.Command;
@@ -345,11 +345,11 @@ public sealed class CksumAndSumCommandTests {
 	[Fact]
 	public async Task SumExpandsWildcardsAndReportsFileNames() {
 		var directory = CreateDirectory();
-		var first = Path.Combine(
+		var first = System.IO.Path.Combine(
 			directory,
 			"a.bin"
 		);
-		var second = Path.Combine(
+		var second = System.IO.Path.Combine(
 			directory,
 			"b.bin"
 		);
@@ -359,7 +359,7 @@ public sealed class CksumAndSumCommandTests {
 			var result = await CommandTestHelper.RunAsync(
 				SumCommandWrapper.RunAsync,
 				new string[] {
-					Path.Combine(
+					System.IO.Path.Combine(
 						directory,
 						"?.bin"
 					)
@@ -381,8 +381,8 @@ public sealed class CksumAndSumCommandTests {
 	}
 
 	private static string CreateDirectory() {
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			$"icod-cksum-{Guid.NewGuid():N}"
 		);
 		Directory.CreateDirectory(
@@ -394,8 +394,8 @@ public sealed class CksumAndSumCommandTests {
 	private static string CreatePath(
 		string suffix
 	) {
-		return Path.Combine(
-			Path.GetTempPath(),
+		return System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			$"icod-cksum-{Guid.NewGuid():N}-{suffix}"
 		);
 	}

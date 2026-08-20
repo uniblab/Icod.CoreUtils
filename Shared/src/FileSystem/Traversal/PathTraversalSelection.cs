@@ -226,6 +226,6 @@ public sealed class PathTraversalRuleSelector : IPathTraversalSelector {
 		return false;
 	}
 
-	private static bool IsSeparator( char value ) => value == Path.DirectorySeparatorChar
-		|| value == Path.AltDirectorySeparatorChar;
+	private static bool IsSeparator( char value ) => value == System.IO.Path.DirectorySeparatorChar
+		|| value == System.IO.Path.AltDirectorySeparatorChar;
 }

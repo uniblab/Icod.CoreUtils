@@ -166,14 +166,14 @@ public sealed class GnuPatchDifferentialTests {
 		);
 		var managedBytes = await managed.File.Content!.ToArrayAsync();
 
-		var directory = Path.Combine(
-			Path.GetTempPath(),
+		var directory = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			string.Concat( "icod-patch-diff-", Guid.NewGuid().ToString( "N" ) )
 		);
 		Directory.CreateDirectory( directory );
 		try {
-			var targetPath = Path.Combine( directory, "target.txt" );
-			var patchPath = Path.Combine( directory, "change.patch" );
+			var targetPath = System.IO.Path.Combine( directory, "target.txt" );
+			var patchPath = System.IO.Path.Combine( directory, "change.patch" );
 			await File.WriteAllBytesAsync( targetPath, Encoding.UTF8.GetBytes( targetText ) );
 			await File.WriteAllBytesAsync( patchPath, Encoding.UTF8.GetBytes( patchText ) );
 			var start = new ProcessStartInfo {

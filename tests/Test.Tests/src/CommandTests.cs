@@ -214,15 +214,15 @@ public sealed class CommandTests {
 	/// <summary>Verifies ordinary host files and directories are evaluated by the system provider.</summary>
 	[Fact]
 	public async Task EvaluatesHostFileAndDirectory() {
-		var root = Path.Combine( Path.GetTempPath(), string.Concat( "test-batch37-", Guid.NewGuid().ToString( "N" ) ) );
+		var root = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "test-batch37-", Guid.NewGuid().ToString( "N" ) ) );
 		Directory.CreateDirectory( root );
-		var file = Path.Combine( root, "item.txt" );
+		var file = System.IO.Path.Combine( root, "item.txt" );
 		try {
 			await File.WriteAllTextAsync( file, "content" );
 			Assert.Equal( 0, await RunAsync( new[] { "-d", root } ) );
 			Assert.Equal( 0, await RunAsync( new[] { "-f", file } ) );
 			Assert.Equal( 0, await RunAsync( new[] { "-s", file } ) );
-			Assert.Equal( 1, await RunAsync( new[] { "-e", Path.Combine( root, "missing" ) } ) );
+			Assert.Equal( 1, await RunAsync( new[] { "-e", System.IO.Path.Combine( root, "missing" ) } ) );
 		} finally {
 			Directory.Delete( root, true );
 		}

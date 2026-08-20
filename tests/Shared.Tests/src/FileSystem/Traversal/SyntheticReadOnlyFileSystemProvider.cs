@@ -84,7 +84,7 @@ internal sealed class SyntheticReadOnlyFileSystemProvider : IReadOnlyFileSystemP
 		if ( directory.Kind != FileSystemEntryKind.Directory ) {
 			throw new IOException( "The synthetic pathname is not a directory." );
 		}
-		directory.Children.Add( Normalize( Path.Combine( directory.Path, childName ) ) );
+		directory.Children.Add( Normalize( System.IO.Path.Combine( directory.Path, childName ) ) );
 		return this;
 	}
 
@@ -176,10 +176,10 @@ internal sealed class SyntheticReadOnlyFileSystemProvider : IReadOnlyFileSystemP
 		}
 		foreach ( var childPath in directory.Children ) {
 			cancellationToken.ThrowIfCancellationRequested();
-			var name = Path.GetFileName( Path.TrimEndingDirectorySeparator( childPath ) );
+			var name = System.IO.Path.GetFileName( System.IO.Path.TrimEndingDirectorySeparator( childPath ) );
 			yield return new ReadOnlyDirectoryEntry(
 				name,
-				Path.Combine( normalized, name )
+				System.IO.Path.Combine( normalized, name )
 			);
 		}
 	}
@@ -200,7 +200,7 @@ internal sealed class SyntheticReadOnlyFileSystemProvider : IReadOnlyFileSystemP
 			targetPath is null ? null : Normalize( targetPath )
 		);
 		_nodes.Add( normalized, node );
-		var parent = Path.GetDirectoryName( normalized );
+		var parent = System.IO.Path.GetDirectoryName( normalized );
 		if ( !string.IsNullOrEmpty( parent ) && _nodes.TryGetValue( Normalize( parent ), out var parentNode ) ) {
 			parentNode.Children.Add( normalized );
 		}
@@ -214,7 +214,7 @@ internal sealed class SyntheticReadOnlyFileSystemProvider : IReadOnlyFileSystemP
 		bool wasDereferenced
 	) => new(
 		accessPath,
-		Path.GetFileName( Path.TrimEndingDirectorySeparator( accessPath ) ),
+		System.IO.Path.GetFileName( System.IO.Path.TrimEndingDirectorySeparator( accessPath ) ),
 		wasDereferenced ? effective.Kind : source.Kind,
 		source.Kind == FileSystemEntryKind.SymbolicLink,
 		wasDereferenced,
@@ -228,7 +228,7 @@ internal sealed class SyntheticReadOnlyFileSystemProvider : IReadOnlyFileSystemP
 			return exact;
 		}
 
-		var ancestor = Path.GetDirectoryName( path );
+		var ancestor = System.IO.Path.GetDirectoryName( path );
 		while ( !string.IsNullOrEmpty( ancestor ) ) {
 			var normalizedAncestor = Normalize( ancestor );
 			if (
@@ -241,11 +241,11 @@ internal sealed class SyntheticReadOnlyFileSystemProvider : IReadOnlyFileSystemP
 				if ( link.TargetPath is null ) {
 					throw new FileNotFoundException( "The synthetic symbolic link has no target.", link.Path );
 				}
-				var remainder = Path.GetRelativePath( normalizedAncestor, path );
-				var targetPath = Normalize( Path.Combine( link.TargetPath, remainder ) );
+				var remainder = System.IO.Path.GetRelativePath( normalizedAncestor, path );
+				var targetPath = Normalize( System.IO.Path.Combine( link.TargetPath, remainder ) );
 				return ResolveAliasedNode( targetPath, activeLinks );
 			}
-			ancestor = Path.GetDirectoryName( normalizedAncestor );
+			ancestor = System.IO.Path.GetDirectoryName( normalizedAncestor );
 		}
 		throw new FileNotFoundException( "The synthetic pathname does not exist.", path );
 	}
@@ -273,7 +273,7 @@ internal sealed class SyntheticReadOnlyFileSystemProvider : IReadOnlyFileSystemP
 			: throw new FileNotFoundException( "The synthetic pathname does not exist.", normalized );
 	}
 
-	private static string Normalize( string path ) => Path.TrimEndingDirectorySeparator( Path.GetFullPath( path ) );
+	private static string Normalize( string path ) => System.IO.Path.TrimEndingDirectorySeparator( System.IO.Path.GetFullPath( path ) );
 
 	private static StringComparer GetPathComparer() => OperatingSystem.IsWindows()
 		? StringComparer.OrdinalIgnoreCase

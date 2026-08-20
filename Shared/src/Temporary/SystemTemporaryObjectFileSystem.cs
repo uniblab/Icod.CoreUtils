@@ -181,7 +181,7 @@ public sealed class SystemTemporaryObjectFileSystem : ITemporaryObjectFileSystem
 	}
 
 	private static string? FindExistingNonDirectoryAncestor( string path ) {
-		var ancestor = Path.GetDirectoryName( path );
+		var ancestor = System.IO.Path.GetDirectoryName( path );
 		while ( !string.IsNullOrEmpty( ancestor ) ) {
 			if ( File.Exists( ancestor ) ) {
 				return ancestor;
@@ -189,7 +189,7 @@ public sealed class SystemTemporaryObjectFileSystem : ITemporaryObjectFileSystem
 			if ( Directory.Exists( ancestor ) ) {
 				return null;
 			}
-			var parent = Path.GetDirectoryName( ancestor );
+			var parent = System.IO.Path.GetDirectoryName( ancestor );
 			if ( string.Equals( parent, ancestor, StringComparison.Ordinal ) ) {
 				break;
 			}

@@ -193,8 +193,8 @@ public sealed class SystemReadOnlyFileSystemProvider : IReadOnlyFileSystemProvid
 	}
 
 	private static string GetName( string path ) {
-		var trimmed = Path.TrimEndingDirectorySeparator( path );
-		var name = Path.GetFileName( trimmed );
+		var trimmed = System.IO.Path.TrimEndingDirectorySeparator( path );
+		var name = System.IO.Path.GetFileName( trimmed );
 		return name.Length > 0 ? name : trimmed;
 	}
 

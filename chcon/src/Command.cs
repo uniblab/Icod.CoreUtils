@@ -330,8 +330,8 @@ public static class Command {
 		CancellationToken cancellationToken
 	) {
 		try {
-			var full = Path.TrimEndingDirectorySeparator( Path.GetFullPath( path ) );
-			var lexicalRoot = Path.TrimEndingDirectorySeparator( Path.GetPathRoot( full ) ?? string.Empty );
+			var full = System.IO.Path.TrimEndingDirectorySeparator( System.IO.Path.GetFullPath( path ) );
+			var lexicalRoot = System.IO.Path.TrimEndingDirectorySeparator( System.IO.Path.GetPathRoot( full ) ?? string.Empty );
 			if ( string.Equals( full, lexicalRoot, StringComparison.Ordinal ) )
 				return true;
 

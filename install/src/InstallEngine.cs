@@ -80,7 +80,7 @@ internal sealed class InstallEngine {
 		foreach ( var plan in plans.Plans ) {
 			try {
 				if ( options.CreateLeadingDirectories ) {
-					var parent = Path.GetDirectoryName( Path.GetFullPath( plan.Destination ) );
+					var parent = System.IO.Path.GetDirectoryName( System.IO.Path.GetFullPath( plan.Destination ) );
 					if ( !string.IsNullOrEmpty( parent ) ) {
 						await EnsureDirectoryAsync(
 							parent,
@@ -203,7 +203,7 @@ internal sealed class InstallEngine {
 			return (
 				options.Operands.Select( source => new InstallPlan(
 					source,
-					Path.Combine( options.TargetDirectory, GetSourceName( source ) )
+					System.IO.Path.Combine( options.TargetDirectory, GetSourceName( source ) )
 				) ).ToArray(),
 				null
 			);
@@ -220,7 +220,7 @@ internal sealed class InstallEngine {
 			sources.Select( source => new InstallPlan(
 				source,
 				destinationIsDirectory
-					? Path.Combine( destinationArgument, GetSourceName( source ) )
+					? System.IO.Path.Combine( destinationArgument, GetSourceName( source ) )
 					: destinationArgument
 			) ).ToArray(),
 			null
@@ -465,7 +465,7 @@ internal sealed class InstallEngine {
 		CancellationToken cancellationToken,
 		bool configureExistingFinal = true
 	) {
-		var fullPath = Path.GetFullPath( path );
+		var fullPath = System.IO.Path.GetFullPath( path );
 		var missing = new Stack<string>();
 		var current = fullPath;
 		FileSystemMetadata? existing = null;
@@ -473,7 +473,7 @@ internal sealed class InstallEngine {
 			existing = await TryGetMetadataAsync( current, PathDereferenceMode.NoFollow, cancellationToken ).ConfigureAwait( false );
 			if ( existing is not null ) break;
 			missing.Push( current );
-			var parent = Path.GetDirectoryName( current );
+			var parent = System.IO.Path.GetDirectoryName( current );
 			if ( string.IsNullOrEmpty( parent ) || string.Equals( parent, current, PathComparison ) ) {
 				throw new DirectoryNotFoundException( string.Concat( "no existing parent for '", fullPath, "'" ) );
 			}
@@ -609,7 +609,7 @@ internal sealed class InstallEngine {
 	}
 
 	private async ValueTask RequireExistingDestinationParentAsync( string destination, CancellationToken cancellationToken ) {
-		var parent = Path.GetDirectoryName( Path.GetFullPath( destination ) );
+		var parent = System.IO.Path.GetDirectoryName( System.IO.Path.GetFullPath( destination ) );
 		if ( string.IsNullOrEmpty( parent ) ) return;
 		var metadata = await metadataProvider.GetMetadataAsync(
 			parent,
@@ -698,8 +698,8 @@ internal sealed class InstallEngine {
 	}
 
 	private static string GetSourceName( string source ) {
-		var trimmed = Path.TrimEndingDirectorySeparator( source );
-		var name = Path.GetFileName( trimmed );
+		var trimmed = System.IO.Path.TrimEndingDirectorySeparator( source );
+		var name = System.IO.Path.GetFileName( trimmed );
 		if ( string.IsNullOrEmpty( name ) ) throw new ArgumentException( string.Concat( "invalid source pathname '", source, "'" ) );
 		return name;
 	}

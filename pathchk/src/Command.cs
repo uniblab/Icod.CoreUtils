@@ -103,7 +103,7 @@ public static class Command {
 			if ( Encoding.UTF8.GetByteCount( path ) > pathLimit ) await Bad( $"file name '{path}' is too long" ).ConfigureAwait( false );
 			foreach ( var component in components ) if ( Encoding.UTF8.GetByteCount( component ) > 255 ) await Bad( $"file name component '{component}' is too long" ).ConfigureAwait( false );
 			if ( path.IndexOf( '\0' ) >= 0 ) await Bad( "file name contains a null character" ).ConfigureAwait( false );
-			try { _ = Path.GetFullPath( path.Length == 0 ? "." : path ); } catch ( Exception ex ) when ( ex is ArgumentException or NotSupportedException or PathTooLongException ) { await Bad( ex.Message ).ConfigureAwait( false ); }
+			try { _ = System.IO.Path.GetFullPath( path.Length == 0 ? "." : path ); } catch ( Exception ex ) when ( ex is ArgumentException or NotSupportedException or PathTooLongException ) { await Bad( ex.Message ).ConfigureAwait( false ); }
 		}
 		return valid;
 	}

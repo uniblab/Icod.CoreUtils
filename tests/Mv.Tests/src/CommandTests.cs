@@ -10,8 +10,8 @@ public sealed class CommandTests {
 	public async Task MovesOrdinaryFile() {
 		var root = CreateTemporaryDirectory();
 		try {
-			var source = Path.Combine( root, "source" );
-			var destination = Path.Combine( root, "destination" );
+			var source = System.IO.Path.Combine( root, "source" );
+			var destination = System.IO.Path.Combine( root, "destination" );
 			await File.WriteAllTextAsync( source, "content" );
 			var status = await RunAsync( new[] { source, destination } );
 			Assert.Equal( 0, status );
@@ -27,8 +27,8 @@ public sealed class CommandTests {
 	public async Task NoClobberRetainsBothFiles() {
 		var root = CreateTemporaryDirectory();
 		try {
-			var source = Path.Combine( root, "source" );
-			var destination = Path.Combine( root, "destination" );
+			var source = System.IO.Path.Combine( root, "source" );
+			var destination = System.IO.Path.Combine( root, "destination" );
 			await File.WriteAllTextAsync( source, "new" );
 			await File.WriteAllTextAsync( destination, "old" );
 			var status = await RunAsync( new[] { "--no-clobber", source, destination } );
@@ -45,8 +45,8 @@ public sealed class CommandTests {
 	public async Task BackupRetainsFormerDestination() {
 		var root = CreateTemporaryDirectory();
 		try {
-			var source = Path.Combine( root, "source" );
-			var destination = Path.Combine( root, "destination" );
+			var source = System.IO.Path.Combine( root, "source" );
+			var destination = System.IO.Path.Combine( root, "destination" );
 			await File.WriteAllTextAsync( source, "new" );
 			await File.WriteAllTextAsync( destination, "old" );
 			var status = await RunAsync( new[] { "--backup=simple", source, destination } );
@@ -64,13 +64,13 @@ public sealed class CommandTests {
 	public async Task MovesDirectory() {
 		var root = CreateTemporaryDirectory();
 		try {
-			var source = Directory.CreateDirectory( Path.Combine( root, "source" ) ).FullName;
-			await File.WriteAllTextAsync( Path.Combine( source, "file" ), "content" );
-			var destination = Path.Combine( root, "destination" );
+			var source = Directory.CreateDirectory( System.IO.Path.Combine( root, "source" ) ).FullName;
+			await File.WriteAllTextAsync( System.IO.Path.Combine( source, "file" ), "content" );
+			var destination = System.IO.Path.Combine( root, "destination" );
 			var status = await RunAsync( new[] { source, destination } );
 			Assert.Equal( 0, status );
 			Assert.False( Directory.Exists( source ) );
-			Assert.Equal( "content", await File.ReadAllTextAsync( Path.Combine( destination, "file" ) ) );
+			Assert.Equal( "content", await File.ReadAllTextAsync( System.IO.Path.Combine( destination, "file" ) ) );
 		} finally {
 			DeleteTree( root );
 		}
@@ -81,15 +81,15 @@ public sealed class CommandTests {
 	public async Task TargetDirectoryMovesMultipleSources() {
 		var root = CreateTemporaryDirectory();
 		try {
-			var first = Path.Combine( root, "first" );
-			var second = Path.Combine( root, "second" );
-			var destination = Directory.CreateDirectory( Path.Combine( root, "destination" ) ).FullName;
+			var first = System.IO.Path.Combine( root, "first" );
+			var second = System.IO.Path.Combine( root, "second" );
+			var destination = Directory.CreateDirectory( System.IO.Path.Combine( root, "destination" ) ).FullName;
 			await File.WriteAllTextAsync( first, "one" );
 			await File.WriteAllTextAsync( second, "two" );
 			var status = await RunAsync( new[] { "--target-directory", destination, first, second } );
 			Assert.Equal( 0, status );
-			Assert.Equal( "one", await File.ReadAllTextAsync( Path.Combine( destination, "first" ) ) );
-			Assert.Equal( "two", await File.ReadAllTextAsync( Path.Combine( destination, "second" ) ) );
+			Assert.Equal( "one", await File.ReadAllTextAsync( System.IO.Path.Combine( destination, "first" ) ) );
+			Assert.Equal( "two", await File.ReadAllTextAsync( System.IO.Path.Combine( destination, "second" ) ) );
 		} finally {
 			DeleteTree( root );
 		}
@@ -100,7 +100,7 @@ public sealed class CommandTests {
 	public async Task RejectsSameSourceAndDestination() {
 		var root = CreateTemporaryDirectory();
 		try {
-			var path = Path.Combine( root, "file" );
+			var path = System.IO.Path.Combine( root, "file" );
 			await File.WriteAllTextAsync( path, "content" );
 			Assert.Equal( 1, await RunAsync( new[] { path, path } ) );
 			Assert.Equal( "content", await File.ReadAllTextAsync( path ) );
@@ -114,14 +114,14 @@ public sealed class CommandTests {
 	public async Task ContinuesAfterIndependentSourceFailure() {
 		var root = CreateTemporaryDirectory();
 		try {
-			var missing = Path.Combine( root, "missing" );
-			var source = Path.Combine( root, "source" );
-			var destination = Directory.CreateDirectory( Path.Combine( root, "destination" ) ).FullName;
+			var missing = System.IO.Path.Combine( root, "missing" );
+			var source = System.IO.Path.Combine( root, "source" );
+			var destination = Directory.CreateDirectory( System.IO.Path.Combine( root, "destination" ) ).FullName;
 			await File.WriteAllTextAsync( source, "content" );
 			var status = await RunAsync( new[] { missing, source, destination } );
 			Assert.Equal( 1, status );
 			Assert.False( File.Exists( source ) );
-			Assert.Equal( "content", await File.ReadAllTextAsync( Path.Combine( destination, "source" ) ) );
+			Assert.Equal( "content", await File.ReadAllTextAsync( System.IO.Path.Combine( destination, "source" ) ) );
 		} finally {
 			DeleteTree( root );
 		}
@@ -144,7 +144,7 @@ public sealed class CommandTests {
 	);
 
 	private static string CreateTemporaryDirectory() {
-		var path = Path.Combine( Path.GetTempPath(), string.Concat( "Icod-Mv-", Guid.NewGuid().ToString( "N" ) ) );
+		var path = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "Icod-Mv-", Guid.NewGuid().ToString( "N" ) ) );
 		Directory.CreateDirectory( path );
 		return path;
 	}

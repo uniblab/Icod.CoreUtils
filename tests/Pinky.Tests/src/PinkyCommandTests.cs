@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 using Icod.CoreUtils.Shared.Diagnostics;
 using Icod.CoreUtils.Shared.Platform;
 using Xunit;
@@ -41,12 +41,12 @@ public sealed class PinkyCommandTests
     [Fact]
     public async Task LongFormatReadsProjectAndPlan()
     {
-        var directory = Path.Combine(Path.GetTempPath(), String.Concat("pinky-tests-", Guid.NewGuid().ToString("N")));
+        var directory = System.IO.Path.Combine( System.IO.Path.GetTempPath(), String.Concat("pinky-tests-", Guid.NewGuid().ToString("N")));
         Directory.CreateDirectory(directory);
         try
         {
-            await File.WriteAllTextAsync(Path.Combine(directory, ".project"), "CoreUtils");
-            await File.WriteAllTextAsync(Path.Combine(directory, ".plan"), "Ship Batch 9");
+            await File.WriteAllTextAsync( System.IO.Path.Combine(directory, ".project"), "CoreUtils");
+            await File.WriteAllTextAsync( System.IO.Path.Combine(directory, ".plan"), "Ship Batch 9");
             var output = new StringWriter();
             var provider = new FakeProvider(directory);
             Assert.Equal(0, await Tool.RunAsync(["-l", "alice"], Context(output), provider));

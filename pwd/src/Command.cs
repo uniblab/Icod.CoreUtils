@@ -12,6 +12,12 @@ public static class Command {
 	private const string PROGRAM = "pwd";
 	private const string VERSION = "pwd (Icod.CoreUtils) 1.0";
 
+	private static readonly char[] theSlashes;
+
+	static Command() {
+		theSlashes = ['/', '\\'];
+	}
+
 	/// <summary>
 	/// Executes <c>pwd</c> synchronously with optional standard-stream substitution.
 	/// </summary>
@@ -91,8 +97,8 @@ public static class Command {
 		catch ( Exception ex ) when ( ex is IOException or UnauthorizedAccessException ) { await context.Diagnostics.ErrorAsync( ex.Message, context.CancellationToken ).ConfigureAwait( false ); return 1; }
 	}
 	private static bool IsValidLogicalPath( string? path, string physical ) {
-		if ( string.IsNullOrEmpty( path ) || !Path.IsPathRooted( path ) ) return false;
-		if ( path.Split( new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries ).Any( x => x is "." or ".." ) ) return false;
+		if ( string.IsNullOrEmpty( path ) || !System.IO.Path.IsPathRooted( path ) ) return false;
+		if ( path.Split( theSlashes, StringSplitOptions.RemoveEmptyEntries ).Any( x => x is "." or ".." ) ) return false;
 		try { return string.Equals( ResolvePhysicalPath( path ), physical, OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal ); } catch { return false; }
 	}
 	/// <summary>
@@ -101,15 +107,15 @@ public static class Command {
 	/// <param name="path">The absolute or relative pathname to resolve.</param>
 	/// <returns>The normalized physical pathname.</returns>
 	internal static string ResolvePhysicalPath( string path ) {
-		var full = Path.GetFullPath( path );
-		var root = Path.GetPathRoot( full ) ?? string.Empty;
+		var full = System.IO.Path.GetFullPath( path );
+		var root = System.IO.Path.GetPathRoot( full ) ?? string.Empty;
 		var current = root;
-		foreach ( var component in full[root.Length..].Split( new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries ) ) {
-			var candidate = Path.Combine( current, component );
+		foreach ( var component in full[root.Length..].Split( new[] { System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries ) ) {
+			var candidate = System.IO.Path.Combine( current, component );
 			var target = Directory.ResolveLinkTarget( candidate, true );
 			current = target?.FullName ?? candidate;
 		}
-		return Path.TrimEndingDirectorySeparator( Path.GetFullPath( current ) );
+		return System.IO.Path.TrimEndingDirectorySeparator( System.IO.Path.GetFullPath( current ) );
 	}
 	private static async Task WriteHelpAsync( CommandContext context ) {
 		const string text = """

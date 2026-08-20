@@ -204,7 +204,7 @@ public sealed class RecursiveMutationTraversalEngine {
 			? null
 			: entry.RelativePath.Length == 0
 				? options.DestinationPath
-				: Path.Combine( options.DestinationPath, entry.RelativePath );
+				: System.IO.Path.Combine( options.DestinationPath, entry.RelativePath );
 		HardLinkIdentityAnchor? firstHardLink = null;
 		if ( entry.Kind != FileSystemEntryKind.Directory ) {
 			_ = hardLinks.Track(

@@ -207,8 +207,8 @@ public sealed class HeadCommandTests {
 	private static async Task<string> CreateFileAsync(
 		string contents
 	) {
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			$"icod-head-test-{Guid.NewGuid():N}.txt"
 		);
 		await File.WriteAllTextAsync(

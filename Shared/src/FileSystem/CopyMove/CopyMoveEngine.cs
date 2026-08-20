@@ -103,7 +103,7 @@ public sealed class CopyMoveEngine {
 				continue;
 			}
 			var target = destinationIsDirectory
-				? Path.Combine( destinationPath, GetSourceName( source ) )
+				? System.IO.Path.Combine( destinationPath, GetSourceName( source ) )
 				: destinationPath;
 			try {
 				var outcome = await ExecuteOneAsync( source, target, options, cancellationToken ).ConfigureAwait( false );
@@ -748,8 +748,8 @@ public sealed class CopyMoveEngine {
 	}
 
 	private static string GetSourceName( string sourcePath ) {
-		var trimmed = Path.TrimEndingDirectorySeparator( sourcePath );
-		var name = Path.GetFileName( trimmed );
+		var trimmed = System.IO.Path.TrimEndingDirectorySeparator( sourcePath );
+		var name = System.IO.Path.GetFileName( trimmed );
 		if ( string.IsNullOrEmpty( name ) ) throw new ArgumentException( string.Concat( "The source has no usable basename: ", sourcePath ) );
 		return name;
 	}

@@ -11,41 +11,41 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task CreatesRelativeSymbolicLink() {
 		using var temporary = new TemporaryDirectory();
-		var source = Path.Combine( temporary.Path, "source" );
-		var links = Path.Combine( temporary.Path, "links" );
+		var source = System.IO.Path.Combine( temporary.Path, "source" );
+		var links = System.IO.Path.Combine( temporary.Path, "links" );
 		Directory.CreateDirectory( links );
 		File.WriteAllText( source, "data" );
 		if ( !await CanCreateSymbolicLinksAsync( source, temporary.Path ) ) {
 			return;
 		}
-		var link = Path.Combine( links, "item" );
+		var link = System.IO.Path.Combine( links, "item" );
 		var error = new StringWriter();
 		var status = await LnCommand.RunAsync( new[] { "-s", "-r", source, link }, new CommandContext( "ln", TextReader.Null, TextWriter.Null, error ) );
 		Assert.True( status == CommandExitCodes.Success, error.ToString() );
 		Assert.Equal( "data", File.ReadAllText( link ) );
-		Assert.False( Path.IsPathFullyQualified( new FileInfo( link ).LinkTarget! ) );
+		Assert.False( System.IO.Path.IsPathFullyQualified( new FileInfo( link ).LinkTarget! ) );
 	}
 
 	/// <summary>Creates multiple links in an explicit target directory.</summary>
 	[Fact]
 	public async Task CreatesMultipleLinksInTargetDirectory() {
 		using var temporary = new TemporaryDirectory();
-		var first = Path.Combine( temporary.Path, "first" );
-		var second = Path.Combine( temporary.Path, "second" );
-		var target = Path.Combine( temporary.Path, "target" );
+		var first = System.IO.Path.Combine( temporary.Path, "first" );
+		var second = System.IO.Path.Combine( temporary.Path, "second" );
+		var target = System.IO.Path.Combine( temporary.Path, "target" );
 		File.WriteAllText( first, "1" ); File.WriteAllText( second, "2" ); Directory.CreateDirectory( target );
 		var status = await LnCommand.RunAsync( new[] { "-t", target, first, second }, new CommandContext( "ln", TextReader.Null, TextWriter.Null, new StringWriter() ) );
 		Assert.Equal( CommandExitCodes.Success, status );
-		Assert.Equal( "1", File.ReadAllText( Path.Combine( target, "first" ) ) );
-		Assert.Equal( "2", File.ReadAllText( Path.Combine( target, "second" ) ) );
+		Assert.Equal( "1", File.ReadAllText( System.IO.Path.Combine( target, "first" ) ) );
+		Assert.Equal( "2", File.ReadAllText( System.IO.Path.Combine( target, "second" ) ) );
 	}
 
 	/// <summary>Backs up and replaces an existing destination.</summary>
 	[Fact]
 	public async Task BacksUpExistingDestination() {
 		using var temporary = new TemporaryDirectory();
-		var source = Path.Combine( temporary.Path, "source" );
-		var destination = Path.Combine( temporary.Path, "destination" );
+		var source = System.IO.Path.Combine( temporary.Path, "source" );
+		var destination = System.IO.Path.Combine( temporary.Path, "destination" );
 		File.WriteAllText( source, "new" ); File.WriteAllText( destination, "old" );
 		var status = await LnCommand.RunAsync( new[] { "-b", source, destination }, new CommandContext( "ln", TextReader.Null, TextWriter.Null, new StringWriter() ) );
 		Assert.Equal( CommandExitCodes.Success, status );
@@ -54,7 +54,7 @@ public sealed class CommandTests {
 	}
 
 	private static async ValueTask<bool> CanCreateSymbolicLinksAsync( string target, string directory ) {
-		var probe = Path.Combine( directory, string.Concat( ".ln-symlink-probe-", Guid.NewGuid().ToString( "N" ) ) );
+		var probe = System.IO.Path.Combine( directory, string.Concat( ".ln-symlink-probe-", Guid.NewGuid().ToString( "N" ) ) );
 		var result = await SystemFileSystemMutationProvider.Instance.CreateSymbolicLinkAsync(
 			probe,
 			target,

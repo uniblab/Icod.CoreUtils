@@ -14,15 +14,15 @@ public sealed class PathnameExpanderTests {
 	[Fact]
 	public async Task ExpandsInOperandAndOrdinalNameOrder() {
 		var basePath = CreateBasePath();
-		var rootPath = Path.Combine( basePath, "root" );
+		var rootPath = System.IO.Path.Combine( basePath, "root" );
 		var provider = new SyntheticReadOnlyFileSystemProvider()
 			.AddDirectory( basePath )
 			.AddDirectory( rootPath )
-			.AddFile( Path.Combine( rootPath, "z.txt" ) )
-			.AddFile( Path.Combine( rootPath, "a.txt" ) )
-			.AddFile( Path.Combine( rootPath, "skip.bin" ) );
+			.AddFile( System.IO.Path.Combine( rootPath, "z.txt" ) )
+			.AddFile( System.IO.Path.Combine( rootPath, "a.txt" ) )
+			.AddFile( System.IO.Path.Combine( rootPath, "skip.bin" ) );
 		var expander = new PathnameExpander( provider );
-		var operand = Path.Combine( "root", "*.txt" );
+		var operand = System.IO.Path.Combine( "root", "*.txt" );
 
 		var events = await CollectAsync( expander.ExpandAsync(
 			new[] { operand, operand },
@@ -39,7 +39,7 @@ public sealed class PathnameExpanderTests {
 		Assert.Equal( new long[] { 0, 1, 2, 3 }, roots.Select( static root => root.RootOrdinal ) );
 		Assert.Equal(
 			new[] { "a.txt", "z.txt", "a.txt", "z.txt" },
-			roots.Select( static root => Path.GetFileName( root.AccessPath ) )
+			roots.Select( static root => System.IO.Path.GetFileName( root.AccessPath ) )
 		);
 	}
 
@@ -50,18 +50,18 @@ public sealed class PathnameExpanderTests {
 	[Fact]
 	public async Task ExpandsDoubleStarAcrossZeroOrMoreSegments() {
 		var basePath = CreateBasePath();
-		var rootPath = Path.Combine( basePath, "root" );
-		var nestedPath = Path.Combine( rootPath, "nested" );
+		var rootPath = System.IO.Path.Combine( basePath, "root" );
+		var nestedPath = System.IO.Path.Combine( rootPath, "nested" );
 		var provider = new SyntheticReadOnlyFileSystemProvider()
 			.AddDirectory( basePath )
 			.AddDirectory( rootPath )
-			.AddFile( Path.Combine( rootPath, "target.txt" ) )
+			.AddFile( System.IO.Path.Combine( rootPath, "target.txt" ) )
 			.AddDirectory( nestedPath )
-			.AddFile( Path.Combine( nestedPath, "target.txt" ) );
+			.AddFile( System.IO.Path.Combine( nestedPath, "target.txt" ) );
 		var expander = new PathnameExpander( provider );
 
 		var events = await CollectAsync( expander.ExpandAsync(
-			new[] { Path.Combine( "root", "**", "target.txt" ) },
+			new[] { System.IO.Path.Combine( "root", "**", "target.txt" ) },
 			new PathnameExpansionOptions {
 				BaseDirectory = basePath,
 				MatchOrder = PathnameExpansionMatchOrder.Ordinal,
@@ -71,12 +71,12 @@ public sealed class PathnameExpanderTests {
 
 		var relative = events
 			.Where( static item => item.Root is not null )
-			.Select( item => Path.GetRelativePath( basePath, item.Root!.AccessPath ) )
+			.Select( item => System.IO.Path.GetRelativePath( basePath, item.Root!.AccessPath ) )
 			.ToArray();
 		Assert.Equal(
 			new[] {
-				Path.Combine( "root", "target.txt" ),
-				Path.Combine( "root", "nested", "target.txt" )
+				System.IO.Path.Combine( "root", "target.txt" ),
+				System.IO.Path.Combine( "root", "nested", "target.txt" )
 			},
 			relative
 		);
@@ -90,24 +90,24 @@ public sealed class PathnameExpanderTests {
 	[Fact]
 	public async Task AdjacentDoubleStarsDoNotDuplicateSameExpansionState() {
 		var basePath = CreateBasePath();
-		var rootPath = Path.Combine( basePath, "root" );
-		var nestedPath = Path.Combine( rootPath, "nested" );
+		var rootPath = System.IO.Path.Combine( basePath, "root" );
+		var nestedPath = System.IO.Path.Combine( rootPath, "nested" );
 		var provider = new SyntheticReadOnlyFileSystemProvider()
 			.AddDirectory( basePath )
 			.AddDirectory( rootPath )
 			.AddDirectory( nestedPath )
-			.AddFile( Path.Combine( nestedPath, "target.txt" ) );
+			.AddFile( System.IO.Path.Combine( nestedPath, "target.txt" ) );
 		var expander = new PathnameExpander( provider );
 
 		var events = await CollectAsync( expander.ExpandAsync(
-			new[] { Path.Combine( "root", "**", "**", "target.txt" ) },
+			new[] { System.IO.Path.Combine( "root", "**", "**", "target.txt" ) },
 			new PathnameExpansionOptions {
 				BaseDirectory = basePath,
 				UnmatchedPatternBehavior = UnmatchedPathnamePatternBehavior.ReturnNoMatches
 			}
 		) );
 
-		Assert.Equal( Path.Combine( nestedPath, "target.txt" ), Assert.Single( events ).Root!.AccessPath );
+		Assert.Equal( System.IO.Path.Combine( nestedPath, "target.txt" ), Assert.Single( events ).Root!.AccessPath );
 	}
 
 
@@ -120,11 +120,11 @@ public sealed class PathnameExpanderTests {
 		var basePath = CreateBasePath();
 		var provider = new SyntheticReadOnlyFileSystemProvider()
 			.AddDirectory( basePath )
-			.AddFile( Path.Combine( basePath, "found.txt" ) );
+			.AddFile( System.IO.Path.Combine( basePath, "found.txt" ) );
 		var expander = new PathnameExpander( provider );
 
 		var events = await CollectAsync( expander.ExpandAsync(
-			new[] { Path.Combine( ".", "*.txt" ) },
+			new[] { System.IO.Path.Combine( ".", "*.txt" ) },
 			new PathnameExpansionOptions {
 				BaseDirectory = basePath,
 				UnmatchedPatternBehavior = UnmatchedPathnamePatternBehavior.ReturnNoMatches
@@ -132,8 +132,8 @@ public sealed class PathnameExpanderTests {
 		) );
 
 		var root = Assert.Single( events ).Root!;
-		Assert.Equal( Path.Combine( basePath, "found.txt" ), root.AccessPath );
-		Assert.Equal( Path.Combine( ".", "found.txt" ), root.DisplayPath );
+		Assert.Equal( System.IO.Path.Combine( basePath, "found.txt" ), root.AccessPath );
+		Assert.Equal( System.IO.Path.Combine( ".", "found.txt" ), root.DisplayPath );
 	}
 
 
@@ -144,22 +144,22 @@ public sealed class PathnameExpanderTests {
 	[Fact]
 	public async Task ParentDirectorySegmentRewindsExpansionAncestry() {
 		var basePath = CreateBasePath();
-		var childPath = Path.Combine( basePath, "child" );
+		var childPath = System.IO.Path.Combine( basePath, "child" );
 		var provider = new SyntheticReadOnlyFileSystemProvider()
 			.AddDirectory( basePath )
 			.AddDirectory( childPath )
-			.AddFile( Path.Combine( basePath, "found.txt" ) );
+			.AddFile( System.IO.Path.Combine( basePath, "found.txt" ) );
 		var expander = new PathnameExpander( provider );
 
 		var events = await CollectAsync( expander.ExpandAsync(
-			new[] { Path.Combine( "child", "..", "*.txt" ) },
+			new[] { System.IO.Path.Combine( "child", "..", "*.txt" ) },
 			new PathnameExpansionOptions {
 				BaseDirectory = basePath,
 				UnmatchedPatternBehavior = UnmatchedPathnamePatternBehavior.ReturnNoMatches
 			}
 		) );
 
-		Assert.Equal( Path.Combine( basePath, "found.txt" ), Assert.Single( events ).Root!.AccessPath );
+		Assert.Equal( System.IO.Path.Combine( basePath, "found.txt" ), Assert.Single( events ).Root!.AccessPath );
 	}
 
 	/// <summary>
@@ -208,14 +208,14 @@ public sealed class PathnameExpanderTests {
 	[Fact]
 	public async Task RootsOnlyFollowsExplicitButNotWildcardDiscoveredLink() {
 		var basePath = CreateBasePath();
-		var rootPath = Path.Combine( basePath, "root" );
-		var targetPath = Path.Combine( basePath, "target" );
-		var linkPath = Path.Combine( rootPath, "link" );
+		var rootPath = System.IO.Path.Combine( basePath, "root" );
+		var targetPath = System.IO.Path.Combine( basePath, "target" );
+		var linkPath = System.IO.Path.Combine( rootPath, "link" );
 		var provider = new SyntheticReadOnlyFileSystemProvider()
 			.AddDirectory( basePath )
 			.AddDirectory( rootPath )
 			.AddDirectory( targetPath )
-			.AddFile( Path.Combine( targetPath, "found.txt" ) )
+			.AddFile( System.IO.Path.Combine( targetPath, "found.txt" ) )
 			.AddLink( linkPath, targetPath );
 		var expander = new PathnameExpander( provider );
 		var options = new PathnameExpansionOptions {
@@ -225,13 +225,13 @@ public sealed class PathnameExpanderTests {
 		};
 
 		var explicitEvents = await CollectAsync( expander.ExpandAsync(
-			new[] { Path.Combine( "root", "link", "*.txt" ) },
+			new[] { System.IO.Path.Combine( "root", "link", "*.txt" ) },
 			options
 		) );
 		Assert.Single( explicitEvents, static item => item.Root is not null );
 
 		var wildcardEvents = await CollectAsync( expander.ExpandAsync(
-			new[] { Path.Combine( "root", "*", "*.txt" ) },
+			new[] { System.IO.Path.Combine( "root", "*", "*.txt" ) },
 			options
 		) );
 		Assert.Equal( PathnameExpansionEventKind.NoMatch, Assert.Single( wildcardEvents ).Kind );
@@ -245,18 +245,18 @@ public sealed class PathnameExpanderTests {
 	[Fact]
 	public async Task FinalDoubleStarIncludesZeroSegmentAndDescendantMatches() {
 		var basePath = CreateBasePath();
-		var rootPath = Path.Combine( basePath, "root" );
-		var nestedPath = Path.Combine( rootPath, "nested" );
+		var rootPath = System.IO.Path.Combine( basePath, "root" );
+		var nestedPath = System.IO.Path.Combine( rootPath, "nested" );
 		var provider = new SyntheticReadOnlyFileSystemProvider()
 			.AddDirectory( basePath )
 			.AddDirectory( rootPath )
-			.AddFile( Path.Combine( rootPath, "file.txt" ) )
+			.AddFile( System.IO.Path.Combine( rootPath, "file.txt" ) )
 			.AddDirectory( nestedPath )
-			.AddFile( Path.Combine( nestedPath, "inside.txt" ) );
+			.AddFile( System.IO.Path.Combine( nestedPath, "inside.txt" ) );
 		var expander = new PathnameExpander( provider );
 
 		var events = await CollectAsync( expander.ExpandAsync(
-			new[] { Path.Combine( "root", "**" ) },
+			new[] { System.IO.Path.Combine( "root", "**" ) },
 			new PathnameExpansionOptions {
 				BaseDirectory = basePath,
 				MatchOrder = PathnameExpansionMatchOrder.Ordinal,
@@ -267,12 +267,12 @@ public sealed class PathnameExpanderTests {
 		Assert.Equal(
 			new[] {
 				"root",
-				Path.Combine( "root", "file.txt" ),
-				Path.Combine( "root", "nested" ),
-				Path.Combine( "root", "nested", "inside.txt" )
+				System.IO.Path.Combine( "root", "file.txt" ),
+				System.IO.Path.Combine( "root", "nested" ),
+				System.IO.Path.Combine( "root", "nested", "inside.txt" )
 			},
 			events.Where( static item => item.Root is not null )
-				.Select( item => Path.GetRelativePath( basePath, item.Root!.AccessPath ) )
+				.Select( item => System.IO.Path.GetRelativePath( basePath, item.Root!.AccessPath ) )
 		);
 	}
 
@@ -283,18 +283,18 @@ public sealed class PathnameExpanderTests {
 	[Fact]
 	public async Task DoubleStarDoesNotConsumeHiddenSegmentByDefault() {
 		var basePath = CreateBasePath();
-		var rootPath = Path.Combine( basePath, "root" );
-		var hiddenPath = Path.Combine( rootPath, ".hidden" );
+		var rootPath = System.IO.Path.Combine( basePath, "root" );
+		var hiddenPath = System.IO.Path.Combine( rootPath, ".hidden" );
 		var provider = new SyntheticReadOnlyFileSystemProvider()
 			.AddDirectory( basePath )
 			.AddDirectory( rootPath )
 			.AddDirectory( hiddenPath )
-			.AddFile( Path.Combine( hiddenPath, "inside.txt" ) )
-			.AddFile( Path.Combine( rootPath, "visible.txt" ) );
+			.AddFile( System.IO.Path.Combine( hiddenPath, "inside.txt" ) )
+			.AddFile( System.IO.Path.Combine( rootPath, "visible.txt" ) );
 		var expander = new PathnameExpander( provider );
 
 		var events = await CollectAsync( expander.ExpandAsync(
-			new[] { Path.Combine( "root", "**", "*.txt" ) },
+			new[] { System.IO.Path.Combine( "root", "**", "*.txt" ) },
 			new PathnameExpansionOptions {
 				BaseDirectory = basePath,
 				MatchOrder = PathnameExpansionMatchOrder.Ordinal,
@@ -304,7 +304,7 @@ public sealed class PathnameExpanderTests {
 
 		var rootEvent = Assert.Single( events, static item => item.Root is not null );
 		var root = Assert.IsType<PathTraversalRoot>( rootEvent.Root );
-		Assert.Equal( "visible.txt", Path.GetFileName( root.AccessPath ) );
+		Assert.Equal( "visible.txt", System.IO.Path.GetFileName( root.AccessPath ) );
 	}
 
 	/// <summary>
@@ -327,7 +327,7 @@ public sealed class PathnameExpanderTests {
 		) );
 
 		var root = Assert.Single( events ).Root!;
-		Assert.Equal( Path.Combine( basePath, "a*b.txt" ), root.AccessPath );
+		Assert.Equal( System.IO.Path.Combine( basePath, "a*b.txt" ), root.AccessPath );
 		Assert.Equal( @"a\*b.txt", root.OriginalOperand );
 		Assert.Equal( "a*b.txt", root.DisplayPath );
 	}
@@ -339,7 +339,7 @@ public sealed class PathnameExpanderTests {
 	[Fact]
 	public async Task ReportsDisappearingIntermediateEntryWithoutConvertingItToNoMatch() {
 		var basePath = CreateBasePath();
-		var rootPath = Path.Combine( basePath, "root" );
+		var rootPath = System.IO.Path.Combine( basePath, "root" );
 		var provider = new SyntheticReadOnlyFileSystemProvider()
 			.AddDirectory( basePath )
 			.AddDirectory( rootPath )
@@ -347,7 +347,7 @@ public sealed class PathnameExpanderTests {
 		var expander = new PathnameExpander( provider );
 
 		var events = await CollectAsync( expander.ExpandAsync(
-			new[] { Path.Combine( "root", "*", "*.txt" ) },
+			new[] { System.IO.Path.Combine( "root", "*", "*.txt" ) },
 			new PathnameExpansionOptions {
 				BaseDirectory = basePath,
 				UnmatchedPatternBehavior = UnmatchedPathnamePatternBehavior.ReturnNoMatches
@@ -369,8 +369,8 @@ public sealed class PathnameExpanderTests {
 		var basePath = CreateBasePath();
 		var provider = new SyntheticReadOnlyFileSystemProvider()
 			.AddDirectory( basePath )
-			.AddFile( Path.Combine( basePath, "one.txt" ) )
-			.AddFile( Path.Combine( basePath, "two.txt" ) );
+			.AddFile( System.IO.Path.Combine( basePath, "one.txt" ) )
+			.AddFile( System.IO.Path.Combine( basePath, "two.txt" ) );
 		var expander = new PathnameExpander( provider );
 
 		var events = await CollectAsync( expander.ExpandAsync(
@@ -395,7 +395,7 @@ public sealed class PathnameExpanderTests {
 	[Fact]
 	public async Task ReportsUnavailableIdentityBeforeRecursiveExpansion() {
 		var basePath = CreateBasePath();
-		var rootPath = Path.Combine( basePath, "root" );
+		var rootPath = System.IO.Path.Combine( basePath, "root" );
 		var provider = new SyntheticReadOnlyFileSystemProvider()
 			.AddDirectory( basePath )
 			.AddDirectory( rootPath );
@@ -403,7 +403,7 @@ public sealed class PathnameExpanderTests {
 		var expander = new PathnameExpander( provider );
 
 		var events = await CollectAsync( expander.ExpandAsync(
-			new[] { Path.Combine( "root", "**", "*.txt" ) },
+			new[] { System.IO.Path.Combine( "root", "**", "*.txt" ) },
 			new PathnameExpansionOptions {
 				BaseDirectory = basePath,
 				UnmatchedPatternBehavior = UnmatchedPathnamePatternBehavior.ReturnNoMatches
@@ -423,14 +423,14 @@ public sealed class PathnameExpanderTests {
 	[Fact]
 	public async Task FiniteLinkExpansionDoesNotRequireEntryIdentity() {
 		var basePath = CreateBasePath();
-		var rootPath = Path.Combine( basePath, "root" );
-		var targetPath = Path.Combine( basePath, "target" );
-		var linkPath = Path.Combine( rootPath, "link" );
+		var rootPath = System.IO.Path.Combine( basePath, "root" );
+		var targetPath = System.IO.Path.Combine( basePath, "target" );
+		var linkPath = System.IO.Path.Combine( rootPath, "link" );
 		var provider = new SyntheticReadOnlyFileSystemProvider()
 			.AddDirectory( basePath )
 			.AddDirectory( rootPath )
 			.AddDirectory( targetPath )
-			.AddFile( Path.Combine( targetPath, "found.txt" ) )
+			.AddFile( System.IO.Path.Combine( targetPath, "found.txt" ) )
 			.AddLink( linkPath, targetPath );
 		provider.RemoveEntryIdentity( basePath );
 		provider.RemoveEntryIdentity( rootPath );
@@ -438,7 +438,7 @@ public sealed class PathnameExpanderTests {
 		var expander = new PathnameExpander( provider );
 
 		var events = await CollectAsync( expander.ExpandAsync(
-			new[] { Path.Combine( "root", "link", "*.txt" ) },
+			new[] { System.IO.Path.Combine( "root", "link", "*.txt" ) },
 			new PathnameExpansionOptions {
 				BaseDirectory = basePath,
 				SymbolicLinkMode = SymbolicLinkTraversalMode.RootsOnly,
@@ -446,7 +446,7 @@ public sealed class PathnameExpanderTests {
 			}
 		) );
 
-		Assert.Equal( Path.Combine( linkPath, "found.txt" ), Assert.Single( events ).Root!.AccessPath );
+		Assert.Equal( System.IO.Path.Combine( linkPath, "found.txt" ), Assert.Single( events ).Root!.AccessPath );
 	}
 
 	/// <summary>
@@ -456,19 +456,19 @@ public sealed class PathnameExpanderTests {
 	[Fact]
 	public async Task FiniteExpansionMayRevisitAncestorThroughExplicitLink() {
 		var basePath = CreateBasePath();
-		var rootPath = Path.Combine( basePath, "root" );
-		var childPath = Path.Combine( rootPath, "child" );
-		var upPath = Path.Combine( childPath, "up" );
+		var rootPath = System.IO.Path.Combine( basePath, "root" );
+		var childPath = System.IO.Path.Combine( rootPath, "child" );
+		var upPath = System.IO.Path.Combine( childPath, "up" );
 		var provider = new SyntheticReadOnlyFileSystemProvider()
 			.AddDirectory( basePath )
 			.AddDirectory( rootPath, "root-id" )
 			.AddDirectory( childPath, "child-id" )
-			.AddFile( Path.Combine( rootPath, "found.txt" ) )
+			.AddFile( System.IO.Path.Combine( rootPath, "found.txt" ) )
 			.AddLink( upPath, rootPath );
 		var expander = new PathnameExpander( provider );
 
 		var events = await CollectAsync( expander.ExpandAsync(
-			new[] { Path.Combine( "root", "child", "up", "found.*" ) },
+			new[] { System.IO.Path.Combine( "root", "child", "up", "found.*" ) },
 			new PathnameExpansionOptions {
 				BaseDirectory = basePath,
 				SymbolicLinkMode = SymbolicLinkTraversalMode.RootsOnly,
@@ -477,7 +477,7 @@ public sealed class PathnameExpanderTests {
 		) );
 
 		Assert.Equal(
-			Path.Combine( upPath, "found.txt" ),
+			System.IO.Path.Combine( upPath, "found.txt" ),
 			Assert.Single( events ).Root!.AccessPath
 		);
 	}
@@ -490,17 +490,17 @@ public sealed class PathnameExpanderTests {
 	[Fact]
 	public async Task ReportsCycleDuringRecursiveExpansion() {
 		var basePath = CreateBasePath();
-		var rootPath = Path.Combine( basePath, "root" );
-		var childPath = Path.Combine( rootPath, "child" );
+		var rootPath = System.IO.Path.Combine( basePath, "root" );
+		var childPath = System.IO.Path.Combine( rootPath, "child" );
 		var provider = new SyntheticReadOnlyFileSystemProvider()
 			.AddDirectory( basePath )
 			.AddDirectory( rootPath, "root-id" )
 			.AddDirectory( childPath, "child-id" )
-			.AddLink( Path.Combine( childPath, "up" ), rootPath );
+			.AddLink( System.IO.Path.Combine( childPath, "up" ), rootPath );
 		var expander = new PathnameExpander( provider );
 
 		var events = await CollectAsync( expander.ExpandAsync(
-			new[] { Path.Combine( "root", "**", "*.txt" ) },
+			new[] { System.IO.Path.Combine( "root", "**", "*.txt" ) },
 			new PathnameExpansionOptions {
 				BaseDirectory = basePath,
 				SymbolicLinkMode = SymbolicLinkTraversalMode.Always,
@@ -520,17 +520,17 @@ public sealed class PathnameExpanderTests {
 	[Fact]
 	public async Task ReportsFileSystemBoundaryDuringRecursiveExpansion() {
 		var basePath = CreateBasePath();
-		var rootPath = Path.Combine( basePath, "root" );
-		var mountedPath = Path.Combine( rootPath, "mounted" );
+		var rootPath = System.IO.Path.Combine( basePath, "root" );
+		var mountedPath = System.IO.Path.Combine( rootPath, "mounted" );
 		var provider = new SyntheticReadOnlyFileSystemProvider()
 			.AddDirectory( basePath, fileSystemIdentity: "fs-root" )
 			.AddDirectory( rootPath, fileSystemIdentity: "fs-root" )
 			.AddDirectory( mountedPath, fileSystemIdentity: "fs-other" )
-			.AddFile( Path.Combine( mountedPath, "inside.txt" ), fileSystemIdentity: "fs-other" );
+			.AddFile( System.IO.Path.Combine( mountedPath, "inside.txt" ), fileSystemIdentity: "fs-other" );
 		var expander = new PathnameExpander( provider );
 
 		var events = await CollectAsync( expander.ExpandAsync(
-			new[] { Path.Combine( "root", "**", "*.txt" ) },
+			new[] { System.IO.Path.Combine( "root", "**", "*.txt" ) },
 			new PathnameExpansionOptions {
 				BaseDirectory = basePath,
 				FileSystemBoundaryMode = FileSystemBoundaryMode.StayOnRootFileSystem,
@@ -574,15 +574,15 @@ public sealed class PathnameExpanderTests {
 	[Fact]
 	public async Task ReportsTerminalDirectoryObservationFailure() {
 		var basePath = CreateBasePath();
-		var rootPath = Path.Combine( basePath, "root" );
-		var childPath = Path.Combine( rootPath, "child" );
+		var rootPath = System.IO.Path.Combine( basePath, "root" );
+		var childPath = System.IO.Path.Combine( rootPath, "child" );
 		var provider = new SyntheticReadOnlyFileSystemProvider()
 			.AddDirectory( basePath )
 			.AddDirectory( rootPath )
 			.AddDirectory( childPath );
 		provider.SetObservationException( childPath, new IOException( "synthetic" ) );
 		var expander = new PathnameExpander( provider );
-		var separator = Path.DirectorySeparatorChar.ToString();
+		var separator = System.IO.Path.DirectorySeparatorChar.ToString();
 
 		var events = await CollectAsync( expander.ExpandAsync(
 			new[] { string.Concat( "r*", separator, "*", separator ) },
@@ -605,16 +605,16 @@ public sealed class PathnameExpanderTests {
 	[Fact]
 	public async Task TrailingSeparatorRespectsTerminalLinkPolicy() {
 		var basePath = CreateBasePath();
-		var rootPath = Path.Combine( basePath, "root" );
-		var targetPath = Path.Combine( basePath, "target" );
-		var linkPath = Path.Combine( rootPath, "link" );
+		var rootPath = System.IO.Path.Combine( basePath, "root" );
+		var targetPath = System.IO.Path.Combine( basePath, "target" );
+		var linkPath = System.IO.Path.Combine( rootPath, "link" );
 		var provider = new SyntheticReadOnlyFileSystemProvider()
 			.AddDirectory( basePath )
 			.AddDirectory( rootPath )
 			.AddDirectory( targetPath )
 			.AddLink( linkPath, targetPath );
 		var expander = new PathnameExpander( provider );
-		var separator = Path.DirectorySeparatorChar.ToString();
+		var separator = System.IO.Path.DirectorySeparatorChar.ToString();
 
 		var explicitEvents = await CollectAsync( expander.ExpandAsync(
 			new[] { string.Concat( "r*", separator, "link", separator ) },
@@ -689,8 +689,8 @@ public sealed class PathnameExpanderTests {
 		} );
 	}
 
-	private static string CreateBasePath() => Path.Combine(
-		Path.GetTempPath(),
+	private static string CreateBasePath() => System.IO.Path.Combine(
+		System.IO.Path.GetTempPath(),
 		string.Concat( "icod-e1-synthetic-", Guid.NewGuid().ToString( "N" ) )
 	);
 

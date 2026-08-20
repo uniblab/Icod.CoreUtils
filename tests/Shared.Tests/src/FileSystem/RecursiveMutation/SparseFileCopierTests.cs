@@ -12,8 +12,8 @@ public sealed class SparseFileCopierTests {
 	public async Task CopiesOnlyAllocatedRangesWhenSparseSupportIsAvailable() {
 		var directory = Directory.CreateTempSubdirectory( "e5-sparse-" );
 		try {
-			var sourcePath = Path.Combine( directory.FullName, "source" );
-			var destinationPath = Path.Combine( directory.FullName, "destination" );
+			var sourcePath = System.IO.Path.Combine( directory.FullName, "source" );
+			var destinationPath = System.IO.Path.Combine( directory.FullName, "destination" );
 			await File.WriteAllBytesAsync( sourcePath, new byte[] { 1, 2, 0, 0, 0, 0, 0, 0, 8, 9 } );
 			await File.WriteAllBytesAsync( destinationPath, Enumerable.Repeat( (byte)0xFF, 10 ).ToArray() );
 			await using var source = new FileStream( sourcePath, FileMode.Open, FileAccess.Read, FileShare.Read );
@@ -46,8 +46,8 @@ public sealed class SparseFileCopierTests {
 	public async Task RequireFailsWhenAllocationQueriesAreUnavailable() {
 		var directory = Directory.CreateTempSubdirectory( "e5-sparse-" );
 		try {
-			var sourcePath = Path.Combine( directory.FullName, "source" );
-			var destinationPath = Path.Combine( directory.FullName, "destination" );
+			var sourcePath = System.IO.Path.Combine( directory.FullName, "source" );
+			var destinationPath = System.IO.Path.Combine( directory.FullName, "destination" );
 			await File.WriteAllBytesAsync( sourcePath, new byte[] { 1 } );
 			await using var source = new FileStream( sourcePath, FileMode.Open, FileAccess.Read, FileShare.Read );
 			await using var destination = new FileStream( destinationPath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None );
@@ -69,8 +69,8 @@ public sealed class SparseFileCopierTests {
 	public async Task RequireRejectsAllocationMapWithDifferentLogicalLength() {
 		var directory = Directory.CreateTempSubdirectory( "e5-sparse-" );
 		try {
-			var sourcePath = Path.Combine( directory.FullName, "source" );
-			var destinationPath = Path.Combine( directory.FullName, "destination" );
+			var sourcePath = System.IO.Path.Combine( directory.FullName, "source" );
+			var destinationPath = System.IO.Path.Combine( directory.FullName, "destination" );
 			await File.WriteAllBytesAsync( sourcePath, new byte[] { 1, 2, 3, 4 } );
 			await using var source = new FileStream( sourcePath, FileMode.Open, FileAccess.Read, FileShare.Read );
 			await using var destination = new FileStream( destinationPath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None );

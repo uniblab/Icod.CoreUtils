@@ -467,8 +467,8 @@ public static class Command {
 			await destination.CompleteAsync( context.CancellationToken ).ConfigureAwait( false );
 			return CommandExitCodes.Success;
 		}
-		var outputPath = Path.GetFullPath( settings.OutputFile );
-		var outputDirectory = Path.GetDirectoryName( outputPath )
+		var outputPath = System.IO.Path.GetFullPath( settings.OutputFile );
+		var outputDirectory = System.IO.Path.GetDirectoryName( outputPath )
 			?? throw new IOException( "cannot determine the output directory" );
 		await using var workspace = TemporaryWorkspace.Create(
 			outputDirectory,

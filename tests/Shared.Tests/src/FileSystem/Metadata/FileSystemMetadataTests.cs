@@ -53,7 +53,7 @@ public sealed class FileSystemMetadataTests {
 	public async Task ObservesFileAndReusesTraversalIdentities() {
 		var directory = CreateTemporaryDirectory();
 		try {
-			var path = Path.Combine( directory, "sample.txt" );
+			var path = System.IO.Path.Combine( directory, "sample.txt" );
 			await File.WriteAllTextAsync( path, "data" );
 			var metadata = await SystemFileSystemMetadataProvider.Instance.GetMetadataAsync( path, false );
 			var observation = await SystemReadOnlyFileSystemProvider.Instance.ObserveAsync( path, false );
@@ -121,7 +121,7 @@ public sealed class FileSystemMetadataTests {
 	public async Task MutatesSelectedPost2038Timestamps() {
 		var directory = CreateTemporaryDirectory();
 		try {
-			var path = Path.Combine( directory, "future.txt" );
+			var path = System.IO.Path.Combine( directory, "future.txt" );
 			await File.WriteAllTextAsync( path, "future" );
 			var access = new DateTimeOffset( 2040, 1, 2, 3, 4, 5, TimeSpan.Zero );
 			var modification = new DateTimeOffset( 2041, 6, 7, 8, 9, 10, TimeSpan.Zero );
@@ -155,7 +155,7 @@ public sealed class FileSystemMetadataTests {
 		}
 		var directory = CreateTemporaryDirectory();
 		try {
-			var path = Path.Combine( directory, "preflight.txt" );
+			var path = System.IO.Path.Combine( directory, "preflight.txt" );
 			await File.WriteAllTextAsync( path, "preflight" );
 			var original = new DateTimeOffset( 2020, 2, 3, 4, 5, 6, TimeSpan.Zero );
 			File.SetLastWriteTimeUtc( path, original.UtcDateTime );
@@ -199,7 +199,7 @@ public sealed class FileSystemMetadataTests {
 		}
 		var directory = CreateTemporaryDirectory();
 		try {
-			var path = Path.Combine( directory, "pipe" );
+			var path = System.IO.Path.Combine( directory, "pipe" );
 			var startInfo = new ProcessStartInfo( executable ) {
 				UseShellExecute = false,
 				CreateNoWindow = true,
@@ -247,8 +247,8 @@ public sealed class FileSystemMetadataTests {
 	public async Task DistinguishesLinkIdentityFromFollowedTargetWhenSupported() {
 		var directory = CreateTemporaryDirectory();
 		try {
-			var target = Path.Combine( directory, "target.txt" );
-			var link = Path.Combine( directory, "link.txt" );
+			var target = System.IO.Path.Combine( directory, "target.txt" );
+			var link = System.IO.Path.Combine( directory, "link.txt" );
 			await File.WriteAllTextAsync( target, "target" );
 			try {
 				_ = File.CreateSymbolicLink( link, target );
@@ -282,8 +282,8 @@ public sealed class FileSystemMetadataTests {
 	}
 
 	private static string CreateTemporaryDirectory() {
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			string.Concat( "icod-e3-metadata-", Guid.NewGuid().ToString( "N" ) )
 		);
 		Directory.CreateDirectory( path );

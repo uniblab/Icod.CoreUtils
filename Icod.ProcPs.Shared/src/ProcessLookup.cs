@@ -92,11 +92,11 @@ public sealed class SystemProcProcessPathProvider : IProcProcessPathProvider {
 	}
 
 	private ProcProcessPathInfo ObserveLinux( int processId ) {
-		var directory = Path.Combine( this.procRoot, processId.ToString( CultureInfo.InvariantCulture ) );
+		var directory = System.IO.Path.Combine( this.procRoot, processId.ToString( CultureInfo.InvariantCulture ) );
 		return new ProcProcessPathInfo {
-			ExecutablePath = ReadUnixLink( Path.Combine( directory, "exe" ), ProcObservationSource.LinuxProcfs, ObservationFidelity.Exact ),
-			RootPath = ReadUnixLink( Path.Combine( directory, "root" ), ProcObservationSource.LinuxProcfs, ObservationFidelity.Exact ),
-			WorkingDirectory = ReadUnixLink( Path.Combine( directory, "cwd" ), ProcObservationSource.LinuxProcfs, ObservationFidelity.Exact )
+			ExecutablePath = ReadUnixLink( System.IO.Path.Combine( directory, "exe" ), ProcObservationSource.LinuxProcfs, ObservationFidelity.Exact ),
+			RootPath = ReadUnixLink( System.IO.Path.Combine( directory, "root" ), ProcObservationSource.LinuxProcfs, ObservationFidelity.Exact ),
+			WorkingDirectory = ReadUnixLink( System.IO.Path.Combine( directory, "cwd" ), ProcObservationSource.LinuxProcfs, ObservationFidelity.Exact )
 		};
 	}
 

@@ -173,8 +173,8 @@ public sealed class OdCommandTests {
 
 	[Fact]
 	public async Task FilesAreConcatenatedWithoutResettingAddress() {
-		var first = Path.GetTempFileName();
-		var second = Path.GetTempFileName();
+		var first = System.IO.Path.GetTempFileName();
+		var second = System.IO.Path.GetTempFileName();
 		try {
 			await File.WriteAllBytesAsync( first, new byte[] { 1, 2 } );
 			await File.WriteAllBytesAsync( second, new byte[] { 3, 4 } );
@@ -190,9 +190,9 @@ public sealed class OdCommandTests {
 	public async Task PathnameGlobsAreExpandedInOrdinalOrder() {
 		var directory = Directory.CreateTempSubdirectory( "od-tests-" );
 		try {
-			await File.WriteAllBytesAsync( Path.Combine( directory.FullName, "b.bin" ), new byte[] { 2 } );
-			await File.WriteAllBytesAsync( Path.Combine( directory.FullName, "a.bin" ), new byte[] { 1 } );
-			var pattern = Path.Combine( directory.FullName, "*.bin" );
+			await File.WriteAllBytesAsync( System.IO.Path.Combine( directory.FullName, "b.bin" ), new byte[] { 2 } );
+			await File.WriteAllBytesAsync( System.IO.Path.Combine( directory.FullName, "a.bin" ), new byte[] { 1 } );
+			var pattern = System.IO.Path.Combine( directory.FullName, "*.bin" );
 			var result = await RunAsync( Array.Empty<byte>(), "-A", "n", "-t", "x1", pattern );
 			Assert.Contains( "01 02", result.Output );
 		} finally {
@@ -202,7 +202,7 @@ public sealed class OdCommandTests {
 
 	[Fact]
 	public async Task MissingFilesProduceFailureButLaterFilesAreProcessed() {
-		var existing = Path.GetTempFileName();
+		var existing = System.IO.Path.GetTempFileName();
 		try {
 			await File.WriteAllBytesAsync( existing, new byte[] { 0xaa } );
 			var result = await RunAsync( Array.Empty<byte>(), "-A", "n", "-t", "x1", existing + ".missing", existing );

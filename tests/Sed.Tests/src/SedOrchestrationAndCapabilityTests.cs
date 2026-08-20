@@ -254,12 +254,12 @@ public sealed class SedOrchestrationAndCapabilityTests {
 	/// <summary>Verifies cleanup and source preservation when a staged transform fails.</summary>
 	[Fact]
 	public async Task SystemInPlaceEditorCleansTemporaryFileAfterFailure() {
-		var directory = Path.Combine(
-			Path.GetTempPath(),
+		var directory = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			$".icod-sed-le5-{Guid.NewGuid():N}"
 		);
 		Directory.CreateDirectory( directory );
-		var path = Path.Combine( directory, "input.txt" );
+		var path = System.IO.Path.Combine( directory, "input.txt" );
 		await File.WriteAllTextAsync( path, "original\n" );
 		var editor = new SedCommand.SystemInPlaceEditor(
 			SecureTemporaryObjectCreator.System
@@ -290,7 +290,7 @@ public sealed class SedOrchestrationAndCapabilityTests {
 			Assert.Equal( "original\n", await File.ReadAllTextAsync( path ) );
 			Assert.DoesNotContain(
 				Directory.EnumerateFiles( directory ),
-				candidate => Path.GetFileName( candidate ).StartsWith(
+				candidate => System.IO.Path.GetFileName( candidate ).StartsWith(
 					".sed.",
 					StringComparison.Ordinal
 				)

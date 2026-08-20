@@ -119,7 +119,7 @@ public sealed class CommandTests {
 	public async Task LinuxProcfsUptimeRetainsExactProvenance() {
 		var root = CreateTempDirectory();
 		try {
-			await File.WriteAllTextAsync( Path.Combine( root, "uptime" ), "123.50 456.00\n" );
+			await File.WriteAllTextAsync( System.IO.Path.Combine( root, "uptime" ), "123.50 456.00\n" );
 			var observation = await new LinuxProcSystemMetricsProvider( root ).GetUptimeAsync( containerMode: false );
 			Assert.True( observation.HasValue );
 			Assert.Equal( ProcObservationSource.LinuxProcfs, observation.Source );
@@ -132,9 +132,9 @@ public sealed class CommandTests {
 		if ( !OperatingSystem.IsLinux() ) return;
 		var root = CreateTempDirectory();
 		try {
-			Directory.CreateDirectory( Path.Combine( root, "1" ) );
-			await File.WriteAllTextAsync( Path.Combine( root, "uptime" ), "1000.00 0.00\n" );
-			await File.WriteAllTextAsync( Path.Combine( root, "1", "stat" ), "1 (init) S 0 0 0 0 0 0 0 0 0 0 0 0 0 0 20 0 1 0 0 0 0\n" );
+			Directory.CreateDirectory( System.IO.Path.Combine( root, "1" ) );
+			await File.WriteAllTextAsync( System.IO.Path.Combine( root, "uptime" ), "1000.00 0.00\n" );
+			await File.WriteAllTextAsync( System.IO.Path.Combine( root, "1", "stat" ), "1 (init) S 0 0 0 0 0 0 0 0 0 0 0 0 0 0 20 0 1 0 0 0 0\n" );
 			var observation = await new LinuxProcSystemMetricsProvider( root ).GetUptimeAsync( containerMode: true );
 			Assert.True( observation.HasValue );
 			Assert.Equal( ProcObservationSource.Derived, observation.Source );
@@ -142,7 +142,7 @@ public sealed class CommandTests {
 			Assert.Equal( 1000d, observation.Value.Uptime.TotalSeconds, 6 );
 		} finally { Directory.Delete( root, recursive: true ); }
 	}
-	private static string CreateTempDirectory() { var path = Path.Combine( Path.GetTempPath(), $"icod-procps-uptime-{Guid.NewGuid():N}" ); Directory.CreateDirectory( path ); return path; }
+	private static string CreateTempDirectory() { var path = System.IO.Path.Combine( System.IO.Path.GetTempPath(), $"icod-procps-uptime-{Guid.NewGuid():N}" ); Directory.CreateDirectory( path ); return path; }
 	private static FakeMetricsProvider CreateProvider( TimeSpan uptime, int users, ProcLoadAverage load, TimeSpan? container = null ) => new( new ProcSystemSnapshot { Uptime = Available( new ProcUptimeInfo( uptime, null ) ), UserSessions = Available( new ProcUserSessionInfo( users ) ), LoadAverage = Available( load ) } ) { Container = Available( new ProcUptimeInfo( container ?? uptime, null ) ) };
 	private static ProcObservedValue<T> Available<T>( T value ) => ProcObservedValue<T>.Available( value, ProcObservationSource.Configuration, ObservationFidelity.Exact );
 	private static async Task<InvocationResult> InvokeAsync( string[] args, IProcSystemMetricsProvider provider, TimeProvider clock ) { using var output = new MemoryStream(); using var error = new MemoryStream(); var status = await Command.RunAsync( args, output, error, provider, clock ); return new InvocationResult( status, Encoding.UTF8.GetString( output.ToArray() ), Encoding.UTF8.GetString( error.ToArray() ) ); }

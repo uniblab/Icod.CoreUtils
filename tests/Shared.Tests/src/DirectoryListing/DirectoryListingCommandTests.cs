@@ -11,9 +11,9 @@ public sealed class DirectoryListingCommandTests {
 	public async Task ListsDirectoryContentsWithClassification() {
 		var root = CreateTemporaryDirectory();
 		try {
-			File.WriteAllText( Path.Combine( root, "beta.txt" ), "beta" );
-			File.WriteAllText( Path.Combine( root, "alpha.txt" ), "alpha" );
-			Directory.CreateDirectory( Path.Combine( root, "nested" ) );
+			File.WriteAllText( System.IO.Path.Combine( root, "beta.txt" ), "beta" );
+			File.WriteAllText( System.IO.Path.Combine( root, "alpha.txt" ), "alpha" );
+			Directory.CreateDirectory( System.IO.Path.Combine( root, "nested" ) );
 			var output = new StringWriter();
 			var error = new StringWriter();
 
@@ -44,7 +44,7 @@ public sealed class DirectoryListingCommandTests {
 	public async Task VdirProfileProducesLongMetadataRows() {
 		var root = CreateTemporaryDirectory();
 		try {
-			File.WriteAllText( Path.Combine( root, "item.txt" ), "content" );
+			File.WriteAllText( System.IO.Path.Combine( root, "item.txt" ), "content" );
 			var output = new StringWriter();
 			var error = new StringWriter();
 
@@ -75,8 +75,8 @@ public sealed class DirectoryListingCommandTests {
 	public async Task RecursiveHeadersUseDescendedPaths() {
 		var root = CreateTemporaryDirectory();
 		try {
-			var nested = Directory.CreateDirectory( Path.Combine( root, "nested" ) ).FullName;
-			File.WriteAllText( Path.Combine( nested, "leaf.txt" ), "leaf" );
+			var nested = Directory.CreateDirectory( System.IO.Path.Combine( root, "nested" ) ).FullName;
+			File.WriteAllText( System.IO.Path.Combine( nested, "leaf.txt" ), "leaf" );
 			var output = new StringWriter();
 			var error = new StringWriter();
 
@@ -106,8 +106,8 @@ public sealed class DirectoryListingCommandTests {
 	public async Task ColorControlsDoNotConsumeColumnWidth() {
 		var root = CreateTemporaryDirectory();
 		try {
-			File.WriteAllText( Path.Combine( root, "a" ), "a" );
-			File.WriteAllText( Path.Combine( root, "b" ), "b" );
+			File.WriteAllText( System.IO.Path.Combine( root, "a" ), "a" );
+			File.WriteAllText( System.IO.Path.Combine( root, "b" ), "b" );
 			var output = new StringWriter();
 			var error = new StringWriter();
 			var environment = new FakeEnvironmentVariableProvider(
@@ -138,9 +138,9 @@ public sealed class DirectoryListingCommandTests {
 	public async Task ReverseOrderingPreservesDirectoryFirstGrouping() {
 		var root = CreateTemporaryDirectory();
 		try {
-			Directory.CreateDirectory( Path.Combine( root, "nested" ) );
-			File.WriteAllText( Path.Combine( root, "alpha.txt" ), "alpha" );
-			File.WriteAllText( Path.Combine( root, "zeta.txt" ), "zeta" );
+			Directory.CreateDirectory( System.IO.Path.Combine( root, "nested" ) );
+			File.WriteAllText( System.IO.Path.Combine( root, "alpha.txt" ), "alpha" );
+			File.WriteAllText( System.IO.Path.Combine( root, "zeta.txt" ), "zeta" );
 			var output = new StringWriter();
 			var error = new StringWriter();
 
@@ -164,7 +164,7 @@ public sealed class DirectoryListingCommandTests {
 	}
 
 	private static string CreateTemporaryDirectory() {
-		var path = Path.Combine( Path.GetTempPath(), ".icod-listing-" + Guid.NewGuid().ToString( "N" ) );
+		var path = System.IO.Path.Combine( System.IO.Path.GetTempPath(), ".icod-listing-" + Guid.NewGuid().ToString( "N" ) );
 		Directory.CreateDirectory( path );
 		return path;
 	}

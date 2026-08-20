@@ -355,7 +355,7 @@ public sealed class CommandTests {
 	private sealed class FileFixture : IDisposable {
 		/// <summary>Initializes a temporary filesystem fixture.</summary>
 		public FileFixture() {
-			this.Root = Path.Combine( Path.GetTempPath(), $"Icod.DiffUtils.Diff3.Tests-{Guid.NewGuid():N}" );
+			this.Root = System.IO.Path.Combine( System.IO.Path.GetTempPath(), $"Icod.DiffUtils.Diff3.Tests-{Guid.NewGuid():N}" );
 			Directory.CreateDirectory( this.Root );
 		}
 
@@ -364,14 +364,14 @@ public sealed class CommandTests {
 
 		/// <summary>Writes UTF-8 text and returns its path.</summary>
 		public string Write( string name, string content ) {
-			var path = Path.Combine( this.Root, name );
+			var path = System.IO.Path.Combine( this.Root, name );
 			File.WriteAllText( path, content, new UTF8Encoding( false ) );
 			return path;
 		}
 
 		/// <summary>Writes bytes and returns its path.</summary>
 		public string WriteBytes( string name, byte[] bytes ) {
-			var path = Path.Combine( this.Root, name );
+			var path = System.IO.Path.Combine( this.Root, name );
 			File.WriteAllBytes( path, bytes );
 			return path;
 		}

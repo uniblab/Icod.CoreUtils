@@ -54,7 +54,7 @@ public sealed class CommandTests {
 	public async Task CombinesExpressionAndPatternFileSources() {
 		var directory = CreateTemporaryDirectory();
 		try {
-			var patternFile = Path.Combine( directory, "patterns.txt" );
+			var patternFile = System.IO.Path.Combine( directory, "patterns.txt" );
 			await File.WriteAllTextAsync( patternFile, "gamma\n" );
 			var result = await RunAsync(
 				[ "-e", "alpha", "-f", patternFile ],
@@ -72,7 +72,7 @@ public sealed class CommandTests {
 	public async Task PreservesPatternFileByteOrderMarksAsPatternData() {
 		var directory = CreateTemporaryDirectory();
 		try {
-			var patternFile = Path.Combine( directory, "patterns.txt" );
+			var patternFile = System.IO.Path.Combine( directory, "patterns.txt" );
 			await File.WriteAllBytesAsync( patternFile, [ 0xEF, 0xBB, 0xBF, (byte)'h', (byte)'i', (byte)'t', (byte)'\n' ] );
 			var result = await RunAsync(
 				[ "-f", patternFile ],
@@ -90,7 +90,7 @@ public sealed class CommandTests {
 	public async Task DistinguishesEmptyPatternFilesFromEmptyExpressions() {
 		var directory = CreateTemporaryDirectory();
 		try {
-			var patternFile = Path.Combine( directory, "empty.txt" );
+			var patternFile = System.IO.Path.Combine( directory, "empty.txt" );
 			await File.WriteAllBytesAsync( patternFile, [] );
 			var fromFile = await RunAsync( [ "-f", patternFile ], "alpha\n"u8.ToArray() );
 			var fromExpression = await RunAsync( [ "-e", string.Empty ], "alpha\n"u8.ToArray() );
@@ -186,8 +186,8 @@ public sealed class CommandTests {
 	public async Task ListsFilesWithOrWithoutSelectedRecords() {
 		var directory = CreateTemporaryDirectory();
 		try {
-			var matching = Path.Combine( directory, "matching.txt" );
-			var missing = Path.Combine( directory, "missing.txt" );
+			var matching = System.IO.Path.Combine( directory, "matching.txt" );
+			var missing = System.IO.Path.Combine( directory, "missing.txt" );
 			await File.WriteAllTextAsync( matching, "hit\n" );
 			await File.WriteAllTextAsync( missing, "miss\n" );
 			var withMatches = await RunAsync( [ "-l", "hit", matching, missing ], [] );
@@ -207,8 +207,8 @@ public sealed class CommandTests {
 	public async Task FilesWithoutMatchPreservesSelectionStatus() {
 		var directory = CreateTemporaryDirectory();
 		try {
-			var matching = Path.Combine( directory, "matching.txt" );
-			var missing = Path.Combine( directory, "missing.txt" );
+			var matching = System.IO.Path.Combine( directory, "matching.txt" );
+			var missing = System.IO.Path.Combine( directory, "missing.txt" );
 			await File.WriteAllTextAsync( matching, "hit\n" );
 			await File.WriteAllTextAsync( missing, "miss\n" );
 			var selected = await RunAsync( [ "-L", "hit", matching ], [] );
@@ -288,8 +288,8 @@ public sealed class CommandTests {
 	public async Task SeparatesContextOutputAcrossFiles() {
 		var directory = CreateTemporaryDirectory();
 		try {
-			var first = Path.Combine( directory, "first.txt" );
-			var second = Path.Combine( directory, "second.txt" );
+			var first = System.IO.Path.Combine( directory, "first.txt" );
+			var second = System.IO.Path.Combine( directory, "second.txt" );
 			await File.WriteAllTextAsync( first, "hit\n" );
 			await File.WriteAllTextAsync( second, "hit\n" );
 			var result = await RunAsync( [ "-n", "-C", "0", "hit", first, second ], [] );
@@ -347,11 +347,11 @@ public sealed class CommandTests {
 	public async Task RecursesWithIncludeExcludeAndDirectoryPruning() {
 		var directory = CreateTemporaryDirectory();
 		try {
-			var skipped = Path.Combine( directory, "skip" );
+			var skipped = System.IO.Path.Combine( directory, "skip" );
 			Directory.CreateDirectory( skipped );
-			await File.WriteAllTextAsync( Path.Combine( directory, "alpha.txt" ), "hit\n" );
-			await File.WriteAllTextAsync( Path.Combine( directory, "beta.log" ), "hit\n" );
-			await File.WriteAllTextAsync( Path.Combine( skipped, "inside.txt" ), "hit\n" );
+			await File.WriteAllTextAsync( System.IO.Path.Combine( directory, "alpha.txt" ), "hit\n" );
+			await File.WriteAllTextAsync( System.IO.Path.Combine( directory, "beta.log" ), "hit\n" );
+			await File.WriteAllTextAsync( System.IO.Path.Combine( skipped, "inside.txt" ), "hit\n" );
 			var result = await RunAsync(
 				[ "-r", "--include=*.txt", "--exclude-dir=skip", "hit", directory ],
 				[]
@@ -372,9 +372,9 @@ public sealed class CommandTests {
 	public async Task AppliesOrderedFileRulesToCommandLineOperands() {
 		var directory = CreateTemporaryDirectory();
 		try {
-			var log = Path.Combine( directory, "note.log" );
-			var temporary = Path.Combine( directory, "cache.tmp" );
-			var text = Path.Combine( directory, "keep.txt" );
+			var log = System.IO.Path.Combine( directory, "note.log" );
+			var temporary = System.IO.Path.Combine( directory, "cache.tmp" );
+			var text = System.IO.Path.Combine( directory, "keep.txt" );
 			await File.WriteAllTextAsync( log, "hit\n" );
 			await File.WriteAllTextAsync( temporary, "hit\n" );
 			await File.WriteAllTextAsync( text, "hit\n" );
@@ -398,10 +398,10 @@ public sealed class CommandTests {
 	public async Task ExcludesCommandLineDirectoryOperandsBySuffix() {
 		var directory = CreateTemporaryDirectory();
 		try {
-			var skipped = Path.Combine( directory, "skip" );
+			var skipped = System.IO.Path.Combine( directory, "skip" );
 			Directory.CreateDirectory( skipped );
-			await File.WriteAllTextAsync( Path.Combine( skipped, "inside.txt" ), "hit\n" );
-			var operand = string.Concat( skipped, Path.DirectorySeparatorChar );
+			await File.WriteAllTextAsync( System.IO.Path.Combine( skipped, "inside.txt" ), "hit\n" );
+			var operand = string.Concat( skipped, System.IO.Path.DirectorySeparatorChar );
 			var result = await RunAsync( [ "-r", "--exclude-dir=skip/", "hit", operand ], [] );
 			Assert.Equal( CommandExitCodes.Failure, result.Status );
 			Assert.Empty( result.Output );
@@ -429,7 +429,7 @@ public sealed class CommandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task DiagnosesOrSuppressesInputErrors() {
-		var path = Path.Combine( Path.GetTempPath(), string.Concat( "grep-missing-", Guid.NewGuid().ToString( "N" ) ) );
+		var path = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "grep-missing-", Guid.NewGuid().ToString( "N" ) ) );
 		var diagnosed = await RunAsync( [ "hit", path ], [] );
 		var suppressed = await RunAsync( [ "-s", "hit", path ], [] );
 		Assert.Equal( CommandExitCodes.UsageError, diagnosed.Status );
@@ -514,7 +514,7 @@ public sealed class CommandTests {
 	}
 
 	private static string CreateTemporaryDirectory() {
-		var path = Path.Combine( Path.GetTempPath(), string.Concat( "Icod.Grep.Tests-", Guid.NewGuid().ToString( "N" ) ) );
+		var path = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "Icod.Grep.Tests-", Guid.NewGuid().ToString( "N" ) ) );
 		Directory.CreateDirectory( path );
 		return path;
 	}

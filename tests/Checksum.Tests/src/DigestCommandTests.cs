@@ -1,4 +1,4 @@
-﻿namespace Icod.CoreUtils.Checksum.Tests;
+namespace Icod.CoreUtils.Checksum.Tests;
 
 using System.Text;
 using B2Command = Icod.CoreUtils.B2Sum.Command;
@@ -135,23 +135,23 @@ public sealed class DigestCommandTests {
 	public async Task ComputesAllFilesMatchedByRecursiveGlob() {
 		var directory = CreateDirectory();
 		var nested = Directory.CreateDirectory(
-			Path.Combine(
+			System.IO.Path.Combine(
 				directory,
 				"nested"
 			)
 		);
-		var rootFile = Path.Combine(
+		var rootFile = System.IO.Path.Combine(
 			directory,
 			"root.txt"
 		);
-		var deepFile = Path.Combine(
+		var deepFile = System.IO.Path.Combine(
 			nested.FullName,
 			"deep.txt"
 		);
 		await File.WriteAllTextAsync( rootFile, "root" );
 		await File.WriteAllTextAsync( deepFile, "deep" );
 		try {
-			var pattern = Path.Combine(
+			var pattern = System.IO.Path.Combine(
 				directory,
 				"**",
 				"*.txt"
@@ -352,8 +352,8 @@ public sealed class DigestCommandTests {
 	}
 
 	private static string CreateDirectory() {
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			$"icod-digest-{Guid.NewGuid():N}"
 		);
 		Directory.CreateDirectory(
@@ -365,8 +365,8 @@ public sealed class DigestCommandTests {
 	private static string CreatePath(
 		string suffix
 	) {
-		return Path.Combine(
-			Path.GetTempPath(),
+		return System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			$"icod-digest-{Guid.NewGuid():N}-{suffix}"
 		);
 	}

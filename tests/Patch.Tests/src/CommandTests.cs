@@ -117,7 +117,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task OriginalFileOperandMayUseStandardInputPatchSource() {
 		var directory = CreateTemporaryDirectory();
-		var target = Path.Combine( directory, "target" );
+		var target = System.IO.Path.Combine( directory, "target" );
 		await File.WriteAllTextAsync( target, "old\n" );
 		var bytes = Encoding.UTF8.GetBytes(
 			"--- target\n+++ target\n@@ -1 +1 @@\n-old\n+new\n"
@@ -159,8 +159,8 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task RecognizedPatchMutatesTarget() {
 		var directory = CreateTemporaryDirectory();
-		var target = Path.Combine( directory, "target" );
-		var patch = Path.Combine( directory, "change.patch" );
+		var target = System.IO.Path.Combine( directory, "target" );
+		var patch = System.IO.Path.Combine( directory, "change.patch" );
 		await File.WriteAllTextAsync( target, "old\n" );
 		await File.WriteAllTextAsync(
 			patch,
@@ -253,8 +253,8 @@ public sealed class CommandTests {
 	}
 
 	private static string CreateTemporaryDirectory() {
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			string.Concat( "patch-test-", Guid.NewGuid().ToString( "N" ) )
 		);
 		Directory.CreateDirectory( path );
@@ -262,8 +262,8 @@ public sealed class CommandTests {
 	}
 
 	private static async Task<string> WriteTemporaryAsync( byte[] bytes ) {
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			string.Concat( "patch-test-", Guid.NewGuid().ToString( "N" ) )
 		);
 		await File.WriteAllBytesAsync( path, bytes );

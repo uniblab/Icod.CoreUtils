@@ -25,7 +25,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task CustomFormatReportsAuthoritativeFileFields() {
 		using var workspace = new TemporaryWorkspace();
-		var file = Path.Combine( workspace.Path, "five.txt" );
+		var file = System.IO.Path.Combine( workspace.Path, "five.txt" );
 		await File.WriteAllTextAsync( file, "12345" );
 		var standardOutput = new StringWriter();
 		var standardError = new StringWriter();
@@ -47,7 +47,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task PrintfInterpretsEscapesWithoutGeneratedNewline() {
 		using var workspace = new TemporaryWorkspace();
-		var file = Path.Combine( workspace.Path, "item" );
+		var file = System.IO.Path.Combine( workspace.Path, "item" );
 		await File.WriteAllTextAsync( file, "x" );
 		var standardOutput = new StringWriter();
 		var exitCode = await Command.RunAsync(
@@ -61,7 +61,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task PrintfRetainsUnknownEscapeCharacter() {
 		using var workspace = new TemporaryWorkspace();
-		var file = Path.Combine( workspace.Path, "item-escape" );
+		var file = System.IO.Path.Combine( workspace.Path, "item-escape" );
 		await File.WriteAllTextAsync( file, "x" );
 		var standardOutput = new StringWriter();
 		var exitCode = await Command.RunAsync(
@@ -137,8 +137,8 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task DereferenceOptionChangesSymbolicLinkKindWhenSupported() {
 		using var workspace = new TemporaryWorkspace();
-		var target = Path.Combine( workspace.Path, "target" );
-		var link = Path.Combine( workspace.Path, "link" );
+		var target = System.IO.Path.Combine( workspace.Path, "target" );
+		var link = System.IO.Path.Combine( workspace.Path, "link" );
 		await File.WriteAllTextAsync( target, "abc" );
 		try {
 			File.CreateSymbolicLink( link, target );
@@ -166,7 +166,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task SupportsExtendedDeviceAndTimestampDirectives() {
 		using var workspace = new TemporaryWorkspace();
-		var file = Path.Combine( workspace.Path, "extended" );
+		var file = System.IO.Path.Combine( workspace.Path, "extended" );
 		await File.WriteAllTextAsync( file, "x" );
 		var standardOutput = new StringWriter();
 		var exitCode = await Command.RunAsync(
@@ -341,9 +341,9 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task ContinuesAfterMissingOperand() {
 		using var workspace = new TemporaryWorkspace();
-		var present = Path.Combine( workspace.Path, "present" );
+		var present = System.IO.Path.Combine( workspace.Path, "present" );
 		await File.WriteAllTextAsync( present, "ok" );
-		var missing = Path.Combine( workspace.Path, "missing" );
+		var missing = System.IO.Path.Combine( workspace.Path, "missing" );
 		var standardOutput = new StringWriter();
 		var exitCode = await Command.RunAsync(
 			new[] { "--format=%n", missing, present },
@@ -359,7 +359,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task InvalidFormatDirectiveFails() {
 		using var workspace = new TemporaryWorkspace();
-		var file = Path.Combine( workspace.Path, "invalid-format" );
+		var file = System.IO.Path.Combine( workspace.Path, "invalid-format" );
 		await File.WriteAllTextAsync( file, "x" );
 		var standardError = new StringWriter();
 		var exitCode = await Command.RunAsync(

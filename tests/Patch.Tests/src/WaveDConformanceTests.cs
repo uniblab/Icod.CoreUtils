@@ -12,8 +12,8 @@ public sealed class WaveDConformanceTests {
 	[Fact]
 	public async Task ArtifactLinkPolicyUsesSharedCanonicalResolver() {
 		var directory = CreateTemporaryDirectory();
-		var target = Path.Combine( directory, "target.txt" );
-		var link = Path.Combine( directory, "link.txt" );
+		var target = System.IO.Path.Combine( directory, "target.txt" );
+		var link = System.IO.Path.Combine( directory, "link.txt" );
 		await File.WriteAllTextAsync( target, "old\n" );
 		try {
 			try {
@@ -54,10 +54,10 @@ public sealed class WaveDConformanceTests {
 	[Fact]
 	public async Task WorkingRootAliasUsesPhysicalContainmentRoot() {
 		var parent = CreateTemporaryDirectory();
-		var actual = Path.Combine( parent, "actual" );
-		var alias = Path.Combine( parent, "alias" );
+		var actual = System.IO.Path.Combine( parent, "actual" );
+		var alias = System.IO.Path.Combine( parent, "alias" );
 		Directory.CreateDirectory( actual );
-		var target = Path.Combine( actual, "target.txt" );
+		var target = System.IO.Path.Combine( actual, "target.txt" );
 		await File.WriteAllTextAsync( target, "old\n" );
 		try {
 			try {
@@ -92,12 +92,12 @@ public sealed class WaveDConformanceTests {
 	public async Task ArtifactContainmentUsesSharedCanonicalModel() {
 		var directory = CreateTemporaryDirectory();
 		var outside = CreateTemporaryDirectory();
-		var link = Path.Combine( directory, "outside-link" );
+		var link = System.IO.Path.Combine( directory, "outside-link" );
 		try {
 			var fileSystem = new SystemPatchFileSystem();
 			await Assert.ThrowsAsync<PatchApplicationException>(
 				async () => await fileSystem.ResolveArtifactPathAsync(
-					Path.Combine( "..", Path.GetFileName( outside ), "escaped.txt" ),
+					System.IO.Path.Combine( "..", System.IO.Path.GetFileName( outside ), "escaped.txt" ),
 					directory,
 					followPathIndirection: false
 				)
@@ -113,7 +113,7 @@ public sealed class WaveDConformanceTests {
 			}
 			await Assert.ThrowsAsync<PatchApplicationException>(
 				async () => await fileSystem.ResolveArtifactPathAsync(
-					Path.Combine( link, "escaped.txt" ),
+					System.IO.Path.Combine( link, "escaped.txt" ),
 					directory,
 					followPathIndirection: true
 				)
@@ -132,7 +132,7 @@ public sealed class WaveDConformanceTests {
 			return;
 		}
 		var directory = CreateTemporaryDirectory();
-		var target = Path.Combine( directory, "target.txt" );
+		var target = System.IO.Path.Combine( directory, "target.txt" );
 		await File.WriteAllTextAsync( target, "old\n" );
 		try {
 			var fileSystem = new SystemPatchFileSystem();
@@ -173,7 +173,7 @@ public sealed class WaveDConformanceTests {
 	[Fact]
 	public async Task Post2038TimestampIsAppliedThroughMetadataProvider() {
 		var directory = CreateTemporaryDirectory();
-		var target = Path.Combine( directory, "target.txt" );
+		var target = System.IO.Path.Combine( directory, "target.txt" );
 		await File.WriteAllTextAsync( target, "old\n" );
 		var timestamp = new DateTimeOffset( 2042, 7, 8, 9, 10, 11, TimeSpan.Zero );
 		try {
@@ -219,7 +219,7 @@ public sealed class WaveDConformanceTests {
 			return;
 		}
 		var directory = CreateTemporaryDirectory();
-		var target = Path.Combine( directory, "target.txt" );
+		var target = System.IO.Path.Combine( directory, "target.txt" );
 		await File.WriteAllTextAsync( target, "old\n" );
 		try {
 			var fileSystem = new SystemPatchFileSystem();
@@ -304,8 +304,8 @@ public sealed class WaveDConformanceTests {
 	}
 
 	private static string CreateTemporaryDirectory() {
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			string.Concat( "icod-patch-p10-", Guid.NewGuid().ToString( "N" ) )
 		);
 		Directory.CreateDirectory( path );

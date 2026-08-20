@@ -138,7 +138,7 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 		cancellationToken.ThrowIfCancellationRequested();
 
 		var metadata = await GetMetadataAsync( path, true, cancellationToken ).ConfigureAwait( false );
-		var fullPath = Path.GetFullPath( path );
+		var fullPath = System.IO.Path.GetFullPath( path );
 		var drive = FindContainingDrive( fullPath );
 		var native = TryGetNativeFileSystemDetails( fullPath );
 
@@ -861,7 +861,7 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 	}
 
 	private static NativeFileSystemDetails TryGetWindowsFileSystemDetails( string path ) {
-		var root = Path.GetPathRoot( Path.GetFullPath( path ) );
+		var root = System.IO.Path.GetPathRoot( System.IO.Path.GetFullPath( path ) );
 		if ( string.IsNullOrEmpty( root ) ) {
 			return NativeFileSystemDetails.Unavailable( "The volume root could not be determined." );
 		}
@@ -923,7 +923,7 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 		foreach ( var drive in DriveInfo.GetDrives() ) {
 			string root;
 			try {
-				root = Path.GetFullPath( drive.RootDirectory.FullName );
+				root = System.IO.Path.GetFullPath( drive.RootDirectory.FullName );
 			} catch ( Exception exception ) when (
 				exception is IOException
 					or UnauthorizedAccessException
@@ -945,9 +945,9 @@ public sealed class SystemFileSystemMetadataProvider : IFileSystemMetadataProvid
 		if ( path.Equals( root, comparison ) ) {
 			return true;
 		}
-		var rootWithSeparator = Path.EndsInDirectorySeparator( root )
+		var rootWithSeparator = System.IO.Path.EndsInDirectorySeparator( root )
 			? root
-			: string.Concat( root, Path.DirectorySeparatorChar );
+			: string.Concat( root, System.IO.Path.DirectorySeparatorChar );
 		return path.StartsWith( rootWithSeparator, comparison );
 	}
 

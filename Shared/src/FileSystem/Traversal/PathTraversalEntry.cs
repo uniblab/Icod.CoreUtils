@@ -48,10 +48,10 @@ public sealed class PathTraversalEntry {
 			depth > 0
 			&& (
 				name is "." or ".."
-				|| name.Contains( Path.DirectorySeparatorChar )
+				|| name.Contains( System.IO.Path.DirectorySeparatorChar )
 				|| (
-					Path.AltDirectorySeparatorChar != Path.DirectorySeparatorChar
-					&& name.Contains( Path.AltDirectorySeparatorChar )
+					System.IO.Path.AltDirectorySeparatorChar != System.IO.Path.DirectorySeparatorChar
+					&& name.Contains( System.IO.Path.AltDirectorySeparatorChar )
 				)
 			)
 		) {

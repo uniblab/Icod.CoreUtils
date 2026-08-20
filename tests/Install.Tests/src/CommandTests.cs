@@ -10,8 +10,8 @@ public sealed class CommandTests {
 	public async Task InstallsOrdinaryFile() {
 		var root = CreateTemporaryDirectory();
 		try {
-			var source = Path.Combine( root, "source" );
-			var destination = Path.Combine( root, "destination" );
+			var source = System.IO.Path.Combine( root, "source" );
+			var destination = System.IO.Path.Combine( root, "destination" );
 			await File.WriteAllTextAsync( source, "content" );
 			Assert.Equal( 0, await RunAsync( new[] { source, destination } ) );
 			Assert.Equal( "content", await File.ReadAllTextAsync( destination ) );
@@ -26,8 +26,8 @@ public sealed class CommandTests {
 	public async Task CreatesLeadingDirectories() {
 		var root = CreateTemporaryDirectory();
 		try {
-			var source = Path.Combine( root, "source" );
-			var destination = Path.Combine( root, "one", "two", "destination" );
+			var source = System.IO.Path.Combine( root, "source" );
+			var destination = System.IO.Path.Combine( root, "one", "two", "destination" );
 			await File.WriteAllTextAsync( source, "content" );
 			Assert.Equal( 0, await RunAsync( new[] { "-D", source, destination } ) );
 			Assert.Equal( "content", await File.ReadAllTextAsync( destination ) );
@@ -41,14 +41,14 @@ public sealed class CommandTests {
 	public async Task InstallsIntoTargetDirectory() {
 		var root = CreateTemporaryDirectory();
 		try {
-			var first = Path.Combine( root, "first" );
-			var second = Path.Combine( root, "second" );
-			var destination = Directory.CreateDirectory( Path.Combine( root, "destination" ) ).FullName;
+			var first = System.IO.Path.Combine( root, "first" );
+			var second = System.IO.Path.Combine( root, "second" );
+			var destination = Directory.CreateDirectory( System.IO.Path.Combine( root, "destination" ) ).FullName;
 			await File.WriteAllTextAsync( first, "one" );
 			await File.WriteAllTextAsync( second, "two" );
 			Assert.Equal( 0, await RunAsync( new[] { "-t", destination, first, second } ) );
-			Assert.Equal( "one", await File.ReadAllTextAsync( Path.Combine( destination, "first" ) ) );
-			Assert.Equal( "two", await File.ReadAllTextAsync( Path.Combine( destination, "second" ) ) );
+			Assert.Equal( "one", await File.ReadAllTextAsync( System.IO.Path.Combine( destination, "first" ) ) );
+			Assert.Equal( "two", await File.ReadAllTextAsync( System.IO.Path.Combine( destination, "second" ) ) );
 		} finally {
 			DeleteTree( root );
 		}
@@ -60,13 +60,13 @@ public sealed class CommandTests {
 		if ( OperatingSystem.IsWindows() ) return;
 		var root = CreateTemporaryDirectory();
 		try {
-			var source = Path.Combine( root, "source" );
-			var physicalTarget = Directory.CreateDirectory( Path.Combine( root, "physical" ) ).FullName;
-			var linkedTarget = Path.Combine( root, "linked" );
+			var source = System.IO.Path.Combine( root, "source" );
+			var physicalTarget = Directory.CreateDirectory( System.IO.Path.Combine( root, "physical" ) ).FullName;
+			var linkedTarget = System.IO.Path.Combine( root, "linked" );
 			await File.WriteAllTextAsync( source, "content" );
 			Directory.CreateSymbolicLink( linkedTarget, physicalTarget );
 			Assert.Equal( 0, await RunAsync( new[] { source, linkedTarget } ) );
-			Assert.Equal( "content", await File.ReadAllTextAsync( Path.Combine( physicalTarget, "source" ) ) );
+			Assert.Equal( "content", await File.ReadAllTextAsync( System.IO.Path.Combine( physicalTarget, "source" ) ) );
 		} finally {
 			DeleteTree( root );
 		}
@@ -78,14 +78,14 @@ public sealed class CommandTests {
 		if ( OperatingSystem.IsWindows() ) return;
 		var root = CreateTemporaryDirectory();
 		try {
-			var source = Path.Combine( root, "source" );
-			var physicalTarget = Directory.CreateDirectory( Path.Combine( root, "physical" ) ).FullName;
-			var linkedTarget = Path.Combine( root, "linked" );
-			var destination = Path.Combine( linkedTarget, "one", "two", "destination" );
+			var source = System.IO.Path.Combine( root, "source" );
+			var physicalTarget = Directory.CreateDirectory( System.IO.Path.Combine( root, "physical" ) ).FullName;
+			var linkedTarget = System.IO.Path.Combine( root, "linked" );
+			var destination = System.IO.Path.Combine( linkedTarget, "one", "two", "destination" );
 			await File.WriteAllTextAsync( source, "content" );
 			Directory.CreateSymbolicLink( linkedTarget, physicalTarget );
 			Assert.Equal( 0, await RunAsync( new[] { "-D", source, destination } ) );
-			Assert.Equal( "content", await File.ReadAllTextAsync( Path.Combine( physicalTarget, "one", "two", "destination" ) ) );
+			Assert.Equal( "content", await File.ReadAllTextAsync( System.IO.Path.Combine( physicalTarget, "one", "two", "destination" ) ) );
 		} finally {
 			DeleteTree( root );
 		}
@@ -97,9 +97,9 @@ public sealed class CommandTests {
 		if ( OperatingSystem.IsWindows() ) return;
 		var root = CreateTemporaryDirectory();
 		try {
-			var source = Path.Combine( root, "source" );
-			var target = Path.Combine( root, "target" );
-			var link = Path.Combine( root, "link" );
+			var source = System.IO.Path.Combine( root, "source" );
+			var target = System.IO.Path.Combine( root, "target" );
+			var link = System.IO.Path.Combine( root, "link" );
 			await File.WriteAllTextAsync( source, "new" );
 			await File.WriteAllTextAsync( target, "old" );
 			File.CreateSymbolicLink( link, target );
@@ -117,7 +117,7 @@ public sealed class CommandTests {
 		if ( OperatingSystem.IsWindows() ) return;
 		var root = CreateTemporaryDirectory();
 		try {
-			var destination = Path.Combine( root, "destination" );
+			var destination = System.IO.Path.Combine( root, "destination" );
 			Assert.Equal( 0, await RunAsync( new[] { "/dev/null", destination } ) );
 			Assert.True( File.Exists( destination ) );
 			Assert.Equal( 0, new FileInfo( destination ).Length );
@@ -131,8 +131,8 @@ public sealed class CommandTests {
 	public async Task RetainsSimpleBackup() {
 		var root = CreateTemporaryDirectory();
 		try {
-			var source = Path.Combine( root, "source" );
-			var destination = Path.Combine( root, "destination" );
+			var source = System.IO.Path.Combine( root, "source" );
+			var destination = System.IO.Path.Combine( root, "destination" );
 			await File.WriteAllTextAsync( source, "new" );
 			await File.WriteAllTextAsync( destination, "old" );
 			Assert.Equal( 0, await RunAsync( new[] { "--backup=simple", source, destination } ) );
@@ -148,8 +148,8 @@ public sealed class CommandTests {
 	public async Task ParsesBackupControlAbbreviations() {
 		var root = CreateTemporaryDirectory();
 		try {
-			var source = Path.Combine( root, "source" );
-			var destination = Path.Combine( root, "destination" );
+			var source = System.IO.Path.Combine( root, "source" );
+			var destination = System.IO.Path.Combine( root, "destination" );
 			await File.WriteAllTextAsync( source, "new" );
 			await File.WriteAllTextAsync( destination, "old" );
 			Assert.Equal( 0, await RunAsync( new[] { "--backup=sim", source, destination } ) );
@@ -165,8 +165,8 @@ public sealed class CommandTests {
 	public async Task CompareRetainsEquivalentDestination() {
 		var root = CreateTemporaryDirectory();
 		try {
-			var source = Path.Combine( root, "source" );
-			var destination = Path.Combine( root, "destination" );
+			var source = System.IO.Path.Combine( root, "source" );
+			var destination = System.IO.Path.Combine( root, "destination" );
 			await File.WriteAllTextAsync( source, "same" );
 			await File.WriteAllTextAsync( destination, "same" );
 			if ( !OperatingSystem.IsWindows() ) {
@@ -187,8 +187,8 @@ public sealed class CommandTests {
 	public async Task PreservesModificationTimestamp() {
 		var root = CreateTemporaryDirectory();
 		try {
-			var source = Path.Combine( root, "source" );
-			var destination = Path.Combine( root, "destination" );
+			var source = System.IO.Path.Combine( root, "source" );
+			var destination = System.IO.Path.Combine( root, "destination" );
 			await File.WriteAllTextAsync( source, "content" );
 			var sourceTime = new DateTime( 2018, 7, 6, 5, 4, 2, DateTimeKind.Utc );
 			File.SetLastWriteTimeUtc( source, sourceTime );
@@ -204,7 +204,7 @@ public sealed class CommandTests {
 	public async Task CreatesDirectoryOperands() {
 		var root = CreateTemporaryDirectory();
 		try {
-			var destination = Path.Combine( root, "one", "two" );
+			var destination = System.IO.Path.Combine( root, "one", "two" );
 			Assert.Equal( 0, await RunAsync( new[] { "-d", destination } ) );
 			Assert.True( Directory.Exists( destination ) );
 		} finally {
@@ -218,8 +218,8 @@ public sealed class CommandTests {
 		if ( OperatingSystem.IsWindows() ) return;
 		var root = CreateTemporaryDirectory();
 		try {
-			var physicalTarget = Directory.CreateDirectory( Path.Combine( root, "physical" ) ).FullName;
-			var linkedTarget = Path.Combine( root, "linked" );
+			var physicalTarget = Directory.CreateDirectory( System.IO.Path.Combine( root, "physical" ) ).FullName;
+			var linkedTarget = System.IO.Path.Combine( root, "linked" );
 			Directory.CreateSymbolicLink( linkedTarget, physicalTarget );
 			File.SetUnixFileMode( physicalTarget, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute );
 			Assert.Equal( 0, await RunAsync( new[] { "--directory", "--mode=0755", linkedTarget } ) );
@@ -245,8 +245,8 @@ public sealed class CommandTests {
 		if ( OperatingSystem.IsWindows() ) return;
 		var root = CreateTemporaryDirectory();
 		try {
-			var source = Path.Combine( root, "source" );
-			var destination = Path.Combine( root, "destination" );
+			var source = System.IO.Path.Combine( root, "source" );
+			var destination = System.IO.Path.Combine( root, "destination" );
 			await File.WriteAllTextAsync( source, "content" );
 			Assert.Equal( 0, await RunAsync( new[] { "--mode=0640", source, destination } ) );
 			Assert.Equal(
@@ -264,7 +264,7 @@ public sealed class CommandTests {
 		if ( OperatingSystem.IsWindows() ) return;
 		var root = CreateTemporaryDirectory();
 		try {
-			var destination = Directory.CreateDirectory( Path.Combine( root, "destination" ) ).FullName;
+			var destination = Directory.CreateDirectory( System.IO.Path.Combine( root, "destination" ) ).FullName;
 			var baseMode = UnixFileMode.UserRead
 				| UnixFileMode.UserWrite
 				| UnixFileMode.UserExecute
@@ -290,9 +290,9 @@ public sealed class CommandTests {
 		if ( OperatingSystem.IsWindows() ) return;
 		var root = CreateTemporaryDirectory();
 		try {
-			var source = Path.Combine( root, "source" );
-			var destination = Path.Combine( root, "destination" );
-			var stripper = Path.Combine( root, "stripper" );
+			var source = System.IO.Path.Combine( root, "source" );
+			var destination = System.IO.Path.Combine( root, "destination" );
+			var stripper = System.IO.Path.Combine( root, "stripper" );
 			await File.WriteAllTextAsync( source, "payload" );
 			await File.WriteAllTextAsync( stripper, "#!/bin/sh\nprintf stripped >> \"$1\"\n" );
 			File.SetUnixFileMode( stripper, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute );
@@ -309,7 +309,7 @@ public sealed class CommandTests {
 	public async Task RefusesSameFilesystemEntry() {
 		var root = CreateTemporaryDirectory();
 		try {
-			var source = Path.Combine( root, "source" );
+			var source = System.IO.Path.Combine( root, "source" );
 			await File.WriteAllTextAsync( source, "content" );
 			Assert.Equal( 1, await RunAsync( new[] { source, source } ) );
 			Assert.Equal( "content", await File.ReadAllTextAsync( source ) );
@@ -323,8 +323,8 @@ public sealed class CommandTests {
 	public async Task IgnoresHistoricalCompatibilityOption() {
 		var root = CreateTemporaryDirectory();
 		try {
-			var source = Path.Combine( root, "source" );
-			var destination = Path.Combine( root, "destination" );
+			var source = System.IO.Path.Combine( root, "source" );
+			var destination = System.IO.Path.Combine( root, "destination" );
 			await File.WriteAllTextAsync( source, "content" );
 			Assert.Equal( 0, await RunAsync( new[] { "-c", source, destination } ) );
 			Assert.Equal( "content", await File.ReadAllTextAsync( destination ) );
@@ -338,7 +338,7 @@ public sealed class CommandTests {
 	public async Task AcceptsPreserveContextForDirectoryOperands() {
 		var root = CreateTemporaryDirectory();
 		try {
-			var destination = Path.Combine( root, "destination" );
+			var destination = System.IO.Path.Combine( root, "destination" );
 			var error = new StringWriter();
 			Assert.Equal(
 				0,
@@ -363,8 +363,8 @@ public sealed class CommandTests {
 	public async Task DebugExplainsAtomicPublication() {
 		var root = CreateTemporaryDirectory();
 		try {
-			var source = Path.Combine( root, "source" );
-			var destination = Path.Combine( root, "destination" );
+			var source = System.IO.Path.Combine( root, "source" );
+			var destination = System.IO.Path.Combine( root, "destination" );
 			await File.WriteAllTextAsync( source, "content" );
 			var output = new StringWriter();
 			Assert.Equal(
@@ -389,8 +389,8 @@ public sealed class CommandTests {
 	public async Task WarnsWhenStripProgramIsUnused() {
 		var root = CreateTemporaryDirectory();
 		try {
-			var source = Path.Combine( root, "source" );
-			var destination = Path.Combine( root, "destination" );
+			var source = System.IO.Path.Combine( root, "source" );
+			var destination = System.IO.Path.Combine( root, "destination" );
 			await File.WriteAllTextAsync( source, "content" );
 			var error = new StringWriter();
 			Assert.Equal(
@@ -432,7 +432,7 @@ public sealed class CommandTests {
 	);
 
 	private static string CreateTemporaryDirectory() {
-		var path = Path.Combine( Path.GetTempPath(), string.Concat( "Icod-Install-", Guid.NewGuid().ToString( "N" ) ) );
+		var path = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "Icod-Install-", Guid.NewGuid().ToString( "N" ) ) );
 		Directory.CreateDirectory( path );
 		return path;
 	}

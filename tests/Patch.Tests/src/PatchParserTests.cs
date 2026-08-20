@@ -370,10 +370,10 @@ public sealed class PatchParserTests {
 		string relativePath,
 		PatchFormat? forcedFormat = null
 	) {
-		var path = Path.Combine(
+		var path = System.IO.Path.Combine(
 			AppContext.BaseDirectory,
 			"fixtures",
-			relativePath.Replace( '/', Path.DirectorySeparatorChar )
+			relativePath.Replace( '/', System.IO.Path.DirectorySeparatorChar )
 		);
 		return await ParseBytesAsync( await File.ReadAllBytesAsync( path ), forcedFormat );
 	}

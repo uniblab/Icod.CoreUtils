@@ -57,14 +57,14 @@ public sealed class TemporaryObjectTests {
 	[Fact]
 	public void CombinedTemplateRetainsReplacementCoordinates() {
 		Assert.True( TemporaryNameTemplate.TryParse(
-			Path.Combine( "nested", "name.XXXX.txt" ),
+			System.IO.Path.Combine( "nested", "name.XXXX.txt" ),
 			null,
 			out var template,
 			out _
 		) );
 		var combined = template!.WithDirectory( "root" );
 		Assert.Equal(
-			Path.Combine( "root", "nested", "name.abcd.txt" ),
+			System.IO.Path.Combine( "root", "nested", "name.abcd.txt" ),
 			combined.Render( "abcd" )
 		);
 	}
@@ -199,7 +199,7 @@ public sealed class TemporaryObjectTests {
 	[Fact]
 	public void SystemProviderCreatesFileExclusively() {
 		using var workspace = new Workspace();
-		var path = Path.Combine( workspace.Root, "file" );
+		var path = System.IO.Path.Combine( workspace.Root, "file" );
 		var first = SystemTemporaryObjectFileSystem.Instance.TryCreate(
 			path,
 			TemporaryObjectKind.File
@@ -215,7 +215,7 @@ public sealed class TemporaryObjectTests {
 	[Fact]
 	public void NameOnlyTreatsAnExclusivelyOpenedFileAsACollision() {
 		using var workspace = new Workspace();
-		var path = Path.Combine( workspace.Root, "locked" );
+		var path = System.IO.Path.Combine( workspace.Root, "locked" );
 		using var stream = new FileStream(
 			path,
 			FileMode.CreateNew,
@@ -232,7 +232,7 @@ public sealed class TemporaryObjectTests {
 	[Fact]
 	public void SystemProviderCreatesDirectoryExclusively() {
 		using var workspace = new Workspace();
-		var path = Path.Combine( workspace.Root, "directory" );
+		var path = System.IO.Path.Combine( workspace.Root, "directory" );
 		var first = SystemTemporaryObjectFileSystem.Instance.TryCreate(
 			path,
 			TemporaryObjectKind.Directory
@@ -248,9 +248,9 @@ public sealed class TemporaryObjectTests {
 	[Fact]
 	public void NameOnlyTreatsDanglingSymbolicLinkAsCollision() {
 		using var workspace = new Workspace();
-		var path = Path.Combine( workspace.Root, "link" );
+		var path = System.IO.Path.Combine( workspace.Root, "link" );
 		try {
-			File.CreateSymbolicLink( path, Path.Combine( workspace.Root, "missing" ) );
+			File.CreateSymbolicLink( path, System.IO.Path.Combine( workspace.Root, "missing" ) );
 		} catch ( Exception exception ) when (
 			exception is UnauthorizedAccessException
 				or IOException
@@ -349,8 +349,8 @@ public sealed class TemporaryObjectTests {
 
 	private sealed class Workspace : IDisposable {
 		public Workspace() {
-			Root = Path.Combine(
-				Path.GetTempPath(),
+			Root = System.IO.Path.Combine(
+				System.IO.Path.GetTempPath(),
 				string.Concat( "Icod.CoreUtils.Shared.Temporary.Tests-", Guid.NewGuid().ToString( "N" ) )
 			);
 			Directory.CreateDirectory( Root );

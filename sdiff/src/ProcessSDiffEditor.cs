@@ -14,7 +14,7 @@ public sealed class ProcessSDiffEditor : ISDiffEditor {
 	) {
 		ArgumentNullException.ThrowIfNull( initialContent );
 		cancellationToken.ThrowIfCancellationRequested();
-		var path = Path.Combine( Path.GetTempPath(), $"sdiff-{Guid.NewGuid():N}.tmp" );
+		var path = System.IO.Path.Combine( System.IO.Path.GetTempPath(), $"sdiff-{Guid.NewGuid():N}.tmp" );
 		try {
 			await WriteLinesAsync( path, initialContent, cancellationToken ).ConfigureAwait( false );
 			var commandLine = Environment.GetEnvironmentVariable( "EDITOR" );

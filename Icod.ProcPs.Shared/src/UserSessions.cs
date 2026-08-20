@@ -225,7 +225,7 @@ public sealed class LinuxProcLoginSessionProvider : IProcLoginSessionProvider {
 			return null;
 		}
 		try {
-			return new DateTimeOffset( File.GetLastAccessTimeUtc( Path.Combine( deviceRoot, terminal ) ), TimeSpan.Zero );
+			return new DateTimeOffset( File.GetLastAccessTimeUtc( System.IO.Path.Combine( deviceRoot, terminal ) ), TimeSpan.Zero );
 		} catch ( IOException ) {
 			return null;
 		} catch ( UnauthorizedAccessException ) {
@@ -366,7 +366,7 @@ public sealed class MacOsProcLoginSessionProvider : IProcLoginSessionProvider {
 			return null;
 		}
 		try {
-			return new DateTimeOffset( File.GetLastAccessTimeUtc( Path.Combine( deviceRoot, terminal ) ), TimeSpan.Zero );
+			return new DateTimeOffset( File.GetLastAccessTimeUtc( System.IO.Path.Combine( deviceRoot, terminal ) ), TimeSpan.Zero );
 		} catch ( IOException ) {
 			return null;
 		} catch ( UnauthorizedAccessException ) {

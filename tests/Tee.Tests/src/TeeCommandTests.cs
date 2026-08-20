@@ -1,4 +1,4 @@
-﻿namespace Icod.CoreUtils.Tee.Tests;
+namespace Icod.CoreUtils.Tee.Tests;
 
 using System.Text;
 using Icod.CoreUtils.Shared.Diagnostics;
@@ -92,8 +92,8 @@ public sealed class TeeCommandTests {
 	[Fact]
 	public async Task OpenFailureDoesNotPreventOtherOutputs() {
 		var good = CreatePath();
-		var directory = Path.Combine(
-			Path.GetTempPath(),
+		var directory = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			$"icod-tee-dir-{Guid.NewGuid():N}"
 		);
 		Directory.CreateDirectory(
@@ -277,8 +277,8 @@ public sealed class TeeCommandTests {
 	}
 
 	private static string CreatePath() {
-		return Path.Combine(
-			Path.GetTempPath(),
+		return System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			$"icod-tee-{Guid.NewGuid():N}.bin"
 		);
 	}

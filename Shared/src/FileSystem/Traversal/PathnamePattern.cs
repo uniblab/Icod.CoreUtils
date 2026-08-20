@@ -72,7 +72,7 @@ public sealed class PathnamePattern {
 
 		string root;
 		try {
-			root = Path.GetPathRoot( pattern ) ?? string.Empty;
+			root = System.IO.Path.GetPathRoot( pattern ) ?? string.Empty;
 		} catch ( Exception exception ) when (
 			exception is ArgumentException
 			or NotSupportedException
@@ -104,10 +104,10 @@ public sealed class PathnamePattern {
 		var result = Root;
 		foreach ( var segment in _segments ) {
 			var literalSegment = new string( segment.Tokens.Select( static token => token.Literal ).ToArray() );
-			result = result.Length == 0 ? literalSegment : Path.Combine( result, literalSegment );
+			result = result.Length == 0 ? literalSegment : System.IO.Path.Combine( result, literalSegment );
 		}
-		if ( RequiresDirectory && result.Length > 0 && !Path.EndsInDirectorySeparator( result ) ) {
-			result = string.Concat( result, Path.DirectorySeparatorChar );
+		if ( RequiresDirectory && result.Length > 0 && !System.IO.Path.EndsInDirectorySeparator( result ) ) {
+			result = string.Concat( result, System.IO.Path.DirectorySeparatorChar );
 		}
 		return result;
 	}
@@ -122,7 +122,7 @@ public sealed class PathnamePattern {
 
 		string pathRoot;
 		try {
-			pathRoot = Path.GetPathRoot( path ) ?? string.Empty;
+			pathRoot = System.IO.Path.GetPathRoot( path ) ?? string.Empty;
 		} catch ( Exception exception ) when (
 			exception is ArgumentException
 			or NotSupportedException
@@ -380,10 +380,10 @@ public sealed class PathnamePattern {
 	}
 
 	private static string NormalizeRoot( string root ) {
-		if ( Path.AltDirectorySeparatorChar == Path.DirectorySeparatorChar ) {
+		if ( System.IO.Path.AltDirectorySeparatorChar == System.IO.Path.DirectorySeparatorChar ) {
 			return root;
 		}
-		return root.Replace( Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar );
+		return root.Replace( System.IO.Path.AltDirectorySeparatorChar, System.IO.Path.DirectorySeparatorChar );
 	}
 
 	private static bool CharactersEqual(
@@ -394,9 +394,9 @@ public sealed class PathnamePattern {
 		? first == second
 		: char.ToUpperInvariant( first ) == char.ToUpperInvariant( second );
 
-	private static char[] GetSeparators() => Path.AltDirectorySeparatorChar == Path.DirectorySeparatorChar
-		? new[] { Path.DirectorySeparatorChar }
-		: new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
+	private static char[] GetSeparators() => System.IO.Path.AltDirectorySeparatorChar == System.IO.Path.DirectorySeparatorChar
+		? new[] { System.IO.Path.DirectorySeparatorChar }
+		: new[] { System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar };
 }
 
 /// <summary>

@@ -8,15 +8,15 @@ public sealed class RecursivePathSafetyTests {
 	/// <summary>Verifies that the host filesystem root is recognized after normalization.</summary>
 	[Fact]
 	public void RecognizesFileSystemRoot() {
-		var root = Path.GetPathRoot( Path.GetFullPath( "." ) )!;
+		var root = System.IO.Path.GetPathRoot( System.IO.Path.GetFullPath( "." ) )!;
 		Assert.True( new RecursivePathSafety().IsFileSystemRoot( root ) );
 	}
 
 	/// <summary>Verifies that a destination below the source is rejected by classification.</summary>
 	[Fact]
 	public void ClassifiesDestinationInsideSource() {
-		var source = Path.Combine( Path.GetTempPath(), "e5-source" );
-		var destination = Path.Combine( source, "copy" );
+		var source = System.IO.Path.Combine( System.IO.Path.GetTempPath(), "e5-source" );
+		var destination = System.IO.Path.Combine( source, "copy" );
 		Assert.Equal(
 			RecursivePathRelationship.DestinationInsideSource,
 			new RecursivePathSafety().Classify( source, destination )
@@ -26,9 +26,9 @@ public sealed class RecursivePathSafetyTests {
 	/// <summary>Verifies that a textual prefix without a separator is not treated as containment.</summary>
 	[Fact]
 	public void DoesNotConfuseSiblingPrefixWithDescendant() {
-		var parent = Path.GetTempPath();
-		var source = Path.Combine( parent, "tree" );
-		var destination = Path.Combine( parent, "tree-copy" );
+		var parent = System.IO.Path.GetTempPath();
+		var source = System.IO.Path.Combine( parent, "tree" );
+		var destination = System.IO.Path.Combine( parent, "tree-copy" );
 		Assert.Equal(
 			RecursivePathRelationship.Disjoint,
 			new RecursivePathSafety().Classify( source, destination )
@@ -42,7 +42,7 @@ public sealed class RecursivePathSafetyTests {
 		try {
 			var result = await new RecursivePathSafety().EvaluateAsync(
 				directory.FullName,
-				Path.Combine( directory.FullName, "missing", "destination" )
+				System.IO.Path.Combine( directory.FullName, "missing", "destination" )
 			);
 			Assert.True( result.Succeeded );
 			Assert.Equal( RecursivePathRelationship.DestinationInsideSource, result.Relationship );

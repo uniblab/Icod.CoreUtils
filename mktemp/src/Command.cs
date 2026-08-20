@@ -156,7 +156,7 @@ public static class Command {
 			}
 			if (
 				useTemporaryDirectory
-				&& Path.IsPathRooted( templateOperand )
+				&& System.IO.Path.IsPathRooted( templateOperand )
 			) {
 				await context.Diagnostics.ErrorAsync(
 					string.Concat( "invalid template, '", templateOperand, "'; with --tmpdir, it may not be absolute" ),
@@ -372,8 +372,8 @@ public static class Command {
 	}
 
 	private static bool ContainsDirectorySeparator( string value ) {
-		return ( 0 <= value.IndexOf( Path.DirectorySeparatorChar ) )
-			|| ( 0 <= value.IndexOf( Path.AltDirectorySeparatorChar ) );
+		return ( 0 <= value.IndexOf( System.IO.Path.DirectorySeparatorChar ) )
+			|| ( 0 <= value.IndexOf( System.IO.Path.AltDirectorySeparatorChar ) );
 	}
 
 	private static bool IsExpectedOutputException( Exception exception ) {

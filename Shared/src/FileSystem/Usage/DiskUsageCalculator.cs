@@ -212,7 +212,7 @@ public sealed class DiskUsageCalculator {
 		if ( entry.IsRoot || (childIsDirectory && separateDirectories) ) {
 			return;
 		}
-		var parentPath = Path.GetDirectoryName( Path.TrimEndingDirectorySeparator( entry.AccessPath ) );
+		var parentPath = System.IO.Path.GetDirectoryName( System.IO.Path.TrimEndingDirectorySeparator( entry.AccessPath ) );
 		if ( parentPath is not null && frames.TryGetValue( NormalizePath( parentPath ), out var parent ) ) {
 			parent.Value = checked( parent.Value + value );
 			parent.LatestTime = Latest( parent.LatestTime, latestTime );
@@ -247,7 +247,7 @@ public sealed class DiskUsageCalculator {
 		}
 	}
 
-	private static string NormalizePath( string path ) => Path.TrimEndingDirectorySeparator( Path.GetFullPath( path ) );
+	private static string NormalizePath( string path ) => System.IO.Path.TrimEndingDirectorySeparator( System.IO.Path.GetFullPath( path ) );
 	private static StringComparer PathComparer => OperatingSystem.IsWindows()
 		? StringComparer.OrdinalIgnoreCase
 		: StringComparer.Ordinal;

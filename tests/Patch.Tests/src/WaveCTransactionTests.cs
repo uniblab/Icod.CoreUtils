@@ -10,7 +10,7 @@ public sealed class WaveCTransactionTests {
 	[Fact]
 	public async Task MetadataFailureRollsBackCommittedReplacement() {
 		var directory = CreateTemporaryDirectory();
-		var target = Path.Combine( directory, "target.txt" );
+		var target = System.IO.Path.Combine( directory, "target.txt" );
 		await File.WriteAllTextAsync( target, "old\n" );
 		try {
 			var fileSystem = new SystemPatchFileSystem();
@@ -33,8 +33,8 @@ public sealed class WaveCTransactionTests {
 	[Fact]
 	public async Task LaterCommitFailureRollsBackEarlierArtifact() {
 		var directory = CreateTemporaryDirectory();
-		var first = Path.Combine( directory, "first.txt" );
-		var second = Path.Combine( directory, "second.txt" );
+		var first = System.IO.Path.Combine( directory, "first.txt" );
+		var second = System.IO.Path.Combine( directory, "second.txt" );
 		await File.WriteAllTextAsync( first, "first-old\n" );
 		await File.WriteAllTextAsync( second, "second-old\n" );
 		try {
@@ -64,7 +64,7 @@ public sealed class WaveCTransactionTests {
 	[Fact]
 	public async Task RevalidationRejectsDestinationChangedAfterStaging() {
 		var directory = CreateTemporaryDirectory();
-		var target = Path.Combine( directory, "target.txt" );
+		var target = System.IO.Path.Combine( directory, "target.txt" );
 		await File.WriteAllTextAsync( target, "old\n" );
 		try {
 			var fileSystem = new SystemPatchFileSystem();
@@ -86,8 +86,8 @@ public sealed class WaveCTransactionTests {
 	[Fact]
 	public async Task ValidationOnlyGuardDetectsInputChange() {
 		var directory = CreateTemporaryDirectory();
-		var input = Path.Combine( directory, "input.txt" );
-		var output = Path.Combine( directory, "output.txt" );
+		var input = System.IO.Path.Combine( directory, "input.txt" );
+		var output = System.IO.Path.Combine( directory, "output.txt" );
 		await File.WriteAllTextAsync( input, "old\n" );
 		try {
 			var fileSystem = new SystemPatchFileSystem();
@@ -126,7 +126,7 @@ public sealed class WaveCTransactionTests {
 	[Fact]
 	public async Task CancellationCleansStagedFiles() {
 		var directory = CreateTemporaryDirectory();
-		var target = Path.Combine( directory, "target.txt" );
+		var target = System.IO.Path.Combine( directory, "target.txt" );
 		await File.WriteAllTextAsync( target, "old\n" );
 		using var cancellation = new CancellationTokenSource();
 		try {
@@ -151,8 +151,8 @@ public sealed class WaveCTransactionTests {
 	[Fact]
 	public async Task CommitsCreationAndDeletionThroughE6() {
 		var directory = CreateTemporaryDirectory();
-		var created = Path.Combine( directory, "created.txt" );
-		var deleted = Path.Combine( directory, "deleted.txt" );
+		var created = System.IO.Path.Combine( directory, "created.txt" );
+		var deleted = System.IO.Path.Combine( directory, "deleted.txt" );
 		await File.WriteAllTextAsync( deleted, "delete-me\n" );
 		try {
 			var fileSystem = new SystemPatchFileSystem();
@@ -192,8 +192,8 @@ public sealed class WaveCTransactionTests {
 	[Fact]
 	public async Task RetainsBackupOnSuccessfulReplacement() {
 		var directory = CreateTemporaryDirectory();
-		var target = Path.Combine( directory, "target.txt" );
-		var backup = Path.Combine( directory, "target.txt.orig" );
+		var target = System.IO.Path.Combine( directory, "target.txt" );
+		var backup = System.IO.Path.Combine( directory, "target.txt.orig" );
 		await File.WriteAllTextAsync( target, "target-old\n" );
 		await File.WriteAllTextAsync( backup, "backup-old\n" );
 		try {
@@ -234,8 +234,8 @@ public sealed class WaveCTransactionTests {
 	[Fact]
 	public async Task BackupPublicationFailureRollsBackTargetAndBackup() {
 		var directory = CreateTemporaryDirectory();
-		var target = Path.Combine( directory, "target.txt" );
-		var backup = Path.Combine( directory, "target.txt.orig" );
+		var target = System.IO.Path.Combine( directory, "target.txt" );
+		var backup = System.IO.Path.Combine( directory, "target.txt.orig" );
 		await File.WriteAllTextAsync( target, "target-old\n" );
 		await File.WriteAllTextAsync( backup, "backup-old\n" );
 		try {
@@ -279,10 +279,10 @@ public sealed class WaveCTransactionTests {
 	[Fact]
 	public async Task BackupRejectAndOutputRollbackWithTarget() {
 		var directory = CreateTemporaryDirectory();
-		var target = Path.Combine( directory, "target.txt" );
-		var backup = Path.Combine( directory, "target.txt.orig" );
-		var reject = Path.Combine( directory, "target.txt.rej" );
-		var output = Path.Combine( directory, "output.txt" );
+		var target = System.IO.Path.Combine( directory, "target.txt" );
+		var backup = System.IO.Path.Combine( directory, "target.txt.orig" );
+		var reject = System.IO.Path.Combine( directory, "target.txt.rej" );
+		var output = System.IO.Path.Combine( directory, "output.txt" );
 		await File.WriteAllTextAsync( target, "target-old\n" );
 		await File.WriteAllTextAsync( backup, "backup-old\n" );
 		try {
@@ -333,8 +333,8 @@ public sealed class WaveCTransactionTests {
 	[Fact]
 	public async Task IndependentFileFailureReportsPartialSuccess() {
 		var directory = CreateTemporaryDirectory();
-		var first = Path.Combine( directory, "first.txt" );
-		var second = Path.Combine( directory, "second.txt" );
+		var first = System.IO.Path.Combine( directory, "first.txt" );
+		var second = System.IO.Path.Combine( directory, "second.txt" );
 		await File.WriteAllTextAsync( first, "first-old\n" );
 		await File.WriteAllTextAsync( second, "second-old\n" );
 		try {
@@ -401,8 +401,8 @@ public sealed class WaveCTransactionTests {
 	}
 
 	private static string CreateTemporaryDirectory() {
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			string.Concat( "icod-patch-p11a-", Guid.NewGuid().ToString( "N" ) )
 		);
 		Directory.CreateDirectory( path );
@@ -413,7 +413,7 @@ public sealed class WaveCTransactionTests {
 		Assert.DoesNotContain(
 			Directory.EnumerateFiles( directory ),
 			path => {
-				var name = Path.GetFileName( path );
+				var name = System.IO.Path.GetFileName( path );
 				return name.Contains( ".patch-", StringComparison.Ordinal )
 					|| name.Contains( ".icod-e6-", StringComparison.Ordinal );
 			}

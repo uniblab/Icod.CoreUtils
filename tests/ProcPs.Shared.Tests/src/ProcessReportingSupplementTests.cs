@@ -9,20 +9,20 @@ public sealed class ProcessReportingSupplementTests {
 	[Fact]
 	public async Task ReadsLinuxStatusAndSecurityLabelWhenAvailable() {
 		var processId = Environment.ProcessId;
-		var root = Path.Combine( Path.GetTempPath(), $"icod-procps-reporting-{Guid.NewGuid():N}" );
+		var root = System.IO.Path.Combine( System.IO.Path.GetTempPath(), $"icod-procps-reporting-{Guid.NewGuid():N}" );
 		try {
-			var processRoot = Path.Combine( root, processId.ToString( System.Globalization.CultureInfo.InvariantCulture ) );
-			Directory.CreateDirectory( Path.Combine( processRoot, "attr" ) );
-			await File.WriteAllBytesAsync( Path.Combine( processRoot, "environ" ), [] );
+			var processRoot = System.IO.Path.Combine( root, processId.ToString( System.Globalization.CultureInfo.InvariantCulture ) );
+			Directory.CreateDirectory( System.IO.Path.Combine( processRoot, "attr" ) );
+			await File.WriteAllBytesAsync( System.IO.Path.Combine( processRoot, "environ" ), [] );
 			await File.WriteAllTextAsync(
-				Path.Combine( processRoot, "status" ),
+				System.IO.Path.Combine( processRoot, "status" ),
 				string.Concat(
 					"Name:\tfixture\n",
 					"SigBlk:\t0000000000000004\n",
 					"CapEff:\t0000000000000025\n"
 				)
 			);
-			await File.WriteAllTextAsync( Path.Combine( processRoot, "attr", "current" ), "fixture_u:fixture_r:fixture_t:s0\n" );
+			await File.WriteAllTextAsync( System.IO.Path.Combine( processRoot, "attr", "current" ), "fixture_u:fixture_r:fixture_t:s0\n" );
 
 			var provider = new SystemProcMatchSupplementProvider( root );
 			var snapshot = new ProcProcessSnapshot( new ProcessIdentity( processId ) );

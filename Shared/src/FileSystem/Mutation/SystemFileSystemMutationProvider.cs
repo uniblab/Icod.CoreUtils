@@ -808,9 +808,9 @@ public sealed class SystemFileSystemMutationProvider : IFileSystemMutationProvid
 				var attributes = File.GetAttributes( normalized );
 				if ( (attributes & FileAttributes.Directory) != 0 ) {
 					if ( physical.IsVolumeMountPoint ) {
-						var mountPath = Path.EndsInDirectorySeparator( normalized )
+						var mountPath = System.IO.Path.EndsInDirectorySeparator( normalized )
 							? normalized
-							: string.Concat( normalized, Path.DirectorySeparatorChar );
+							: string.Concat( normalized, System.IO.Path.DirectorySeparatorChar );
 						if ( !NativeDeleteVolumeMountPointWindows( mountPath ) ) {
 							return FromWindowsFailure( normalized, "remove volume mount point" );
 						}
@@ -1295,7 +1295,7 @@ public sealed class SystemFileSystemMutationProvider : IFileSystemMutationProvid
 		ArgumentException.ThrowIfNullOrEmpty( path );
 		try {
 			error = null;
-			return Path.GetFullPath( path );
+			return System.IO.Path.GetFullPath( path );
 		} catch ( Exception exception ) when (
 			exception is ArgumentException or NotSupportedException or PathTooLongException
 		) {
@@ -1360,7 +1360,7 @@ public sealed class SystemFileSystemMutationProvider : IFileSystemMutationProvid
 				closingBrace == path.Length - 1
 					|| (
 						closingBrace == path.Length - 2
-							&& Path.EndsInDirectorySeparator( path )
+							&& System.IO.Path.EndsInDirectorySeparator( path )
 					)
 			);
 	}

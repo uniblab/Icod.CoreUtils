@@ -278,7 +278,7 @@ public sealed class CommandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task MissingFileFailsCleanly() {
-		var path = Path.Combine( Path.GetTempPath(), string.Concat( "tsort-missing-", Guid.NewGuid().ToString( "N" ) ) );
+		var path = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "tsort-missing-", Guid.NewGuid().ToString( "N" ) ) );
 		var result = await RunAsync( string.Empty, path );
 		Assert.Equal( CommandExitCodes.Failure, result.Status );
 		Assert.Contains( path, result.ErrorText );
@@ -495,7 +495,7 @@ public sealed class CommandTests {
 		string? option = null,
 		bool optionAfterFile = false
 	) {
-		var path = Path.Combine( Path.GetTempPath(), string.Concat( "tsort-", Guid.NewGuid().ToString( "N" ), ".txt" ) );
+		var path = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "tsort-", Guid.NewGuid().ToString( "N" ), ".txt" ) );
 		await File.WriteAllTextAsync( path, inputText, new UTF8Encoding( false ) );
 		try {
 			var args = null == option

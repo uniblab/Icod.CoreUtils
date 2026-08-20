@@ -198,10 +198,10 @@ public sealed class CommandTests {
 		using var fixture = new FileFixture();
 		var firstDirectory = fixture.Directory( "first" );
 		var secondDirectory = fixture.Directory( "second" );
-		Directory.CreateDirectory( Path.Combine( firstDirectory, "nested" ) );
-		Directory.CreateDirectory( Path.Combine( secondDirectory, "nested" ) );
-		File.WriteAllText( Path.Combine( firstDirectory, "nested", "value.txt" ), "old\n" );
-		File.WriteAllText( Path.Combine( secondDirectory, "nested", "value.txt" ), "new\n" );
+		Directory.CreateDirectory( System.IO.Path.Combine( firstDirectory, "nested" ) );
+		Directory.CreateDirectory( System.IO.Path.Combine( secondDirectory, "nested" ) );
+		File.WriteAllText( System.IO.Path.Combine( firstDirectory, "nested", "value.txt" ), "old\n" );
+		File.WriteAllText( System.IO.Path.Combine( secondDirectory, "nested", "value.txt" ), "new\n" );
 		var result = await RunAsync( "-r", firstDirectory, secondDirectory );
 		Assert.Equal( 1, result.Status );
 		Assert.Contains( "1c1", result.Output, StringComparison.Ordinal );
@@ -213,7 +213,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task NewFileTreatsAbsentInputAsEmpty() {
 		using var fixture = new FileFixture();
-		var missing = Path.Combine( fixture.Root, "missing" );
+		var missing = System.IO.Path.Combine( fixture.Root, "missing" );
 		var present = fixture.Write( "present", "new\n" );
 		var result = await RunAsync( "-N", missing, present );
 		Assert.Equal( 1, result.Status );
@@ -224,15 +224,15 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task NewFileRequiresRecursiveOptionForAbsentSubdirectories() {
 		using var fixture = new FileFixture();
-		var missing = Path.Combine( fixture.Root, "missing" );
+		var missing = System.IO.Path.Combine( fixture.Root, "missing" );
 		var present = fixture.Directory( "present" );
-		var child = Path.Combine( present, "nested" );
+		var child = System.IO.Path.Combine( present, "nested" );
 		Directory.CreateDirectory( child );
-		File.WriteAllText( Path.Combine( child, "value.txt" ), "new\n" );
+		File.WriteAllText( System.IO.Path.Combine( child, "value.txt" ), "new\n" );
 		var result = await RunAsync( "-N", missing, present );
 		Assert.Equal( 0, result.Status );
 		Assert.Equal(
-			$"Common subdirectories: {Path.Combine( missing, "nested" )} and {child}{Nl}",
+			$"Common subdirectories: {System.IO.Path.Combine( missing, "nested" )} and {child}{Nl}",
 			result.Output
 		);
 	}
@@ -295,7 +295,7 @@ public sealed class CommandTests {
 	private sealed class FileFixture : IDisposable {
 		/// <summary>Initializes a temporary filesystem fixture.</summary>
 		public FileFixture() {
-			this.Root = Path.Combine( Path.GetTempPath(), $"Icod.DiffUtils.Diff.Tests-{Guid.NewGuid():N}" );
+			this.Root = System.IO.Path.Combine( System.IO.Path.GetTempPath(), $"Icod.DiffUtils.Diff.Tests-{Guid.NewGuid():N}" );
 			System.IO.Directory.CreateDirectory( this.Root );
 		}
 
@@ -304,21 +304,21 @@ public sealed class CommandTests {
 
 		/// <summary>Creates a named child directory.</summary>
 		public string Directory( string name ) {
-			var path = Path.Combine( this.Root, name );
+			var path = System.IO.Path.Combine( this.Root, name );
 			System.IO.Directory.CreateDirectory( path );
 			return path;
 		}
 
 		/// <summary>Writes UTF-8 text and returns its path.</summary>
 		public string Write( string name, string content ) {
-			var path = Path.Combine( this.Root, name );
+			var path = System.IO.Path.Combine( this.Root, name );
 			File.WriteAllText( path, content, new UTF8Encoding( false ) );
 			return path;
 		}
 
 		/// <summary>Writes bytes and returns their path.</summary>
 		public string WriteBytes( string name, byte[] bytes ) {
-			var path = Path.Combine( this.Root, name );
+			var path = System.IO.Path.Combine( this.Root, name );
 			File.WriteAllBytes( path, bytes );
 			return path;
 		}

@@ -178,14 +178,14 @@ public sealed class ProcessRunnerTests {
 
 		DirectoryInfo? directory = testOutputDirectory;
 		while ( null != directory ) {
-			var hostProject = Path.Combine(
+			var hostProject = System.IO.Path.Combine(
 				directory.FullName,
 				"tests",
 				"ProcessTestHost",
 				"Icod.CoreUtils.ProcessTestHost.csproj"
 			);
 			if ( File.Exists( hostProject ) ) {
-				var hostDirectory = Path.Combine(
+				var hostDirectory = System.IO.Path.Combine(
 					directory.FullName,
 					"tests",
 					"ProcessTestHost",
@@ -196,7 +196,7 @@ public sealed class ProcessRunnerTests {
 					!string.IsNullOrEmpty( configuration )
 					&& !string.IsNullOrEmpty( targetFramework )
 				) {
-					var configuredHost = Path.Combine(
+					var configuredHost = System.IO.Path.Combine(
 						hostDirectory,
 						configuration,
 						targetFramework,
@@ -217,9 +217,9 @@ public sealed class ProcessRunnerTests {
 						.FirstOrDefault(
 							path => !path.Contains(
 								string.Concat(
-									Path.DirectorySeparatorChar,
+									System.IO.Path.DirectorySeparatorChar,
 									"ref",
-									Path.DirectorySeparatorChar
+									System.IO.Path.DirectorySeparatorChar
 								),
 								StringComparison.Ordinal
 							)

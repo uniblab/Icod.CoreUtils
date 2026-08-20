@@ -162,7 +162,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies a missing -C directory is an env setup failure rather than a command lookup failure.</summary>
 	[Fact]
 	public async Task MissingWorkingDirectoryReturnsInternalFailure() {
-		var missing = Path.Combine( Path.GetTempPath(), $"icod-env-missing-{Guid.NewGuid():N}" );
+		var missing = System.IO.Path.Combine( System.IO.Path.GetTempPath(), $"icod-env-missing-{Guid.NewGuid():N}" );
 		var error = new MemoryStream();
 		var exitCode = await Command.RunAsync(
 			[ "-C", missing, "definitely-not-a-command" ],
@@ -193,7 +193,7 @@ public sealed class CommandTests {
 		if ( OperatingSystem.IsWindows() ) return;
 		var error = new MemoryStream();
 		var exitCode = await Command.RunAsync(
-			[ Path.GetTempPath() ],
+			[ System.IO.Path.GetTempPath() ],
 			stdout: new MemoryStream(),
 			stderr: error
 		);

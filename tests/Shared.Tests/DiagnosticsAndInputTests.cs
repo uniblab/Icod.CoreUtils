@@ -55,7 +55,7 @@ public sealed class DiagnosticsAndInputTests {
 
 	[Fact]
 	public async Task InputSourceReadsFileAsynchronously() {
-		var path = Path.GetTempFileName();
+		var path = System.IO.Path.GetTempFileName();
 		try {
 			await File.WriteAllTextAsync(
 				path,

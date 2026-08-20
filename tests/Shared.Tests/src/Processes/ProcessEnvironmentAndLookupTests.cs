@@ -36,8 +36,8 @@ public sealed class ProcessEnvironmentAndLookupTests {
 	/// <summary>Verifies PATH and PATHEXT lookup against an explicit environment.</summary>
 	[Fact]
 	public void ExecutableLocatorUsesExplicitSearchEnvironment() {
-		var directory = Path.Combine(
-			Path.GetTempPath(),
+		var directory = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			$"icod-f4-locator-{Guid.NewGuid():N}"
 		);
 		Directory.CreateDirectory(
@@ -48,7 +48,7 @@ public sealed class ProcessEnvironmentAndLookupTests {
 				? "f4-tool.EXE"
 				: "f4-tool"
 			;
-			var path = Path.Combine(
+			var path = System.IO.Path.Combine(
 				directory,
 				fileName
 			);
@@ -83,7 +83,7 @@ public sealed class ProcessEnvironmentAndLookupTests {
 				result.Message
 			);
 			Assert.Equal(
-				Path.GetFullPath( path ),
+				System.IO.Path.GetFullPath( path ),
 				result.Value
 			);
 		} finally {
@@ -100,15 +100,15 @@ public sealed class ProcessEnvironmentAndLookupTests {
 		if ( OperatingSystem.IsWindows() ) {
 			return;
 		}
-		var directory = Path.Combine(
-			Path.GetTempPath(),
+		var directory = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			$"icod-f4-nonexec-{Guid.NewGuid():N}"
 		);
 		Directory.CreateDirectory(
 			directory
 		);
 		try {
-			var path = Path.Combine(
+			var path = System.IO.Path.Combine(
 				directory,
 				"f4-nonexec"
 			);

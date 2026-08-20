@@ -192,7 +192,7 @@ public static class Command {
 			this.standardError = standardError;
 			this.inputFullPath = "-" == options.InputPath
 				? null
-				: Path.GetFullPath( options.InputPath );
+				: System.IO.Path.GetFullPath( options.InputPath );
 		}
 
 		public string GetName( long index ) {
@@ -232,7 +232,7 @@ public static class Command {
 			if ( null == this.inputFullPath ) {
 				return;
 			}
-			var outputFullPath = Path.GetFullPath( outputPath );
+			var outputFullPath = System.IO.Path.GetFullPath( outputPath );
 			var comparison = OperatingSystem.IsWindows()
 				? StringComparison.OrdinalIgnoreCase
 				: StringComparison.Ordinal;
@@ -275,8 +275,8 @@ public static class Command {
 			};
 			string? commandFilePath = null;
 			if ( OperatingSystem.IsWindows() ) {
-				commandFilePath = Path.Combine(
-					Path.GetTempPath(),
+				commandFilePath = System.IO.Path.Combine(
+					System.IO.Path.GetTempPath(),
 					$"icod-split-filter-{Guid.NewGuid():N}.cmd"
 				);
 				try {
@@ -538,7 +538,7 @@ public static class Command {
 					options.SuffixLengthExplicit = 0 != suffixLength;
 					break;
 				case "additional-suffix":
-					if ( null == value || value.IndexOfAny( new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar } ) >= 0 ) {
+					if ( null == value || value.IndexOfAny( new[] { System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar } ) >= 0 ) {
 						await context.Diagnostics.ErrorAsync( "additional suffix must not contain a directory separator", context.CancellationToken ).ConfigureAwait( false );
 						return null;
 					}

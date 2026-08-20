@@ -7,10 +7,10 @@ public sealed class CommandTests {
 	/// <summary>Verifies the profile uses the shared option and rendering vocabulary.</summary>
 	[Fact]
 	public async Task ListsDirectoryWithSharedOptions() {
-		var root = Path.Combine( Path.GetTempPath(), "icod-dir-" + Guid.NewGuid().ToString( "N" ) );
+		var root = System.IO.Path.Combine( System.IO.Path.GetTempPath(), "icod-dir-" + Guid.NewGuid().ToString( "N" ) );
 		Directory.CreateDirectory( root );
 		try {
-			await File.WriteAllTextAsync( Path.Combine( root, "one file.txt" ), "data" );
+			await File.WriteAllTextAsync( System.IO.Path.Combine( root, "one file.txt" ), "data" );
 			var output = new StringWriter();
 			var error = new StringWriter();
 

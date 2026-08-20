@@ -502,10 +502,10 @@ public sealed class PathnameExpander {
 		PathnameExpansionOptions options,
 		CancellationToken cancellationToken
 	) {
-		var baseDirectory = Path.GetFullPath( options.BaseDirectory );
+		var baseDirectory = System.IO.Path.GetFullPath( options.BaseDirectory );
 		var startPath = pattern.Root.Length == 0
 			? baseDirectory
-			: Path.GetFullPath( pattern.Root );
+			: System.IO.Path.GetFullPath( pattern.Root );
 		var observation = await _provider.ObserveAsync(
 			startPath,
 			true,
@@ -651,7 +651,7 @@ public sealed class PathnameExpander {
 
 		string parentPath;
 		try {
-			parentPath = Path.Combine( state.AccessPath, ".." );
+			parentPath = System.IO.Path.Combine( state.AccessPath, ".." );
 		} catch ( Exception exception ) when (
 			exception is ArgumentException
 				or NotSupportedException
@@ -881,9 +881,9 @@ public sealed class PathnameExpander {
 		if ( effectivePath.Length == 0 ) {
 			throw new ArgumentException( "A pathname operand cannot be empty.", nameof( operand ) );
 		}
-		var accessPath = Path.IsPathRooted( effectivePath )
-			? Path.GetFullPath( effectivePath )
-			: Path.GetFullPath( effectivePath, Path.GetFullPath( baseDirectory ) );
+		var accessPath = System.IO.Path.IsPathRooted( effectivePath )
+			? System.IO.Path.GetFullPath( effectivePath )
+			: System.IO.Path.GetFullPath( effectivePath, System.IO.Path.GetFullPath( baseDirectory ) );
 		return new PathTraversalRoot(
 			operand,
 			operandIndex,
@@ -896,7 +896,7 @@ public sealed class PathnameExpander {
 
 	private static string CombineDisplayPath( string parent, string name ) => parent.Length == 0
 		? name
-		: Path.Combine( parent, name );
+		: System.IO.Path.Combine( parent, name );
 
 	private static string CreateStateKey( ExpansionState state ) => string.Concat(
 		state.SegmentIndex.ToString( System.Globalization.CultureInfo.InvariantCulture ),

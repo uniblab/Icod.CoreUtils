@@ -1,4 +1,4 @@
-﻿namespace Icod.CoreUtils.Tail.Tests;
+namespace Icod.CoreUtils.Tail.Tests;
 
 using System.Text;
 using TailCommand = Icod.CoreUtils.Tail.Command;
@@ -268,8 +268,8 @@ public sealed class TailCommandTests {
 	private static async Task<string> CreateFileAsync(
 		string contents
 	) {
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			$"icod-tail-test-{Guid.NewGuid():N}.txt"
 		);
 		await File.WriteAllTextAsync(

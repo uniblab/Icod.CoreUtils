@@ -1,10 +1,8 @@
-extern alias IcodPath;
-
 using System.Diagnostics;
 using Icod.CoreUtils.Shared.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
-using PathIndirectionKind = IcodPath::Icod.Path.PathIndirectionKind;
-using WindowsReparseTags = IcodPath::Icod.Path.WindowsReparseTags;
+using PathIndirectionKind = Icod.Path.PathIndirectionKind;
+using WindowsReparseTags = Icod.Path.WindowsReparseTags;
 using Xunit;
 
 namespace Icod.CoreUtils.Shared.Tests.FileSystem.Metadata;
@@ -18,9 +16,9 @@ public sealed class ReparsePointMetadataTests {
 			return;
 		}
 		var root = CreateTemporaryDirectory();
-		var junction = Path.Combine( root, "junction" );
+		var junction = System.IO.Path.Combine( root, "junction" );
 		try {
-			var target = Directory.CreateDirectory( Path.Combine( root, "target" ) ).FullName;
+			var target = Directory.CreateDirectory( System.IO.Path.Combine( root, "target" ) ).FullName;
 			if ( !TryCreateJunction( junction, target ) ) {
 				return;
 			}
@@ -80,8 +78,8 @@ public sealed class ReparsePointMetadataTests {
 	}
 
 	private static string CreateTemporaryDirectory() {
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			string.Concat( "Icod.Metadata.Reparse.Tests.", Guid.NewGuid().ToString( "N" ) )
 		);
 		Directory.CreateDirectory( path );

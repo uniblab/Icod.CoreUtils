@@ -408,8 +408,8 @@ public sealed class ReadOnlyPathTraversalEngine {
 	) {
 		var relativePath = parent.RelativePath.Length == 0
 			? child.Name
-			: Path.Combine( parent.RelativePath, child.Name );
-		var displayPath = Path.Combine( parent.DisplayPath, child.Name );
+			: System.IO.Path.Combine( parent.RelativePath, child.Name );
+		var displayPath = System.IO.Path.Combine( parent.DisplayPath, child.Name );
 		return new PathTraversalEntry(
 			parent.Root,
 			child.AccessPath,

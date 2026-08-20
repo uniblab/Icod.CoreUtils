@@ -67,7 +67,7 @@ public sealed class BinaryAndOperandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task ParallelOpenFailureProducesNoRows() {
-		var file = Path.GetTempFileName();
+		var file = System.IO.Path.GetTempFileName();
 		try {
 			await File.WriteAllBytesAsync( file, "later\n"u8.ToArray() );
 			var result = await RunAsync( [ string.Concat( file, ".missing" ), file ], [] );
@@ -83,7 +83,7 @@ public sealed class BinaryAndOperandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task SerialOpenFailureContinues() {
-		var file = Path.GetTempFileName();
+		var file = System.IO.Path.GetTempFileName();
 		try {
 			await File.WriteAllBytesAsync( file, "later\n"u8.ToArray() );
 			var result = await RunAsync( [ "-s", string.Concat( file, ".missing" ), file ], [] );
@@ -124,7 +124,7 @@ public sealed class BinaryAndOperandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task ParallelReadFailureContinuesOtherColumns() {
-		var file = Path.GetTempFileName();
+		var file = System.IO.Path.GetTempFileName();
 		try {
 			await File.WriteAllBytesAsync( file, "later\n"u8.ToArray() );
 			using var input = new ThrowingReadStream();
@@ -144,7 +144,7 @@ public sealed class BinaryAndOperandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task SerialReadFailureTerminatesOperandAndContinues() {
-		var file = Path.GetTempFileName();
+		var file = System.IO.Path.GetTempFileName();
 		try {
 			await File.WriteAllBytesAsync( file, "later\n"u8.ToArray() );
 			using var input = new ThrowingReadStream();

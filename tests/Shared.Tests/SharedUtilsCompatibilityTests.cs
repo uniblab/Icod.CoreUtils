@@ -9,15 +9,15 @@ public sealed class SharedUtilsCompatibilityTests {
 	public void BasenamePreservesLegacyBehavior() {
 		Assert.Equal( ".", SharedUtils.Basename( string.Empty ) );
 		Assert.Equal(
-			Path.DirectorySeparatorChar.ToString(),
+			System.IO.Path.DirectorySeparatorChar.ToString(),
 			SharedUtils.Basename(
-				Path.DirectorySeparatorChar.ToString()
+				System.IO.Path.DirectorySeparatorChar.ToString()
 			)
 		);
 		Assert.Equal(
 			"file.txt",
 			SharedUtils.Basename(
-				Path.Combine( "directory", "file.txt" )
+				System.IO.Path.Combine( "directory", "file.txt" )
 			)
 		);
 	}

@@ -205,7 +205,7 @@ internal sealed class TarArchiveEngine {
 				await using var writer = new TarWriter( destination, options.Format, leaveOpen: true );
 				await CopyArchiveAsync( archivePath, writer, options, static _ => true, token ).ConfigureAwait( false );
 				foreach ( var operand in options.Operands ) {
-					var source = Path.GetFullPath( operand.Value, operand.WorkingDirectory );
+					var source = System.IO.Path.GetFullPath( operand.Value, operand.WorkingDirectory );
 					if ( PathsEqual( source, archivePath ) ) throw new IOException( "An archive cannot be concatenated with itself." );
 					await CopyArchiveAsync( source, writer, options, static _ => true, token ).ConfigureAwait( false );
 				}
@@ -252,7 +252,7 @@ internal sealed class TarArchiveEngine {
 			operand.Value,
 			index,
 			index,
-			Path.GetFullPath( operand.Value, operand.WorkingDirectory ),
+			System.IO.Path.GetFullPath( operand.Value, operand.WorkingDirectory ),
 			operand.Value,
 			PathTraversalRootKind.Literal
 		) ).ToArray();
@@ -282,7 +282,7 @@ internal sealed class TarArchiveEngine {
 			if ( item.Kind is not (PathTraversalEventKind.EnterDirectory or PathTraversalEventKind.Entry) ) continue;
 			var entry = item.Entry!;
 			RequireEntryBudget( options, ref count );
-			if ( archivePath is not null && PathsEqual( Path.GetFullPath( entry.AccessPath ), archivePath ) ) {
+			if ( archivePath is not null && PathsEqual( System.IO.Path.GetFullPath( entry.AccessPath ), archivePath ) ) {
 				await stderr.WriteLineAsync( string.Concat( "tar: ", entry.DisplayPath, ": file is the archive; not dumped" ) ).ConfigureAwait( false );
 				continue;
 			}
@@ -406,7 +406,7 @@ internal sealed class TarArchiveEngine {
 			precondition,
 			async (destination, token) => await writer( destination, token ).ConfigureAwait( false )
 		);
-		var containment = Path.GetDirectoryName( path ) ?? Path.GetPathRoot( path ) ?? options.InitialDirectory;
+		var containment = System.IO.Path.GetDirectoryName( path ) ?? System.IO.Path.GetPathRoot( path ) ?? options.InitialDirectory;
 		await using var transaction = new TransactionalFileReplacementTransaction(
 			new[] { artifact },
 			replacementFileSystem,
@@ -629,9 +629,9 @@ internal sealed class TarArchiveEngine {
 		var operand = options.Operands[entry.Root.OperandIndex];
 		var rootName = operand.Value.Replace( '\\', '/' );
 		if ( !options.AbsoluteNames ) {
-			if ( Path.IsPathRooted( operand.Value ) ) {
-				var full = Path.GetFullPath( operand.Value, operand.WorkingDirectory );
-				var pathRoot = Path.GetPathRoot( full ) ?? string.Empty;
+			if ( System.IO.Path.IsPathRooted( operand.Value ) ) {
+				var full = System.IO.Path.GetFullPath( operand.Value, operand.WorkingDirectory );
+				var pathRoot = System.IO.Path.GetPathRoot( full ) ?? string.Empty;
 				rootName = full[pathRoot.Length..].Replace( '\\', '/' ).TrimStart( '/' );
 			} else {
 				rootName = TrimDotSlash( rootName );
@@ -684,15 +684,15 @@ internal sealed class TarArchiveEngine {
 		}
 	}
 
-	private static string GetArchivePath( TarOptions options ) => Path.GetFullPath( options.ArchiveName!, options.InitialDirectory );
+	private static string GetArchivePath( TarOptions options ) => System.IO.Path.GetFullPath( options.ArchiveName!, options.InitialDirectory );
 
 	private async Task WriteMemberErrorAsync( string name, string message ) {
 		await stderr.WriteLineAsync( string.Concat( "tar: ", name, ": ", message ) ).ConfigureAwait( false );
 	}
 
 	private static bool PathsEqual( string left, string right ) => string.Equals(
-		Path.GetFullPath( left ),
-		Path.GetFullPath( right ),
+		System.IO.Path.GetFullPath( left ),
+		System.IO.Path.GetFullPath( right ),
 		OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal
 	);
 

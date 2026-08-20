@@ -1,4 +1,3 @@
-using Path = global::System.IO.Path;
 using System.Runtime.InteropServices;
 using Icod.CoreUtils.Shared.FileSystem.Metadata;
 
@@ -47,7 +46,7 @@ public sealed class SystemFileSystemUsageProvider : IFileSystemUsageProvider {
 			}
 			var mountPoint = information.MountPoint.IsAvailable
 				? information.MountPoint.GetRequiredValue()
-				: Path.GetPathRoot( Path.GetFullPath( candidate.Path ) ) ?? candidate.Path;
+				: System.IO.Path.GetPathRoot( System.IO.Path.GetFullPath( candidate.Path ) ) ?? candidate.Path;
 			var key = information.Identity.IsAvailable ? information.Identity.ToString() : mountPoint;
 			if ( deduplicate && !identities.Add( key ) ) {
 				continue;
@@ -91,7 +90,7 @@ public sealed class SystemFileSystemUsageProvider : IFileSystemUsageProvider {
 	}
 
 	private static DriveInfo? FindContainingDrive( string path ) {
-		var fullPath = Path.GetFullPath( path );
+		var fullPath = System.IO.Path.GetFullPath( path );
 		DriveInfo[] drives;
 		try {
 			drives = DriveInfo.GetDrives();
@@ -102,7 +101,7 @@ public sealed class SystemFileSystemUsageProvider : IFileSystemUsageProvider {
 		var bestLength = -1;
 		foreach ( var drive in drives ) {
 			try {
-				var root = Path.GetFullPath( drive.RootDirectory.FullName );
+				var root = System.IO.Path.GetFullPath( drive.RootDirectory.FullName );
 				if ( root.Length > bestLength && IsWithinRoot( fullPath, root ) ) {
 					best = drive;
 					bestLength = root.Length;
@@ -119,9 +118,9 @@ public sealed class SystemFileSystemUsageProvider : IFileSystemUsageProvider {
 		if ( path.Equals( root, comparison ) ) {
 			return true;
 		}
-		var rootWithSeparator = Path.EndsInDirectorySeparator( root )
+		var rootWithSeparator = System.IO.Path.EndsInDirectorySeparator( root )
 			? root
-			: string.Concat( root, Path.DirectorySeparatorChar );
+			: string.Concat( root, System.IO.Path.DirectorySeparatorChar );
 		return path.StartsWith( rootWithSeparator, comparison );
 	}
 

@@ -61,7 +61,7 @@ public sealed class RecursivePathSafety {
 	/// <returns><see langword="true"/> when the normalized pathname is its own filesystem root.</returns>
 	public bool IsFileSystemRoot( string path ) {
 		var fullPath = Normalize( path );
-		var root = Path.GetPathRoot( fullPath );
+		var root = System.IO.Path.GetPathRoot( fullPath );
 		return !string.IsNullOrEmpty( root )
 			&& string.Equals( TrimEndingSeparators( fullPath ), TrimEndingSeparators( root ), _comparison );
 	}
@@ -165,7 +165,7 @@ public sealed class RecursivePathSafety {
 	/// <returns>The absolute path without non-root trailing separators.</returns>
 	public static string Normalize( string path ) {
 		ArgumentException.ThrowIfNullOrEmpty( path );
-		return TrimEndingSeparators( Path.GetFullPath( path ) );
+		return TrimEndingSeparators( System.IO.Path.GetFullPath( path ) );
 	}
 
 	private RecursivePathRelationship ClassifyResolved( string source, string destination ) {
@@ -201,19 +201,19 @@ public sealed class RecursivePathSafety {
 	}
 
 	private bool IsDescendant( string parent, string candidate ) {
-		var endsWithSeparator = parent.EndsWith( Path.DirectorySeparatorChar )
-			|| parent.EndsWith( Path.AltDirectorySeparatorChar );
-		var prefix = endsWithSeparator ? parent : string.Concat( parent, Path.DirectorySeparatorChar );
+		var endsWithSeparator = parent.EndsWith( System.IO.Path.DirectorySeparatorChar )
+			|| parent.EndsWith( System.IO.Path.AltDirectorySeparatorChar );
+		var prefix = endsWithSeparator ? parent : string.Concat( parent, System.IO.Path.DirectorySeparatorChar );
 		return candidate.StartsWith( prefix, _comparison );
 	}
 
 	private static string TrimEndingSeparators( string path ) {
-		var root = Path.GetPathRoot( path );
+		var root = System.IO.Path.GetPathRoot( path );
 		var minimumLength = string.IsNullOrEmpty( root ) ? 0 : root.Length;
 		var length = path.Length;
 		while (
 			length > minimumLength
-			&& (path[length - 1] == Path.DirectorySeparatorChar || path[length - 1] == Path.AltDirectorySeparatorChar)
+			&& (path[length - 1] == System.IO.Path.DirectorySeparatorChar || path[length - 1] == System.IO.Path.AltDirectorySeparatorChar)
 		) {
 			length--;
 		}

@@ -81,7 +81,7 @@ public sealed class ProcessRunnerTests {
 			environmentOptions
 		);
 
-		var directory = Path.Combine(
+		var directory = System.IO.Path.Combine(
 			AppContext.BaseDirectory,
 			$"icod-f4-cwd-{Guid.NewGuid():N}"
 		);
@@ -103,8 +103,8 @@ public sealed class ProcessRunnerTests {
 				environmentResult.StandardOutput
 			);
 			Assert.Equal(
-				Path.GetFullPath( directory ),
-				Path.GetFullPath( directoryResult.StandardOutput! )
+				System.IO.Path.GetFullPath( directory ),
+				System.IO.Path.GetFullPath( directoryResult.StandardOutput! )
 			);
 		} finally {
 			Directory.Delete(
@@ -248,7 +248,7 @@ public sealed class ProcessRunnerTests {
 			?? throw new InvalidOperationException( "Unable to locate the test configuration directory." );
 		var testsDirectory = configurationDirectory.Parent?.Parent?.Parent
 			?? throw new InvalidOperationException( "Unable to locate the tests directory." );
-		return Path.Combine(
+		return System.IO.Path.Combine(
 			testsDirectory.FullName,
 			"ProcessTestHost",
 			"bin",

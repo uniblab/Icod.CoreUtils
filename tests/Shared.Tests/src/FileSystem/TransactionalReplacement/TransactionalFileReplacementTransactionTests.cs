@@ -14,7 +14,7 @@ public sealed class TransactionalFileReplacementTransactionTests {
 	[Fact]
 	public async Task ReplacesFileAndRetainsSimpleBackup() {
 		var fileSystem = new FakeTransactionalReplacementFileSystem();
-		var path = Path.GetFullPath( "destination" );
+		var path = System.IO.Path.GetFullPath( "destination" );
 		fileSystem.Seed( path, "old" );
 		var artifact = CreateReplacement( fileSystem, "unit", path, "new" );
 		var options = new TransactionalReplacementOptions {
@@ -39,9 +39,9 @@ public sealed class TransactionalFileReplacementTransactionTests {
 	[Fact]
 	public async Task RetainsOnlyExplicitPerArtifactBackup() {
 		var fileSystem = new FakeTransactionalReplacementFileSystem();
-		var retained = Path.GetFullPath( "retained" );
-		var ordinary = Path.GetFullPath( "ordinary" );
-		var backup = Path.GetFullPath( "retained.orig" );
+		var retained = System.IO.Path.GetFullPath( "retained" );
+		var ordinary = System.IO.Path.GetFullPath( "ordinary" );
+		var backup = System.IO.Path.GetFullPath( "retained.orig" );
 		fileSystem.Seed( retained, "retained-old" );
 		fileSystem.Seed( ordinary, "ordinary-old" );
 		var observation = fileSystem.Observe( retained );
@@ -83,8 +83,8 @@ public sealed class TransactionalFileReplacementTransactionTests {
 	[Fact]
 	public async Task RollsBackWholeRecoveryUnitAfterLaterCommitFailure() {
 		var fileSystem = new FakeTransactionalReplacementFileSystem();
-		var first = Path.GetFullPath( "first" );
-		var second = Path.GetFullPath( "second" );
+		var first = System.IO.Path.GetFullPath( "first" );
+		var second = System.IO.Path.GetFullPath( "second" );
 		fileSystem.Seed( first, "first-old" );
 		fileSystem.Seed( second, "second-old" );
 		var injector = new OneShotFailureInjector(
@@ -111,8 +111,8 @@ public sealed class TransactionalFileReplacementTransactionTests {
 	[Fact]
 	public async Task RestoresPreexistingBackupWhenRecoveryUnitFails() {
 		var fileSystem = new FakeTransactionalReplacementFileSystem();
-		var first = Path.GetFullPath( "backup-first" );
-		var second = Path.GetFullPath( "backup-second" );
+		var first = System.IO.Path.GetFullPath( "backup-first" );
+		var second = System.IO.Path.GetFullPath( "backup-second" );
 		fileSystem.Seed( first, "first-old" );
 		fileSystem.Seed( string.Concat( first, "~" ), "older-backup" );
 		fileSystem.Seed( second, "second-old" );
@@ -143,8 +143,8 @@ public sealed class TransactionalFileReplacementTransactionTests {
 	[Fact]
 	public async Task RemovesNewDestinationWhenRecoveryUnitFails() {
 		var fileSystem = new FakeTransactionalReplacementFileSystem();
-		var first = Path.GetFullPath( "new-first" );
-		var second = Path.GetFullPath( "new-second" );
+		var first = System.IO.Path.GetFullPath( "new-first" );
+		var second = System.IO.Path.GetFullPath( "new-second" );
 		fileSystem.Seed( second, "second-old" );
 		await using var transaction = new TransactionalFileReplacementTransaction(
 			new[] {
@@ -165,9 +165,9 @@ public sealed class TransactionalFileReplacementTransactionTests {
 	[Fact]
 	public async Task ContinuesIndependentRecoveryUnitsAndReportsPartialCommit() {
 		var fileSystem = new FakeTransactionalReplacementFileSystem();
-		var first = Path.GetFullPath( "first-unit" );
-		var second = Path.GetFullPath( "second-unit" );
-		var third = Path.GetFullPath( "third-unit" );
+		var first = System.IO.Path.GetFullPath( "first-unit" );
+		var second = System.IO.Path.GetFullPath( "second-unit" );
+		var third = System.IO.Path.GetFullPath( "third-unit" );
 		fileSystem.Seed( first, "one-old" );
 		fileSystem.Seed( second, "two-old" );
 		fileSystem.Seed( third, "three-old" );
@@ -197,7 +197,7 @@ public sealed class TransactionalFileReplacementTransactionTests {
 	[Fact]
 	public async Task DeletesFileAndRetainsBackup() {
 		var fileSystem = new FakeTransactionalReplacementFileSystem();
-		var path = Path.GetFullPath( "deleted" );
+		var path = System.IO.Path.GetFullPath( "deleted" );
 		fileSystem.Seed( path, "old" );
 		var observation = fileSystem.Observe( path );
 		var artifact = new TransactionalReplacementArtifact(
@@ -232,7 +232,7 @@ public sealed class TransactionalFileReplacementTransactionTests {
 	[Fact]
 	public async Task RevalidatesIdentityImmediatelyBeforeCommit() {
 		var fileSystem = new FakeTransactionalReplacementFileSystem();
-		var path = Path.GetFullPath( "identity-race" );
+		var path = System.IO.Path.GetFullPath( "identity-race" );
 		fileSystem.Seed( path, "old" );
 		await using var transaction = new TransactionalFileReplacementTransaction(
 			new[] { CreateReplacement( fileSystem, "unit", path, "new" ) },
@@ -250,7 +250,7 @@ public sealed class TransactionalFileReplacementTransactionTests {
 	[Fact]
 	public async Task CleansStagingArtifactsAfterCancellation() {
 		var fileSystem = new FakeTransactionalReplacementFileSystem();
-		var path = Path.GetFullPath( "cancelled" );
+		var path = System.IO.Path.GetFullPath( "cancelled" );
 		fileSystem.Seed( path, "old" );
 		using var cancellation = new CancellationTokenSource();
 		await using var transaction = new TransactionalFileReplacementTransaction(
@@ -276,7 +276,7 @@ public sealed class TransactionalFileReplacementTransactionTests {
 		var fileSystem = new FakeTransactionalReplacementFileSystem(
 			new TransactionalReplacementCapabilities( false, false, false, true )
 		);
-		var path = Path.GetFullPath( "atomic" );
+		var path = System.IO.Path.GetFullPath( "atomic" );
 		fileSystem.Seed( path, "old" );
 		var options = new TransactionalReplacementOptions {
 			AtomicityPolicy = TransactionalReplacementAtomicityPolicy.RequireAtomic
@@ -296,7 +296,7 @@ public sealed class TransactionalFileReplacementTransactionTests {
 	[Fact]
 	public async Task RetriesFailedCleanupBeforeReturning() {
 		var fileSystem = new FakeTransactionalReplacementFileSystem();
-		var path = Path.GetFullPath( "cleanup" );
+		var path = System.IO.Path.GetFullPath( "cleanup" );
 		fileSystem.Seed( path, "old" );
 		await using var transaction = new TransactionalFileReplacementTransaction(
 			new[] { CreateReplacement( fileSystem, "unit", path, "new" ) },
@@ -316,7 +316,7 @@ public sealed class TransactionalFileReplacementTransactionTests {
 	[Fact]
 	public async Task ReportsTerminalCleanupFailureAndDisposalRetries() {
 		var fileSystem = new FakeTransactionalReplacementFileSystem();
-		var path = Path.GetFullPath( "cleanup-incomplete" );
+		var path = System.IO.Path.GetFullPath( "cleanup-incomplete" );
 		fileSystem.Seed( path, "old" );
 		var transaction = new TransactionalFileReplacementTransaction(
 			new[] { CreateReplacement( fileSystem, "unit", path, "new" ) },
@@ -408,7 +408,7 @@ public sealed class TransactionalFileReplacementTransactionTests {
 
 		public OneShotFailureInjector( TransactionalReplacementStage stage, string artifactPath ) {
 			this.stage = stage;
-			this.artifactPath = Path.GetFullPath( artifactPath );
+			this.artifactPath = System.IO.Path.GetFullPath( artifactPath );
 		}
 
 		public ValueTask OnStageAsync(
@@ -418,7 +418,7 @@ public sealed class TransactionalFileReplacementTransactionTests {
 		) {
 			cancellationToken.ThrowIfCancellationRequested();
 			if ( this.stage == stage
-				&& Path.GetFullPath( artifact.Path ) == artifactPath
+				&& System.IO.Path.GetFullPath( artifact.Path ) == artifactPath
 				&& 1 == Interlocked.Exchange( ref remaining, 0 ) ) {
 				throw new IOException( string.Concat( "Injected E6 failure at ", stage, "." ) );
 			}
@@ -509,8 +509,8 @@ public sealed class TransactionalFileReplacementTransactionTests {
 			CancellationToken cancellationToken = default
 		) {
 			cancellationToken.ThrowIfCancellationRequested();
-			var directory = Path.GetDirectoryName( Normalize( destinationPath ) )!;
-			var path = Path.Combine(
+			var directory = System.IO.Path.GetDirectoryName( Normalize( destinationPath ) )!;
+			var path = System.IO.Path.Combine(
 				directory,
 				string.Concat( ".fake-e6-", purpose, "-", Interlocked.Increment( ref temporarySequence ) )
 			);
@@ -632,7 +632,7 @@ public sealed class TransactionalFileReplacementTransactionTests {
 		}
 
 		private static string Normalize( string path ) {
-			return Path.TrimEndingDirectorySeparator( Path.GetFullPath( path ) );
+			return System.IO.Path.TrimEndingDirectorySeparator( System.IO.Path.GetFullPath( path ) );
 		}
 
 		private static StringComparer HostComparer() {

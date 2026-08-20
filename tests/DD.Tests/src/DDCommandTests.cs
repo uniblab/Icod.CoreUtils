@@ -1,4 +1,4 @@
-﻿using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CoreUtils.Shared.Diagnostics;
 using Xunit;
 using Tool = Icod.CoreUtils.DD.Command;
 
@@ -509,8 +509,8 @@ public sealed class DDCommandTests {
 
 	[Fact]
 	public async Task DirectoryInputFlagAllowsAZeroCountDirectoryOpen() {
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			string.Concat( "dd-directory-", Guid.NewGuid().ToString( "N" ) )
 		);
 		Directory.CreateDirectory( path );
@@ -556,8 +556,8 @@ public sealed class DDCommandTests {
 		cancellationToken
 	);
 
-	private static string TemporaryPath() => Path.Combine(
-		Path.GetTempPath(),
+	private static string TemporaryPath() => System.IO.Path.Combine(
+		System.IO.Path.GetTempPath(),
 		string.Concat(
 			"dd-tests-",
 			Guid.NewGuid().ToString( "N" )

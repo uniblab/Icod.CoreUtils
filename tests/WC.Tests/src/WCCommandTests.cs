@@ -1,4 +1,4 @@
-﻿namespace Icod.CoreUtils.WC.Tests;
+namespace Icod.CoreUtils.WC.Tests;
 
 using System.Text;
 using Icod.CoreUtils.Shared.Diagnostics;
@@ -170,8 +170,8 @@ public sealed class WcCommandTests {
 			"two\n",
 			"second"
 		);
-		var list = Path.Combine(
-			Path.GetTempPath(),
+		var list = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			$"icod-wc-list-{Guid.NewGuid():N}.bin"
 		);
 		await File.WriteAllBytesAsync(
@@ -278,8 +278,8 @@ public sealed class WcCommandTests {
 		var valid = await CreateFileAsync(
 			"a\n"
 		);
-		var missing = Path.Combine(
-			Path.GetTempPath(),
+		var missing = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			$"icod-wc-missing-{Guid.NewGuid():N}"
 		);
 		try {
@@ -370,8 +370,8 @@ public sealed class WcCommandTests {
 		string contents,
 		string? stem = null
 	) {
-		var path = Path.Combine(
-			Path.GetTempPath(),
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			$"icod-wc-{stem ?? "file"}-{Guid.NewGuid():N}.txt"
 		);
 		await File.WriteAllTextAsync(

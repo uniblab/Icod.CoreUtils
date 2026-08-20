@@ -456,8 +456,8 @@ public sealed class SedRecordAndTextSemanticsTests {
 	}
 
 	private static string CreateTemporaryPath() {
-		return Path.Combine(
-			Path.GetTempPath(),
+		return System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
 			$"icod-sed-le4-{Guid.NewGuid():N}.dat"
 		);
 	}

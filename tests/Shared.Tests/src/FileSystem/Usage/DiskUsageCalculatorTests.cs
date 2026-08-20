@@ -10,7 +10,7 @@ public sealed class DiskUsageCalculatorTests {
 	/// <summary>Verifies apparent-size accounting for a literal file is exact.</summary>
 	[Fact]
 	public async Task ReportsExactApparentSizeForFile() {
-		var path = Path.Combine( Path.GetTempPath(), string.Concat( "icod-du-file-", Guid.NewGuid().ToString( "N" ) ) );
+		var path = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "icod-du-file-", Guid.NewGuid().ToString( "N" ) ) );
 		try {
 			await File.WriteAllBytesAsync( path, new byte[ 73 ] );
 			var calculator = new DiskUsageCalculator(
@@ -34,10 +34,10 @@ public sealed class DiskUsageCalculatorTests {
 	/// <summary>Verifies apparent-size directory totals contain only regular files and undereferenced links.</summary>
 	[Fact]
 	public async Task ApparentDirectorySizeExcludesDirectoryMetadata() {
-		var root = Path.Combine( Path.GetTempPath(), string.Concat( "icod-du-apparent-tree-", Guid.NewGuid().ToString( "N" ) ) );
+		var root = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "icod-du-apparent-tree-", Guid.NewGuid().ToString( "N" ) ) );
 		Directory.CreateDirectory( root );
 		try {
-			await File.WriteAllBytesAsync( Path.Combine( root, "payload.bin" ), new byte[ 41 ] );
+			await File.WriteAllBytesAsync( System.IO.Path.Combine( root, "payload.bin" ), new byte[ 41 ] );
 			var calculator = new DiskUsageCalculator(
 				SystemFileSystemMetadataProvider.Instance,
 				SystemReadOnlyFileSystemProvider.Instance
@@ -59,11 +59,11 @@ public sealed class DiskUsageCalculatorTests {
 	/// <summary>Verifies exclusions suppress matching descendants and preserve a root result.</summary>
 	[Fact]
 	public async Task AppliesExclusionPatterns() {
-		var root = Path.Combine( Path.GetTempPath(), string.Concat( "icod-du-tree-", Guid.NewGuid().ToString( "N" ) ) );
+		var root = System.IO.Path.Combine( System.IO.Path.GetTempPath(), string.Concat( "icod-du-tree-", Guid.NewGuid().ToString( "N" ) ) );
 		Directory.CreateDirectory( root );
 		try {
-			await File.WriteAllTextAsync( Path.Combine( root, "keep.txt" ), "keep" );
-			await File.WriteAllTextAsync( Path.Combine( root, "skip.tmp" ), "skip" );
+			await File.WriteAllTextAsync( System.IO.Path.Combine( root, "keep.txt" ), "keep" );
+			await File.WriteAllTextAsync( System.IO.Path.Combine( root, "skip.tmp" ), "skip" );
 			var calculator = new DiskUsageCalculator(
 				SystemFileSystemMetadataProvider.Instance,
 				SystemReadOnlyFileSystemProvider.Instance

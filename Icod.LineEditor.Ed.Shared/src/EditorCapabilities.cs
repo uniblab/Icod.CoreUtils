@@ -34,7 +34,7 @@ public sealed record EditorSecurityPolicy {
 			allowShellCommands: false,
 			allowPathnames: false,
 			allowRememberedFileName: true,
-			workingDirectory: Path.GetFullPath( workingDirectory )
+			workingDirectory: System.IO.Path.GetFullPath( workingDirectory )
 		);
 	}
 
@@ -119,7 +119,7 @@ public sealed class EditorCapabilityProfile {
 	) {
 		ArgumentException.ThrowIfNullOrWhiteSpace( workingDirectory );
 		ArgumentNullException.ThrowIfNull( fileAccess );
-		var capturedDirectory = Path.GetFullPath( workingDirectory );
+		var capturedDirectory = System.IO.Path.GetFullPath( workingDirectory );
 		return new EditorCapabilityProfile(
 			EditorSecurityPolicy.Restricted( capturedDirectory ),
 			new RestrictedEditorFileAccess( capturedDirectory, fileAccess ),
@@ -364,7 +364,7 @@ public sealed class StandardEditorFileAccess : IEditorFileAccess {
 	private static string ResolveReplacementPath(
 		string path
 	) {
-		var fullPath = Path.GetFullPath( path );
+		var fullPath = System.IO.Path.GetFullPath( path );
 		var information = new FileInfo( fullPath );
 		if ( string.IsNullOrEmpty( information.LinkTarget ) ) {
 			return fullPath;
@@ -522,7 +522,7 @@ public sealed class RestrictedEditorFileAccess : IEditorFileAccess {
 	) {
 		ArgumentException.ThrowIfNullOrWhiteSpace( workingDirectory );
 		ArgumentNullException.ThrowIfNull( inner );
-		this.workingDirectory = Path.GetFullPath( workingDirectory );
+		this.workingDirectory = System.IO.Path.GetFullPath( workingDirectory );
 		this.inner = inner;
 	}
 
@@ -562,11 +562,11 @@ public sealed class RestrictedEditorFileAccess : IEditorFileAccess {
 				"Restricted editor file access permits only a simple filename."
 			);
 		}
-		var resolved = Path.GetFullPath( Path.Combine( this.workingDirectory, path ) );
+		var resolved = System.IO.Path.GetFullPath( System.IO.Path.Combine( this.workingDirectory, path ) );
 		var comparison = OperatingSystem.IsWindows()
 			? StringComparison.OrdinalIgnoreCase
 			: StringComparison.Ordinal;
-		if ( !string.Equals( Path.GetDirectoryName( resolved ), this.workingDirectory, comparison ) ) {
+		if ( !string.Equals( System.IO.Path.GetDirectoryName( resolved ), this.workingDirectory, comparison ) ) {
 			throw new UnauthorizedAccessException(
 				"The resolved filename is outside the captured working directory."
 			);
@@ -593,7 +593,7 @@ public static class EditorRestrictedPath {
 	) {
 		if (
 			string.IsNullOrWhiteSpace( candidate )
-			|| Path.IsPathRooted( candidate )
+			|| System.IO.Path.IsPathRooted( candidate )
 			|| candidate.Contains( '/' )
 			|| candidate.Contains( '\\' )
 			|| candidate.Contains( ':' )

@@ -432,7 +432,7 @@ public static class Command {
 			this.standardOutput = standardOutput;
 			this.inputFullPath = "-" == options.InputPath
 				? null
-				: Path.GetFullPath( options.InputPath );
+				: System.IO.Path.GetFullPath( options.InputPath );
 		}
 
 		public async Task WritePieceAsync(
@@ -512,7 +512,7 @@ public static class Command {
 			if ( null == this.inputFullPath ) {
 				return;
 			}
-			var outputFullPath = Path.GetFullPath( outputPath );
+			var outputFullPath = System.IO.Path.GetFullPath( outputPath );
 			var comparison = OperatingSystem.IsWindows()
 				? StringComparison.OrdinalIgnoreCase
 				: StringComparison.Ordinal;

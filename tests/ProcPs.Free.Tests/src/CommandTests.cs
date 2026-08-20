@@ -137,7 +137,7 @@ public sealed class CommandTests {
 	public async Task LinuxProcfsMemoryRetainsExactProvenance() {
 		var root = CreateTempDirectory();
 		try {
-			await File.WriteAllTextAsync( Path.Combine( root, "meminfo" ), "MemTotal:       2 kB\nMemFree:        1 kB\n" );
+			await File.WriteAllTextAsync( System.IO.Path.Combine( root, "meminfo" ), "MemTotal:       2 kB\nMemFree:        1 kB\n" );
 			var observation = await new LinuxProcSystemMetricsProvider( root ).GetMemoryAsync();
 			Assert.True( observation.HasValue );
 			Assert.Equal( ProcObservationSource.LinuxProcfs, observation.Source );
@@ -163,7 +163,7 @@ public sealed class CommandTests {
 		Assert.Contains( "'--si'", result.Error );
 		Assert.Contains( "'--seconds'", result.Error );
 	}
-	private static string CreateTempDirectory() { var path = Path.Combine( Path.GetTempPath(), $"icod-procps-free-{Guid.NewGuid():N}" ); Directory.CreateDirectory( path ); return path; }
+	private static string CreateTempDirectory() { var path = System.IO.Path.Combine( System.IO.Path.GetTempPath(), $"icod-procps-free-{Guid.NewGuid():N}" ); Directory.CreateDirectory( path ); return path; }
 	private static ProcObservedValue<ProcMemoryInfo> SampleMemory() {
 		static ulong KiB( ulong value ) => value * 1024UL;
 		var fields = new Dictionary<string, ulong> {
