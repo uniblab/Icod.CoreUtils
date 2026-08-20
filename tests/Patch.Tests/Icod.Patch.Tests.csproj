@@ -21,7 +21,6 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\patch\Icod.Patch.csproj" />
 		<ProjectReference Include="..\..\Shared\Icod.CoreUtils.Shared.csproj" />
-		<ProjectReference Include="..\..\Icod.Path\Icod.Path.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Update="fixtures\**\*" CopyToOutputDirectory="PreserveNewest" />
