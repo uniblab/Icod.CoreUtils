@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Fmt;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Text;
+using Icod.CommandFramework.Text;
 
 /// <summary>Contains one byte-oriented input line analyzed for paragraph selection and formatting.</summary>
 internal sealed class FmtInputLine {

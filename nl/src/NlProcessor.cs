@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Text;
 using Icod.CoreUtils.Shared.Diagnostics;
 using Icod.CoreUtils.Shared.IO;
-using Icod.CoreUtils.Shared.Text;
+using Icod.CommandFramework.Text;
 
 /// <summary>Processes all <c>nl</c> operands as one logical document.</summary>
 internal sealed class NlProcessor {

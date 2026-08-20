@@ -4,7 +4,7 @@ using System.Text;
 using Icod.CoreUtils.Shared.Escapes;
 using Icod.CoreUtils.Shared.Ranges;
 using Icod.CoreUtils.Shared.Records;
-using Icod.CoreUtils.Shared.Text;
+using Icod.CommandFramework.Text;
 using Xunit;
 
 /// <summary>

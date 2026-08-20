@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Fold;
 
-using Icod.CoreUtils.Shared.Text;
+using Icod.CommandFramework.Text;
 
 /// <summary>Retains exact text units for the current movable fold segment.</summary>
 internal sealed class FoldBuffer {

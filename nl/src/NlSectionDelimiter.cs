@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.NL;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Text;
+using Icod.CommandFramework.Text;
 
 /// <summary>Represents the logical-page delimiters recognized by GNU <c>nl</c>.</summary>
 internal sealed class NlSectionDelimiter {

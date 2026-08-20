@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
 using Icod.CoreUtils.Shared.RegularExpressions;
-using Icod.CoreUtils.Shared.Text;
+using Icod.CommandFramework.Text;
 
 // Responsibility: Sed-specific regular-expression policy over the Shared GNU provider.
 public static partial class Command {

@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Icod.CoreUtils.Shared.Records;
-using Icod.CoreUtils.Shared.Text;
+using Icod.CommandFramework.Text;
 
 // Responsibility: byte-preserving input, text mapping, and explicit record framing.
 public static partial class Command {

@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Cut;
 
 using Icod.CoreUtils.Shared.Ranges;
-using Icod.CoreUtils.Shared.Text;
+using Icod.CommandFramework.Text;
 
 /// <summary>Contains validated options for one <c>cut</c> execution.</summary>
 internal sealed class CutOptions {

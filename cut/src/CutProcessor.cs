@@ -4,7 +4,7 @@ using System.Buffers;
 using Icod.CoreUtils.Shared.Diagnostics;
 using Icod.CoreUtils.Shared.IO;
 using Icod.CoreUtils.Shared.Records;
-using Icod.CoreUtils.Shared.Text;
+using Icod.CommandFramework.Text;
 
 /// <summary>Performs byte-preserving positional extraction for <c>cut</c>.</summary>
 internal sealed class CutProcessor {

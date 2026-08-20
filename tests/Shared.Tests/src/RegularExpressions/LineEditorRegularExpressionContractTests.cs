@@ -3,7 +3,7 @@ namespace Icod.CoreUtils.Shared.Tests;
 using System.Text;
 
 using Icod.CoreUtils.Shared.RegularExpressions;
-using Icod.CoreUtils.Shared.Text;
+using Icod.CommandFramework.Text;
 
 using Xunit;
 

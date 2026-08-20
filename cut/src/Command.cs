@@ -5,7 +5,7 @@ using Icod.CoreUtils.Shared.CommandLine;
 using Icod.CoreUtils.Shared.Diagnostics;
 using Icod.CoreUtils.Shared.IO;
 using Icod.CoreUtils.Shared.Ranges;
-using Icod.CoreUtils.Shared.Text;
+using Icod.CommandFramework.Text;
 
 /// <summary>Implements GNU <c>cut</c> for .NET.</summary>
 /// <remarks>
