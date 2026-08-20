@@ -1,5 +1,7 @@
 namespace Icod.CoreUtils.Shared.Text;
 
+using Icod.CommandFramework.Text;
+
 /// <summary>Represents the controlled result of parsing GNU-style tab stops.</summary>
 public sealed class TabStopParseResult {
 	private TabStopParseResult(

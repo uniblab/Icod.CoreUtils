@@ -3,6 +3,7 @@ namespace Icod.CoreUtils.Expand;
 using Icod.CoreUtils.Shared.Diagnostics;
 using Icod.CoreUtils.Shared.IO;
 using Icod.CoreUtils.Shared.Text;
+using DisplayColumnState = Icod.CommandFramework.Text.DisplayColumnState;
 
 /// <summary>Performs the byte-preserving <c>expand</c> transformation.</summary>
 internal sealed class ExpandProcessor {

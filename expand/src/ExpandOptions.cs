@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Expand;
 
-using Icod.CoreUtils.Shared.Text;
+using Icod.CommandFramework.Text;
 
 /// <summary>Contains validated options for one <c>expand</c> invocation.</summary>
 internal sealed class ExpandOptions {

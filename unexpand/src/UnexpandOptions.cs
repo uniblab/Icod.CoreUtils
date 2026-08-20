@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Unexpand;
 
-using Icod.CoreUtils.Shared.Text;
+using Icod.CommandFramework.Text;
 
 /// <summary>Contains validated options for one <c>unexpand</c> invocation.</summary>
 internal sealed class UnexpandOptions {
