@@ -1,8 +1,7 @@
 # Shared text tests
 
-- `TextUnitReaderTests.cs` verifies byte iteration, incremental UTF-8 scalar decoding, exact source-byte retention, malformed-input policies, byte offsets, cancellation, and stream ownership.
-- `TextLocaleAndWidthTests.cs` verifies C/POSIX and deterministic Unicode blank classification together with zero-, one-, two-, and indeterminate-column widths.
-- `TextLocaleEnvironmentTests.cs` verifies `LC_ALL`, `LC_CTYPE`, and `LANG` precedence and deterministic C/POSIX versus UTF-8 profile selection.
-- `TabStopParserTests.cs` verifies GNU tab-list grammar, repeated specifications, `/N`, `+N`, legacy parser edge cases, structured diagnostics, and overflow handling.
-- `TabStopAndColumnTests.cs` verifies recurring and finite tab-stop lookup, maximum configured distances, checked columns, backspace, carriage return, and cursor recalculation.
-- `TextLineReaderTests.cs` verifies terminated, empty, unterminated, Unicode, malformed-byte, cancellation, and stream-ownership behavior for logical lines.
+After the Completion Gate G3 text contraction, this directory contains only tests for Coreutils-owned text policy.
+
+- `TabStopParserTests.cs` verifies GNU tab-list grammar, repeated specifications, `/N`, `+N`, compatibility edge cases, structured diagnostics, and overflow handling while consuming the tab-stop model from `Icod.CommandFramework.Text`.
+
+Tests for byte-preserving text units, logical-line reading, locale resolution, Unicode display width, display-column state, and tab-stop model mechanics live with their owning implementation in `Icod.CommandFramework.Tests`.
