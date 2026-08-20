@@ -26,7 +26,7 @@ No command suite may become a production dependency of `Icod.CommandFramework`, 
 
 ## Neutral foundations
 
-- [ ] **Icod.Path**
+- [x] **Icod.Path**
   - `Icod.Path`
   - `Icod.Path.Tests`
   - Proposed destination: `Icod.Path` repository and NuGet package.
