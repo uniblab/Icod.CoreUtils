@@ -5,7 +5,7 @@ using System.Text;
 using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CommandFramework.FileSystem.Mutation;
 using Icod.CommandFramework.FileSystem.RecursiveMutation;
-using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;
+using Icod.CommandFramework.FileSystem.TransactionalReplacement;
 using Icod.CommandFramework.FileSystem.Traversal;
 using Xunit;
 

@@ -1,7 +1,7 @@
 namespace Icod.LineEditor.Sed.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;
+using Icod.CommandFramework.FileSystem.TransactionalReplacement;
 using SedCommand = Icod.LineEditor.Sed.Command;
 using Xunit;
 

@@ -269,7 +269,7 @@ No projects move during this phase.
   - leave the duplicate RecursiveMutation implementation and its duplicated Shared tests in place until G3H2.
 - [x] **G3H2 — RecursiveMutation implementation/test excision**
   - remove the duplicate CoreUtils `FileSystem.RecursiveMutation` implementation and its duplicated Shared tests.
-- [ ] **G3I1 — TransactionalReplacement consumer cut-over**
+- [x] **G3I1 — TransactionalReplacement consumer cut-over**
   - move surviving consumers of `Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement` to `Icod.CommandFramework.FileSystem.TransactionalReplacement`;
   - leave the duplicate TransactionalReplacement implementation and duplicated Shared tests in place until G3I2.
 - [ ] **G3I2 — TransactionalReplacement implementation/test excision**
@@ -426,7 +426,7 @@ Current sequence:
 - [x] G3G2 — remove the duplicate CoreUtils Mutation implementation and tests.
 - [x] G3H1 — cut RecursiveMutation consumers over to `Icod.CommandFramework.FileSystem.RecursiveMutation`.
 - [x] G3H2 — remove the duplicate CoreUtils RecursiveMutation implementation and tests.
-- [ ] G3I1 — cut TransactionalReplacement consumers over to `Icod.CommandFramework.FileSystem.TransactionalReplacement`.
+- [x] G3I1 — cut TransactionalReplacement consumers over to `Icod.CommandFramework.FileSystem.TransactionalReplacement`.
 - [ ] G3I2 — remove the duplicate CoreUtils TransactionalReplacement implementation and tests.
 - [ ] Audit and contract root filesystem operations.
 - [ ] Excise namespaces that are wholly owned by `Icod.CommandFramework`.

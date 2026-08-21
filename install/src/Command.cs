@@ -6,7 +6,7 @@ namespace Icod.CoreUtils.Install;
 using Icod.CoreUtils.Shared.Diagnostics;
 using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CommandFramework.FileSystem.Mutation;
-using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;
+using Icod.CommandFramework.FileSystem.TransactionalReplacement;
 using Icod.CommandFramework.Platform;
 
 /// <summary>Implements GNU <c>install</c> through the shared filesystem contracts.</summary>

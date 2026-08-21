@@ -3,7 +3,7 @@ namespace Icod.Patch.Tests;
 using System.IO;
 using System.Text;
 using Icod.CommandFramework.FileSystem.Mutation;
-using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;
+using Icod.CommandFramework.FileSystem.TransactionalReplacement;
 using Xunit;
 
 /// <summary>Verifies Patch conformance against the stabilized shared E2 through E6 contracts.</summary>

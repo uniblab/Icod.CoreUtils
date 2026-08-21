@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Install;
 
-using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;
+using Icod.CommandFramework.FileSystem.TransactionalReplacement;
 
 /// <summary>Parses GNU-compatible <c>install</c> command-line options.</summary>
 internal static class InstallArgumentParser {

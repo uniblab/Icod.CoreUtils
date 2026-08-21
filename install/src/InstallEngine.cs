@@ -6,7 +6,7 @@ using FileCreationMask = Icod.CommandFramework.FileSystem.Modes.FileCreationMask
 using PosixFileMode = Icod.CommandFramework.FileSystem.Modes.PosixFileMode;
 using Icod.CommandFramework.FileSystem.Mutation;
 using Icod.CoreUtils.Shared.FileSystem.Ownership;
-using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;
+using Icod.CommandFramework.FileSystem.TransactionalReplacement;
 using Icod.CommandFramework.FileSystem.Traversal;
 using Icod.CommandFramework.Platform;
 
