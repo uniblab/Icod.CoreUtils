@@ -7,8 +7,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Icod.CoreUtils.Shared.FileSystem.Traversal;
-using Icod.CoreUtils.Shared.Platform;
+using Icod.CommandFramework.FileSystem.Traversal;
+using Icod.CommandFramework.Platform;
 
 /// <summary>GNU-compatible SELinux file-context manipulation front end.</summary>
 public static class Command {

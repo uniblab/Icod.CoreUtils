@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Shared.FileSystem.Ownership;
 
 using System.Globalization;
-using Icod.CoreUtils.Shared.Platform;
+using Icod.CommandFramework.Platform;
 
 /// <summary>Describes a resolved owner and/or group selection.</summary>
 /// <param name="UserId">The selected numeric user ID, or <see langword="null"/> when unchanged.</param>

@@ -137,6 +137,8 @@ public sealed class CommandTests {
 
 	[Fact]
 	public async Task NotFoundAndCannotInvokeStatusesArePreserved() {
+		var notFoundError = new StringWriter();
+		var cannotInvokeError = new StringWriter();
 		var notFound = new FakeProcessExecutor {
 			Result = ProcessResult.FromTermination(
 				ProcessTermination.LaunchFailed(
@@ -159,19 +161,29 @@ public sealed class CommandTests {
 			127,
 			await Command.RunAsync(
 				new[] { "-o0", "missing" },
+				stderr: notFoundError,
 				processExecutor: notFound,
 				platform: FakeStdBufPlatform.Supported(),
 				environmentVariableProvider: static _ => null
 			)
 		);
+		Assert.Contains(
+			"failed to run command 'missing': not found",
+			notFoundError.ToString()
+		);
 		Assert.Equal(
 			126,
 			await Command.RunAsync(
 				new[] { "-o0", "blocked" },
+				stderr: cannotInvokeError,
 				processExecutor: cannotInvoke,
 				platform: FakeStdBufPlatform.Supported(),
 				environmentVariableProvider: static _ => null
 			)
+		);
+		Assert.Contains(
+			"failed to run command 'blocked': permission denied",
+			cannotInvokeError.ToString()
 		);
 	}
 

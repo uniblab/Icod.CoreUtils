@@ -5,7 +5,7 @@ using Icod.CoreUtils.Shared.Diagnostics;
 using Icod.CoreUtils.Shared.FileSystem.CopyMove;
 using Icod.CoreUtils.Shared.FileSystem.RecursiveMutation;
 using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;
-using Icod.CoreUtils.Shared.FileSystem.Traversal;
+using Icod.CommandFramework.FileSystem.Traversal;
 
 namespace Icod.CoreUtils.Cp;
 

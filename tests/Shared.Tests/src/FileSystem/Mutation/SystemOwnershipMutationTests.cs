@@ -1,10 +1,10 @@
 namespace Icod.CoreUtils.Shared.Tests.FileSystem.Mutation;
 
 using System.Globalization;
-using Icod.CoreUtils.Shared.FileSystem.Metadata;
+using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
-using Icod.CoreUtils.Shared.FileSystem.Traversal;
-using Icod.CoreUtils.Shared.Platform;
+using Icod.CommandFramework.FileSystem.Traversal;
+using Icod.CommandFramework.Platform;
 using Xunit;
 
 /// <summary>Exercises host-backed E4 ownership mutation behavior.</summary>

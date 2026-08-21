@@ -6,7 +6,7 @@ using System.Globalization;
 using System.Text;
 using Icod.CoreUtils.Shared.Processes;
 using Icod.CoreUtils.Shared.Terminal;
-using Icod.CoreUtils.Shared.Time;
+using Icod.CommandFramework.Time;
 using Icod.ProcPs.Shared;
 /// <summary>Implements the procps-ng compatible <c>watch</c> command.</summary>
 public static class Command {

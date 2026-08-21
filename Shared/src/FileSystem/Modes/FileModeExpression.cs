@@ -1,3 +1,5 @@
+using FrameworkModes = Icod.CommandFramework.FileSystem.Modes;
+
 namespace Icod.CoreUtils.Shared.FileSystem.Modes;
 
 /// <summary>
@@ -109,7 +111,7 @@ public sealed class FileModeExpression {
 	/// <param name="absoluteMode">The parsed twelve-bit mode.</param>
 	/// <param name="numericDigitCount">The number of octal digits supplied.</param>
 	internal FileModeExpression( int absoluteMode, int numericDigitCount ) {
-		AbsoluteMode = new PosixFileMode( absoluteMode );
+		AbsoluteMode = new FrameworkModes.PosixFileMode( absoluteMode );
 		NumericDigitCount = numericDigitCount;
 		clauses = Array.Empty<FileModeClause>();
 	}
@@ -124,7 +126,7 @@ public sealed class FileModeExpression {
 	}
 
 	/// <summary>Gets the absolute numeric mode, when the expression is a plain numeric mode.</summary>
-	public PosixFileMode? AbsoluteMode { get; }
+	public FrameworkModes.PosixFileMode? AbsoluteMode { get; }
 
 	/// <summary>Gets the number of octal digits supplied for a plain numeric mode.</summary>
 	public int NumericDigitCount { get; }
@@ -142,17 +144,17 @@ public sealed class FileModeExpression {
 	/// <param name="isDirectory">Whether the target is a directory.</param>
 	/// <param name="creationMask">The current umask used when a symbolic clause omits its subjects.</param>
 	/// <returns>The resulting mode.</returns>
-	public PosixFileMode Apply(
-		PosixFileMode currentMode,
+	public FrameworkModes.PosixFileMode Apply(
+		FrameworkModes.PosixFileMode currentMode,
 		bool isDirectory,
-		FileCreationMask creationMask
+		FrameworkModes.FileCreationMask creationMask
 	) {
 		if ( AbsoluteMode.HasValue ) {
 			var value = AbsoluteMode.Value.Value;
 			if ( isDirectory && NumericDigitCount <= 4 ) {
 				value |= currentMode.Value & 0x0c00;
 			}
-			return new PosixFileMode( value );
+			return new FrameworkModes.PosixFileMode( value );
 		}
 
 		var mode = currentMode.Value;
@@ -182,7 +184,7 @@ public sealed class FileModeExpression {
 				};
 			}
 		}
-		return new PosixFileMode( mode & 0x0fff );
+		return new FrameworkModes.PosixFileMode( mode & 0x0fff );
 	}
 
 	private static int GetSubjectMask( FileModeSubject subjects ) {

@@ -5,9 +5,9 @@ namespace Icod.CoreUtils.Unlink;
 
 using Icod.CoreUtils.Shared.CommandLine;
 using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.FileSystem.Metadata;
+using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
-using Icod.CoreUtils.Shared.FileSystem.Traversal;
+using Icod.CommandFramework.FileSystem.Traversal;
 
 /// <summary>
 /// Implements GNU <c>unlink</c> physical name removal over the shared single-path mutation provider.

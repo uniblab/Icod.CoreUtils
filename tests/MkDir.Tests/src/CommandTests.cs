@@ -3,8 +3,9 @@ namespace Icod.CoreUtils.Mkdir.Tests;
 using MkDirCommand = Icod.CoreUtils.Mkdir.Command;
 using Xunit;
 using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.FileSystem.Metadata;
+using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Modes;
+using FileCreationMask = Icod.CommandFramework.FileSystem.Modes.FileCreationMask;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
 
 /// <summary>Exercises GNU-compatible <c>mkdir</c> behavior.</summary>

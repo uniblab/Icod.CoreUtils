@@ -2,7 +2,7 @@ namespace Icod.CoreUtils.Stat;
 
 using Icod.CoreUtils.Shared.CommandLine;
 using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.FileSystem.Metadata;
+using Icod.CommandFramework.FileSystem.Metadata;
 
 /// <summary>Implements GNU-compatible <c>stat</c> metadata and filesystem reporting.</summary>
 public static class Command {

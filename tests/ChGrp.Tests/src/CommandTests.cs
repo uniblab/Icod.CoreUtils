@@ -2,11 +2,11 @@ namespace Icod.CoreUtils.ChGrp.Tests;
 
 using ChGrpCommand = Icod.CoreUtils.Chgrp.Command;
 using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.FileSystem.Metadata;
-using Icod.CoreUtils.Shared.FileSystem.Modes;
+using Icod.CommandFramework.FileSystem.Metadata;
+using Icod.CommandFramework.FileSystem.Modes;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
-using Icod.CoreUtils.Shared.FileSystem.Traversal;
-using Icod.CoreUtils.Shared.Platform;
+using Icod.CommandFramework.FileSystem.Traversal;
+using Icod.CommandFramework.Platform;
 using System.IO;
 using Xunit;
 

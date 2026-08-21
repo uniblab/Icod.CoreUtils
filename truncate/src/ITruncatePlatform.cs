@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Truncate;
 
-using Icod.CoreUtils.Shared.Platform;
+using Icod.CommandFramework.Platform;
 
 /// <summary>
 /// Defines platform-dependent file-length and preferred-I/O-block operations required by <c>truncate</c>.

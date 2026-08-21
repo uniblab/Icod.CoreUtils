@@ -12,8 +12,8 @@
 - `Processes`: shell-free asynchronous child-process execution with redirected stream forwarding, capture, cancellation, and process-tree termination.
 - `RegularExpressions`: fully managed GNU basic regular-expression parsing, leftmost-longest matching, GNU/Gnulib capture-register behavior, back-references, structured diagnostics, cancellation, and injectable locale/classification providers.
 - `Temporary`: cryptographically secure base-62 name generation, exclusive temporary file/directory creation, collision retries, and deterministic cleanup support.
-- `FileSystem.Traversal`: segment-aware pathname expansion, injectable one-level filesystem observation, stable entry/filesystem identities, and iterative event-based read-only traversal.
-- `FileSystem.Metadata`: authoritative entry and filesystem metadata, explicit availability, E1 identity reuse, allocated-block accounting, and selective timestamp mutation.
+- `Icod.CommandFramework.FileSystem.Traversal` (package dependency): segment-aware pathname expansion, injectable one-level filesystem observation, stable entry/filesystem identities, and iterative event-based read-only traversal.
+- `Icod.CommandFramework.FileSystem.Metadata` (package dependency): authoritative entry and filesystem metadata, explicit availability, E1 identity reuse, allocated-block accounting, and selective timestamp mutation.
 - `FileSystem.Ownership`: GNU/POSIX user and group resolution plus shared `chown`/`chgrp` recursive command policy.
 - `FileSystem.Mutation`: race-aware single-path creation, linking, removal, mode mutation, and UID/GID mutation with explicit capability and identity preconditions.
 - `FileSystem.RecursiveMutation`: E1-based recursive mutation/copy planning, preserve-root and containment preflight, hard-link and sparse-file preservation, metadata policy, and rollback cleanup.
@@ -114,19 +114,12 @@ The `Icod.CoreUtils.Shared.Ordering` namespace supplies the Completion Gate D ex
 
 `TemporaryWorkspace` owns the secure directory and run files. Cleanup ignores the operation cancellation token and is attempted after success, failure, and cancellation. Combined operation and cleanup failures preserve both exceptions. This ordering and workspace layer is shared incubation infrastructure and a provisional `Icod.CommandFramework` candidate; no command project is referenced by it.
 
-## Read-only pathname traversal
+## Framework-owned read-only pathname traversal
 
-Completion Gate E1 adds `Icod.CoreUtils.Shared.FileSystem.Traversal`. Pathname patterns support segment-local `*`, `?`, and bracket expressions plus a complete `**` segment for zero or more pathname segments. `PathnameExpander` preserves operand provenance and delegates every host observation to `IReadOnlyFileSystemProvider`. `ReadOnlyPathTraversalEngine` yields preorder, entry, postorder, error, cycle, and filesystem-boundary events while keeping yielding independent from pruning.
+Completion Gate E1 traversal now lives in `Icod.CommandFramework.FileSystem.Traversal`. Coreutils consumes `PathnamePattern`, `PathnameExpander`, `IReadOnlyFileSystemProvider`, `ReadOnlyPathTraversalEngine`, stable entry/filesystem identities, link policy, cycle detection, and traversal events from the published framework package. G3F1 removes the duplicate CoreUtils implementation and its duplicate Shared tests.
+## Framework-owned filesystem metadata and timestamps
 
-The system provider obtains stable platform identities through Windows file IDs, Linux `statx`, and macOS `stat`/`lstat`. Link following distinguishes never, command-line roots only, and all eligible links. Cycle detection is limited to active ancestry rather than global deduplication. See [`src/FileSystem/Traversal/README.md`](src/FileSystem/Traversal/README.md).
-
-
-## Filesystem metadata and timestamps
-
-Completion Gate E3 adds `Icod.CoreUtils.Shared.FileSystem.Metadata`. The model reports detailed file kinds, size, link count and link-object identity, native mode and ownership, access/modification/change/birth timestamps, device and inode-equivalent identity, allocated blocks, containing-filesystem information, and timestamp-mutation capabilities. Every platform-dependent field uses an explicit availability state rather than a sentinel value.
-
-`SystemFileSystemMetadataProvider` reuses the E1 `FileSystemEntryIdentity` and `FileSystemIdentity` contracts and supplies Windows, Linux, and macOS native adapters with a controlled managed fallback. See [`src/FileSystem/Metadata/README.md`](src/FileSystem/Metadata/README.md).
-
+Completion Gate E3 metadata now lives in `Icod.CommandFramework.FileSystem.Metadata`. Coreutils consumes the framework metadata model, explicit availability values, filesystem information, timestamp-mutation contracts, and system provider directly from the published package. G3E2 removed the duplicate CoreUtils implementation and its duplicate Shared tests.
 ## Recursive filesystem mutation and copying
 
 Completion Gate E5 adds `Icod.CoreUtils.Shared.FileSystem.RecursiveMutation`. The mutation-aware traversal engine wraps the E1 event stream, preserves its root provenance and traversal vocabulary, and attaches E4 identity-bearing preconditions to physical entries. Additional contracts cover preserve-root, one-filesystem delegation, destination containment, repeated hard links, sparse allocation, E3 metadata preservation, partial failure, and the rollback seam consumed by Completion Gate E6. See [`src/FileSystem/RecursiveMutation/README.md`](src/FileSystem/RecursiveMutation/README.md).

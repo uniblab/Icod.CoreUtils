@@ -5,11 +5,13 @@ namespace Icod.CoreUtils.Chmod;
 
 using Icod.CoreUtils.Shared.CommandLine;
 using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.FileSystem.Metadata;
+using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Modes;
+using FileCreationMask = Icod.CommandFramework.FileSystem.Modes.FileCreationMask;
+using PosixFileMode = Icod.CommandFramework.FileSystem.Modes.PosixFileMode;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
 using Icod.CoreUtils.Shared.FileSystem.RecursiveMutation;
-using Icod.CoreUtils.Shared.FileSystem.Traversal;
+using Icod.CommandFramework.FileSystem.Traversal;
 
 /// <summary>
 /// Implements GNU <c>chmod</c> over the shared metadata, traversal, and mutation contracts.

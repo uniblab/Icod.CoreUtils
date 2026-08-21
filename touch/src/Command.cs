@@ -2,9 +2,9 @@ namespace Icod.CoreUtils.Touch;
 
 using Icod.CoreUtils.Shared.CommandLine;
 using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.FileSystem.Metadata;
-using Icod.CoreUtils.Shared.FileSystem.Traversal;
-using Icod.CoreUtils.Shared.Platform;
+using Icod.CommandFramework.FileSystem.Metadata;
+using Icod.CommandFramework.FileSystem.Traversal;
+using Icod.CommandFramework.Platform;
 using Icod.CoreUtils.Shared.Time;
 
 /// <summary>Implements GNU-compatible <c>touch</c> timestamp mutation.</summary>

@@ -136,7 +136,7 @@ public sealed class FileAllocationMap {
 public sealed record SparseExtensionInfo(
 	long OriginalLength,
 	long NewLength,
-	Icod.CoreUtils.Shared.Platform.PlatformOperationResult<FileAllocationMap> Allocation
+	Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap> Allocation
 ) {
 	/// <summary>Gets whether the allocation query confirmed at least one logical hole.</summary>
 	public bool SparseConfirmed =>

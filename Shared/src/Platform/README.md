@@ -1,15 +1,40 @@
-# Platform
+# Icod.CoreUtils.Shared.Platform
 
-The `Icod.CoreUtils.Shared.Platform` namespace centralizes operating-system capabilities and injectable host-information providers.
+This namespace contains Coreutils-specific host-information providers that remain after the neutral platform mechanism moved to the standalone `Icod.CommandFramework` package.
 
-## Responsibilities
+## Retained Coreutils responsibilities
 
-- Detect support for file modes, links, identity, statistics, security contexts, and related platform features.
-- Read users, groups, login records, process information, system identity, system metrics, and supported native security contexts.
-- Provide controlled supported, unsupported, degraded, and failed operation results.
-- Isolate the small native interop surface required when the BCL does not expose an operation.
-- Provide the injectable SELinux boundary used by `chcon` and `runcon`, including file/link contexts, context validation, transition computation, and execution-context setup.
+- Read login-accounting records used by commands such as `who`, `users`, and related reporting tools.
+- Provide the Coreutils process-information model and host process observations used by command-family behavior.
+- Provide system-information and system-metrics observations used by Coreutils reporting commands.
+- Provide Coreutils user-information records and lookup behavior that are not part of the neutral framework identity contract.
+
+The retained production source is:
+
+- `LoginRecordProvider.cs`
+- `ProcessInformation.cs`
+- `SystemInformationProvider.cs`
+- `SystemMetrics.cs`
+- `UserInformation.cs`
+
+## Framework ownership
+
+Neutral operating-system mechanism is owned by `Icod.CommandFramework.Platform`, including:
+
+- `GroupIdentity`, `UserIdentity`, and `ProcessIdentity`
+- `IIdentityProvider` and `SystemIdentityProvider`
+- `PlatformCapabilities`
+- `PlatformFeature`
+- `PlatformOperationResult`
+- `SelinuxContext`
+- `SelinuxExecutionResult`
+- `ISelinuxPlatform`
+- `NativeSelinuxPlatform`
+
+Coreutils code that needs those contracts consumes the published framework package directly.
 
 ## Portability policy
 
-Windows, Linux, and macOS are required platforms. Implementations make a best effort for FreeBSD and other BSD systems, and keep abstractions suitable for a future TempleOS-compatible provider. BCL APIs are preferred; P/Invoke is confined to narrow provider boundaries. Unsupported operations return controlled results rather than throwing platform exceptions through command code. SELinux operations are Linux-specific and require a usable `libselinux.so.1` plus an SELinux-enabled kernel; other required runners retain portable command metadata and controlled unsupported behavior.
+Windows, Linux, and macOS remain required platforms, with BSD support best effort where the retained providers can obtain meaningful information. Platform-specific parsing and native calls stay behind narrow provider boundaries. Unsupported observations must remain controlled and explicit rather than leaking unrelated host exceptions through command behavior.
+
+SELinux mechanism is no longer implemented in this namespace. `chcon` and `runcon` consume the neutral SELinux boundary from `Icod.CommandFramework.Platform`.

@@ -1,10 +1,10 @@
 namespace Icod.Patch;
 
-using Icod.CoreUtils.Shared.FileSystem.Metadata;
+using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
 using Icod.CoreUtils.Shared.FileSystem.RecursiveMutation;
 using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;
-using Icod.CoreUtils.Shared.FileSystem.Traversal;
+using Icod.CommandFramework.FileSystem.Traversal;
 using System.IO;
 
 /// <summary>Adapts immutable Patch artifacts to the shared Completion Gate E6 transaction engine.</summary>

@@ -1,20 +1,35 @@
-# Time
+# Icod.CoreUtils.Shared.Time
 
-The `Icod.CoreUtils.Shared.Time` namespace contains date parsing, date formatting, wall-clock services, and monotonic scheduling contracts.
+This namespace contains the Coreutils-specific wall-clock and GNU date policy retained after the cross-suite monotonic timing substrate moved to the standalone `Icod.CommandFramework` package.
 
 ## Responsibilities
 
-- Supply local and UTC current-time values.
+- Supply local and UTC current-time values for Coreutils commands.
 - Attempt controlled system-clock updates through platform-specific APIs.
 - Parse GNU-compatible date operands relative to an explicit base time and time zone.
 - Format GNU date conversion specifications consistently across commands.
-- Supply injectable monotonic timestamps and cancellation-aware delays.
-- Produce drift-resistant fixed-rate periodic ticks without depending on wall-clock adjustments.
+
+The retained production types are:
+
+- `IDateTimeProvider`
+- `SystemDateTimeProvider`
+- `GnuDateParser`
+- `GnuDateFormatter`
+
+## Framework ownership
+
+Cross-suite monotonic timing and scheduling are owned by `Icod.CommandFramework.Time`, including:
+
+- `IMonotonicClock`
+- `SystemMonotonicClock`
+- `IPeriodicScheduler`
+- `MonotonicPeriodicScheduler`
+- `PeriodicTick`
+
+Coreutils commands or co-resident suites that need timeout, elapsed-time, sampling, or refresh-cadence behavior consume those published framework contracts directly.
 
 ## Portability policy
 
-BCL date, time-zone, formatting, `Stopwatch`, and task-delay APIs are preferred. Native clock-setting calls are isolated behind `IDateTimeProvider`; unsupported hosts return a controlled unsuccessful result rather than exposing a platform exception. Timeout and refresh logic must use `IMonotonicClock` rather than local or UTC wall time. Tests may inject a deterministic clock so timeout and periodic behavior do not depend on CI runner load.
+BCL date, time-zone, and formatting APIs are preferred. Native clock-setting calls remain isolated behind `IDateTimeProvider`; unsupported hosts return a controlled unsuccessful result rather than exposing a platform exception.
 
-## Completion Gate P1 consumer boundary
-
-ProcPs interval-driven commands consume `IMonotonicClock` and the fixed-rate periodic scheduler for elapsed time and refresh cadence. `Icod.ProcPs.Shared` owns sampling windows, counter deltas, wraparound, first-sample policy, and command-specific refresh semantics; it must not reimplement a wall-clock-independent clock or timer loop.
+GNU date parsing and formatting remain in `Icod.CoreUtils.Shared.Time` because they encode Coreutils-specific command semantics rather than neutral scheduling infrastructure.

@@ -2,7 +2,7 @@ namespace Icod.CoreUtils.Groups.Tests;
 
 using Icod.CoreUtils.Shared.CommandLine;
 using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.Platform;
+using Icod.CommandFramework.Platform;
 using Tool = Icod.CoreUtils.Groups.Command;
 using Xunit;
 

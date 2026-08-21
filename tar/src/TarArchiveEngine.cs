@@ -4,7 +4,7 @@ using System.Formats.Tar;
 using System.Globalization;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
 using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;
-using Icod.CoreUtils.Shared.FileSystem.Traversal;
+using Icod.CommandFramework.FileSystem.Traversal;
 
 internal sealed class TarArchiveEngine {
 	private readonly TextWriter stdout;
