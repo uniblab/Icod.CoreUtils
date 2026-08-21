@@ -1,8 +1,8 @@
 namespace Icod.LineEditor.Ed.Shared.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.FileSystem;
-using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;
+using Icod.CommandFramework.FileSystem;
+using Icod.CommandFramework.FileSystem.TransactionalReplacement;
 using Icod.LineEditor.Ed;
 using Xunit;
 

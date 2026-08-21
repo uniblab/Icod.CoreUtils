@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Install;
 
-using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;
+using Icod.CommandFramework.FileSystem.TransactionalReplacement;
 
 /// <summary>Describes one parsed GNU <c>install</c> invocation.</summary>
 internal sealed class InstallOptions {

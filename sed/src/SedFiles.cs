@@ -4,13 +4,13 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Icod.CoreUtils.Shared.FileSystem;
+using Icod.CommandFramework.FileSystem;
 using Icod.CommandFramework.FileSystem.Metadata;
-using Icod.CoreUtils.Shared.FileSystem.Mutation;
-using Icod.CoreUtils.Shared.FileSystem.RecursiveMutation;
-using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;
+using Icod.CommandFramework.FileSystem.Mutation;
+using Icod.CommandFramework.FileSystem.RecursiveMutation;
+using Icod.CommandFramework.FileSystem.TransactionalReplacement;
 using Icod.CommandFramework.FileSystem.Traversal;
-using Icod.CoreUtils.Shared.Temporary;
+using Icod.CommandFramework.Temporary;
 
 // Responsibility: in-place editing and pathname handling.
 public static partial class Command {

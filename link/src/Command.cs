@@ -5,7 +5,7 @@ namespace Icod.CoreUtils.Link;
 
 using Icod.CoreUtils.Shared.CommandLine;
 using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.FileSystem.Mutation;
+using Icod.CommandFramework.FileSystem.Mutation;
 using Icod.CommandFramework.FileSystem.Traversal;
 
 /// <summary>Implements GNU <c>link</c>, the strict two-operand hard-link command.</summary>

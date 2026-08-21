@@ -2,8 +2,8 @@ namespace Icod.Tar;
 
 using System.Formats.Tar;
 using System.Globalization;
-using Icod.CoreUtils.Shared.FileSystem.Mutation;
-using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;
+using Icod.CommandFramework.FileSystem.Mutation;
+using Icod.CommandFramework.FileSystem.TransactionalReplacement;
 using Icod.CommandFramework.FileSystem.Traversal;
 
 internal sealed class TarArchiveEngine {

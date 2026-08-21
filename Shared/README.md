@@ -12,12 +12,13 @@
 - `Processes`: shell-free asynchronous child-process execution with redirected stream forwarding, capture, cancellation, and process-tree termination.
 - `RegularExpressions`: fully managed GNU basic regular-expression parsing, leftmost-longest matching, GNU/Gnulib capture-register behavior, back-references, structured diagnostics, cancellation, and injectable locale/classification providers.
 - `Temporary`: cryptographically secure base-62 name generation, exclusive temporary file/directory creation, collision retries, and deterministic cleanup support.
+- `Icod.CommandFramework.FileSystem` (package dependency): capability-aware durable file/filesystem flush operations, sparse-file extension, allocated-range queries, and the system implementation.
 - `Icod.CommandFramework.FileSystem.Traversal` (package dependency): segment-aware pathname expansion, injectable one-level filesystem observation, stable entry/filesystem identities, and iterative event-based read-only traversal.
 - `Icod.CommandFramework.FileSystem.Metadata` (package dependency): authoritative entry and filesystem metadata, explicit availability, E1 identity reuse, allocated-block accounting, and selective timestamp mutation.
 - `FileSystem.Ownership`: GNU/POSIX user and group resolution plus shared `chown`/`chgrp` recursive command policy.
-- `FileSystem.Mutation`: race-aware single-path creation, linking, removal, mode mutation, and UID/GID mutation with explicit capability and identity preconditions.
-- `FileSystem.RecursiveMutation`: E1-based recursive mutation/copy planning, preserve-root and containment preflight, hard-link and sparse-file preservation, metadata policy, and rollback cleanup.
-- `FileSystem.TransactionalReplacement`: secure sibling staging, E3/E4 revalidation, atomic publication, GNU backup naming, per-file recovery units, metadata restoration, rollback, durability reporting, and deterministic cleanup.
+- `Icod.CommandFramework.FileSystem.Mutation` (package dependency): race-aware single-path creation, linking, removal, mode mutation, and UID/GID mutation with explicit capability and identity preconditions.
+- `Icod.CommandFramework.FileSystem.RecursiveMutation` (package dependency): recursive mutation/copy planning, preserve-root and containment preflight, hard-link and sparse-file preservation, metadata policy, and rollback cleanup.
+- `Icod.CommandFramework.FileSystem.TransactionalReplacement` (package dependency): secure sibling staging, pathname revalidation, atomic publication, backup-name generation, per-file recovery units, metadata restoration, rollback, durability reporting, and deterministic cleanup.
 - `Platform`: BCL-first capability reporting and controlled unsupported results.
 
 ## Text processing
@@ -120,12 +121,13 @@ Completion Gate E1 traversal now lives in `Icod.CommandFramework.FileSystem.Trav
 ## Framework-owned filesystem metadata and timestamps
 
 Completion Gate E3 metadata now lives in `Icod.CommandFramework.FileSystem.Metadata`. Coreutils consumes the framework metadata model, explicit availability values, filesystem information, timestamp-mutation contracts, and system provider directly from the published package. G3E2 removed the duplicate CoreUtils implementation and its duplicate Shared tests.
-## Recursive filesystem mutation and copying
+## Framework-owned recursive filesystem mutation and copying
 
-Completion Gate E5 adds `Icod.CoreUtils.Shared.FileSystem.RecursiveMutation`. The mutation-aware traversal engine wraps the E1 event stream, preserves its root provenance and traversal vocabulary, and attaches E4 identity-bearing preconditions to physical entries. Additional contracts cover preserve-root, one-filesystem delegation, destination containment, repeated hard links, sparse allocation, E3 metadata preservation, partial failure, and the rollback seam consumed by Completion Gate E6. See [`src/FileSystem/RecursiveMutation/README.md`](src/FileSystem/RecursiveMutation/README.md).
+Completion Gate E5 recursive mutation now lives in `Icod.CommandFramework.FileSystem.RecursiveMutation`. Coreutils consumes the framework traversal-planning, preserve-root, containment, hard-link, sparse-file, metadata-preservation, and rollback contracts directly.
 
-Completion Gate E6 adds `Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement`. It stages complete secure sibling files and rollback copies before mutation, revalidates stable E3 identity immediately before commit, publishes through explicit atomicity and durability contracts, supports GNU backup naming, groups artifacts by recovery unit, restores E5 metadata, and continues reverse-order rollback and cleanup after failures. See [`src/FileSystem/TransactionalReplacement/README.md`](src/FileSystem/TransactionalReplacement/README.md).
+## Framework-owned transactional replacement
 
+Completion Gate E6 transactional replacement now lives in `Icod.CommandFramework.FileSystem.TransactionalReplacement`. Coreutils consumes secure sibling staging, pathname revalidation, atomic publication, backup-name generation, recovery-unit, metadata-restoration, rollback, durability, and cleanup contracts directly. GNU-visible prompting, force/update, and multi-file policy remain with command/Coreutils code.
 ## Ownership mutation
 
 Batch 42 adds `Icod.CoreUtils.Shared.FileSystem.Ownership`. It resolves user and group names through `IIdentityProvider`, honors GNU name-first and forced `+ID` syntax, supports reference and `--from` ownership, separates recursive traversal from terminal dereferencing, and combines E3 observations with ownership-aware E4 preconditions and E5 postorder recursion. The system mutation provider uses `chown` and `lchown` on supported Unix hosts and returns a controlled unsupported result on Windows.

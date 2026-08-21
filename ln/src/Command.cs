@@ -5,7 +5,7 @@ namespace Icod.CoreUtils.Ln;
 
 using Icod.CoreUtils.Shared.CommandLine;
 using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.FileSystem.Mutation;
+using Icod.CommandFramework.FileSystem.Mutation;
 using Icod.CommandFramework.FileSystem.Traversal;
 
 /// <summary>Implements GNU <c>ln</c> over the shared single-path mutation provider.</summary>

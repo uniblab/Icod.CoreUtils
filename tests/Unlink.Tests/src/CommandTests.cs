@@ -3,7 +3,7 @@ namespace Icod.CoreUtils.Unlink.Tests;
 using UnlinkCommand = Icod.CoreUtils.Unlink.Command;
 using Xunit;
 using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.FileSystem.Mutation;
+using Icod.CommandFramework.FileSystem.Mutation;
 
 /// <summary>Exercises GNU-compatible <c>unlink</c> behavior.</summary>
 public sealed class CommandTests {

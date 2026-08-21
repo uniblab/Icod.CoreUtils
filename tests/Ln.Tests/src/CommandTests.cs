@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Ln.Tests;
 
 using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.FileSystem.Mutation;
+using Icod.CommandFramework.FileSystem.Mutation;
 using LnCommand = Icod.CoreUtils.Ln.Command;
 using Xunit;
 

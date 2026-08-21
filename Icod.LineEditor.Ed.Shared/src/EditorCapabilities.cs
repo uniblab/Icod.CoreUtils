@@ -1,15 +1,15 @@
 namespace Icod.LineEditor.Ed;
 
 using System.Text;
-using Icod.CoreUtils.Shared.FileSystem;
+using Icod.CommandFramework.FileSystem;
 using Icod.CommandFramework.FileSystem.Metadata;
-using Icod.CoreUtils.Shared.FileSystem.Mutation;
-using Icod.CoreUtils.Shared.FileSystem.RecursiveMutation;
-using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;
+using Icod.CommandFramework.FileSystem.Mutation;
+using Icod.CommandFramework.FileSystem.RecursiveMutation;
+using Icod.CommandFramework.FileSystem.TransactionalReplacement;
 using Icod.CommandFramework.FileSystem.Traversal;
 using Icod.CoreUtils.Shared.Records;
 using Icod.CoreUtils.Shared.Processes;
-using Icod.CoreUtils.Shared.Temporary;
+using Icod.CommandFramework.Temporary;
 
 /// <summary>Defines immutable parser and capability policy for an Ed engine instance.</summary>
 public sealed record EditorSecurityPolicy {

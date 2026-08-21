@@ -1,12 +1,12 @@
 namespace Icod.Patch;
 
 using System.Collections.ObjectModel;
-using Icod.CoreUtils.Shared.FileSystem;
+using Icod.CommandFramework.FileSystem;
 using Icod.CommandFramework.FileSystem.Metadata;
-using Icod.CoreUtils.Shared.FileSystem.Mutation;
+using Icod.CommandFramework.FileSystem.Mutation;
 using Icod.CommandFramework.FileSystem.Traversal;
-using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;
-using Icod.CoreUtils.Shared.Temporary;
+using Icod.CommandFramework.FileSystem.TransactionalReplacement;
+using Icod.CommandFramework.Temporary;
 using Icod.Path;
 
 /// <summary>Contains the E3 state observed for one potential artifact destination.</summary>

@@ -2,7 +2,7 @@ namespace Icod.CoreUtils.Sync.Tests;
 
 using System.Text;
 using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.FileSystem;
+using Icod.CommandFramework.FileSystem;
 using Icod.CommandFramework.Platform;
 using Xunit;
 

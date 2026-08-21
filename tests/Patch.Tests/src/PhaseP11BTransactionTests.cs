@@ -3,9 +3,9 @@ namespace Icod.Patch.Tests;
 using System.IO;
 using System.Text;
 using Icod.CommandFramework.FileSystem.Metadata;
-using Icod.CoreUtils.Shared.FileSystem.Mutation;
-using Icod.CoreUtils.Shared.FileSystem.RecursiveMutation;
-using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;
+using Icod.CommandFramework.FileSystem.Mutation;
+using Icod.CommandFramework.FileSystem.RecursiveMutation;
+using Icod.CommandFramework.FileSystem.TransactionalReplacement;
 using Icod.CommandFramework.FileSystem.Traversal;
 using Xunit;
 

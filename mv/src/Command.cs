@@ -3,8 +3,8 @@
 
 using Icod.CoreUtils.Shared.Diagnostics;
 using Icod.CoreUtils.Shared.FileSystem.CopyMove;
-using Icod.CoreUtils.Shared.FileSystem.RecursiveMutation;
-using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;
+using Icod.CommandFramework.FileSystem.RecursiveMutation;
+using Icod.CommandFramework.FileSystem.TransactionalReplacement;
 using Icod.CommandFramework.FileSystem.Traversal;
 
 namespace Icod.CoreUtils.Mv;

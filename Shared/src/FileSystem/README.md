@@ -1,10 +1,12 @@
 # Shared.FileSystem
 
-`Shared.FileSystem` contains the Coreutils-specific filesystem policy that remains after neutral host-filesystem mechanism moved to `Icod.CommandFramework`. The local operations/copy/mutation layers still support Coreutils behavior such as flush/allocation policy, GNU ownership handling, recursive mutation/copy policy, and transactional replacement. Read-only traversal and authoritative metadata are now consumed from the published framework package.
+`Shared.FileSystem` contains the Coreutils-specific filesystem policy that remains after neutral host-filesystem mechanism moved to `Icod.CommandFramework`. Coreutils-local code now concentrates on GNU copy/move policy, ownership handling, mode parsing, and filesystem-usage reporting. Neutral durable-flush, sparse-allocation, traversal, metadata, mutation, recursive-mutation, and transactional-replacement mechanisms are consumed from the published framework package.
 
 The operations layer distinguishes operating-system API availability from the behavior of an individual filesystem or volume. Every operation therefore returns `PlatformOperationResult` rather than silently claiming unsupported semantics. The traversal layer yields caller-independent roots, entries, event phases, identities, boundaries, cycles, and structured errors. The metadata layer enriches those same identities with typed values whose availability is always explicit.
 
-## Operations
+## Framework-owned root filesystem operations
+
+G3J confirms that `FileSystemCapabilities`, `IFileSystemOperations`, and `SystemFileSystemOperations` are neutral framework mechanism. Coreutils consumes those contracts directly from `Icod.CommandFramework.FileSystem`; the duplicate CoreUtils root declarations and their duplicate Shared tests are removed.
 
 | Requirement | API |
 |---|---|
@@ -59,16 +61,15 @@ Completion Gate E1 traversal is owned by `Icod.CommandFramework.FileSystem.Trave
 ## Framework-owned authoritative metadata and timestamps
 
 Completion Gate E3 metadata is now owned by `Icod.CommandFramework.FileSystem.Metadata`. Coreutils consumes `IFileSystemMetadataProvider`, `SystemFileSystemMetadataProvider`, `FileSystemMetadata`, `FileSystemInformation`, timestamp-mutation requests, and explicit metadata-availability values from the published framework package. The duplicate local Metadata implementation and its duplicate tests are removed by G3E2.
-## Recursive mutation and copying
+## Framework-owned single-path mutation
 
-Completion Gate E5 lives in `Icod.CoreUtils.Shared.FileSystem.RecursiveMutation`. It consumes E1 events and E4 mutation preconditions instead of introducing another walker. It adds preserve-root and destination-containment preflight, root-relative destination mapping, hard-link identity tracking, sparse-range copying, requested-versus-required metadata policy, and deterministic reverse-order rollback. See [`RecursiveMutation/README.md`](RecursiveMutation/README.md).
+Completion Gate E4 mutation is owned by `Icod.CommandFramework.FileSystem.Mutation`. Coreutils consumes the framework race-aware single-path creation, linking, removal, mode mutation, UID/GID mutation, capability reporting, and identity-precondition contracts directly. G3G2 removes the duplicate local Mutation implementation and its duplicate Shared tests.
+## Framework-owned recursive mutation and copying
 
-## Transactional replacement
+Completion Gate E5 recursive mutation is owned by `Icod.CommandFramework.FileSystem.RecursiveMutation`. Coreutils consumes the framework traversal planning, preserve-root and containment checks, hard-link identity tracking, sparse copying, metadata-preservation plans, and rollback journal directly. G3H2 removes the duplicate local RecursiveMutation implementation and tests.
+## Framework-owned transactional replacement
 
-Completion Gate E6 lives in `Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement`. It consumes secure sibling temporary creation, E3 metadata and stable identities, E4 mutation preconditions, E5 containment and metadata-preservation plans, and the existing file/directory durability operations. The transaction stages complete destination and recovery files before mutation, revalidates every pathname immediately before commit, supports GNU simple/numbered/existing backup naming, commits explicit recovery units, and continues rollback and cleanup after individual failures.
-
-Atomicity, durability, rollback, cleanup, and partial-commit states are returned explicitly. Commands retain policy for prompts, force/update decisions, and GNU-visible multi-file behavior. See [`TransactionalReplacement/README.md`](TransactionalReplacement/README.md).
-
+Completion Gate E6 transactional replacement is owned by `Icod.CommandFramework.FileSystem.TransactionalReplacement`. Coreutils consumes the framework staging, pathname revalidation, backup-name generation, recovery-unit, commit, rollback, cleanup, durability, and partial-commit contracts directly. G3I2 removes the duplicate local TransactionalReplacement implementation and tests. Commands retain GNU-visible prompting, force/update, and multi-file policy.
 ## Ownership mutation
 
 Batch 42 extends the E4 provider with explicit UID/GID mutation and ownership-aware `--from` preconditions, and adds `Icod.CoreUtils.Shared.FileSystem.Ownership` for GNU name/ID resolution plus the common `chown`/`chgrp` recursive policy. Recursive directory mutation is applied in postorder, and traversal-link policy remains independent of terminal dereferencing. Windows reports POSIX ownership mutation as unsupported rather than approximating it with ACLs or file attributes. See [`Ownership/README.md`](Ownership/README.md).
