@@ -54,7 +54,7 @@ Commands should accept `IFileSystemOperations` through an overload or constructo
 
 ## Framework-owned read-only traversal
 
-Completion Gate E1 traversal is now owned by `Icod.CommandFramework.FileSystem.Traversal`. Coreutils consumes the framework pathname-expansion, stable identity, directory-observation, and traversal contracts directly. The duplicate local Traversal implementation remains only as a temporary G3 migration artifact and is scheduled for G3F1 excision.
+Completion Gate E1 traversal is owned by `Icod.CommandFramework.FileSystem.Traversal`. Coreutils consumes the framework pathname-expansion, stable identity, directory-observation, and traversal contracts directly. G3F1 removes the duplicate local Traversal implementation and tests, so no CoreUtils copy remains.
 
 ## Framework-owned authoritative metadata and timestamps
 
