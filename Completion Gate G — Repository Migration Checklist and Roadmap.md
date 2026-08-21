@@ -253,10 +253,13 @@ No projects move during this phase.
   - move every surviving consumer of `Icod.CoreUtils.Shared.FileSystem.Metadata` to `Icod.CommandFramework.FileSystem.Metadata`;
   - leave the duplicate Metadata implementation and its duplicated Shared tests in place only until G3E2.
   - follow-up namespace alignment: because the framework Metadata contracts expose `Icod.CommandFramework.FileSystem.Traversal` identities, surviving Metadata consumers were also aligned to the framework Traversal namespace; the duplicate Traversal implementation/tests remain for a later excision tranche.
-- [ ] **G3E2 — Metadata implementation/test excision**
+- [x] **G3E2 — Metadata implementation/test excision**
   - remove the duplicate CoreUtils Metadata source directory;
   - remove the duplicated Metadata tests from `Icod.CoreUtils.Shared.Tests`.
-- [ ] Audit and contract the remaining filesystem boundaries (`Mutation`, `RecursiveMutation`, `TransactionalReplacement`, `Traversal`, and root filesystem operations).
+- [ ] **G3F1 — Traversal implementation/test excision**
+  - remove the duplicate CoreUtils `FileSystem.Traversal` implementation and its duplicated Shared tests;
+  - rely exclusively on `Icod.CommandFramework.FileSystem.Traversal`, whose consumer cut-over was completed during the G3E1 namespace-alignment follow-up.
+- [ ] Audit and contract the remaining filesystem boundaries (`Mutation`, `RecursiveMutation`, `TransactionalReplacement`, and root filesystem operations).
 - [ ] Remove namespaces and tests that are wholly owned by `Icod.CommandFramework`.
 - [ ] Audit `Icod.CoreUtils.ProcessTestHost` after framework-owned process tests are removed.
 - [ ] Complete `Icod.CoreUtils.Shared` packaging and convert retained Coreutils commands to package references.
@@ -402,7 +405,8 @@ Current sequence:
 - [x] G3D1 — cut the neutral file-mode value model over to `Icod.CommandFramework.FileSystem.Modes`.
 - [x] G3D2 — delete the duplicate CoreUtils file-mode value model and contract its documentation.
 - [x] G3E1 — cut Metadata consumers over to `Icod.CommandFramework.FileSystem.Metadata`.
-- [ ] G3E2 — remove the duplicate CoreUtils Metadata implementation and tests.
+- [x] G3E2 — remove the duplicate CoreUtils Metadata implementation and tests.
+- [ ] G3F1 — remove the duplicate CoreUtils Traversal implementation and tests.
 - [ ] Contract the remaining framework-owned filesystem boundaries.
 - [ ] Excise namespaces that are wholly owned by `Icod.CommandFramework`.
 - [ ] Audit and remove/rehome framework-owned `Shared.Tests` and `ProcessTestHost` infrastructure.
