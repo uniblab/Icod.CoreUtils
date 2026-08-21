@@ -177,8 +177,6 @@ public sealed class PhaseP12ClosureTests {
 		byte[]? inputBytes = null
 	) {
 		await using var input = new MemoryStream( inputBytes ?? Array.Empty<byte>(), writable: false );
-		using var output = new StringWriter();
-		using var error = new StringWriter();
 		var status = await Command.RunAsync(
 			arguments,
 			TextReader.Null,

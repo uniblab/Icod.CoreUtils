@@ -23,7 +23,6 @@ public sealed class PsCommandTests {
 	/// <summary>Verifies all-process selection and custom format aliases and headings.</summary>
 	[Fact]
 	public async Task AllAndCustomFormatAreSupported() {
-		using var output = new MemoryStream();
 		var status = await RunAsync( [ "-A", "-o", "pid=PROCESS,ppid,user,args" ], output );
 		Assert.Equal( 0, status );
 		var text = Text( output );
@@ -36,7 +35,6 @@ public sealed class PsCommandTests {
 	/// <summary>Verifies BSD <c>aux</c> output and descending sort syntax.</summary>
 	[Fact]
 	public async Task BsdAuxAndSortingAreSupported() {
-		using var output = new MemoryStream();
 		var status = await RunAsync( [ "aux", "--sort=-pid" ], output );
 		Assert.Equal( 0, status );
 		var lines = Lines( output );
@@ -47,7 +45,6 @@ public sealed class PsCommandTests {
 	/// <summary>Verifies quick PID selection preserves operand order and empty custom headings suppress headers.</summary>
 	[Fact]
 	public async Task QuickPidPreservesRequestedOrder() {
-		using var output = new MemoryStream();
 		var status = await RunAsync( [ "-q", "202,101", "-o", "pid=" ], output );
 		Assert.Equal( 0, status );
 		var lines = Lines( output );
@@ -86,7 +83,6 @@ public sealed class PsCommandTests {
 	/// <summary>Verifies explicit per-field widths and help sections are accepted.</summary>
 	[Fact]
 	public async Task FieldWidthsAndHelpSectionsAreSupported() {
-		using var output = new MemoryStream();
 		Assert.Equal( 0, await RunAsync( [ "-p", "101", "-o", "pid:10=PROCESS" ], output ) );
 		Assert.Contains( "   PROCESS", Text( output ), StringComparison.Ordinal );
 
@@ -98,7 +94,6 @@ public sealed class PsCommandTests {
 	/// <summary>Verifies calculated fields and reusable namespace/container/environment observations.</summary>
 	[Fact]
 	public async Task MetricsAndExtendedProcPsFieldsAreRendered() {
-		using var output = new MemoryStream();
 		var status = await RunAsync(
 			[ "-p", "202", "--cols", "200", "-o", "pid=,pcpu=,pmem=,etime=,cgroup=,container=,pidns=,environ=" ],
 			output
@@ -117,7 +112,6 @@ public sealed class PsCommandTests {
 	/// <summary>Verifies forest ordering and command indentation.</summary>
 	[Fact]
 	public async Task ForestOrdersChildrenAfterParents() {
-		using var output = new MemoryStream();
 		var status = await RunAsync( [ "-A", "--forest", "-o", "pid=,ppid=,args=" ], output );
 		Assert.Equal( 0, status );
 		var lines = Lines( output );
@@ -129,7 +123,6 @@ public sealed class PsCommandTests {
 	/// <summary>Verifies thread mode consumes the shared lightweight-task supplement provider.</summary>
 	[Fact]
 	public async Task ThreadModeReportsLightweightTasks() {
-		using var output = new MemoryStream();
 		var status = await RunAsync( [ "-A", "-L", "-o", "pid=,lwp=,thgrpid=" ], output );
 		Assert.Equal( 0, status );
 		var text = Text( output );
@@ -141,7 +134,6 @@ public sealed class PsCommandTests {
 	/// <summary>Verifies thread mode selects a thread-oriented default field set when no custom format is supplied.</summary>
 	[Fact]
 	public async Task ThreadModeUsesThreadDefaultFields() {
-		using var output = new MemoryStream();
 		var status = await RunAsync( [ "-A", "-L" ], output );
 		Assert.Equal( 0, status );
 		var lines = Lines( output );
@@ -153,7 +145,6 @@ public sealed class PsCommandTests {
 	/// <summary>Verifies environment personality selection affects the default presentation.</summary>
 	[Fact]
 	public async Task PersonalityEnvironmentSelectsBsdPresentation() {
-		using var output = new MemoryStream();
 		var environment = new Dictionary<string, string?>( StringComparer.Ordinal ) {
 			[ "PS_PERSONALITY" ] = "bsd"
 		};
@@ -175,7 +166,6 @@ public sealed class PsCommandTests {
 	/// <summary>Verifies width and explicit header controls.</summary>
 	[Fact]
 	public async Task WidthAndHeadersAreHonored() {
-		using var output = new MemoryStream();
 		var status = await RunAsync( [ "-A", "--no-headers", "--cols", "16", "-o", "pid,args" ], output );
 		Assert.Equal( 0, status );
 		foreach ( var line in Lines( output ) ) {
@@ -187,7 +177,6 @@ public sealed class PsCommandTests {
 	/// <summary>Verifies Linux security, signal, and capability observations are rendered through shared supplements.</summary>
 	[Fact]
 	public async Task SecuritySignalAndCapabilityFieldsUseSupplementObservations() {
-		using var output = new MemoryStream();
 		var status = await RunAsync( [ "-p", "101", "--cols", "200", "-o", "label=,blocked=,caught=,ignored=,pending=,capeff=" ], output );
 		Assert.Equal( 0, status );
 		Assert.Equal( "system_u:system_r:worker_t:s0 0000000000000004 0000000000000008 0000000000000001 0000000000000002 0000000000000025", Text( output ).Trim() );
@@ -196,7 +185,6 @@ public sealed class PsCommandTests {
 	/// <summary>Verifies large enumerations are streamed without dependence on console output.</summary>
 	[Fact]
 	public async Task LargeProcessSetIsWrittenWithoutBufferingFailures() {
-		using var output = new MemoryStream();
 		var status = await Tool.RunAsync(
 			[ "-A", "-o", "pid=" ],
 			stdout: output,
@@ -214,7 +202,6 @@ public sealed class PsCommandTests {
 	/// <summary>Verifies common help and version paths write only to injected streams.</summary>
 	[Fact]
 	public async Task HelpAndVersionWork() {
-		using var help = new MemoryStream();
 		Assert.Equal( 0, await RunAsync( [ "--help" ], help ) );
 		Assert.Contains( "Usage:", Text( help ), StringComparison.Ordinal );
 		using var version = new MemoryStream();
@@ -231,7 +218,6 @@ public sealed class PsCommandTests {
 	public async Task CancellationReturnsConventionalCode() {
 		using var cancellation = new CancellationTokenSource();
 		cancellation.Cancel();
-		using var output = new MemoryStream();
 		var status = await Tool.RunAsync(
 			[],
 			stdout: output,

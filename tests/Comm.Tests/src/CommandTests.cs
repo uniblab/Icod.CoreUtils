@@ -20,8 +20,6 @@ public sealed class CommandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task SupportsSuppressionDelimitersAndTotals() {
-		using var first = new TemporaryFile( "a\nc\n"u8.ToArray() );
-		using var second = new TemporaryFile( "b\nc\n"u8.ToArray() );
 		var common = await RunAsync( [ "-12", first.Path, second.Path ] );
 		var detailed = await RunAsync( [ "--output-delimiter=|", "--total", first.Path, second.Path ] );
 		Assert.Equal( "c\n"u8.ToArray(), common.Output );

@@ -77,7 +77,6 @@ public sealed class SeqCommandTests {
 
 	[Fact]
 	public async Task RepeatsInfiniteEndpointsUntilCancelled() {
-		using var cancellation = new CancellationTokenSource();
 		var output = new CancellingTextWriter(
 			cancellation,
 			128
@@ -117,7 +116,6 @@ public sealed class SeqCommandTests {
 		Assert.StartsWith( Lines( "1", "2" ), large.Output );
 		Assert.EndsWith( Lines( "9999", "10000" ), large.Output );
 
-		using var cancellation = new CancellationTokenSource();
 		cancellation.Cancel();
 		var cancelled = await RunAsync(
 			new string[] { "1", "1000000000" },

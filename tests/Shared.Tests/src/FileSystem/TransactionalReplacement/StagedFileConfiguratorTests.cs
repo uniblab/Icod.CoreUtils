@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Shared.Tests.FileSystem.TransactionalReplacement;
 
 using System.Text;
-using Icod.CoreUtils.Shared.FileSystem.Mutation;
+using Icod.CommandFramework.FileSystem.Mutation;
 using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;
 using Xunit;
 

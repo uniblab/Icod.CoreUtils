@@ -112,7 +112,6 @@ public sealed class BinaryAndOperandTests {
 	[Fact]
 	public async Task ReportsReadFailures() {
 		using var input = new ThrowingReadStream();
-		using var output = new MemoryStream();
 		var error = new StringWriter();
 		var context = new CommandContext( "paste", new StringReader( string.Empty ), new StringWriter(), error, input, output );
 		var status = await Command.RunAsync( [ ], context );
@@ -127,8 +126,6 @@ public sealed class BinaryAndOperandTests {
 		var file = System.IO.Path.GetTempFileName();
 		try {
 			await File.WriteAllBytesAsync( file, "later\n"u8.ToArray() );
-			using var input = new ThrowingReadStream();
-			using var output = new MemoryStream();
 			var error = new StringWriter();
 			var context = new CommandContext( "paste", new StringReader( string.Empty ), new StringWriter(), error, input, output );
 			var status = await Command.RunAsync( [ "-", file ], context );
@@ -147,8 +144,6 @@ public sealed class BinaryAndOperandTests {
 		var file = System.IO.Path.GetTempFileName();
 		try {
 			await File.WriteAllBytesAsync( file, "later\n"u8.ToArray() );
-			using var input = new ThrowingReadStream();
-			using var output = new MemoryStream();
 			var error = new StringWriter();
 			var context = new CommandContext( "paste", new StringReader( string.Empty ), new StringWriter(), error, input, output );
 			var status = await Command.RunAsync( [ "-s", "-", file ], context );
@@ -167,7 +162,6 @@ public sealed class BinaryAndOperandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task ReportsWriteFailures() {
-		using var input = new MemoryStream( "x\n"u8.ToArray() );
 		using var output = new ThrowingWriteStream();
 		var error = new StringWriter();
 		var context = new CommandContext( "paste", new StringReader( string.Empty ), new StringWriter(), error, input, output );
@@ -182,8 +176,6 @@ public sealed class BinaryAndOperandTests {
 	public async Task HonorsCancellation() {
 		using var cancellation = new CancellationTokenSource();
 		cancellation.Cancel();
-		using var input = new MemoryStream( "x\n"u8.ToArray() );
-		using var output = new MemoryStream();
 		var context = new CommandContext( "paste", new StringReader( string.Empty ), new StringWriter(), new StringWriter(), input, output, cancellationToken: cancellation.Token );
 		var status = await Command.RunAsync( [ ], context );
 		Assert.Equal( CommandExitCodes.Canceled, status );

@@ -1197,7 +1197,6 @@ Other options:
 		}
 
 		private static byte[] HashKey( byte[] seed, string value ) {
-			using var hash = IncrementalHash.CreateHash( HashAlgorithmName.SHA256 );
 			hash.AppendData( seed );
 			hash.AppendData( Utf8.GetBytes( value ) );
 			return hash.GetHashAndReset();

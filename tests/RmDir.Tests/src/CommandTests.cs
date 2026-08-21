@@ -4,7 +4,7 @@ using RmDirCommand = Icod.CoreUtils.Rmdir.Command;
 using Xunit;
 using Icod.CoreUtils.Shared.Diagnostics;
 using Icod.CommandFramework.FileSystem.Metadata;
-using Icod.CoreUtils.Shared.FileSystem.Mutation;
+using Icod.CommandFramework.FileSystem.Mutation;
 
 /// <summary>Exercises GNU-compatible <c>rmdir</c> behavior.</summary>
 public sealed class CommandTests {
@@ -41,7 +41,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies that only nonempty-directory failure is ignored.</summary>
 	[Fact]
 	public async Task IgnoreFailOnNonEmptyLeavesDirectoryAndReturnsSuccess() {
-		using var temporary = new TemporaryDirectory();
 		var directory = System.IO.Path.Combine( temporary.Path, "nonempty" );
 		Directory.CreateDirectory( directory );
 		File.WriteAllText( System.IO.Path.Combine( directory, "item" ), "data" );
@@ -60,7 +59,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies that a directory symbolic link is not followed or removed by <c>rmdir</c>.</summary>
 	[Fact]
 	public async Task RefusesDirectorySymbolicLink() {
-		using var temporary = new TemporaryDirectory();
 		var target = System.IO.Path.Combine( temporary.Path, "target" );
 		var link = System.IO.Path.Combine( temporary.Path, "link" );
 		Directory.CreateDirectory( target );

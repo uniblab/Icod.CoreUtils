@@ -32,7 +32,6 @@ public sealed class CommandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task HeadCountSelectsWithoutReplacement() {
-		using var random = new TemporaryFile( CreateRandomBytes( 2, 0 ) );
 		var result = await RunAsync(
 			[ "-n", "2", "--random-source", random.Path ],
 			"a\nb\nc\n"u8.ToArray()
@@ -135,7 +134,6 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task OutputMayReplaceTheInputFileSafely() {
 		using var input = new TemporaryFile( "a\nb\nc\n"u8.ToArray() );
-		using var random = new TemporaryFile( CreateRandomBytes( 2, 0 ) );
 		var result = await RunAsync(
 			[ "--random-source", random.Path, "-o", input.Path, input.Path ],
 			[]
@@ -149,7 +147,6 @@ public sealed class CommandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task ZeroHeadCountDoesNotReadInputOrRandomSource() {
-		using var output = new TemporaryFile( "old"u8.ToArray() );
 		var missingInput = System.IO.Path.Combine( System.IO.Path.GetTempPath(), Guid.NewGuid().ToString( "N" ) );
 		var missingRandom = System.IO.Path.Combine( System.IO.Path.GetTempPath(), Guid.NewGuid().ToString( "N" ) );
 		var result = await RunAsync(
@@ -197,8 +194,6 @@ public sealed class CommandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task ExhaustedRandomSourceIsDiagnosedBeforeOutputIsTruncated() {
-		using var random = new TemporaryFile( [] );
-		using var output = new TemporaryFile( "preserve"u8.ToArray() );
 		var result = await RunAsync(
 			[ "--random-source", random.Path, "--output", output.Path ],
 			"a\nb\n"u8.ToArray()
@@ -308,7 +303,6 @@ public sealed class CommandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task NumericOptionsAcceptLeadingWhitespaceAndPlusSigns() {
-		using var random = new TemporaryFile( CreateRandomBytes( 0 ) );
 		var count = await RunAsync(
 			[ "-n", " +1", "--random-source", random.Path ],
 			"a\nb\n"u8.ToArray()

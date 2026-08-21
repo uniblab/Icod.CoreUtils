@@ -89,7 +89,6 @@ public sealed class CommandTests {
 	public async Task RejectsSignedNumericSignals( string signal ) {
 		ArgumentNullException.ThrowIfNull( signal );
 		var executor = FakeExecutor.Exited( 0 );
-		using var error = new MemoryStream();
 		var status = await Command.RunAsync( new[] { "--signal", signal, "1", "child" }, stdout: Stream.Null, stderr: error, processExecutor: executor, signalProvider: new FakeSignals( executor ) );
 		Assert.Equal( 125, status );
 		Assert.Null( executor.LastOptions );
@@ -120,7 +119,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies F4 command lookup preserves GNU's command-not-found status.</summary>
 	[Fact]
 	public async Task MissingCommandReturns127() {
-		using var error = new MemoryStream();
 		var status = await Command.RunAsync( new[] { "0", $"icod-timeout-missing-{Guid.NewGuid():N}" }, stdout: Stream.Null, stderr: error );
 		Assert.Equal( 127, status );
 	}

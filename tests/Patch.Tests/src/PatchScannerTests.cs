@@ -456,7 +456,6 @@ public sealed class PatchScannerTests {
 	}
 
 	private static async Task ReadAndDetectAsync( byte[] bytes ) {
-		using var input = new MemoryStream( bytes );
 		await using var source = await PatchSource.ReadAsync( input );
 		_ = PatchScanner.Detect( source.Records, source.Probes );
 	}
@@ -465,7 +464,6 @@ public sealed class PatchScannerTests {
 		byte[] bytes,
 		Func<PatchSource, PatchScanResult, Task> assertion
 	) {
-		using var input = new MemoryStream( bytes );
 		await using var source = await PatchSource.ReadAsync( input );
 		var result = PatchScanner.Detect( source.Records, source.Probes );
 		await assertion( source, result );

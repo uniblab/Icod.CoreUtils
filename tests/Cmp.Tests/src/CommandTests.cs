@@ -234,7 +234,6 @@ public sealed class CommandTests {
 			new byte[] { 1 },
 			new byte[] { 1 },
 			async ( first, second ) => {
-				using var cancellation = new CancellationTokenSource();
 				cancellation.Cancel();
 				var result = await RunAsync( new[] { first, second }, cancellationToken: cancellation.Token );
 				Assert.Equal( CommandExitCodes.Canceled, result.Status );

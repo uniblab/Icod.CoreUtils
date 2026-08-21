@@ -213,7 +213,6 @@ public sealed class GnuPatchDifferentialTests {
 				UseShellExecute = false
 			};
 			start.ArgumentList.Add( "--version" );
-			using var process = Process.Start( start );
 			if ( null == process ) {
 				return false;
 			}

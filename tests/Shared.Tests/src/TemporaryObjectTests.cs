@@ -164,7 +164,6 @@ public sealed class TemporaryObjectTests {
 			out var template,
 			out _
 		) );
-		using var source = new CancellationTokenSource();
 		var fileSystem = new AlwaysCollidingFileSystem();
 		var creator = new SecureTemporaryObjectCreator(
 			fileSystem,
@@ -214,7 +213,6 @@ public sealed class TemporaryObjectTests {
 
 	[Fact]
 	public void NameOnlyTreatsAnExclusivelyOpenedFileAsACollision() {
-		using var workspace = new Workspace();
 		var path = System.IO.Path.Combine( workspace.Root, "locked" );
 		using var stream = new FileStream(
 			path,
@@ -231,7 +229,6 @@ public sealed class TemporaryObjectTests {
 
 	[Fact]
 	public void SystemProviderCreatesDirectoryExclusively() {
-		using var workspace = new Workspace();
 		var path = System.IO.Path.Combine( workspace.Root, "directory" );
 		var first = SystemTemporaryObjectFileSystem.Instance.TryCreate(
 			path,
@@ -247,7 +244,6 @@ public sealed class TemporaryObjectTests {
 
 	[Fact]
 	public void NameOnlyTreatsDanglingSymbolicLinkAsCollision() {
-		using var workspace = new Workspace();
 		var path = System.IO.Path.Combine( workspace.Root, "link" );
 		try {
 			File.CreateSymbolicLink( path, System.IO.Path.Combine( workspace.Root, "missing" ) );

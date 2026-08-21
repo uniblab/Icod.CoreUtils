@@ -304,7 +304,6 @@ public sealed class SyncCommandTests {
 		) {
 			return;
 		}
-		using var temporary = new TemporaryDirectory();
 		var path = temporary.CreateFile( "data-only.bin" );
 		await File.WriteAllBytesAsync(
 			path,
@@ -335,7 +334,6 @@ public sealed class SyncCommandTests {
 		) {
 			return;
 		}
-		using var temporary = new TemporaryDirectory();
 		var path = temporary.CreateFile( "target.bin" );
 		await File.WriteAllBytesAsync(
 			path,
@@ -368,9 +366,7 @@ public sealed class SyncCommandTests {
 		IFileSystemOperations? provider = null,
 		CancellationToken cancellationToken = default
 	) {
-		using var input = new StringReader( string.Empty );
 		using var output = new StringWriter();
-		using var error = new StringWriter();
 		var context = new CommandContext(
 			"sync",
 			input,

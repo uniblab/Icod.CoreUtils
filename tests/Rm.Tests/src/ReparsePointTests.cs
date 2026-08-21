@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Rm.Tests;
 
 using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.FileSystem.Mutation;
+using Icod.CommandFramework.FileSystem.Mutation;
 using RmCommand = Icod.CoreUtils.Rm.Command;
 using Xunit;
 

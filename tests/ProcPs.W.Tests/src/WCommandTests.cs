@@ -33,7 +33,6 @@ public sealed class WCommandTests {
 	/// <summary>Verifies short mode and header suppression omit long-only fields and the uptime heading.</summary>
 	[Fact]
 	public async Task ShortModeAndNoHeaderSuppressLongFieldsAndHeading() {
-		using var output = new MemoryStream();
 		var status = await RunAsync( [ "-hs" ], output );
 		Assert.Equal( 0, status );
 		var text = Text( output );
@@ -46,7 +45,6 @@ public sealed class WCommandTests {
 	/// <summary>Verifies pid mode prefixes WHAT with the login/current process pair.</summary>
 	[Fact]
 	public async Task PidModeShowsLoginAndCurrentProcessIdentifiers() {
-		using var output = new MemoryStream();
 		var status = await RunAsync( [ "-hp" ], output );
 		Assert.Equal( 0, status );
 		var text = Text( output );
@@ -57,7 +55,6 @@ public sealed class WCommandTests {
 	/// <summary>Verifies the optional user operand restricts displayed login sessions.</summary>
 	[Fact]
 	public async Task UserOperandFiltersSessions() {
-		using var output = new MemoryStream();
 		var sessions = new FakeSessionProvider(
 			[
 				LoginSession( "alice", "pts/1", 100 ),
@@ -74,7 +71,6 @@ public sealed class WCommandTests {
 	/// <summary>Verifies <c>-f</c> toggles the origin column off, matching procps-ng compatibility behavior.</summary>
 	[Fact]
 	public async Task FromOptionTogglesOriginColumn() {
-		using var output = new MemoryStream();
 		var status = await RunAsync( [ "-hf" ], output );
 		Assert.Equal( 0, status );
 		var text = Text( output );
@@ -92,7 +88,6 @@ public sealed class WCommandTests {
 				Process( 102, 77, 1000, 30, 10, 10, "background", [ "background" ], "/dev/pts/1", 300, 200 )
 			]
 		);
-		using var output = new MemoryStream();
 		var status = await RunAsync( [ "-h" ], output, processProvider: processes );
 		Assert.Equal( 0, status );
 		var text = Text( output );
@@ -125,7 +120,6 @@ public sealed class WCommandTests {
 	/// <summary>Verifies container mode delegates uptime semantics to the shared metrics provider.</summary>
 	[Fact]
 	public async Task ContainerModeRequestsContainerUptime() {
-		using var output = new MemoryStream();
 		var metrics = new FakeMetricsProvider();
 		var status = await RunAsync( [ "--container" ], output, metricsProvider: metrics );
 		Assert.Equal( 0, status );
@@ -135,7 +129,6 @@ public sealed class WCommandTests {
 	/// <summary>Verifies terminal mode can include an observed terminal absent from login accounting.</summary>
 	[Fact]
 	public async Task TerminalModeAddsUnaccountedObservableTerminal() {
-		using var output = new MemoryStream();
 		var sessions = new FakeSessionProvider( [] );
 		var processes = new FakeProcessProvider(
 			[
@@ -152,7 +145,6 @@ public sealed class WCommandTests {
 	/// <summary>Verifies the documented ProcPs environment width controls are honored within their valid ranges.</summary>
 	[Fact]
 	public async Task EnvironmentControlsUserAndFromWidths() {
-		using var output = new MemoryStream();
 		var sessions = new FakeSessionProvider(
 			[ new ProcLoginSession( "abcdefghijkl", "pts/1", "host.example", Now.AddHours( -1 ), Now.AddSeconds( -30 ), 100, null ) ]
 		);
@@ -176,7 +168,6 @@ public sealed class WCommandTests {
 	/// <summary>Verifies an explicitly injected terminal width still limits the WHAT field.</summary>
 	[Fact]
 	public async Task ColumnsEnvironmentLimitsWhatWidth() {
-		using var output = new MemoryStream();
 		string? EnvironmentProvider( string name ) {
 			ArgumentNullException.ThrowIfNull( name );
 			if ( "COLUMNS" == name ) {
@@ -194,7 +185,6 @@ public sealed class WCommandTests {
 	/// <summary>Verifies invalid ProcPs width environment values warn and fall back without touching the test console.</summary>
 	[Fact]
 	public async Task InvalidEnvironmentWidthsReportWarningsAndUseDefaults() {
-		using var output = new MemoryStream();
 		using var error = new MemoryStream();
 		string? EnvironmentProvider( string name ) {
 			ArgumentNullException.ThrowIfNull( name );
@@ -228,7 +218,6 @@ public sealed class WCommandTests {
 	/// <summary>Verifies IP-address mode prefers a numeric accounting origin and forces the FROM column on.</summary>
 	[Fact]
 	public async Task IpAddressModeUsesNumericOriginAndForcesFromColumn() {
-		using var output = new MemoryStream();
 		var sessions = new FakeSessionProvider(
 			[ new ProcLoginSession( "alice", "pts/1", "host.example", Now.AddHours( -1 ), Now.AddSeconds( -30 ), 100, null, "203.0.113.8" ) ]
 		);
@@ -242,8 +231,6 @@ public sealed class WCommandTests {
 	/// <summary>Verifies unavailable native login accounting produces a controlled diagnostic rather than guessed rows.</summary>
 	[Fact]
 	public async Task MissingLoginAccountingReportsControlledFailure() {
-		using var output = new MemoryStream();
-		using var error = new MemoryStream();
 		var sessions = new MissingSessionProvider();
 		var status = await Tool.RunAsync(
 			[],
@@ -287,8 +274,6 @@ public sealed class WCommandTests {
 	/// <summary>Verifies cancellation is reported using the suite's controlled cancellation status.</summary>
 	[Fact]
 	public async Task CancellationReturnsControlledStatus() {
-		using var output = new MemoryStream();
-		using var error = new MemoryStream();
 		using var cancellation = new CancellationTokenSource();
 		cancellation.Cancel();
 		var status = await Tool.RunAsync(

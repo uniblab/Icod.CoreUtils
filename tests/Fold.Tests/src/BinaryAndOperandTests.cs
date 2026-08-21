@@ -99,7 +99,6 @@ public sealed class BinaryAndOperandTests {
 		var file = System.IO.Path.GetTempFileName();
 		try {
 			await File.WriteAllTextAsync( file, "abcdef" );
-			using var output = new MemoryStream();
 			var context = new CommandContext(
 				"fold",
 				new StringReader( string.Empty ),
@@ -121,7 +120,6 @@ public sealed class BinaryAndOperandTests {
 	[Fact]
 	public async Task CallerOwnedStreamsRemainOpen() {
 		using var input = new MemoryStream( "abcdef"u8.ToArray() );
-		using var output = new MemoryStream();
 		var context = CreateContext( input, output, new StringWriter() );
 		var status = await Command.RunAsync( [ "-4" ], context );
 		Assert.Equal( CommandExitCodes.Success, status );
@@ -141,7 +139,6 @@ public sealed class BinaryAndOperandTests {
 		Assert.Equal( "abc"u8.ToArray(), readOutput.ToArray() );
 		Assert.Contains( "simulated read failure", readError.ToString() );
 
-		using var input = new MemoryStream( "abcdef"u8.ToArray() );
 		using var failingOutput = new ThrowingWriteStream();
 		var writeError = new StringWriter();
 		var writeStatus = await Command.RunAsync( [ "-4" ], CreateContext( input, failingOutput, writeError ) );

@@ -145,7 +145,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies a failed operand does not prevent later operands from being processed.</summary>
 	[Fact]
 	public async Task ContinuesAfterInputError() {
-		using var directory = new TemporaryDirectory();
 		var missing = directory.File( "missing" );
 		var valid = directory.File( "valid" );
 		await File.WriteAllBytesAsync( valid, "a\nb\n"u8.ToArray() );

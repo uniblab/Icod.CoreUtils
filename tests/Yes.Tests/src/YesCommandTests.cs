@@ -27,12 +27,10 @@ public sealed class YesCommandTests {
 
 	[Fact]
 	public async Task JoinsOperandsWithSpaces() {
-		using var cancellation = new CancellationTokenSource();
 		var output = new CancellingTextWriter(
 			cancellation,
 			80
 		);
-		using var error = new StringWriter { NewLine = Environment.NewLine };
 		var exitCode = await YesCommand.RunAsync(
 			new string[] { "alpha", "beta" },
 			TextReader.Null,
@@ -47,7 +45,6 @@ public sealed class YesCommandTests {
 	[Fact]
 	public async Task BrokenPipeReturnsFailureAndDiagnostic() {
 		using var output = new ThrowingTextWriter();
-		using var error = new StringWriter { NewLine = Environment.NewLine };
 		var exitCode = await YesCommand.RunAsync(
 			Array.Empty<string>(),
 			TextReader.Null,
@@ -77,7 +74,6 @@ public sealed class YesCommandTests {
 		string[] args
 	) {
 		using var output = new StringWriter { NewLine = Environment.NewLine };
-		using var error = new StringWriter { NewLine = Environment.NewLine };
 		var exitCode = await YesCommand.RunAsync(
 			args,
 			TextReader.Null,

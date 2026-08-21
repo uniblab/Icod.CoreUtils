@@ -111,7 +111,6 @@ public sealed class BinaryAndOperandTests {
 	[Fact]
 	public async Task ReportsReadFailures() {
 		using var input = new ThrowingReadStream();
-		using var output = new MemoryStream();
 		var error = new StringWriter();
 		var context = new CommandContext( "nl", new StringReader( string.Empty ), new StringWriter(), error, input, output );
 		var status = await Command.RunAsync( [ ], context );

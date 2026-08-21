@@ -1508,7 +1508,6 @@ public sealed class EditorEngine {
 		CancellationToken cancellationToken
 	) {
 		await using var stream = new MemoryStream( content.ToArray(), writable: false );
-		using var reader = new ByteRecordReader( stream );
 		var lines = new List<ReadOnlyMemory<byte>>();
 		var terminated = true;
 		while ( true ) {

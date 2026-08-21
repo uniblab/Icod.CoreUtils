@@ -239,8 +239,6 @@ public sealed class CommandTests {
 		CancellationToken cancellationToken = default
 	) {
 		using var input = new MemoryStream( stdinBytes ?? Array.Empty<byte>() );
-		using var output = new StringWriter();
-		using var error = new StringWriter();
 		var status = await Command.RunAsync(
 			arguments,
 			TextReader.Null,

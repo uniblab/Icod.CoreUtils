@@ -2,7 +2,7 @@ namespace Icod.Patch.Tests;
 
 using System.IO;
 using System.Text;
-using Icod.CoreUtils.Shared.FileSystem.Mutation;
+using Icod.CommandFramework.FileSystem.Mutation;
 using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;
 using Xunit;
 

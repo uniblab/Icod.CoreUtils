@@ -66,7 +66,6 @@ public sealed class BinaryAndOperandTests {
 		var file = System.IO.Path.GetTempFileName();
 		try {
 			await File.WriteAllBytesAsync( file, "        x"u8.ToArray() );
-			using var output = new MemoryStream();
 			var context = new CommandContext( "unexpand", new StringReader( string.Empty ), new StringWriter(), new StringWriter(), null, output );
 			var status = await Command.RunAsync( [ file ], context );
 			Assert.Equal( CommandExitCodes.Success, status );
@@ -81,7 +80,6 @@ public sealed class BinaryAndOperandTests {
 	[Fact]
 	public async Task CallerOwnedStreamsRemainOpen() {
 		using var input = new MemoryStream( "        x"u8.ToArray() );
-		using var output = new MemoryStream();
 		var context = new CommandContext( "unexpand", new StringReader( string.Empty ), new StringWriter(), new StringWriter(), input, output );
 		await Command.RunAsync( [ ], context );
 		Assert.True( input.CanRead );

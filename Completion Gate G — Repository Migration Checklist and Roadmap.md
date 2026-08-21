@@ -259,7 +259,7 @@ No projects move during this phase.
 - [x] **G3F1 — Traversal implementation/test excision**
   - remove the duplicate CoreUtils `FileSystem.Traversal` implementation and its duplicated Shared tests;
   - rely exclusively on `Icod.CommandFramework.FileSystem.Traversal`, whose consumer cut-over was completed during the G3E1 namespace-alignment follow-up.
-- [ ] **G3G1 — Mutation consumer cut-over**
+- [x] **G3G1 — Mutation consumer cut-over**
   - move surviving consumers of `Icod.CoreUtils.Shared.FileSystem.Mutation` to `Icod.CommandFramework.FileSystem.Mutation`;
   - leave the duplicate Mutation implementation and its duplicated Shared tests in place until G3G2.
 - [ ] **G3G2 — Mutation implementation/test excision**
@@ -412,7 +412,7 @@ Current sequence:
 - [x] G3E1 — cut Metadata consumers over to `Icod.CommandFramework.FileSystem.Metadata`.
 - [x] G3E2 — remove the duplicate CoreUtils Metadata implementation and tests.
 - [x] G3F1 — remove the duplicate CoreUtils Traversal implementation and tests.
-- [ ] G3G1 — cut Mutation consumers over to `Icod.CommandFramework.FileSystem.Mutation`.
+- [x] G3G1 — cut Mutation consumers over to `Icod.CommandFramework.FileSystem.Mutation`.
 - [ ] G3G2 — remove the duplicate CoreUtils Mutation implementation and tests.
 - [ ] Contract the remaining framework-owned filesystem boundaries.
 - [ ] Excise namespaces that are wholly owned by `Icod.CommandFramework`.

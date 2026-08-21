@@ -26,7 +26,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies an explicitly signed positive numeric address is accepted.</summary>
 	[Fact]
 	public async Task AcceptsSignedPositiveNumericAddress() {
-		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "part" );
 		await File.WriteAllTextAsync( input, "a\nb\nc\n" );
@@ -41,7 +40,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies multiple numeric addresses produce consecutive sections.</summary>
 	[Fact]
 	public async Task SplitsAtMultipleNumericAddresses() {
-		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "part" );
 		await File.WriteAllTextAsync( input, "1\n2\n3\n4\n5\n6\n" );
@@ -58,7 +56,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies numeric repetition uses absolute multiples of the address.</summary>
 	[Fact]
 	public async Task RepeatsNumericAddress() {
-		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "part" );
 		await File.WriteAllTextAsync( input, "1\n2\n3\n4\n5\n6\n" );
@@ -74,7 +71,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies an explicitly signed positive repeat count is accepted.</summary>
 	[Fact]
 	public async Task AcceptsSignedPositiveRepeatCount() {
-		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "part" );
 		await File.WriteAllTextAsync( input, "1\n2\n3\n4\n5\n6\n" );
@@ -90,7 +86,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies GNU basic regular expressions select a line boundary.</summary>
 	[Fact]
 	public async Task SplitsAtBasicRegularExpression() {
-		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "part" );
 		await File.WriteAllTextAsync( input, "a\nb\nMARK\nc\n" );
@@ -105,7 +100,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies positive regex offsets move the split point after the match.</summary>
 	[Fact]
 	public async Task AppliesPositiveRegularExpressionOffset() {
-		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "part" );
 		await File.WriteAllTextAsync( input, "a\nb\nMARK\nc\n" );
@@ -120,7 +114,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies negative regex offsets preserve buffered lines for the following section.</summary>
 	[Fact]
 	public async Task AppliesNegativeRegularExpressionOffset() {
-		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "part" );
 		await File.WriteAllTextAsync( input, "a\nb\nMARK\nc\n" );
@@ -135,7 +128,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies percent-delimited regex sections are skipped without consuming a file number.</summary>
 	[Fact]
 	public async Task SuppressesPercentDelimitedSection() {
-		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "part" );
 		await File.WriteAllTextAsync( input, "a\nb\nMARK\nc\n" );
@@ -150,7 +142,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies regex repetition retains each matching line as the next section start.</summary>
 	[Fact]
 	public async Task RepeatsRegularExpression() {
-		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "part" );
 		await File.WriteAllTextAsync( input, "a\nb\nMARK\nc\nMARK\nd\n" );
@@ -166,7 +157,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies regex star repetition terminates successfully when no later match exists.</summary>
 	[Fact]
 	public async Task RepeatsRegularExpressionUntilExhausted() {
-		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "part" );
 		await File.WriteAllTextAsync( input, "a\nMARK\nb\nMARK\nc\n" );
@@ -183,7 +173,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies matching lines can be removed from output.</summary>
 	[Fact]
 	public async Task SuppressesMatchedLine() {
-		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "part" );
 		await File.WriteAllTextAsync( input, "a\nb\nMARK\nc\n" );
@@ -198,7 +187,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies newline is excluded from regular-expression matching.</summary>
 	[Fact]
 	public async Task MatchesLineEndBeforeNewline() {
-		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "part" );
 		await File.WriteAllBytesAsync( input, "x\nEND\ny"u8.ToArray() );
@@ -213,7 +201,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies malformed UTF-8 source bytes remain byte-for-byte intact.</summary>
 	[Fact]
 	public async Task PreservesInvalidUtf8Bytes() {
-		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "part" );
 		var bytes = new byte[] { 0xff, (byte)'\n', (byte)'B', (byte)'\n', 0xfe };
@@ -229,7 +216,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies standard input need not be seekable.</summary>
 	[Fact]
 	public async Task SplitsNonseekableStandardInput() {
-		using var directory = new TemporaryDirectory();
 		var prefix = directory.File( "part" );
 		await using var input = new NonSeekableReadStream( "a\nb\nc\n"u8.ToArray() );
 
@@ -243,7 +229,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies custom decimal digit width.</summary>
 	[Fact]
 	public async Task UsesRequestedDigitWidth() {
-		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "part" );
 		await File.WriteAllTextAsync( input, "a\nb\n" );
@@ -258,7 +243,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies an explicitly signed positive digit width is accepted.</summary>
 	[Fact]
 	public async Task UsesSignedPositiveDigitWidth() {
-		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "part" );
 		await File.WriteAllTextAsync( input, "a\nb\n" );
@@ -273,7 +257,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies printf-style suffix formats and literal percent signs.</summary>
 	[Fact]
 	public async Task UsesSuffixFormat() {
-		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "piece" );
 		await File.WriteAllTextAsync( input, "a\nb\n" );
@@ -288,7 +271,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies empty output files can be elided and their number reused.</summary>
 	[Fact]
 	public async Task ElidesEmptyFiles() {
-		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "part" );
 		await File.WriteAllTextAsync( input, "a\nb\n" );
@@ -307,7 +289,6 @@ public sealed class CommandTests {
 	[InlineData( "--quiet" )]
 	[InlineData( "--silent" )]
 	public async Task SuppressesByteCounts( string option ) {
-		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "part" );
 		await File.WriteAllTextAsync( input, "a\nb\n" );
@@ -321,7 +302,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies default failure cleanup removes all generated files.</summary>
 	[Fact]
 	public async Task RemovesFilesAfterMatchFailure() {
-		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "part" );
 		await File.WriteAllTextAsync( input, "a\nb\n" );
@@ -336,7 +316,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies keep-files retains the partial piece produced before a match failure.</summary>
 	[Fact]
 	public async Task KeepsFilesAfterMatchFailure() {
-		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "part" );
 		await File.WriteAllTextAsync( input, "a\nb\n" );
@@ -350,7 +329,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies keep-files retains bytes consumed before an out-of-range numeric address.</summary>
 	[Fact]
 	public async Task KeepsPartialNumericPieceOnFailure() {
-		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "part" );
 		await File.WriteAllTextAsync( input, "a\nb\n" );
@@ -364,7 +342,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies suppress-matched accepts the boundary immediately after the final input line.</summary>
 	[Fact]
 	public async Task AcceptsSuppressedAddressImmediatelyAfterInput() {
-		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "part" );
 		await File.WriteAllTextAsync( input, "a\nb\n" );
@@ -379,7 +356,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies suppress-matched rejects an address more than one line past end of input.</summary>
 	[Fact]
 	public async Task RejectsDistantSuppressedNumericAddress() {
-		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "part" );
 		await File.WriteAllTextAsync( input, "a\nb\n" );
@@ -442,7 +418,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies equal numeric addresses produce a warning and an empty section.</summary>
 	[Fact]
 	public async Task WarnsForEqualNumericAddresses() {
-		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "part" );
 		await File.WriteAllTextAsync( input, "a\nb\nc\n" );
@@ -459,7 +434,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies output cannot overwrite the input operand.</summary>
 	[Fact]
 	public async Task PreventsInputOverwrite() {
-		using var directory = new TemporaryDirectory();
 		var prefix = directory.File( "piece" );
 		var input = prefix + "00";
 		await File.WriteAllTextAsync( input, "a\nb\n" );
@@ -503,7 +477,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies cancellation returns the shared canceled status and removes output by default.</summary>
 	[Fact]
 	public async Task ObservesCancellation() {
-		using var directory = new TemporaryDirectory();
 		var prefix = directory.File( "part" );
 		using var cancellation = new CancellationTokenSource();
 		cancellation.Cancel();

@@ -27,7 +27,6 @@ public sealed class CommandTests {
 	/// <summary>The historical normal report uses the third input as its pairwise common file.</summary>
 	[Fact]
 	public async Task NormalReportUsesThirdInputForRepeatedLineAlignment() {
-		using var fixture = new FileFixture();
 		var mine = fixture.Write( "mine", "A\n" );
 		var older = fixture.Write( "older", "A\nA\n" );
 		var yours = fixture.Write( "yours", "B\nA\n" );
@@ -41,7 +40,6 @@ public sealed class CommandTests {
 	/// <summary>Nonoverlapping changes from the third file are merged without conflict.</summary>
 	[Fact]
 	public async Task MergeAppliesYoursOnlyChange() {
-		using var fixture = new FileFixture();
 		var mine = fixture.Write( "mine", "base\n" );
 		var older = fixture.Write( "older", "base\n" );
 		var yours = fixture.Write( "yours", "new\n" );
@@ -53,7 +51,6 @@ public sealed class CommandTests {
 	/// <summary>Default merge mode marks a true overlap with all three labels.</summary>
 	[Fact]
 	public async Task MergeMarksThreeWayConflict() {
-		using var fixture = new FileFixture();
 		var mine = fixture.Write( "mine", "mine\n" );
 		var older = fixture.Write( "older", "old\n" );
 		var yours = fixture.Write( "yours", "yours\n" );
@@ -68,7 +65,6 @@ public sealed class CommandTests {
 	/// <summary>Show-overlap merge mode omits the ancestor body.</summary>
 	[Fact]
 	public async Task ShowOverlapMergeUsesTwoWayMarkers() {
-		using var fixture = new FileFixture();
 		var mine = fixture.Write( "mine", "mine\n" );
 		var older = fixture.Write( "older", "old\n" );
 		var yours = fixture.Write( "yours", "yours\n" );
@@ -83,7 +79,6 @@ public sealed class CommandTests {
 	/// <summary>Show-all treats an already-applied descendant change as a conflict with the ancestor.</summary>
 	[Fact]
 	public async Task ShowAllMarksOlderOnlyRegion() {
-		using var fixture = new FileFixture();
 		var mine = fixture.Write( "mine", "same\n" );
 		var older = fixture.Write( "older", "old\n" );
 		var yours = fixture.Write( "yours", "same\n" );
@@ -98,7 +93,6 @@ public sealed class CommandTests {
 	/// <summary>Show-overlap ignores an already-applied descendant change.</summary>
 	[Fact]
 	public async Task ShowOverlapIgnoresOlderOnlyRegion() {
-		using var fixture = new FileFixture();
 		var mine = fixture.Write( "mine", "same\n" );
 		var older = fixture.Write( "older", "old\n" );
 		var yours = fixture.Write( "yours", "same\n" );
@@ -110,7 +104,6 @@ public sealed class CommandTests {
 	/// <summary>The ordinary ed mode writes a reverse-order change command.</summary>
 	[Fact]
 	public async Task EdModeWritesChangeCommand() {
-		using var fixture = new FileFixture();
 		var mine = fixture.Write( "mine", "base\n" );
 		var older = fixture.Write( "older", "base\n" );
 		var yours = fixture.Write( "yours", "new\n" );
@@ -122,7 +115,6 @@ public sealed class CommandTests {
 	/// <summary>Marked ed conflicts preserve mine and append marker blocks around it.</summary>
 	[Fact]
 	public async Task ShowAllEdModeWritesSplitConflictCommands() {
-		using var fixture = new FileFixture();
 		var mine = fixture.Write( "mine", "mine\n" );
 		var older = fixture.Write( "older", "old\n" );
 		var yours = fixture.Write( "yours", "yours\n" );
@@ -137,7 +129,6 @@ public sealed class CommandTests {
 	/// <summary>Marked-overlap-only mode brackets true overlaps while leaving other regions untouched.</summary>
 	[Fact]
 	public async Task MarkedOverlapOnlyWritesConflictMarkers() {
-		using var fixture = new FileFixture();
 		var mine = fixture.Write( "mine", "mine\n" );
 		var older = fixture.Write( "older", "old\n" );
 		var yours = fixture.Write( "yours", "yours\n" );
@@ -152,7 +143,6 @@ public sealed class CommandTests {
 	/// <summary>System V compatibility appends write and quit commands to an ed script.</summary>
 	[Fact]
 	public async Task InitialWriteOptionAppendsWriteAndQuit() {
-		using var fixture = new FileFixture();
 		var mine = fixture.Write( "mine", "base\n" );
 		var older = fixture.Write( "older", "base\n" );
 		var yours = fixture.Write( "yours", "new\n" );
@@ -163,7 +153,6 @@ public sealed class CommandTests {
 	/// <summary>Ed payloads escape leading periods and then restore them with a substitution.</summary>
 	[Fact]
 	public async Task EdModeEscapesLeadingPeriods() {
-		using var fixture = new FileFixture();
 		var mine = fixture.Write( "mine", "base\n" );
 		var older = fixture.Write( "older", "base\n" );
 		var yours = fixture.Write( "yours", ".value\n" );
@@ -174,7 +163,6 @@ public sealed class CommandTests {
 	/// <summary>Ed mode diagnoses an incomplete replacement line but emits a usable script.</summary>
 	[Fact]
 	public async Task EdModeWarnsForIncompleteLine() {
-		using var fixture = new FileFixture();
 		var mine = fixture.Write( "mine", "base\n" );
 		var older = fixture.Write( "older", "base\n" );
 		var yours = fixture.Write( "yours", "new" );
@@ -187,7 +175,6 @@ public sealed class CommandTests {
 	/// <summary>Normal reports identify incomplete final lines for every displayed input.</summary>
 	[Fact]
 	public async Task NormalReportMarksIncompleteFinalLines() {
-		using var fixture = new FileFixture();
 		var mine = fixture.Write( "mine", "mine" );
 		var older = fixture.Write( "older", "old\n" );
 		var yours = fixture.Write( "yours", "yours" );
@@ -203,7 +190,6 @@ public sealed class CommandTests {
 	/// <summary>Initial-tab mode changes normal-report content indentation.</summary>
 	[Fact]
 	public async Task InitialTabAlignsNormalReportContent() {
-		using var fixture = new FileFixture();
 		var mine = fixture.Write( "mine", "mine\n" );
 		var older = fixture.Write( "older", "old\n" );
 		var yours = fixture.Write( "yours", "yours\n" );
@@ -214,7 +200,6 @@ public sealed class CommandTests {
 	/// <summary>Trailing carriage returns are ignored and stripped from changed replacement lines.</summary>
 	[Fact]
 	public async Task StripTrailingCarriageReturnAffectsComparisonAndMerge() {
-		using var fixture = new FileFixture();
 		var mine = fixture.Write( "mine", "same\r\nold\r\n" );
 		var older = fixture.Write( "older", "same\nold\n" );
 		var yours = fixture.Write( "yours", "same\nyours\n" );
@@ -226,7 +211,6 @@ public sealed class CommandTests {
 	/// <summary>Binary inputs require explicit text mode.</summary>
 	[Fact]
 	public async Task BinaryInputsRequireTextMode() {
-		using var fixture = new FileFixture();
 		var mine = fixture.WriteBytes( "mine", new byte[] { (byte)'m', 0, (byte)'\n' } );
 		var older = fixture.WriteBytes( "older", new byte[] { (byte)'o', 0, (byte)'\n' } );
 		var yours = fixture.WriteBytes( "yours", new byte[] { (byte)'y', 0, (byte)'\n' } );
@@ -249,7 +233,6 @@ public sealed class CommandTests {
 	/// <summary>Standard input may provide any one operand.</summary>
 	[Fact]
 	public async Task ReadsThirdOperandFromStandardInput() {
-		using var fixture = new FileFixture();
 		var mine = fixture.Write( "mine", "mine\n" );
 		var older = fixture.Write( "older", "base\n" );
 		var result = await RunWithInputAsync( "base\n", mine, older, "-" );
@@ -263,7 +246,6 @@ public sealed class CommandTests {
 	[InlineData( "-mA3", "incompatible options" )]
 	[InlineData( "-mi", "options -i and -m are incompatible" )]
 	public async Task RejectsIncompatibleOptions( string option, string expected ) {
-		using var fixture = new FileFixture();
 		var first = fixture.Write( "first", "a\n" );
 		var second = fixture.Write( "second", "a\n" );
 		var third = fixture.Write( "third", "a\n" );

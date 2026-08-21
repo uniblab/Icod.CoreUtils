@@ -496,7 +496,6 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task ReportsOutputFailures() {
 		using var input = new MemoryStream( "hit\n"u8.ToArray(), writable: false );
-		using var output = new MemoryStream();
 		output.Dispose();
 		var textOutput = new StringWriter();
 		var error = new StringWriter();

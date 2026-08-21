@@ -3,7 +3,7 @@ namespace Icod.CoreUtils.Unlink.Tests;
 using UnlinkCommand = Icod.CoreUtils.Unlink.Command;
 using Xunit;
 using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.FileSystem.Mutation;
+using Icod.CommandFramework.FileSystem.Mutation;
 
 /// <summary>Exercises GNU-compatible <c>unlink</c> behavior.</summary>
 public sealed class CommandTests {
@@ -26,7 +26,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies physical symbolic-link removal without touching the target.</summary>
 	[Fact]
 	public async Task RemovesSymbolicLinkWithoutRemovingTarget() {
-		using var temporary = new TemporaryDirectory();
 		var target = System.IO.Path.Combine( temporary.Path, "target" );
 		var link = System.IO.Path.Combine( temporary.Path, "link" );
 		File.WriteAllText( target, "data" );
@@ -52,7 +51,6 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task RemovesWindowsDirectorySymbolicLinkWithoutRemovingTarget() {
 		if ( !OperatingSystem.IsWindows() ) return;
-		using var temporary = new TemporaryDirectory();
 		var target = System.IO.Path.Combine( temporary.Path, "directory-target" );
 		var link = System.IO.Path.Combine( temporary.Path, "directory-link" );
 		Directory.CreateDirectory( target );
@@ -79,7 +77,6 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task RemovesWindowsJunctionWithoutRemovingTarget() {
 		if ( !OperatingSystem.IsWindows() ) return;
-		using var temporary = new TemporaryDirectory();
 		var target = System.IO.Path.Combine( temporary.Path, "target" );
 		var junction = System.IO.Path.Combine( temporary.Path, "junction" );
 		Directory.CreateDirectory( target );
@@ -105,7 +102,6 @@ public sealed class CommandTests {
 	/// <summary>Verifies that an ordinary directory is rejected.</summary>
 	[Fact]
 	public async Task RefusesOrdinaryDirectory() {
-		using var temporary = new TemporaryDirectory();
 		var directory = System.IO.Path.Combine( temporary.Path, "directory" );
 		Directory.CreateDirectory( directory );
 		var error = new StringWriter();

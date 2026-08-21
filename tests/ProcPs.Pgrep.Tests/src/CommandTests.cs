@@ -29,7 +29,6 @@ public sealed class CommandTests {
 			TestSupport.Process( 101, "worker", 10 ),
 			TestSupport.Process( 202, "worker", 10 )
 		);
-		using var output = new MemoryStream();
 		var status = await Command.RunAsync(
 			[ "-n", "worker" ],
 			stdout: output,
@@ -47,7 +46,6 @@ public sealed class CommandTests {
 	public async Task SelectionCriteriaAreAndedAndEnvironmentSelectorsAreOred() {
 		var process = TestSupport.Process( 101, "worker", 10, parent: 44, uid: 1000 );
 		var supplements = new FakeSupplementProvider().Add( 101, 500, "ROLE=worker", "PATH=/bin" );
-		using var output = new MemoryStream();
 		var status = await Command.RunAsync(
 			[ "-P", "44", "-u", "1000", "--env", "ROLE=worker", "--older", "60" ],
 			stdout: output,
@@ -64,7 +62,6 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task FullListingUsesShellQuoteWithoutChangingPatternTarget() {
 		var process = TestSupport.Process( 101, "worker", 10, arguments: [ "worker", "two words", "a'b" ] );
-		using var output = new MemoryStream();
 		var status = await Command.RunAsync(
 			[ "-a", "-Q", "worker" ],
 			stdout: output,
@@ -81,7 +78,6 @@ public sealed class CommandTests {
 
 	[Fact]
 	public async Task CountReturnsNoMatchStatusWhenZero() {
-		using var output = new MemoryStream();
 		var status = await Command.RunAsync(
 			[ "-c", "missing" ],
 			stdout: output,
@@ -98,7 +94,6 @@ public sealed class CommandTests {
 
 	[Fact]
 	public async Task NewestAloneCountsAsSelectionCriterion() {
-		using var output = new MemoryStream();
 		var status = await Command.RunAsync(
 			[ "-n" ],
 			stdout: output,
@@ -117,7 +112,6 @@ public sealed class CommandTests {
 
 	[Fact]
 	public async Task ZeroProcessGroupAndSessionMeanCurrentProcessContext() {
-		using var output = new MemoryStream();
 		var status = await Command.RunAsync(
 			[ "-g", "0", "-s", "0" ],
 			stdout: output,
@@ -138,7 +132,6 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task PidFileMayBeReadFromStandardInput() {
 		using var input = new MemoryStream( System.Text.Encoding.UTF8.GetBytes( "101\n" ) );
-		using var output = new MemoryStream();
 		var status = await Command.RunAsync(
 			[ "-F", "-" ],
 			stdin: input,
@@ -157,7 +150,6 @@ public sealed class CommandTests {
 	public async Task EnvironmentListUsesOrSemantics() {
 		var process = TestSupport.Process( 101, "worker", 10 );
 		var supplements = new FakeSupplementProvider().Add( 101, 120, "ZONE=west" );
-		using var output = new MemoryStream();
 		var status = await Command.RunAsync(
 			[ "--env", "ROLE=worker,ZONE=west" ],
 			stdout: output,
@@ -175,7 +167,6 @@ public sealed class CommandTests {
 	public async Task RequireHandlerUsesSelectedSignalDisposition() {
 		var control = new FakeControl();
 		control.HandlerPids.Add( 202 );
-		using var output = new MemoryStream();
 		var status = await Command.RunAsync(
 			[ "--signal", "USR1", "-H", "worker" ],
 			stdout: output,

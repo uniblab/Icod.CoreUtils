@@ -43,7 +43,6 @@ public sealed class CommandTests {
 
 	[Fact]
 	public async Task QuietSuppressesFooterButNotProcessBanner() {
-		using var output = new MemoryStream();
 		var status = await Command.RunAsync(
 			[ "-q", "101" ], stdout: output,
 			processProvider: new FakeProcessProvider().Add( 101 ),
@@ -56,7 +55,6 @@ public sealed class CommandTests {
 
 	[Fact]
 	public async Task RangeSelectsOnlyOverlappingMappings() {
-		using var output = new MemoryStream();
 		var maps = TestSupport.Maps(
 			TestSupport.Region( 0x1000, 0x3000, path: "/one" ),
 			TestSupport.Region( 0x4000, 0x5000, path: "/two" )
@@ -69,7 +67,6 @@ public sealed class CommandTests {
 
 	[Fact]
 	public async Task DeviceModePrintsOffsetsDevicesAndTotals() {
-		using var output = new MemoryStream();
 		var maps = TestSupport.Maps(
 			TestSupport.Region( 0x1000, 0x3000, "rw-p", 0x2000, "08:01" ),
 			TestSupport.Region( 0x4000, 0x5000, "r--s", 0, "00:05", path: "[shared]" )
@@ -85,7 +82,6 @@ public sealed class CommandTests {
 
 	[Fact]
 	public async Task ExtendedModeUsesSmapsRssAndDirtyFields() {
-		using var output = new MemoryStream();
 		var metrics = new[] {
 			new ProcMemoryMapMetric( "Rss", 7, "kB" ),
 			new ProcMemoryMapMetric( "Shared_Dirty", 2, "kB" ),
@@ -123,7 +119,6 @@ public sealed class CommandTests {
 
 	[Fact]
 	public async Task Utf8MappingNamesRoundTrip() {
-		using var output = new MemoryStream();
 		var status = await Command.RunAsync( [ "-p", "101" ], stdout: output, processProvider: new FakeProcessProvider().Add( 101 ), memoryMapProvider: new FakeMemoryMapProvider().Add( 101, TestSupport.Maps( TestSupport.Region( 0x1000, 0x2000, path: "/tmp/naïve-世界.so" ) ) ) );
 		Assert.Equal( 0, status );
 		Assert.Contains( "/tmp/naïve-世界.so", TestSupport.Text( output ), StringComparison.Ordinal );
@@ -131,7 +126,6 @@ public sealed class CommandTests {
 
 	[Fact]
 	public async Task VanishedProcessContributesProcpsMissingStatusBit() {
-		using var output = new MemoryStream();
 		using var error = new MemoryStream();
 		var status = await Command.RunAsync( [ "101" ], stdout: output, stderr: error, processProvider: new FakeProcessProvider().Missing( 101, ProcObservationAvailability.Vanished ), memoryMapProvider: new FakeMemoryMapProvider() );
 		Assert.Equal( 42, status );
@@ -141,8 +135,6 @@ public sealed class CommandTests {
 
 	[Fact]
 	public async Task UnsupportedMapsProduceControlledDiagnosticAfterBanner() {
-		using var output = new MemoryStream();
-		using var error = new MemoryStream();
 		var status = await Command.RunAsync( [ "101" ], stdout: output, stderr: error, processProvider: new FakeProcessProvider().Add( 101 ), memoryMapProvider: new FakeMemoryMapProvider().Missing( 101, ProcObservationAvailability.Unsupported, "no complete map API" ) );
 		Assert.Equal( 1, status );
 		Assert.Equal( $"101:   demo{Environment.NewLine}", TestSupport.Text( output ) );
@@ -151,7 +143,6 @@ public sealed class CommandTests {
 
 	[Fact]
 	public async Task AccessDeniedMapProducesPrivilegeDiagnostic() {
-		using var error = new MemoryStream();
 		var status = await Command.RunAsync( [ "101" ], stderr: error, processProvider: new FakeProcessProvider().Add( 101 ), memoryMapProvider: new FakeMemoryMapProvider().Missing( 101, ProcObservationAvailability.AccessDenied, "permission denied by fixture" ) );
 		Assert.Equal( 1, status );
 		Assert.Equal( $"pmap: cannot examine PID 101: permission denied by fixture{Environment.NewLine}", TestSupport.Text( error ) );
@@ -159,12 +150,10 @@ public sealed class CommandTests {
 
 	[Fact]
 	public async Task ProcPidOperandAndModeConflictsFollowProfile() {
-		using var output = new MemoryStream();
 		var status = await Command.RunAsync( [ "/proc/101" ], stdout: output, processProvider: new FakeProcessProvider().Add( 101 ), memoryMapProvider: new FakeMemoryMapProvider().Add( 101, TestSupport.Maps( TestSupport.Region( 0x1000, 0x2000 ) ) ) );
 		Assert.Equal( 0, status );
 		Assert.StartsWith( $"101:   demo{Environment.NewLine}", TestSupport.Text( output ) );
 
-		using var error = new MemoryStream();
 		status = await Command.RunAsync( [ "-x", "-d", "101" ], stderr: error );
 		Assert.Equal( 1, status );
 		Assert.Contains( "mutually exclusive", TestSupport.Text( error ), StringComparison.Ordinal );
@@ -172,7 +161,6 @@ public sealed class CommandTests {
 
 	[Fact]
 	public async Task HelpUsesHostNewlinesWithoutCrLfDoubling() {
-		using var output = new MemoryStream();
 		var status = await Command.RunAsync( [ "--help" ], stdout: output );
 		Assert.Equal( 0, status );
 		Assert.StartsWith( $"{Environment.NewLine}Usage:{Environment.NewLine} pmap [options]", TestSupport.Text( output ) );

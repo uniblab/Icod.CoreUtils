@@ -57,7 +57,6 @@ public sealed class TransactionalReplacementIntegrationTests {
 	/// <summary>Verifies restoration of both destination and pre-existing backup after post-commit failure.</summary>
 	[Fact]
 	public async Task PostCommitFailureRestoresDestinationAndExistingBackup() {
-		using var directory = new TemporaryDirectory();
 		var path = System.IO.Path.Combine( directory.Path, "input.txt" );
 		var backupPath = string.Concat( path, ".bak" );
 		await File.WriteAllTextAsync( path, "original\n" );
@@ -94,7 +93,6 @@ public sealed class TransactionalReplacementIntegrationTests {
 	/// <summary>Verifies that cancellation leaves the input and directory unchanged.</summary>
 	[Fact]
 	public async Task CanceledInPlaceEditPreservesInputAndCleansArtifacts() {
-		using var directory = new TemporaryDirectory();
 		var path = System.IO.Path.Combine( directory.Path, "input.txt" );
 		await File.WriteAllTextAsync( path, "original\n" );
 		using var cancellation = new CancellationTokenSource();
@@ -122,7 +120,6 @@ public sealed class TransactionalReplacementIntegrationTests {
 	/// <summary>Verifies the explicit Sed follow-symlinks policy before no-follow E6 planning.</summary>
 	[Fact]
 	public async Task FollowSymlinksEditsResolvedTargetWhileDefaultRejectsTerminalLink() {
-		using var directory = new TemporaryDirectory();
 		var target = System.IO.Path.Combine( directory.Path, "target.txt" );
 		var link = System.IO.Path.Combine( directory.Path, "link.txt" );
 		await File.WriteAllTextAsync( target, "target\n" );

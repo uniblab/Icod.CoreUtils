@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Ln.Tests;
 
 using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.FileSystem.Mutation;
+using Icod.CommandFramework.FileSystem.Mutation;
 using LnCommand = Icod.CoreUtils.Ln.Command;
 using Xunit;
 
@@ -29,7 +29,6 @@ public sealed class CommandTests {
 	/// <summary>Creates multiple links in an explicit target directory.</summary>
 	[Fact]
 	public async Task CreatesMultipleLinksInTargetDirectory() {
-		using var temporary = new TemporaryDirectory();
 		var first = System.IO.Path.Combine( temporary.Path, "first" );
 		var second = System.IO.Path.Combine( temporary.Path, "second" );
 		var target = System.IO.Path.Combine( temporary.Path, "target" );
@@ -43,7 +42,6 @@ public sealed class CommandTests {
 	/// <summary>Backs up and replaces an existing destination.</summary>
 	[Fact]
 	public async Task BacksUpExistingDestination() {
-		using var temporary = new TemporaryDirectory();
 		var source = System.IO.Path.Combine( temporary.Path, "source" );
 		var destination = System.IO.Path.Combine( temporary.Path, "destination" );
 		File.WriteAllText( source, "new" ); File.WriteAllText( destination, "old" );
