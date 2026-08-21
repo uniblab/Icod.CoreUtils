@@ -2,7 +2,7 @@ using Path = global::System.IO.Path;
 using System.Runtime.InteropServices;
 using PathIndirectionInfo = Icod.Path.PathIndirectionInfo;
 using PathIndirectionKind = Icod.Path.PathIndirectionKind;
-using Icod.CoreUtils.Shared.FileSystem;
+using Icod.CommandFramework.FileSystem;
 using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CommandFramework.FileSystem.Mutation;
 using Icod.CommandFramework.FileSystem.RecursiveMutation;
