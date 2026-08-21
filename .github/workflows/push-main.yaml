@@ -29,3 +29,6 @@ jobs:
       - run: dotnet restore Icod.CoreUtils.sln
       - run: dotnet build Icod.CoreUtils.sln -c Release --no-restore -p:ContinuousIntegrationBuild=true
       - run: dotnet test Icod.CoreUtils.sln -c Release --no-build --logger trx
+      - name: Validate isolated Coreutils boundary
+        shell: pwsh
+        run: ./eng/validate-g3n-coreutils.ps1 -Configuration Release
