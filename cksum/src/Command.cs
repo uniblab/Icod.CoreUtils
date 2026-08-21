@@ -2,8 +2,8 @@ namespace Icod.CoreUtils.Cksum;
 
 using System.Text;
 using Icod.CoreUtils.Shared.Checksums;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.IO;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.IO;
 
 /// <summary>Computes and verifies checksums.</summary>
 public static class Command {

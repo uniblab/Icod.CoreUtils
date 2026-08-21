@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Unexpand.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Xunit;
 
 /// <summary>Tests documented <c>unexpand</c> option and blank-conversion behavior.</summary>

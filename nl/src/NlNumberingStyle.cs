@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.NL;
 
-using Icod.CoreUtils.Shared.RegularExpressions;
+using Icod.CommandFramework.RegularExpressions;
 
 /// <summary>Represents a validated section-numbering style.</summary>
 internal sealed class NlNumberingStyle {

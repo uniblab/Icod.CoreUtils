@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Tac.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using TacCommand = Icod.CoreUtils.Tac.Command;
 using Xunit;
 

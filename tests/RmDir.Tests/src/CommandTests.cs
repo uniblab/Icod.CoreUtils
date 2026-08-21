@@ -2,7 +2,7 @@ namespace Icod.CoreUtils.Rmdir.Tests;
 
 using RmDirCommand = Icod.CoreUtils.Rmdir.Command;
 using Xunit;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CommandFramework.FileSystem.Mutation;
 

@@ -5,8 +5,8 @@ namespace Icod.CoreUtils.BasEnc;
 
 using System.Text;
 using Icod.CoreUtils.Shared.Codecs;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.IO;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.IO;
 
 /// <summary>
 /// Encodes or decodes data and writes the result to standard output.

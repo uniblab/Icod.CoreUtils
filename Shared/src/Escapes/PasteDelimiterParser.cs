@@ -2,7 +2,7 @@ namespace Icod.CoreUtils.Shared.Escapes;
 
 using System.Buffers;
 using System.Text;
-using Icod.CoreUtils.Shared.Delimiters;
+using Icod.CommandFramework.Delimiters;
 
 /// <summary>Parses the GNU <c>paste --delimiters</c> escape language into a separator cycle.</summary>
 public static class PasteDelimiterParser {

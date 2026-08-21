@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Sha512Sum;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>
 /// Provides the executable entry point for the GNU-compatible <c>sha512sum</c> command for computing and verifying SHA-512 message digests.

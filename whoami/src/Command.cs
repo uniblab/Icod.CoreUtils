@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.WhoAmI;
 
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.Platform;
 
 /// <summary>Implements the <c>whoami</c> command.</summary>

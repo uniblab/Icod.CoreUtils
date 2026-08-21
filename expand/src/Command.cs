@@ -1,8 +1,8 @@
 namespace Icod.CoreUtils.Expand;
 
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.IO;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.IO;
 using Icod.CommandFramework.Text;
 using TabStopParser = Icod.CoreUtils.Shared.Text.TabStopParser;
 

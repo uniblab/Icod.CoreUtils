@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Rmdir;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>
 /// Provides the <c>rmdir [OPTION]... DIRECTORY...</c> command entry point.

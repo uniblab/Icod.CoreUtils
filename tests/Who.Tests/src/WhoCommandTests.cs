@@ -2,8 +2,8 @@ namespace Icod.CoreUtils.Who.Tests;
 
 using System.Net;
 using System.Runtime.CompilerServices;
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
 using Icod.CoreUtils.Shared.Platform;
 using Tool = Icod.CoreUtils.Who.Command;
 using Xunit;

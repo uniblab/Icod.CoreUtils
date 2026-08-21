@@ -4,9 +4,9 @@
 namespace Icod.DiffUtils.Diff3;
 
 using System.Security;
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.IO;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.IO;
 using Icod.DiffUtils.Shared;
 using Icod.DiffUtils.Shared.Lines;
 using Icod.DiffUtils.Shared.Merge;

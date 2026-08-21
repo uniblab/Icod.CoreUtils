@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Sort;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>Provides the process entry point for <c>sort [OPTION]... [FILE]...</c>.</summary>
 public static class Program {

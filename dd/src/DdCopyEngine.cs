@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.DD;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>
 /// Coordinates the asynchronous <c>dd</c> read, conversion, seek, write, and statistics pipeline.

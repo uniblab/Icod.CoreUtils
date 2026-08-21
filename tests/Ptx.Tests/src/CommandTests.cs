@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Ptx.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Xunit;
 
 /// <summary>Exercises GNU Coreutils 9.11-compatible command behavior.</summary>

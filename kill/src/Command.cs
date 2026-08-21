@@ -1,7 +1,7 @@
 namespace Icod.UtilLinux.Kill;
 
 using System.Globalization;
-using Icod.CoreUtils.Shared.Processes;
+using Icod.CommandFramework.Processes;
 
 /// <summary>Implements the util-linux 2.42.2 <c>kill</c> command profile.</summary>
 public static class Command {

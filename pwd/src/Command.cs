@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Pwd;
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>
 /// Implements GNU-compatible <c>pwd</c> and prints the logical or physical current working directory.

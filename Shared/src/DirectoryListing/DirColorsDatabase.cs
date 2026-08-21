@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Shared.DirectoryListing;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Terminal;
+using Icod.CommandFramework.Terminal;
 
 /// <summary>Identifies the shell syntax emitted by <c>dircolors</c>.</summary>
 public enum DirColorsShell {

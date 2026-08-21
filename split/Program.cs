@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Split;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>Provides the <c>split [OPTION]... [FILE [PREFIX]]</c> process entry point.</summary>
 public static class Program {

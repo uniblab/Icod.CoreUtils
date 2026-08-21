@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Shuf;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>Provides the process entry point for <c>shuf [OPTION]... [FILE]</c>, <c>shuf -e [OPTION]... [ARG]...</c>, and <c>shuf -i LO-HI [OPTION]...</c>.</summary>
 public static class Program {

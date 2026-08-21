@@ -4,7 +4,7 @@ namespace Icod.ProcPs.Tload;
 
 using System.Globalization;
 using System.Text;
-using Icod.CoreUtils.Shared.Terminal;
+using Icod.CommandFramework.Terminal;
 using Icod.ProcPs.Shared;
 
 /// <summary>Implements the procps-ng compatible <c>tload</c> command.</summary>

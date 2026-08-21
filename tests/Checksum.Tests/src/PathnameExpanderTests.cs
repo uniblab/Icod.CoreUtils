@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Checksum.Tests;
 
-using Icod.CoreUtils.Shared.IO;
+using Icod.CommandFramework.IO;
 using Xunit;
 
 public sealed class PathnameExpanderTests {

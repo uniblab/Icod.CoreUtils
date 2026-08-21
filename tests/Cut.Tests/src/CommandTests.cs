@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Cut.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Xunit;
 
 /// <summary>Tests byte, character, range, and control-path behavior.</summary>

@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Fmt;
 
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.IO;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.IO;
 using Icod.CommandFramework.Text;
 
 /// <summary>Processes byte-preserving <c>fmt</c> input operands.</summary>

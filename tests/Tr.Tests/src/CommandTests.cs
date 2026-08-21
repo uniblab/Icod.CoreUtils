@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Tr.Tests;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Xunit;
 
 /// <summary>Tests byte translation, set grammar, deletion, squeezing, diagnostics, and control paths.</summary>

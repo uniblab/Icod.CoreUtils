@@ -1,7 +1,7 @@
 namespace Icod.ProcPs.Vmstat.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Host;
+using Icod.CommandFramework.Host;
 using Icod.ProcPs.Shared;
 using Xunit;
 

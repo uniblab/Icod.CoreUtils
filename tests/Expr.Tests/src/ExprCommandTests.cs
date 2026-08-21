@@ -3,8 +3,8 @@ namespace Icod.CoreUtils.Expr.Tests;
 using System.Globalization;
 using System.Numerics;
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.RegularExpressions;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.RegularExpressions;
 using Xunit;
 
 public sealed class ExprCommandTests {

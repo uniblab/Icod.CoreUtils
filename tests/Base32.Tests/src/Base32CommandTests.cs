@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Base32.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Base32Command = Icod.CoreUtils.Base32.Command;
 using Xunit;
 

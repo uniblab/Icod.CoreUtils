@@ -1,6 +1,7 @@
 namespace Icod.CoreUtils.Shared.Tests.Escapes;
 
 using System.Text;
+using Icod.CommandFramework.Delimiters;
 using Icod.CoreUtils.Shared.Escapes;
 using Xunit;
 
@@ -12,7 +13,7 @@ public sealed class PasteDelimiterParserTests {
 	public void EmptyArgumentProducesEmptyCycleElement() {
 		var result = PasteDelimiterParser.Parse( String.Empty );
 		Assert.True( result.IsSuccess );
-		var cycle = Assert.IsType<Icod.CoreUtils.Shared.Delimiters.SeparatorCycle>( result.Value );
+		var cycle = Assert.IsType<SeparatorCycle>( result.Value );
 		Assert.Equal( 1, cycle.Count );
 		Assert.True( cycle[0].IsEmpty );
 	}
@@ -21,7 +22,7 @@ public sealed class PasteDelimiterParserTests {
 	[Fact]
 	public void ParserProducesOneCycleElementPerDelimiterCharacter() {
 		var result = PasteDelimiterParser.Parse( "\\0,\\t界" );
-		var cycle = Assert.IsType<Icod.CoreUtils.Shared.Delimiters.SeparatorCycle>( result.Value );
+		var cycle = Assert.IsType<SeparatorCycle>( result.Value );
 		Assert.Equal( 4, cycle.Count );
 		Assert.True( cycle[0].IsEmpty );
 		Assert.Equal( new byte[] { (byte)',' }, cycle[1].Bytes.ToArray() );
@@ -33,7 +34,7 @@ public sealed class PasteDelimiterParserTests {
 	[Fact]
 	public void ParserRecognizesNamedEscapes() {
 		var result = PasteDelimiterParser.Parse( "\\b\\f\\n\\r\\t\\v\\\\" );
-		var cycle = Assert.IsType<Icod.CoreUtils.Shared.Delimiters.SeparatorCycle>( result.Value );
+		var cycle = Assert.IsType<SeparatorCycle>( result.Value );
 		Assert.Equal(
 			new byte[] { (byte)'\b', (byte)'\f', (byte)'\n', (byte)'\r', (byte)'\t', (byte)'\v', (byte)'\\' },
 			cycle.Separators.SelectMany( value => value.Bytes.ToArray() ).ToArray()
@@ -44,7 +45,7 @@ public sealed class PasteDelimiterParserTests {
 	[Fact]
 	public void UnknownEscapeRetainsOnlyItsCharacter() {
 		var result = PasteDelimiterParser.Parse( "\\q" );
-		var cycle = Assert.IsType<Icod.CoreUtils.Shared.Delimiters.SeparatorCycle>( result.Value );
+		var cycle = Assert.IsType<SeparatorCycle>( result.Value );
 		Assert.Equal( new byte[] { (byte)'q' }, cycle[0].Bytes.ToArray() );
 		Assert.Empty( result.Diagnostics );
 	}
@@ -64,7 +65,7 @@ public sealed class PasteDelimiterParserTests {
 	[Fact]
 	public void ParserAcceptsInjectedStatelessEncoding() {
 		var result = PasteDelimiterParser.Parse( "é", Encoding.Latin1 );
-		var cycle = Assert.IsType<Icod.CoreUtils.Shared.Delimiters.SeparatorCycle>( result.Value );
+		var cycle = Assert.IsType<SeparatorCycle>( result.Value );
 		Assert.Equal( new byte[] { 0xE9 }, cycle[0].Bytes.ToArray() );
 	}
 

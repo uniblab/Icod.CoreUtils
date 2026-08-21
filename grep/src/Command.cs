@@ -5,12 +5,12 @@ namespace Icod.Grep;
 
 using System.Globalization;
 using System.Text;
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.FileSystem.Traversal;
-using Icod.CoreUtils.Shared.IO;
-using Icod.CoreUtils.Shared.Records;
-using Icod.CoreUtils.Shared.RegularExpressions;
+using Icod.CommandFramework.IO;
+using Icod.CommandFramework.Records;
+using Icod.CommandFramework.RegularExpressions;
 
 /// <summary>Implements GNU-compatible pattern searching over byte-preserving input records.</summary>
 public static class Command {

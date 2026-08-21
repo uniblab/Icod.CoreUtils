@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.WC.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using WcCommand = Icod.CoreUtils.WC.Command;
 using Xunit;
 

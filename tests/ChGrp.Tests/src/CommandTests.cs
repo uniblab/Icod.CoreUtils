@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.ChGrp.Tests;
 
 using ChGrpCommand = Icod.CoreUtils.Chgrp.Command;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CommandFramework.FileSystem.Modes;
 using Icod.CommandFramework.FileSystem.Mutation;

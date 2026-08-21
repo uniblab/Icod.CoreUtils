@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Ptx;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>Provides the <c>ptx [OPTION]... [INPUT]...</c> process entry point.</summary>
 public static class Program {

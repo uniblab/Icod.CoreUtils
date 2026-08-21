@@ -3,10 +3,10 @@
 
 namespace Icod.CoreUtils.Tr;
 
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
 using Icod.CoreUtils.Shared.Escapes;
-using Icod.CoreUtils.Shared.IO;
+using Icod.CommandFramework.IO;
 
 /// <summary>Implements GNU-compatible byte translation, deletion, and squeezing.</summary>
 public static class Command {

@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Sha224Sum;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>
 /// Provides the executable entry point for the GNU-compatible <c>sha224sum</c> command for computing and verifying SHA-224 message digests.

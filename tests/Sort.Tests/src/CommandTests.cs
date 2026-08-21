@@ -2,7 +2,7 @@ namespace Icod.CoreUtils.Sort.Tests;
 
 using System.Globalization;
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Xunit;
 
 /// <summary>Tests ordering families, key semantics, external runs, check mode, merge mode, and control paths.</summary>

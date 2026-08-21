@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Env;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Processes;
+using Icod.CommandFramework.Processes;
 
 /// <summary>
 /// Parses the GNU <c>env -S</c> split-string language without invoking a shell.

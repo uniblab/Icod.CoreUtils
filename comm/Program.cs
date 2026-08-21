@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Comm;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>Provides the process entry point for <c>comm [OPTION]... FILE1 FILE2</c>.</summary>
 public static class Program {

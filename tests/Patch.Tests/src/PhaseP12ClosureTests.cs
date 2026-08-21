@@ -2,7 +2,7 @@ namespace Icod.Patch.Tests;
 
 using System.IO;
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Xunit;
 
 /// <summary>Closes Phase P12 conformance, hardening, and extraction-readiness contracts.</summary>

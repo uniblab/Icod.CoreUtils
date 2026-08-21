@@ -24,7 +24,7 @@ public sealed class BinaryFormattingTests {
 		var representable = OperatingSystem.IsWindows()
 			|| (
 				OperatingSystem.IsMacOS()
-				&& Architecture.Arm64 == RuntimeInformation.ProcessArchitecture
+				&& System.Runtime.InteropServices.Architecture.Arm64 == RuntimeInformation.ProcessArchitecture
 			)
 		;
 		Assert.Equal( representable, success );

@@ -25,7 +25,7 @@ public static class SharedUtils {
 	}
 
 	/// <summary>Parses the legacy short-option specification used by existing commands.</summary>
-	/// <remarks>New commands should use <see cref="Icod.CoreUtils.Shared.CommandLine.OptionParser"/>.</remarks>
+	/// <remarks>New commands should use <see cref="Icod.CommandFramework.CommandLine.OptionParser"/>.</remarks>
 	public static (HashSet<char> flags, Dictionary<char, string?> optionValues, string[] rest) ParseOptions( string[] args, string optSpec ) {
 		var flags = new HashSet<char>();
 		var optionValues = new Dictionary<char, string?>();

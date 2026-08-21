@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Expr;
 
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.RegularExpressions;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.RegularExpressions;
 
 /// <summary>Implements <c>expr EXPRESSION</c> according to GNU Coreutils.</summary>
 public static class Command {

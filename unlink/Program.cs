@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Unlink;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>
 /// Provides the <c>unlink FILE</c> command entry point.

@@ -1,6 +1,6 @@
 namespace Icod.UtilLinux.Kill.Tests;
 
-using Icod.CoreUtils.Shared.Processes;
+using Icod.CommandFramework.Processes;
 using Xunit;
 
 /// <summary>Tests the util-linux 2.42.2 <c>kill</c> command profile.</summary>

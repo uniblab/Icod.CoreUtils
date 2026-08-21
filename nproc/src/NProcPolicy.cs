@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.NProc;
 
-using Icod.CoreUtils.Shared.Host;
+using Icod.CommandFramework.Host;
 using System.Globalization;
 
 /// <summary>Identifies the primary fact used for one <c>nproc</c> decision.</summary>

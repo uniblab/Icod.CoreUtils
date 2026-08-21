@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Cut.Tests;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Xunit;
 
 /// <summary>Tests exact bytes, ordered operands, ownership, cancellation, and failures.</summary>

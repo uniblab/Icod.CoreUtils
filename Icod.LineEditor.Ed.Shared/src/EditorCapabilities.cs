@@ -7,8 +7,8 @@ using Icod.CommandFramework.FileSystem.Mutation;
 using Icod.CommandFramework.FileSystem.RecursiveMutation;
 using Icod.CommandFramework.FileSystem.TransactionalReplacement;
 using Icod.CommandFramework.FileSystem.Traversal;
-using Icod.CoreUtils.Shared.Records;
-using Icod.CoreUtils.Shared.Processes;
+using Icod.CommandFramework.Records;
+using Icod.CommandFramework.Processes;
 using Icod.CommandFramework.Temporary;
 
 /// <summary>Defines immutable parser and capability policy for an Ed engine instance.</summary>

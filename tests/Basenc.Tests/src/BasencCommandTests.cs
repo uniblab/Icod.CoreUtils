@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Basenc.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using BasencCommand = Icod.CoreUtils.BasEnc.Command;
 using Xunit;
 

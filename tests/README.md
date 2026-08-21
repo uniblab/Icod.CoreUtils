@@ -2,23 +2,27 @@
 
 This directory is intentionally distinct from `/test`, which implements the Unix `test(1)` command.
 
-- `Shared.Tests` verifies the Batch 0 Shared infrastructure.
-- `ProcessTestHost` supplies deterministic child-process behavior for process-runner tests.
+`Shared.Tests` verifies the behavior that remains owned by `Icod.CoreUtils.Shared` after Completion Gate G contraction. Neutral command-framework tests live in the independent `Icod.CommandFramework` repository and are not duplicated here.
 
-## Test matrix
+`ProcessTestHost` is a deliberately small repository-local executable used only by real-child integration tests for Coreutils commands that must launch a deterministic process. At present:
 
-- Command-line parsing: short clusters, aliases, attached and separate values, optional values, `--`, ordering modes, unique and ambiguous long abbreviations, duplicate options, errors, and legacy rewrites.
-- Streaming I/O: LF, CRLF, NUL records, empty and unterminated records, records larger than the buffer, short byte reads, bounded copies, skipping, ranges, and cancellation.
-- Temporary spooling: rewind behavior and cleanup.
-- Numeric operands: GNU count suffixes, signs, invalid suffixes, overflow rejection/clamping, floating durations, exponents, and culture independence.
-- Processes: exact argument preservation, stdin/stdout/stderr forwarding, capture, exit codes, concurrent stream drainage, and cancellation.
-- Platform capabilities: controlled unsupported results, hard links, symbolic-link inspection, and Unix mode access where available.
-- Compatibility: the existing `SharedUtils` public contract.
+- `Nice.Tests` uses the `exit` behavior to verify propagation of a real child exit status.
+- `Timeout.Tests` uses the `sleep` behavior to verify that the system executor can actually bound and terminate a real child process.
 
-Run the Batch 0 suite with:
+The framework repository keeps its own independent process test host for framework-level process-runner tests. Coreutils does not depend on that test project or assembly.
+
+## Test ownership
+
+Tests under `Shared.Tests` cover retained Coreutils-specific shared behavior such as GNU formatting/escape policy, numeric operand grammar, ordering policy, directory-listing policy, filesystem ownership/usage behavior, ranges, tab-stop parsing, and GNU date/time policy.
+
+Command test projects remain responsible for command-visible behavior and command-specific integration. Tests should not write to standard output or standard error except when an inter-process communication test deliberately requires inherited streams.
+
+## Running tests
+
+Run the contracted Shared test project with:
 
 ```text
 dotnet test tests/Shared.Tests/Icod.CoreUtils.Shared.Tests.csproj -c Debug
 ```
 
-Run the complete Batch 0 build sequence with `build.cmd` on Windows or `./build.sh` on Unix-like systems.
+Run the complete repository build/test sequence with `build.cmd` on Windows or `./build.sh` on Unix-like systems.

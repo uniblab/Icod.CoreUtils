@@ -1,7 +1,7 @@
 namespace Icod.ProcPs.Shared;
 
 using System.Globalization;
-using Icod.CoreUtils.Shared.Host;
+using Icod.CommandFramework.Host;
 /// <summary>Describes one configured huge-page pool for a Linux NUMA node.</summary>
 public sealed class ProcHugePagePool {
 	/// <summary>Gets the huge-page size in bytes.</summary>

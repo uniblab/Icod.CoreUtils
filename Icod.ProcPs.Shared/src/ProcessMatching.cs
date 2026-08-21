@@ -4,8 +4,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;
-using Icod.CoreUtils.Shared.Processes;
-using Icod.CoreUtils.Shared.RegularExpressions;
+using Icod.CommandFramework.Processes;
+using Icod.CommandFramework.RegularExpressions;
 
 /// <summary>Identifies the procps-ng 4.0.6 process-matching command profile.</summary>
 public enum ProcMatchCommandMode {
@@ -196,7 +196,7 @@ public sealed class SystemProcMatchSupplementProvider : IProcMatchSupplementProv
 				environment = ProcObservedValue<IReadOnlyList<string>>.Available(
 					ParseEnvironment( bytes ),
 					ProcObservationSource.LinuxProcfs,
-					Icod.CoreUtils.Shared.Host.ObservationFidelity.Exact
+					Icod.CommandFramework.Host.ObservationFidelity.Exact
 				);
 			} catch ( UnauthorizedAccessException exception ) {
 				environment = ProcObservedValue<IReadOnlyList<string>>.Missing( ProcObservationAvailability.AccessDenied, exception.Message );
@@ -208,7 +208,7 @@ public sealed class SystemProcMatchSupplementProvider : IProcMatchSupplementProv
 				statusFields = ProcObservedValue<IReadOnlyDictionary<string, string>>.Available(
 					ParseStatusFields( text ),
 					ProcObservationSource.LinuxProcfs,
-					Icod.CoreUtils.Shared.Host.ObservationFidelity.Exact
+					Icod.CommandFramework.Host.ObservationFidelity.Exact
 				);
 			} catch ( UnauthorizedAccessException exception ) {
 				statusFields = ProcObservedValue<IReadOnlyDictionary<string, string>>.Missing( ProcObservationAvailability.AccessDenied, exception.Message );
@@ -220,7 +220,7 @@ public sealed class SystemProcMatchSupplementProvider : IProcMatchSupplementProv
 				securityLabel = ProcObservedValue<string>.Available(
 					text.Trim(),
 					ProcObservationSource.LinuxProcfs,
-					Icod.CoreUtils.Shared.Host.ObservationFidelity.Exact
+					Icod.CommandFramework.Host.ObservationFidelity.Exact
 				);
 			} catch ( UnauthorizedAccessException exception ) {
 				securityLabel = ProcObservedValue<string>.Missing( ProcObservationAvailability.AccessDenied, exception.Message );
@@ -322,7 +322,7 @@ public sealed class SystemProcMatchSupplementProvider : IProcMatchSupplementProv
 			return ProcObservedValue<TimeSpan>.Available(
 				elapsed,
 				ProcObservationSource.DotNetProcessApi,
-				Icod.CoreUtils.Shared.Host.ObservationFidelity.Equivalent
+				Icod.CommandFramework.Host.ObservationFidelity.Equivalent
 			);
 		} catch ( InvalidOperationException exception ) {
 			return ProcObservedValue<TimeSpan>.Missing( ProcObservationAvailability.Vanished, exception.Message );
@@ -345,7 +345,7 @@ public sealed class SystemProcMatchSupplementProvider : IProcMatchSupplementProv
 	private static ProcObservedValue<T> Exact<T>( T value ) => ProcObservedValue<T>.Available(
 		value,
 		ProcObservationSource.LinuxProcfs,
-		Icod.CoreUtils.Shared.Host.ObservationFidelity.Exact
+		Icod.CommandFramework.Host.ObservationFidelity.Exact
 	);
 	private static ProcObservedValue<uint> OptionalExact( uint? value ) => value.HasValue
 		? Exact( value.Value )

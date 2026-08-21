@@ -5,10 +5,10 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `67`, `69` through Batch `72`; Batch `68` (`Icod.ProcPs.Top`) is deliberately deferred until after `Icod.ProcPs` extraction|
-| Current engineering milestone | -- |
-| Completed infrastructure milestone | Completion Gates E2 through E6, F1 through F4, and P1 — filesystem, terminal, process-control, and ProcPs provider foundations; three-platform ProcPs provider correction validated and merged |
-| Active infrastructure dependency | preserve the ProcPs extraction boundary so deferred Batch 68 can be completed after `Icod.ProcPs` leaves the co-resident solution |
-| Next engineering step | Completion Gate G; Batch 68 — `Icod.ProcPs.Top` remains deferred until after `Icod.ProcPs` is migrated out of this repository |
+| Current engineering milestone | Completion Gate G — G3M3 internal-library boundary freeze and Coreutils consumer validation |
+| Completed infrastructure milestone | Completion Gates E2 through E6, F1 through F4, and P1 — filesystem, terminal, process-control, and ProcPs provider foundations; G3M2 filesystem consumer cut-over completed against `Icod.CommandFramework` 1.1.0 |
+| Active infrastructure dependency | freeze `Icod.CoreUtils.Shared` as a non-packable repository-local Coreutils library, retain published `Icod.CommandFramework` 1.1.0 and `Icod.Path` 1.0.0 dependencies, and validate in-repository Coreutils consumers |
+| Next engineering step | G3M3 — run the repository-local Shared boundary and Coreutils consumer validation; then proceed to isolated G3N closure |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -41,14 +41,11 @@ No separate `[` project will be added. The existing `test` project remains the c
 
 ## Development architecture
 
-The present repository is deliberately a **multi-suite incubation workspace**. It is not yet the final repository layout.
+The present repository is deliberately a **multi-suite extraction workspace**. It is not yet the final repository layout.
 
-The current `Shared` project continues to incubate both:
+Before Completion Gate G, `Icod.CoreUtils.Shared` incubated both neutral cross-suite mechanism and Coreutils-family behavior. G3M2 completes the approved neutral migration. From G3M3 onward the boundary is frozen: `Icod.CoreUtils.Shared` contains only GNU Coreutils/Fileutils/Textutils shared behavior and remains a repository-local project, while neutral mechanism is consumed from published `Icod.CommandFramework` and `Icod.Path` packages.
 
-1. functionality that may ultimately become cross-suite `Icod.CommandFramework` APIs; and
-2. functionality that may remain specific to GNU Coreutils, Fileutils, and Textutils in `Icod.CoreUtils.Shared`.
-
-The project's present physical name does not establish permanent ownership. The common argument processor is the existing example: it resides in the current `Icod.CoreUtils.Shared` project during incubation, but use by independent suites makes it a likely `Icod.CommandFramework` candidate. The same rule applies to host, processor-resource, process-identity, process-targeting, process-launch, waiting, signal, priority, clock, and terminal mechanics that are consumed by both Coreutils and ProcPs or by other suites.
+Any remaining sibling-suite `ProjectReference` to `Icod.CoreUtils.Shared` is transitional extraction debt rather than evidence for a public CoreUtils package. G4 through G8 replace those references with the appropriate published neutral foundations as each suite moves to its permanent repository.
 
 The suite projects developed here may add their own Shared libraries when the reuse is genuinely suite-specific:
 
@@ -120,19 +117,20 @@ Suite-specific Shared project, when required
 Command projects
 ```
 
-At that point:
+At Gate G closure:
 
-- `Icod.CommandFramework` becomes its own solution, repository, and versioned NuGet package;
-- `Icod.CoreUtils.Shared` is retained and extracted only if the consumer audit shows meaningful Coreutils/Fileutils/Textutils-only reuse;
-- the suite projects are separated into their own solutions and repositories;
-- cross-repository dependencies become versioned NuGet `PackageReference` entries;
+- `Icod.CommandFramework` is an independent solution, repository, and versioned NuGet package; Gate G may publish refreshed versions when newly approved command-neutral mechanisms are migrated into it;
+- `Icod.Path` remains an independent neutral package for canonical-path and pathname-indirection contracts;
+- `Icod.CoreUtils.Shared` remains permanently in the `Icod.CoreUtils` repository as the Coreutils/Fileutils/Textutils suite-local class library and is not independently published;
+- the sibling suite projects are separated into their own solutions and repositories;
+- cross-repository dependencies become versioned NuGet `PackageReference` entries to neutral published foundations;
 - project references remain appropriate within each extracted suite unless an additional package boundary is independently justified.
 
 `Icod.CoreUtils` must not acquire permanent production dependencies on sibling command suites. Interoperability should normally occur through documented command-line behavior and textual formats. Unified diffs flow from `Icod.DiffUtils` to `Icod.Patch`, and ed scripts flow from `Icod.DiffUtils` to `Icod.LineEditor.Ed`, without requiring runtime references between their suite-specific Shared libraries.
 
 ### Icod.CommandFramework
 
-`Icod.CommandFramework` will be extracted only after the co-resident suite work has supplied enough actual consumers to reveal stable boundaries. Candidate responsibilities include:
+`Icod.CommandFramework` is the command-neutral host and command infrastructure foundation. Its responsibilities include:
 
 - command contexts and injected standard streams;
 - common argument-processing foundations;
@@ -141,28 +139,27 @@ At that point:
 - high-performance cross-platform file I/O;
 - byte, text, record, delimiter, locale, and display-width abstractions;
 - secure temporary-object and workspace infrastructure;
-- general filesystem capability, traversal, and metadata abstractions;
+- general filesystem capability, traversal, metadata, current-process creation-mask observation, filesystem inode-pool observation, and host file-clone/reflink mechanisms;
 - host identity, processor-resource availability, affinity, quota, and provenance abstractions;
 - process identity, PID-reuse-aware targeting, process groups, sessions, lifetime, liveness, and waiting abstractions;
 - argument-safe process launch, environment construction, standard-stream forwarding, signal, priority, exit-status, and termination-reason abstractions;
 - monotonic clocks, cancellation-aware delay, periodic scheduling, terminal control, and platform-capability abstractions.
-An API moves to `Icod.CommandFramework` because multiple independent suites use the same contract, not merely because it currently resides in `Shared`.
+
+An API belongs in `Icod.CommandFramework` when independent-suite consumption demonstrates a common contract **or** when it is intrinsically command-neutral host mechanism required by an already framework-owned abstraction. Suite-visible GNU policy remains above that boundary.
 
 ### Icod.CoreUtils.Shared
 
-`Icod.CoreUtils.Shared` may remain after framework extraction. Its purpose is narrower: behavior shared among Coreutils, Fileutils, and Textutils commands that is not a suitable cross-suite framework contract.
+`Icod.CoreUtils.Shared` remains after framework extraction as the permanent repository-local Coreutils/Fileutils/Textutils Shared library. Its purpose is narrower: behavior shared among those commands that is not a suitable command-neutral framework contract.
 
-During incubation, code common to Coreutils and ProcPs may still be implemented physically in the current `Icod.CoreUtils.Shared` project because that is the available shared foundation. Such code must be marked as a provisional `Icod.CommandFramework` candidate and must not be treated as permanently Coreutils-owned merely because of its temporary project location.
+The final G3 filesystem audit preserves GNU mode grammar, GNU copy/move reflink selection and overwrite behavior, GNU ownership handling, block-size conventions, `df`/`du` accounting and presentation, listing models, copy/move/install policy, and similar Coreutils-family engines here. Current-process creation-mask observation, inode-pool observation, and host file-clone execution move below this layer into `Icod.CommandFramework`. No additional `Icod.Path` migration is required.
 
-Likely eventual `Icod.CoreUtils.Shared` examples include Coreutils-specific option combinations, backup and overwrite policies, block-size conventions, ownership and mode presentation, listing models, copy/move/install policies, and other engines reused by multiple Coreutils commands but not by Diffutils, Grep, Patch, Ed, Sed, Tar, or ProcPs.
-
-The final dependency would be:
+The final dependency is:
 
 ```text
 Icod.CoreUtils command
-        ↓
+        ↓ repository-local ProjectReference
 Icod.CoreUtils.Shared
-        ↓
+        ↓ external PackageReference
 Icod.CommandFramework
 ```
 
@@ -566,7 +563,7 @@ Add secure, exclusive file and directory creation, template validation, `TMPDIR`
   * [x] explicit documentation of differences from `System.Text.RegularExpressions`;
   * [x] injectable and testable matching providers.
 
-This gate prevents `expr` from introducing an isolated regular-expression implementation. The same foundation remains the CoreUtils basis for `csplit` and is a candidate for eventual extraction into `Icod.CommandFramework` for reuse by `Icod.Grep`, `Icod.LineEditor.Sed`, and `Icod.LineEditor.Ed`.
+This gate prevents `expr` from introducing an isolated regular-expression implementation. The same foundation remains the Coreutils basis for `csplit` and is a candidate for eventual extraction into `Icod.CommandFramework` for reuse by `Icod.Grep`, `Icod.LineEditor.Sed`, and `Icod.LineEditor.Ed`.
 
 ### Batch 16 — Expression language (1 tool)
 
@@ -1740,24 +1737,37 @@ Extraction is treated as a security boundary: rooted/platform-root and escaping 
 The project remains co-resident until Completion Gate G, when it is moved into its own solution and repository and its cross-suite dependencies are converted to `Icod.CommandFramework` package references.
 
 
-### Completion Gate G — final classification, package extraction, and repository split
+### Completion Gate G — final classification, foundation refinement, package extraction, and repository split
 
 This gate is deliberately last. By this point the Coreutils, Diffutils, Grep, Patch, Ed, Sed, selected UtilLinux commands, Tar, and ProcPs projects have supplied the shared consumer evidence needed to choose stable API and repository boundaries. `Icod.ProcPs` may already have been migrated out under the explicit pre-Batch-68 exception; Gate G validates that extracted boundary while performing the remaining final separations.
 
 - [ ] Inventory every public, protected, and internal API in the current Shared incubation project and record its actual consumers by project and suite.
 - [ ] Inventory every API in `Icod.DiffUtils.Shared`, `Icod.LineEditor.Ed.Shared`, `Icod.ProcPs.Shared`, any evidence-based `Icod.LineEditor.Shared`, and any other suite engine to detect duplication or misplaced cross-suite contracts.
 - [ ] Classify each API as:
-  - [ ] cross-suite and suitable for `Icod.CommandFramework`;
+  - [ ] cross-suite or intrinsically command-neutral mechanism suitable for `Icod.CommandFramework`;
   - [ ] shared only by Coreutils/Fileutils/Textutils and suitable for `Icod.CoreUtils.Shared`;
   - [ ] shared only within another suite and suitable for that suite's Shared library;
   - [ ] command-local and unsuitable for a public package.
 - [ ] Review namespace design, accessibility, XML documentation, binary compatibility, trimming/AOT behavior, native ABI boundaries, and dependency direction before freezing public contracts.
-- [ ] Create the `Icod.CommandFramework` solution and repository with independent Windows, Ubuntu, and macOS CI.
-- [ ] Publish `Icod.CommandFramework` as a versioned NuGet package with symbols, SourceLink, deterministic builds, package documentation, and a Semantic Versioning policy.
-- [ ] Move only demonstrated cross-suite functionality into `Icod.CommandFramework`.
-- [ ] Retain and extract `Icod.CoreUtils.Shared` only where meaningful Coreutils/Fileutils/Textutils-only reuse remains; make it depend on `Icod.CommandFramework` rather than duplicate framework behavior.
-- [ ] Publish `Icod.CoreUtils.Shared` as its own versioned NuGet package when retained.
-- [ ] Convert individual Coreutils command projects to `PackageReference` dependencies on the published `Icod.CoreUtils.Shared` binary, or directly on `Icod.CommandFramework` when no Coreutils-specific layer is required.
+- [x] Create the `Icod.CommandFramework` solution and repository with independent Windows, Ubuntu, and macOS CI.
+- [x] Publish `Icod.CommandFramework` as a versioned NuGet package with symbols, SourceLink, deterministic builds, package documentation, and a Semantic Versioning policy.
+- [ ] Move all approved neutral functionality into `Icod.CommandFramework`, including the final filesystem-mechanism remainder identified during G3 closure.
+- [x] Final filesystem foundation refinement:
+  - [x] extend framework `FileSystemInformation` with explicit total/free/available inode-pool observations populated from the existing `statvfs` path;
+  - [x] move current-process creation-mask observation (`IFileCreationMaskProvider` / `SystemFileCreationMaskProvider`) to `Icod.CommandFramework.FileSystem.Modes`;
+  - [x] add a capability-aware host file-clone/reflink primitive to the framework while retaining GNU `cp` reflink policy in CoreUtils;
+  - [x] move/rehome the corresponding tests to the framework repository;
+  - [x] audit the CoreUtils `copy_file_range` helper and delete it if unused rather than creating an unnecessary framework abstraction;
+  - [x] build/test the framework on Windows, Ubuntu, and macOS and publish `Icod.CommandFramework` 1.1.0 before pruning CoreUtils consumers.
+- [x] CoreUtils filesystem consumer cut-over:
+  - [x] consume framework inode-pool observations from `SystemFileSystemUsageProvider` and remove its duplicate local `statvfs` ABI;
+  - [x] consume the framework creation-mask provider;
+  - [x] consume the framework file-clone primitive from `CopyMoveEngine` while retaining GNU policy locally;
+  - [x] route directory metadata preservation through the existing framework metadata-preservation/application path so ownership, mode, timestamps including birth time, attributes, and required-versus-best-effort semantics match regular-file handling;
+  - [x] prune migrated CoreUtils code and tests only after the corresponding consumers validate against the refreshed package.
+- [x] Retain `Icod.CoreUtils.Shared` permanently as a repository-local Coreutils/Fileutils/Textutils class library; make it depend on published neutral foundations rather than duplicate framework behavior.
+- [x] Do **not** publish `Icod.CoreUtils.Shared` independently to NuGet.org or GitHub Packages.
+- [x] Retain same-repository `ProjectReference` dependencies from genuine Coreutils command projects to `Icod.CoreUtils.Shared`; use direct neutral `PackageReference` dependencies where no Coreutils-specific layer is required.
 - [ ] Split the co-resident suite projects into their final solutions and repositories:
   - [ ] `Icod.DiffUtils`;
   - [ ] `Icod.Grep`;
@@ -1773,10 +1783,10 @@ This gate is deliberately last. By this point the Coreutils, Diffutils, Grep, Pa
 - [ ] Resolve duplicate executable names and define suite packages, umbrella distributions, aliases, and installation-path policy.
 - [ ] Remove stale project, solution-folder, output-path, packaging, CI, and inventory references from the original repository.
 - [ ] Eliminate circular dependencies and ensure `Icod.CommandFramework` has no production dependency on any command suite.
-- [ ] Build and test every final repository against published NuGet binaries rather than unpublished source-tree references.
+- [ ] Build and test every final repository against published external NuGet binaries plus its own repository-local project references rather than neighboring source trees.
 - [ ] Publish an architecture and migration document explaining the final package boundaries, repository split, executable ownership, and replacement of transitional Shared dependencies.
 
-Completion of this gate establishes `Icod.CommandFramework` as the neutral cross-platform command foundation and completes the repository split. It does not require `Icod.CoreUtils.Shared` to disappear; that package remains appropriate for behavior genuinely specific to the Coreutils, Fileutils, and Textutils family.
+Completion of this gate establishes `Icod.CommandFramework` as the neutral cross-platform command foundation and completes the repository split. It does not require `Icod.CoreUtils.Shared` to disappear; that repository-local library remains appropriate for behavior genuinely specific to the Coreutils, Fileutils, and Textutils family.
 
 ## Why the tools are scheduled this way
 

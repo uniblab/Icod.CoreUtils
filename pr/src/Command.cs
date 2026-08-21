@@ -5,8 +5,8 @@ namespace Icod.CoreUtils.Pr;
 
 using System.Globalization;
 using System.Text;
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
 using Icod.CoreUtils.Shared.Time;
 
 /// <summary>Implements GNU-compatible pagination and multi-column presentation.</summary>

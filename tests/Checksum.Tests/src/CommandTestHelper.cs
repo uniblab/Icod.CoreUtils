@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Checksum.Tests;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 internal sealed record CommandResult(
 	int ExitCode,

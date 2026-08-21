@@ -1,9 +1,9 @@
 namespace Icod.CoreUtils.Fmt;
 
 using System.Globalization;
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.IO;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.IO;
 
 /// <summary>Implements GNU <c>fmt</c> for .NET.</summary>
 /// <remarks>

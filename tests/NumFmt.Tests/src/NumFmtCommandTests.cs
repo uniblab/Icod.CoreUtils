@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.NumFmt.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Xunit;
 
 public sealed class NumFmtCommandTests {

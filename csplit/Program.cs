@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.CSplit;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>Provides the <c>csplit [OPTION]... FILE PATTERN...</c> process entry point.</summary>
 public static class Program {

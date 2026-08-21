@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Timeout.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Processes;
+using Icod.CommandFramework.Processes;
 using Icod.CommandFramework.Time;
 using Xunit;
 

@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
-using Icod.CoreUtils.Shared.RegularExpressions;
+using Icod.CommandFramework.RegularExpressions;
 using Icod.CommandFramework.Text;
 
 // Responsibility: Sed-specific regular-expression policy over the Shared GNU provider.

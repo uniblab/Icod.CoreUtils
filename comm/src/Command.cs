@@ -5,11 +5,11 @@ namespace Icod.CoreUtils.Comm;
 
 using System.Globalization;
 using System.Text;
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.IO;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.IO;
 using Icod.CoreUtils.Shared.Ordering;
-using Icod.CoreUtils.Shared.Records;
+using Icod.CommandFramework.Records;
 
 /// <summary>Implements GNU-compatible comparison of two sorted record streams.</summary>
 public static class Command {

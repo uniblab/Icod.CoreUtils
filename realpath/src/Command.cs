@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.RealPath;
 
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
 using Icod.Path;
 
 /// <summary>Implements GNU-compatible <c>realpath</c> canonical pathname output.</summary>

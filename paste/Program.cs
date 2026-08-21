@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Paste;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>Provides the process entry point for <c>paste</c>.</summary>
 public static class Program {

@@ -4,10 +4,10 @@
 namespace Icod.DiffUtils.SDiff;
 
 using System.Security;
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.IO;
-using Icod.CoreUtils.Shared.RegularExpressions;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.IO;
+using Icod.CommandFramework.RegularExpressions;
 using Icod.DiffUtils.Shared;
 using Icod.DiffUtils.Shared.Edits;
 using Icod.DiffUtils.Shared.Lines;

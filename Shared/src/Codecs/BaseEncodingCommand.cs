@@ -1,9 +1,9 @@
 namespace Icod.CoreUtils.Shared.Codecs;
 
 using System.Globalization;
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.IO;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.IO;
 
 /// <summary>
 /// Implements the common command-line and stream behavior used by the

@@ -1,133 +1,71 @@
 # Icod.CoreUtils.Shared
 
-`Icod.CoreUtils.Shared` contains reusable infrastructure for the individual core-utility executables.
+`Icod.CoreUtils.Shared` is the permanent repository-local shared library for the GNU Coreutils/Fileutils/Textutils command family. Neutral command-host, stream, process, terminal, record, regular-expression, temporary-resource, pathname, and low-level filesystem mechanisms live in published foundation packages instead of being duplicated here.
 
-## Batch 0 components
+## External foundation dependencies
 
-- `CommandLine`: declarative GNU/POSIX-style option parsing with short clusters, long options, required and optional values, aliases, `--`, configurable ordering, structured diagnostics, and legacy token rewrites.
-- `Diagnostics`: command contexts, standard exit codes, and program-prefixed diagnostics.
-- `Formatting`: GNU-compatible formatting escape decoding for command format strings and escaped operands; neutral scanning is shared with the explicit C3 escape profiles.
-- `IO`: compatibility delimited-record readers and writers, bounded stream operations, standard-input operands, and temporary spooling.
-- `Numerics`: culture-invariant integer and floating quantity parsing, arbitrary-precision rational arithmetic, exact suffix tables, explicit rounding, and overflow policies.
-- `Processes`: shell-free asynchronous child-process execution with redirected stream forwarding, capture, cancellation, and process-tree termination.
-- `RegularExpressions`: fully managed GNU basic regular-expression parsing, leftmost-longest matching, GNU/Gnulib capture-register behavior, back-references, structured diagnostics, cancellation, and injectable locale/classification providers.
-- `Temporary`: cryptographically secure base-62 name generation, exclusive temporary file/directory creation, collision retries, and deterministic cleanup support.
-- `Icod.CommandFramework.FileSystem` (package dependency): capability-aware durable file/filesystem flush operations, sparse-file extension, allocated-range queries, and the system implementation.
-- `Icod.CommandFramework.FileSystem.Traversal` (package dependency): segment-aware pathname expansion, injectable one-level filesystem observation, stable entry/filesystem identities, and iterative event-based read-only traversal.
-- `Icod.CommandFramework.FileSystem.Metadata` (package dependency): authoritative entry and filesystem metadata, explicit availability, E1 identity reuse, allocated-block accounting, and selective timestamp mutation.
-- `FileSystem.Ownership`: GNU/POSIX user and group resolution plus shared `chown`/`chgrp` recursive command policy.
-- `Icod.CommandFramework.FileSystem.Mutation` (package dependency): race-aware single-path creation, linking, removal, mode mutation, and UID/GID mutation with explicit capability and identity preconditions.
-- `Icod.CommandFramework.FileSystem.RecursiveMutation` (package dependency): recursive mutation/copy planning, preserve-root and containment preflight, hard-link and sparse-file preservation, metadata policy, and rollback cleanup.
-- `Icod.CommandFramework.FileSystem.TransactionalReplacement` (package dependency): secure sibling staging, pathname revalidation, atomic publication, backup-name generation, per-file recovery units, metadata restoration, rollback, durability reporting, and deterministic cleanup.
-- `Platform`: BCL-first capability reporting and controlled unsupported results.
+- `Icod.CommandFramework` 1.1.0 owns neutral command infrastructure, general text/time mechanism, process and terminal mechanism, filesystem traversal and metadata, inode-pool observation, current-process creation-mask observation, and host file-clone/reflink mechanism consumed by Coreutils.
+- `Icod.Path` 1.0.0 owns canonical and platform-aware pathname behavior used by the suite.
 
-## Text processing
+`Icod.CoreUtils.Shared` must not reintroduce copies of framework-owned public types. A shared API that exposes a framework concept uses the permanent foundation type directly so consumers see one CLR type identity.
 
-The `Icod.CoreUtils.Shared.Text` namespace supplies the reusable Completion Gate C2 foundation for byte-sensitive text-layout commands. `TextUnitReader` can iterate opaque bytes or decode UTF-8 scalars while retaining the exact source bytes for every unit. Invalid UTF-8 is handled explicitly by preserving each invalid byte, returning replacement scalars that still retain the replaced bytes, or throwing at a stable source-byte offset. Byte-order marks are ordinary data and are never removed.
+## Repository-local identity
 
-`TextLineReader` and `TextLine` add byte-preserving logical-line iteration for later formatting commands. A line feed is retained as explicit line metadata, while carriage returns and every other byte remain ordinary units. Consumers can reproduce the original bytes exactly or create a managed decision string for regular-expression and layout work without turning that string into the authoritative serialization.
+`Icod.CoreUtils.Shared` is deliberately **not** an independently published NuGet package. Its project is non-packable and genuine Coreutils/Fileutils/Textutils consumers use a same-repository `ProjectReference`, for example:
 
-`ITextLocaleProvider` supplies injectable blank classification and the associated byte or UTF-8 decoding profile. `TextLocaleEnvironment` resolves the active profile in `LC_ALL`, `LC_CTYPE`, then `LANG` precedence, selecting exact C/POSIX byte behavior or the deterministic UTF-8 profile. `IDisplayWidthProvider` supplies injectable scalar widths; the default managed provider is deterministic across operating systems, uses Unicode 16.0.0 East Asian Width data, treats ambiguous-width scalars as one column, and measures scalars rather than grapheme clusters. `DisplayColumnState` provides checked advancement, bounded backspace movement, carriage-return reset, and tab-stop advancement without imposing command-specific buffering policy.
+```xml
+<ProjectReference Include="..\Shared\Icod.CoreUtils.Shared.csproj" />
+```
 
-`TabStopParser` accepts comma- and blank-separated values, repeated specifications, explicit stop lists, globally aligned `/N` continuation, and final-stop-relative `+N` continuation. One unprefixed value denotes a globally recurring interval. Empty specifications, redundant separators, prefix-only specifications, and zero-valued prefixed intervals reproduce GNU's default-stop behavior. Parse failures use structured error codes so command projects can produce their own GNU-compatible diagnostics.
+Do not add a `PackageReference` to `Icod.CoreUtils.Shared` and do not publish it to NuGet.org or GitHub Packages. Any remaining co-resident sibling-suite `ProjectReference` to this library is transitional Gate G extraction debt. G4 through G8 must replace that dependency with the actual published neutral owner, normally `Icod.CommandFramework` and, where applicable, `Icod.Path`.
 
-The initial portability profile is exact for the POSIX C byte locale and supplies a deterministic UTF-8 Unicode profile whose blank classification excludes nonbreaking spaces. Locale behavior remains injectable. Other legacy or stateful encodings are not silently normalized through replacement fallback; a future provider may add them when an exact byte-preserving implementation is justified.
+## Coreutils-owned areas
 
-## Record, range, delimiter, and escape processing
+The contracted library retains the following command-family behavior:
 
-Completion Gate C3 adds four composable namespaces without placing command policy in Shared.
+- `BinaryFormatting`: byte-oriented rendering used by binary-data utilities.
+- `Checksums`: GNU checksum/digest command policy and output behavior.
+- `Codecs`: Coreutils base-encoding command policy.
+- `DirectoryListing`: shared `ls`, `dir`, `vdir`, and `dircolors` policy and presentation orchestration.
+- `Escapes`: GNU command-specific escape grammars such as `paste`/`tr` behavior; neutral delimiter mechanism comes from `Icod.CommandFramework.Delimiters`.
+- `FileSystem.CopyMove`: GNU `cp`/`mv` copy/move policy and orchestration; host clone execution is framework-owned.
+- `FileSystem.Modes`: GNU symbolic/numeric mode parsing; POSIX mode values and current-process creation-mask observation are framework-owned.
+- `FileSystem.Ownership`: GNU/POSIX user/group resolution and shared `chown`/`chgrp` policy.
+- `FileSystem.Usage`: GNU block-size, filesystem-usage, accounting, and reporting policy; inode-pool observations come from framework metadata.
+- `Formatting`: GNU-compatible format-string and escaped-operand behavior.
+- `Numerics`: GNU/Coreutils numeric operand, suffix, rounding, and quantity grammar.
+- `Ordering`: Coreutils external-ordering policy and codecs, using framework record and temporary-resource contracts.
+- `Platform`: Coreutils-specific login, process-information, system-information, system-metrics, and user-information providers retained after the platform split.
+- `Ranges`: GNU positional range-list parsing and normalization.
+- `Text`: GNU tab-stop parsing policy. General byte/UTF-8 text units, display-width, and tab-stop value models are framework-owned.
+- `Time`: GNU date parsing/formatting and wall-clock mutation policy. Monotonic scheduling is framework-owned.
+- `SharedUtils`: compatibility surface for existing commands while focused APIs continue to replace legacy helpers.
 
-- `Icod.CoreUtils.Shared.Records` frames line-feed or NUL byte records. `DelimitedByteRecordSegmentReader` bounds input retention even for enormous records and reports record termination explicitly; `ByteRecordReader` provides the corresponding content-plus-termination materializing model; `DelimitedByteRecordWriter` writes content and separators separately.
-- `Icod.CoreUtils.Shared.Ranges` parses and normalizes GNU positional range lists, including leading-open, trailing-open, complement, and configurable general domains. Overlaps merge, but adjacent ranges deliberately remain separate so consumers can observe requested range starts.
-- `Icod.CoreUtils.Shared.Delimiters` distinguishes nonempty match delimiters from possibly empty output separators, supplies repeating separator cycles, and incrementally matches multibyte delimiters across arbitrary input buffers.
-- `Icod.CoreUtils.Shared.Escapes` supplies neutral backslash scanning, structured diagnostics, GNU `paste` delimiter parsing, and the low-level escaped-byte stream required by later GNU `tr` parsing. Formatting, `paste`, and `tr` remain separate grammar profiles because identical source escapes intentionally have different meanings.
+## Framework-owned filesystem mechanism
 
-The existing `Icod.CoreUtils.Shared.IO.DelimitedByteRecordReader` remains source-compatible and delegates to the C3 `ByteRecordReader`, which in turn uses the segmented framing engine. Decoded `TextReader`/`TextWriter` record APIs remain available when exact source bytes are not part of a command's contract.
+Coreutils consumes the following directly from `Icod.CommandFramework.FileSystem` and its subnamespaces:
+
+- root filesystem capabilities and operations, including capability-aware whole-file clone/reflink;
+- read-only traversal and pathname expansion;
+- authoritative metadata, timestamp mutation, and filesystem inode-pool observation;
+- POSIX mode value models and current-process creation-mask observation;
+- single-path mutation;
+- recursive mutation/copy planning;
+- transactional replacement.
+
+GNU-visible prompting, operand interpretation, reflink selection policy, overwrite/update behavior, backup policy selection, ownership rules, and other command semantics remain in Coreutils code.
+
+## Boundary rules
+
+1. `Icod.CommandFramework` contains mechanism that is useful independently of Coreutils.
+2. `Icod.CoreUtils.Shared` contains demonstrated Coreutils/Fileutils/Textutils reuse, not general CLI infrastructure.
+3. `Icod.CoreUtils.Shared` remains in this repository and is consumed by same-repository `ProjectReference`, never by package reference.
+4. Remaining sibling-suite references are temporary extraction debt and do not establish a public CoreUtils package boundary.
+5. Individual commands retain command-specific grammar and presentation when reuse is not demonstrated.
+6. Public signatures use the permanent package owner of a type; duplicate lookalike value models are not permitted.
+7. Injected standard streams are not owned or disposed by shared command logic.
+8. Naturally asynchronous operations accept cancellation and do not use `Task.Run` as an I/O substitute.
 
 ## Compatibility
 
-`SharedUtils` remains source-compatible for existing tools. Newly refactored commands should use the focused APIs instead of extending `SharedUtils`.
-
-The intended migration is incremental:
-
-1. Keep the command's existing synchronous `Run` entry point as a compatibility wrapper.
-2. Add `RunAsync(..., CancellationToken)` and use `CommandContext` for injected and console streams.
-3. Replace `SharedUtils.ParseOptions` with declarative `OptionDefinition` instances and `OptionParser`.
-4. Use `DelimitedRecordReader` and `DelimitedRecordWriter` for intentionally decoded text; use `Icod.CoreUtils.Shared.Records` when record bytes, NUL termination, or unterminated-final-record state must remain exact. Use `StreamOperations` instead of command-specific copy loops.
-5. Use `QuantityParser`, `ProcessRunner`, and `PlatformCapabilities` where applicable.
-6. Use `IRegularExpressionProvider` instead of translating GNU BRE patterns into `System.Text.RegularExpressions`.
-
-## Option parser example
-
-```csharp
-var parser = new OptionParser(
-	new OptionDefinition[] {
-		new(
-			"lines",
-			'n',
-			new[] { "lines" },
-			OptionValueArity.Required
-		),
-		new(
-			"quiet",
-			'q',
-			new[] { "quiet", "silent" }
-		)
-	},
-	new OptionParserSettings {
-		Ordering = OptionOrdering.Permute,
-		AllowLongOptionAbbreviations = true
-	}
-);
-
-var result = parser.Parse( args );
-if ( !result.IsSuccess ) {
-	foreach ( var error in result.Errors ) {
-		await context.StandardError.WriteLineAsync(
-			OptionDiagnosticFormatter.Format(
-				context.ProgramName,
-				error
-			)
-		).ConfigureAwait( false );
-	}
-}
-```
-
-Options are preserved in encounter order. A command can therefore implement “last option wins” by reading the final occurrence, while still retaining every source spelling and argument index for diagnostics.
-
-## Legacy token forms
-
-Tool-specific obsolete syntax belongs in a token rewrite rule rather than in the core parser. For example, a `head` migration can rewrite `-25` into `-n` and `25` before normal parsing. Rewritten tokens retain the original source token and argument index.
-
-## Streaming and ownership
-
-Shared I/O and record helpers never own injected standard streams. `InputSource` owns only files that it opens. Naturally asynchronous operations accept `CancellationToken` and do not use `Task.Run` as an I/O substitute.
-
-## Regular expressions
-
-Completion Gate C1 adds a reusable GNU BRE engine under `src/RegularExpressions`. It owns GNU/POSIX syntax, leftmost-longest selection, captures, back-references, locale-provider boundaries, cancellation, and controlled diagnostics. See [`src/RegularExpressions/README.md`](src/RegularExpressions/README.md) for the conformance profile and explicit differences from `System.Text.RegularExpressions`.
-
-## External ordering
-
-The `Icod.CoreUtils.Shared.Ordering` namespace supplies the Completion Gate D execution model without creating dependencies between individual tools. Locale selection follows `LC_ALL`, `LC_COLLATE`, and `LANG` precedence; C/POSIX profiles compare bytes, while named supported locales use injectable managed collation. Reusable collation keys, GNU sort-key syntax parsing, composite key rules, and original-input ordinals separate comparison policy from command front ends.
-
-`ExternalRunBuilder<T>` creates stable sorted runs under a caller-provided memory estimate. `StableExternalMerger<T>` validates and merges run streams, and `ExternalOrderingEngine<T>` performs bounded-fan-in intermediate passes when necessary. `IExternalRunCodec<T>` keeps temporary serialization independent of record type; `ByteRecordRunCodec` supplies the byte-preserving Coreutils format.
-
-`TemporaryWorkspace` owns the secure directory and run files. Cleanup ignores the operation cancellation token and is attempted after success, failure, and cancellation. Combined operation and cleanup failures preserve both exceptions. This ordering and workspace layer is shared incubation infrastructure and a provisional `Icod.CommandFramework` candidate; no command project is referenced by it.
-
-## Framework-owned read-only pathname traversal
-
-Completion Gate E1 traversal now lives in `Icod.CommandFramework.FileSystem.Traversal`. Coreutils consumes `PathnamePattern`, `PathnameExpander`, `IReadOnlyFileSystemProvider`, `ReadOnlyPathTraversalEngine`, stable entry/filesystem identities, link policy, cycle detection, and traversal events from the published framework package. G3F1 removes the duplicate CoreUtils implementation and its duplicate Shared tests.
-## Framework-owned filesystem metadata and timestamps
-
-Completion Gate E3 metadata now lives in `Icod.CommandFramework.FileSystem.Metadata`. Coreutils consumes the framework metadata model, explicit availability values, filesystem information, timestamp-mutation contracts, and system provider directly from the published package. G3E2 removed the duplicate CoreUtils implementation and its duplicate Shared tests.
-## Framework-owned recursive filesystem mutation and copying
-
-Completion Gate E5 recursive mutation now lives in `Icod.CommandFramework.FileSystem.RecursiveMutation`. Coreutils consumes the framework traversal-planning, preserve-root, containment, hard-link, sparse-file, metadata-preservation, and rollback contracts directly.
-
-## Framework-owned transactional replacement
-
-Completion Gate E6 transactional replacement now lives in `Icod.CommandFramework.FileSystem.TransactionalReplacement`. Coreutils consumes secure sibling staging, pathname revalidation, atomic publication, backup-name generation, recovery-unit, metadata-restoration, rollback, durability, and cleanup contracts directly. GNU-visible prompting, force/update, and multi-file policy remain with command/Coreutils code.
-## Ownership mutation
-
-Batch 42 adds `Icod.CoreUtils.Shared.FileSystem.Ownership`. It resolves user and group names through `IIdentityProvider`, honors GNU name-first and forced `+ID` syntax, supports reference and `--from` ownership, separates recursive traversal from terminal dereferencing, and combines E3 observations with ownership-aware E4 preconditions and E5 postorder recursion. The system mutation provider uses `chown` and `lchown` on supported Unix hosts and returns a controlled unsupported result on Windows.
+The contraction performed by Completion Gate G is an ownership and dependency-boundary change, not a command-semantics change. Existing command behavior remains the compatibility target while neutral implementation dependencies are supplied by published foundation packages and Coreutils-specific reuse remains source-built inside this repository.

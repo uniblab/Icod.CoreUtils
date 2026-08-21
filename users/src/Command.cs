@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Users;
 
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
 using Icod.CoreUtils.Shared.Platform;
 
 /// <summary>Implements the <c>users</c> command.</summary>

@@ -8,12 +8,12 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.IO;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.IO;
 using Icod.CoreUtils.Shared.Ordering;
-using Icod.CoreUtils.Shared.Records;
-using Icod.CoreUtils.Shared.Temporary;
+using Icod.CommandFramework.Records;
+using Icod.CommandFramework.Temporary;
 
 /// <summary>Implements GNU-compatible external sorting, checking, and merging.</summary>
 public static class Command {

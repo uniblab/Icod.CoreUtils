@@ -3,9 +3,9 @@ namespace Icod.CoreUtils.Shared.Checksums;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.IO;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.IO;
 
 /// <summary>
 /// Provides the cksum options implementation.

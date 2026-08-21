@@ -1,7 +1,7 @@
 namespace Icod.Patch;
 
 using System.Security;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>Contains validated Patch Wave C invocation options.</summary>
 internal sealed class PatchOptions {

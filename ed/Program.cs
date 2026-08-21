@@ -1,6 +1,6 @@
 namespace Icod.LineEditor.Ed;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>Hosts the asynchronous <c>ed</c> command entry point.</summary>
 public static class Program {

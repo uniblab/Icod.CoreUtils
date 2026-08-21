@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Truncate.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.Platform;
 using Xunit;
 

@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.WhoAmI.Tests;
 
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.Platform;
 using Tool = Icod.CoreUtils.WhoAmI.Command;
 using Xunit;

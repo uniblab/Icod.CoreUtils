@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.TSort;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>Provides the <c>tsort [OPTION] [FILE]</c> process entry point.</summary>
 public static class Program {

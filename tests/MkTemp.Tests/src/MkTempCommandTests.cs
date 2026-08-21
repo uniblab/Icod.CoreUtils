@@ -1,8 +1,8 @@
 namespace Icod.CoreUtils.MkTemp.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.Temporary;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.Temporary;
 using Xunit;
 
 public sealed class MkTempCommandTests {

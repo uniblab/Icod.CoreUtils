@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.WC;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>
 /// Provides the executable entry point for the GNU-compatible <c>wc</c> command for counting lines, words, characters, and bytes.

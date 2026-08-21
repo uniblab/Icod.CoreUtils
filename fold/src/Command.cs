@@ -1,8 +1,8 @@
 namespace Icod.CoreUtils.Fold;
 
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.IO;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.IO;
 using Icod.CommandFramework.Text;
 
 /// <summary>Implements GNU <c>fold</c> for .NET.</summary>

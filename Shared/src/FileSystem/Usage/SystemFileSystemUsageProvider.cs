@@ -1,9 +1,8 @@
-using System.Runtime.InteropServices;
 using Icod.CommandFramework.FileSystem.Metadata;
 
 namespace Icod.CoreUtils.Shared.FileSystem.Usage;
 
-/// <summary>Provides filesystem capacity and inode observations through Shared metadata and narrow host APIs.</summary>
+/// <summary>Provides filesystem capacity and inode observations through the framework metadata provider.</summary>
 public sealed class SystemFileSystemUsageProvider : IFileSystemUsageProvider {
 	private readonly IFileSystemMetadataProvider metadataProvider;
 
@@ -53,16 +52,15 @@ public sealed class SystemFileSystemUsageProvider : IFileSystemUsageProvider {
 			}
 			var drive = candidate.Drive ?? FindContainingDrive( mountPoint );
 			var deviceName = GetDeviceName( drive, mountPoint, information );
-			var inodes = TryGetInodes( candidate.Path );
 			var snapshot = new FileSystemUsageSnapshot(
 				candidate.Path,
 				deviceName,
 				information,
 				IsLocal( drive )
 			) {
-				TotalInodes = inodes.Total,
-				FreeInodes = inodes.Free,
-				AvailableInodes = inodes.Available
+				TotalInodes = information.TotalInodes,
+				FreeInodes = information.FreeInodes,
+				AvailableInodes = information.AvailableInodes
 			};
 			results.Add( snapshot );
 		}
@@ -151,69 +149,5 @@ public sealed class SystemFileSystemUsageProvider : IFileSystemUsageProvider {
 		return mountPoint;
 	}
 
-	private static InodeValues TryGetInodes( string path ) {
-		if ( OperatingSystem.IsWindows() ) {
-			return InodeValues.Unsupported( "Windows does not expose filesystem inode pools." );
-		}
-		try {
-			if ( StatVfs( path, out var statistics ) != 0 ) {
-				return InodeValues.Unavailable( $"statvfs failed with errno {Marshal.GetLastPInvokeError()}." );
-			}
-			return new InodeValues(
-				FileSystemMetadataValue<ulong>.Available( statistics.Files ),
-				FileSystemMetadataValue<ulong>.Available( statistics.FilesFree ),
-				FileSystemMetadataValue<ulong>.Available( statistics.FilesAvailable )
-			);
-		} catch ( Exception exception ) when (
-			exception is DllNotFoundException or EntryPointNotFoundException or BadImageFormatException
-		) {
-			return InodeValues.Unsupported( exception.Message );
-		}
-	}
-
-	[DllImport( "libc", EntryPoint = "statvfs", SetLastError = true )]
-	private static extern int StatVfs( string path, out PosixStatVfs statistics );
-
-#pragma warning disable CS0649
-	[StructLayout( LayoutKind.Sequential )]
-	private struct PosixStatVfs {
-		public ulong BlockSize;
-		public ulong FragmentSize;
-		public ulong Blocks;
-		public ulong BlocksFree;
-		public ulong BlocksAvailable;
-		public ulong Files;
-		public ulong FilesFree;
-		public ulong FilesAvailable;
-		public ulong FileSystemIdentifier;
-		public ulong Flags;
-		public ulong MaximumNameLength;
-		public int Spare0;
-		public int Spare1;
-		public int Spare2;
-		public int Spare3;
-		public int Spare4;
-		public int Spare5;
-	}
-#pragma warning restore CS0649
-
 	private readonly record struct Candidate( string Path, DriveInfo? Drive );
-	private readonly record struct InodeValues(
-		FileSystemMetadataValue<ulong> Total,
-		FileSystemMetadataValue<ulong> Free,
-		FileSystemMetadataValue<ulong> Available
-	) {
-		/// <summary>Creates unsupported inode values.</summary>
-		public static InodeValues Unsupported( string message ) => new(
-			FileSystemMetadataValue<ulong>.Unsupported( message ),
-			FileSystemMetadataValue<ulong>.Unsupported( message ),
-			FileSystemMetadataValue<ulong>.Unsupported( message )
-		);
-		/// <summary>Creates unavailable inode values.</summary>
-		public static InodeValues Unavailable( string message ) => new(
-			FileSystemMetadataValue<ulong>.Unavailable( message ),
-			FileSystemMetadataValue<ulong>.Unavailable( message ),
-			FileSystemMetadataValue<ulong>.Unavailable( message )
-		);
-	}
 }

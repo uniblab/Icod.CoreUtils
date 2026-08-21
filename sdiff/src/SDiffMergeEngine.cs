@@ -1,7 +1,7 @@
 namespace Icod.DiffUtils.SDiff;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Icod.DiffUtils.Shared.Lines;
 
 /// <summary>Runs interactive merge commands and commits the output only after a complete merge.</summary>

@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Shared.Ordering;
 
 using System.Buffers.Binary;
-using Icod.CoreUtils.Shared.Records;
+using Icod.CommandFramework.Records;
 
 /// <summary>Serializes byte records and their original ordinals in a deterministic length-prefixed run format.</summary>
 public sealed class ByteRecordRunCodec : IExternalRunCodec<ByteRecord> {

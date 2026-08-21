@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Base64;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>
 /// Provides the executable entry point for the GNU-compatible <c>base64</c> command for encoding and decoding data with the Base64 representation.

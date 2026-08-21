@@ -6,12 +6,12 @@ namespace Icod.CoreUtils.Uniq;
 using System.Buffers;
 using System.Globalization;
 using System.Text;
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.IO;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.IO;
 using Icod.CoreUtils.Shared.Ordering;
-using Icod.CoreUtils.Shared.Records;
-using Icod.CoreUtils.Shared.Temporary;
+using Icod.CommandFramework.Records;
+using Icod.CommandFramework.Temporary;
 
 /// <summary>Implements GNU-compatible adjacent-record filtering and grouping.</summary>
 public static class Command {

@@ -1,6 +1,6 @@
 namespace Icod.DiffUtils.Shared.Tests;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Icod.DiffUtils.Shared;
 using Xunit;
 

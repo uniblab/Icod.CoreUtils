@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Join.Tests;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Xunit;
 
 /// <summary>Tests sorted relational joining, duplicate groups, fields, and control paths.</summary>

@@ -1,15 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
+		<Copyright>2026</Copyright>
 		<LangVersion>13.0</LangVersion>
 		<OutputType>Library</OutputType>
 		<TargetFramework>net10.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<IsPackable>false</IsPackable>
 		<OutputPath>..\bin\$(Configuration)\</OutputPath>
 		<AssemblyName>Icod.CoreUtils.Shared</AssemblyName>
 		<RootNamespace>Icod.CoreUtils.Shared</RootNamespace>
+		<Configurations>Debug;Release;Staging</Configurations>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
 		<PlatformTarget>AnyCPU</PlatformTarget>
@@ -37,41 +40,25 @@
 	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
 		<ErrorReport>prompt</ErrorReport>
 		<WarningLevel>4</WarningLevel>
-		<DebugType>pdbonly</DebugType>
+		<DebugType>portable</DebugType>
 		<Optimize>true</Optimize>
 		<SignAssembly>false</SignAssembly>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
 	</PropertyGroup>
-	<PropertyGroup>
-		<PackageVersion>1.0.0-WIP1</PackageVersion>
-		<PackageReleaseNotes>Initial release of Icod.CoreUtils.Shared</PackageReleaseNotes>
-		<Authors>Timothy J. Bruce</Authors>
-		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<PackageIcon>icon.png</PackageIcon>
-		<PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
-		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-		<IncludeContentInPack>true</IncludeContentInPack>
-		<IncludeSymbols>True</IncludeSymbols>
-		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-	</PropertyGroup>
 	<ItemGroup>
 		<Content Include="README.md">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 			<TargetPath>$(AssemblyName).README.md</TargetPath>
-			<Pack>true</Pack>
-			<PackagePath>\</PackagePath>
 		</Content>
 
 		<Content Include="LICENSE">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 			<TargetPath>$(AssemblyName).LICENSE.txt</TargetPath>
-			<Pack>true</Pack>
-			<PackagePath>\</PackagePath>
 		</Content>
 	</ItemGroup>
 	<ItemGroup>
-	  <PackageReference Include="Icod.CommandFramework" Version="1.0.0" />
-	  <PackageReference Include="Icod.Path" Version="1.0.0" />
+		<PackageReference Include="Icod.CommandFramework" Version="1.1.0" />
+		<PackageReference Include="Icod.Path" Version="1.0.0" />
 	</ItemGroup>
 </Project>

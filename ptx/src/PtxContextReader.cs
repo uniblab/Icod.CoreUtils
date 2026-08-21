@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Ptx;
 
 using System.Runtime.CompilerServices;
-using Icod.CoreUtils.Shared.Records;
+using Icod.CommandFramework.Records;
 
 /// <summary>Streams default GNU sentence contexts, traditional line contexts, or custom-regexp contexts.</summary>
 internal static class PtxContextReader {

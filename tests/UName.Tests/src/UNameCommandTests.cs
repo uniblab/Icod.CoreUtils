@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.UName.Tests;
 
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
 using Icod.CoreUtils.Shared.Platform;
 using Tool = Icod.CoreUtils.UName.Command;
 using Xunit;

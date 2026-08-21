@@ -6,13 +6,13 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Icod.CoreUtils.Shared.RegularExpressions;
+using Icod.CommandFramework.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.IO;
-using Icod.CoreUtils.Shared.Processes;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.IO;
+using Icod.CommandFramework.Processes;
 
 // Responsibility: substitution and transliteration.
 public static partial class Command {

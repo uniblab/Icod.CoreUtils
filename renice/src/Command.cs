@@ -3,7 +3,7 @@ namespace Icod.UtilLinux.Renice;
 using System.Globalization;
 using System.Text;
 using Icod.CommandFramework.Platform;
-using Icod.CoreUtils.Shared.Processes;
+using Icod.CommandFramework.Processes;
 
 /// <summary>Implements the util-linux 2.42.2 <c>renice</c> command profile.</summary>
 public static class Command {

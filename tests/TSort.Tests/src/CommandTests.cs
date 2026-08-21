@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.TSort.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Xunit;
 
 /// <summary>Verifies GNU Coreutils 9.11-compatible <c>tsort</c> behavior.</summary>

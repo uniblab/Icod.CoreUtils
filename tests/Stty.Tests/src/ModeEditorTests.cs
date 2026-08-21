@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Stty.Tests;
 
-using Icod.CoreUtils.Shared.Terminal;
+using Icod.CommandFramework.Terminal;
 using Xunit;
 
 /// <summary>Tests pure <c>stty</c> mode editing policy.</summary>

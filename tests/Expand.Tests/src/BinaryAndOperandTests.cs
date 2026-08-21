@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Expand.Tests;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Xunit;
 
 /// <summary>Tests binary fidelity, operand continuity, ownership, and failures for <c>expand</c>.</summary>

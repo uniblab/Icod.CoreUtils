@@ -1,9 +1,9 @@
 namespace Icod.CoreUtils.Cut;
 
 using System.Buffers;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.IO;
-using Icod.CoreUtils.Shared.Records;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.IO;
+using Icod.CommandFramework.Records;
 using Icod.CommandFramework.Text;
 
 /// <summary>Performs byte-preserving positional extraction for <c>cut</c>.</summary>

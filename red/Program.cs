@@ -1,6 +1,6 @@
 namespace Icod.LineEditor.Red;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>Hosts the asynchronous <c>red</c> command entry point.</summary>
 public static class Program {

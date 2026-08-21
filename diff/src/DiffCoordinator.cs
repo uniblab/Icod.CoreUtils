@@ -1,7 +1,7 @@
 namespace Icod.DiffUtils.Diff;
 
 using System.IO.Enumeration;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Icod.DiffUtils.Shared;
 using Icod.DiffUtils.Shared.Edits;
 using Icod.DiffUtils.Shared.Lines;

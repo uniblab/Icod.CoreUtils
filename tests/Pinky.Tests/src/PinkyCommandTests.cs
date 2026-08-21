@@ -1,5 +1,5 @@
 using System.Runtime.CompilerServices;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Icod.CoreUtils.Shared.Platform;
 using Xunit;
 using Tool = Icod.CoreUtils.Pinky.Command;

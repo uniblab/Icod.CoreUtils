@@ -2,7 +2,7 @@ namespace Icod.CoreUtils.Stty;
 
 using System.Globalization;
 using System.Text;
-using Icod.CoreUtils.Shared.Terminal;
+using Icod.CommandFramework.Terminal;
 
 /// <summary>Formats human-readable and machine-readable terminal state.</summary>
 public static class SttyFormatter {

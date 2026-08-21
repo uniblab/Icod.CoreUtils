@@ -2,7 +2,7 @@ namespace Icod.DiffUtils.Diff;
 
 using System.Globalization;
 using System.Text;
-using Icod.CoreUtils.Shared.RegularExpressions;
+using Icod.CommandFramework.RegularExpressions;
 using Icod.DiffUtils.Shared.Edits;
 using Icod.DiffUtils.Shared.Layout;
 using Icod.DiffUtils.Shared.Lines;

@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Fold.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Xunit;
 
 /// <summary>Tests binary fidelity, bounded buffering, operand boundaries, ownership, and failures for <c>fold</c>.</summary>

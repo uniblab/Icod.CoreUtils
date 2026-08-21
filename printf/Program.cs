@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Printf;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>Provides the <c>printf</c> process entry point.</summary>
 public static class Program {

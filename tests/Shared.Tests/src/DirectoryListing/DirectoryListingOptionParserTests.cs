@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Shared.Tests.DirectoryListing;
 
 using Icod.CoreUtils.Shared.DirectoryListing;
-using Icod.CoreUtils.Shared.Terminal;
+using Icod.CommandFramework.Terminal;
 using Xunit;
 
 /// <summary>Verifies shared ls, dir, and vdir command-line profiles.</summary>

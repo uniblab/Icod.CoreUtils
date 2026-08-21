@@ -1,8 +1,8 @@
 namespace Icod.CoreUtils.Nohup;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Processes;
-using Icod.CoreUtils.Shared.Terminal;
+using Icod.CommandFramework.Processes;
+using Icod.CommandFramework.Terminal;
 
 /// <summary>
 /// Implements GNU <c>nohup</c> 9.11 behavior.

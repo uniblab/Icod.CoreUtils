@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.PrintEnv;
 using System.Collections;
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>
 /// Implements GNU-compatible <c>printenv</c> and prints selected environment variables or the complete environment.

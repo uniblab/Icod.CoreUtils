@@ -3,7 +3,7 @@ namespace Icod.CoreUtils.Printf;
 using System.Globalization;
 using System.Numerics;
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Icod.CoreUtils.Shared.Formatting;
 
 /// <summary>Implements GNU-style <c>printf FORMAT [ARGUMENT]...</c>.</summary>

@@ -2,7 +2,7 @@ namespace Icod.LineEditor.Sed;
 
 using System.Threading;
 using System.Threading.Tasks;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>
 /// Provides the executable entry point for the GNU-compatible <c>sed</c> command for transforming text with stream-editor commands.

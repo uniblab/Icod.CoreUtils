@@ -1,7 +1,7 @@
 namespace Icod.Grep.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Xunit;
 
 /// <summary>Tests GNU grep pattern modes, byte records, traversal, output controls, diagnostics, and status semantics.</summary>

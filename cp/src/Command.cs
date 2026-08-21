@@ -1,7 +1,7 @@
 // Original behavior/reference: GNU coreutils
 // Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Icod.CoreUtils.Shared.FileSystem.CopyMove;
 using Icod.CommandFramework.FileSystem.RecursiveMutation;
 using Icod.CommandFramework.FileSystem.TransactionalReplacement;

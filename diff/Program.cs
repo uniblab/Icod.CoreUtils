@@ -1,6 +1,6 @@
 namespace Icod.DiffUtils.Diff;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>Provides the process entry point for <c>diff</c>.</summary>
 public static class Program {
