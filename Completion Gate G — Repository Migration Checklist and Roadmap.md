@@ -309,7 +309,7 @@ No projects move during this phase.
     - record that technical packageability was successfully demonstrated;
     - architecture review nevertheless found no independently justified distribution boundary: the retained library is Coreutils-family implementation, not a cross-suite foundation, so separate publication is rejected.
   - [ ] **G3M2 — final filesystem mechanism migration and framework package refresh**
-    - [ ] **G3M2A — migrate neutral mechanism and tests to `Icod.CommandFramework`**
+    - [x] **G3M2A — migrate neutral mechanism and tests to `Icod.CommandFramework`**
       - extend `Icod.CommandFramework.FileSystem.Metadata.FileSystemInformation` with explicit total, free, and caller-available inode-pool observations and populate them from the existing `statvfs` data; Windows and unsupported hosts must report explicit unavailability rather than guessed counts;
       - move `IFileCreationMaskProvider` and `SystemFileCreationMaskProvider` into `Icod.CommandFramework.FileSystem.Modes`, preserving Linux non-mutating observation and guarded Unix query-and-restore behavior;
       - add a capability-aware file-clone/reflink primitive to `Icod.CommandFramework.FileSystem`, moving the native host mechanism below Coreutils while leaving GNU `--reflink=never|auto|always` policy in CoreUtils;
@@ -498,7 +498,7 @@ Current sequence:
 - [x] **G3K1/G3K2 — Remaining framework-owned namespace consumer cut-over and implementation/test excision.**
 - [x] **G3L — ProcessTestHost audit and contraction.**
 - [x] **G3M1 — Package-boundary evaluation and local validation:** local pack/restore proved the contracted library is technically packageable, but the architecture review rejected an independent distribution boundary.
-- [ ] **G3M2A — Framework filesystem migration and package refresh:** move inode-pool observation, creation-mask observation, and host file-clone/reflink mechanism plus their tests to `Icod.CommandFramework`; audit the dead/unused `copy_file_range` helper; build/test and publish the refreshed framework package.
+- [x] **G3M2A — Framework filesystem migration and package refresh:** inode-pool observation, creation-mask observation, and host file-clone/reflink mechanism plus their tests are published in `Icod.CommandFramework` 1.1.0 after required-runner validation.
 - [ ] **G3M2B — CoreUtils consumer cut-over and prudent pruning:** consume the refreshed framework package, cut `df`/mode/copy-move/directory-metadata paths over to the neutral APIs, and remove migrated CoreUtils code/tests only after validation.
 - [ ] **G3M3 — Internal-library boundary freeze and Coreutils consumer validation:** keep `Icod.CoreUtils.Shared` in-repository, remove independent-publication intent, retain same-repository project references, and validate its published neutral dependencies.
 - [ ] **G3N — Isolated Coreutils validation and G3 closure:** run the clean-checkout/build/test closure before beginning G4 repository extraction.

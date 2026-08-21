@@ -5,10 +5,10 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `67`, `69` through Batch `72`; Batch `68` (`Icod.ProcPs.Top`) is deliberately deferred until after `Icod.ProcPs` extraction|
-| Current engineering milestone | Completion Gate G — G3 contraction; final filesystem mechanism migration approved |
+| Current engineering milestone | Completion Gate G — G3M2B CoreUtils filesystem consumer cut-over and prudent pruning |
 | Completed infrastructure milestone | Completion Gates E2 through E6, F1 through F4, and P1 — filesystem, terminal, process-control, and ProcPs provider foundations; three-platform ProcPs provider correction validated and merged |
-| Active infrastructure dependency | complete the G3 filesystem foundation refresh and publish the updated `Icod.CommandFramework` package before pruning migrated CoreUtils code; preserve the ProcPs extraction boundary for deferred Batch 68 |
-| Next engineering step | G3M2A — migrate approved neutral filesystem mechanisms and tests to `Icod.CommandFramework`, validate and publish the refreshed package; then perform G3M2B CoreUtils consumer cut-over and prudent pruning |
+| Active infrastructure dependency | consume published `Icod.CommandFramework` 1.1.0, cut CoreUtils filesystem consumers over to the neutral mechanisms, and prune only the superseded local implementations; preserve the ProcPs extraction boundary for deferred Batch 68 |
+| Next engineering step | G3M2B — validate the Framework 1.1.0 consumer cut-over for Shared, `cp`, `mv`, `df`, `du`, `chmod`, `mkdir`, `mkfifo`, and `mknod` on the required runners; then proceed to G3M3 |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -1755,13 +1755,13 @@ This gate is deliberately last. By this point the Coreutils, Diffutils, Grep, Pa
 - [x] Create the `Icod.CommandFramework` solution and repository with independent Windows, Ubuntu, and macOS CI.
 - [x] Publish `Icod.CommandFramework` as a versioned NuGet package with symbols, SourceLink, deterministic builds, package documentation, and a Semantic Versioning policy.
 - [ ] Move all approved neutral functionality into `Icod.CommandFramework`, including the final filesystem-mechanism remainder identified during G3 closure.
-- [ ] Final filesystem foundation refinement:
-  - [ ] extend framework `FileSystemInformation` with explicit total/free/available inode-pool observations populated from the existing `statvfs` path;
-  - [ ] move current-process creation-mask observation (`IFileCreationMaskProvider` / `SystemFileCreationMaskProvider`) to `Icod.CommandFramework.FileSystem.Modes`;
-  - [ ] add a capability-aware host file-clone/reflink primitive to the framework while retaining GNU `cp` reflink policy in CoreUtils;
-  - [ ] move/rehome the corresponding tests to the framework repository;
-  - [ ] audit the CoreUtils `copy_file_range` helper and delete it if unused rather than creating an unnecessary framework abstraction;
-  - [ ] build/test the framework on Windows, Ubuntu, and macOS and publish a refreshed package before pruning CoreUtils consumers.
+- [x] Final filesystem foundation refinement:
+  - [x] extend framework `FileSystemInformation` with explicit total/free/available inode-pool observations populated from the existing `statvfs` path;
+  - [x] move current-process creation-mask observation (`IFileCreationMaskProvider` / `SystemFileCreationMaskProvider`) to `Icod.CommandFramework.FileSystem.Modes`;
+  - [x] add a capability-aware host file-clone/reflink primitive to the framework while retaining GNU `cp` reflink policy in CoreUtils;
+  - [x] move/rehome the corresponding tests to the framework repository;
+  - [x] audit the CoreUtils `copy_file_range` helper and delete it if unused rather than creating an unnecessary framework abstraction;
+  - [x] build/test the framework on Windows, Ubuntu, and macOS and publish `Icod.CommandFramework` 1.1.0 before pruning CoreUtils consumers.
 - [ ] CoreUtils filesystem consumer cut-over:
   - [ ] consume framework inode-pool observations from `SystemFileSystemUsageProvider` and remove its duplicate local `statvfs` ABI;
   - [ ] consume the framework creation-mask provider;

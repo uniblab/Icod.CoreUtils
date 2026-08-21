@@ -4,6 +4,7 @@ using NodeCommand = Icod.CoreUtils.MkNod.Command;
 using Icod.CommandFramework.Diagnostics;
 using Icod.CoreUtils.Shared.FileSystem.Modes;
 using FileCreationMask = Icod.CommandFramework.FileSystem.Modes.FileCreationMask;
+using IFileCreationMaskProvider = Icod.CommandFramework.FileSystem.Modes.IFileCreationMaskProvider;
 using PosixFileMode = Icod.CommandFramework.FileSystem.Modes.PosixFileMode;
 using Icod.CommandFramework.FileSystem.Mutation;
 using Icod.CommandFramework.FileSystem.Traversal;

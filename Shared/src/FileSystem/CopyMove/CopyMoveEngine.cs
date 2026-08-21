@@ -1,5 +1,4 @@
 using Path = global::System.IO.Path;
-using System.Runtime.InteropServices;
 using PathIndirectionInfo = Icod.Path.PathIndirectionInfo;
 using PathIndirectionKind = Icod.Path.PathIndirectionKind;
 using Icod.CommandFramework.FileSystem.Metadata;
@@ -17,10 +16,16 @@ namespace Icod.CoreUtils.Shared.FileSystem.CopyMove;
 /// </summary>
 public sealed class CopyMoveEngine {
 	private const int CopyBufferSize = 128 * 1024;
+	private const RecursiveMetadataFields DirectoryMetadataFields =
+		RecursiveMetadataFields.Mode
+		| RecursiveMetadataFields.Ownership
+		| RecursiveMetadataFields.Timestamps
+		| RecursiveMetadataFields.Attributes;
 	private readonly IReadOnlyFileSystemProvider readOnlyProvider;
 	private readonly IFileSystemMetadataProvider metadataProvider;
 	private readonly ITransactionalReplacementFileSystem replacementFileSystem;
 	private readonly IFileSystemMutationProvider mutationProvider;
+	private readonly IFileSystemOperations fileSystemOperations;
 	private readonly RecursiveMutationTraversalEngine traversal;
 	private readonly SparseFileCopier sparseCopier;
 
@@ -57,7 +62,7 @@ public sealed class CopyMoveEngine {
 	/// <param name="readOnlyProvider">The E1 observation provider.</param>
 	/// <param name="metadataProvider">The E3 metadata provider.</param>
 	/// <param name="replacementFileSystem">The E6 transactional filesystem boundary.</param>
-	/// <param name="fileSystemOperations">The sparse-file operation provider.</param>
+	/// <param name="fileSystemOperations">The framework filesystem operation provider.</param>
 	/// <param name="mutationProvider">The E4 single-path mutation provider.</param>
 	public CopyMoveEngine(
 		IReadOnlyFileSystemProvider readOnlyProvider,
@@ -70,9 +75,9 @@ public sealed class CopyMoveEngine {
 		this.metadataProvider = metadataProvider ?? throw new ArgumentNullException( nameof( metadataProvider ) );
 		this.replacementFileSystem = replacementFileSystem ?? throw new ArgumentNullException( nameof( replacementFileSystem ) );
 		this.mutationProvider = mutationProvider ?? throw new ArgumentNullException( nameof( mutationProvider ) );
-		ArgumentNullException.ThrowIfNull( fileSystemOperations );
+		this.fileSystemOperations = fileSystemOperations ?? throw new ArgumentNullException( nameof( fileSystemOperations ) );
 		traversal = new RecursiveMutationTraversalEngine( readOnlyProvider );
-		sparseCopier = new SparseFileCopier( fileSystemOperations );
+		sparseCopier = new SparseFileCopier( this.fileSystemOperations );
 	}
 
 	/// <summary>Copies or moves source operands to one destination operand.</summary>
@@ -314,7 +319,14 @@ public sealed class CopyMoveEngine {
 					}
 					case RecursiveMutationEventKind.LeaveDirectory:
 						if ( !(item.Entry!.TraversalEntry.IsReparsePoint && !item.Entry.TraversalEntry.WasDereferenced) ) {
-							ApplyDirectoryMetadataBestEffort( item.Entry!, options );
+							var metadataResult = await ApplyDirectoryMetadataAsync(
+								item.Entry!,
+								options,
+								cancellationToken
+							).ConfigureAwait( false );
+							if ( !metadataResult.Succeeded ) {
+								return metadataResult;
+							}
 						}
 						break;
 					case RecursiveMutationEventKind.FileSystemBoundary:
@@ -489,9 +501,19 @@ public sealed class CopyMoveEngine {
 		CancellationToken cancellationToken
 	) {
 		if ( options.ReflinkPolicy == CopyMoveReflinkPolicy.Always ) {
-			return TryCloneFile( source, destination )
-				? (true, null)
-				: (false, "A reflink was required but the host did not create one.");
+			ResetCopyStreams(
+				source,
+				destination
+			);
+			var clone = await fileSystemOperations.CloneFileAsync(
+				source,
+				destination,
+				cancellationToken
+			).ConfigureAwait( false );
+			if ( clone.Succeeded ) {
+				return (true, null);
+			}
+			return (false, "A reflink was required but the host did not create one.");
 		}
 		if ( options.SparseFilePolicy == RecursiveSparseFilePolicy.Require ) {
 			var requiredSparse = await sparseCopier.CopyAsync(
@@ -504,8 +526,23 @@ public sealed class CopyMoveEngine {
 			return (requiredSparse.Succeeded, requiredSparse.Message);
 		}
 		if ( options.SparseFilePolicy == RecursiveSparseFilePolicy.WhenSupported ) {
-			if ( options.ReflinkPolicy == CopyMoveReflinkPolicy.Auto && TryCloneFile( source, destination ) ) {
-				return (true, null);
+			if ( options.ReflinkPolicy == CopyMoveReflinkPolicy.Auto ) {
+				ResetCopyStreams(
+					source,
+					destination
+				);
+				var clone = await fileSystemOperations.CloneFileAsync(
+					source,
+					destination,
+					cancellationToken
+				).ConfigureAwait( false );
+				if ( clone.Succeeded ) {
+					return (true, null);
+				}
+				ResetCopyStreams(
+					source,
+					destination
+				);
 			}
 			var sparse = await sparseCopier.CopyAsync(
 				source,
@@ -899,78 +936,52 @@ public sealed class CopyMoveEngine {
 		}
 	}
 
-	private static void ApplyDirectoryMetadataBestEffort( RecursiveMutationEntry entry, CopyMoveOptions options ) {
-		var source = entry.TraversalEntry.AccessPath;
-		var destination = entry.DestinationPath!;
-		try {
-			if ( (options.MetadataFields & RecursiveMetadataFields.Mode) != 0 && !OperatingSystem.IsWindows() ) {
-				File.SetUnixFileMode( destination, File.GetUnixFileMode( source ) );
-			}
-			if ( (options.MetadataFields & RecursiveMetadataFields.AccessTime) != 0 ) {
-				Directory.SetLastAccessTimeUtc( destination, Directory.GetLastAccessTimeUtc( source ) );
-			}
-			if ( (options.MetadataFields & RecursiveMetadataFields.ModificationTime) != 0 ) {
-				Directory.SetLastWriteTimeUtc( destination, Directory.GetLastWriteTimeUtc( source ) );
-			}
-			if ( (options.MetadataFields & RecursiveMetadataFields.Attributes) != 0 ) {
-				File.SetAttributes( destination, File.GetAttributes( source ) & ~FileAttributes.ReparsePoint );
-			}
-		} catch ( Exception exception ) when ( IsControlledException( exception ) ) {
-			if ( (options.RequiredMetadataFields & options.MetadataFields) != RecursiveMetadataFields.None ) throw;
+	private async ValueTask<(bool Succeeded, string? Message)> ApplyDirectoryMetadataAsync(
+		RecursiveMutationEntry entry,
+		CopyMoveOptions options,
+		CancellationToken cancellationToken
+	) {
+		ArgumentNullException.ThrowIfNull(
+			entry
+		);
+		ArgumentNullException.ThrowIfNull(
+			options
+		);
+		cancellationToken.ThrowIfCancellationRequested();
+		var requestedFields = options.MetadataFields & DirectoryMetadataFields;
+		if ( RecursiveMetadataFields.None == requestedFields ) {
+			return (true, null);
 		}
-	}
-
-	private static bool TryCloneFile( FileStream source, FileStream destination ) {
-		if ( !OperatingSystem.IsLinux() ) return false;
-		try {
-			source.Position = 0;
-			destination.Position = 0;
-			destination.SetLength( 0 );
-			var result = ioctl(
-				destination.SafeFileHandle.DangerousGetHandle().ToInt32(),
-				LinuxFiclone,
-				source.SafeFileHandle.DangerousGetHandle().ToInt32()
-			);
-			if ( result == 0 ) {
-				destination.Position = destination.Length;
-				return true;
-			}
-		} catch ( Exception exception ) when ( exception is DllNotFoundException or EntryPointNotFoundException or PlatformNotSupportedException ) {
+		var requiredFields = options.RequiredMetadataFields & requestedFields;
+		var dereferenceMode = ( entry.TraversalEntry.WasDereferenced )
+			? PathDereferenceMode.FollowEligiblePathIndirection
+			: PathDereferenceMode.NoFollow
+		;
+		var sourceMetadata = await metadataProvider.GetMetadataAsync(
+			entry.TraversalEntry.AccessPath,
+			dereferenceMode,
+			cancellationToken
+		).ConfigureAwait( false );
+		var plan = RecursiveMetadataPreservationPlan.Create(
+			sourceMetadata,
+			requestedFields,
+			requiredFields
+		);
+		if ( !plan.CanProceed ) {
+			return (false, "Required source metadata is unavailable.");
 		}
-		ResetCopyStreams( source, destination );
-		return false;
-	}
-
-	private static bool TryCopyFileRange( FileStream source, FileStream destination, CancellationToken cancellationToken ) {
-		if ( !OperatingSystem.IsLinux() ) return false;
 		try {
-			ResetCopyStreams( source, destination );
-			var remaining = source.Length;
-			while ( remaining > 0 ) {
-				cancellationToken.ThrowIfCancellationRequested();
-				var requested = (nuint)Math.Min( remaining, 1024 * 1024 );
-				var copied = copy_file_range(
-					source.SafeFileHandle.DangerousGetHandle().ToInt32(),
-					IntPtr.Zero,
-					destination.SafeFileHandle.DangerousGetHandle().ToInt32(),
-					IntPtr.Zero,
-					requested,
-					0
-				);
-				if ( copied <= 0 ) {
-					ResetCopyStreams( source, destination );
-					return false;
-				}
-				remaining -= (long)copied;
-			}
-			source.Position = source.Length;
-			destination.Position = destination.Length;
-			return true;
+			await replacementFileSystem.ApplyMetadataAsync(
+				entry.DestinationPath!,
+				sourceMetadata,
+				plan,
+				cancellationToken
+			).ConfigureAwait( false );
+			return (true, null);
 		} catch ( OperationCanceledException ) when ( cancellationToken.IsCancellationRequested ) {
 			throw;
-		} catch ( Exception exception ) when ( exception is DllNotFoundException or EntryPointNotFoundException or PlatformNotSupportedException ) {
-			ResetCopyStreams( source, destination );
-			return false;
+		} catch ( Exception exception ) when ( IsControlledException( exception ) ) {
+			return (false, exception.Message);
 		}
 	}
 
@@ -986,19 +997,4 @@ public sealed class CopyMoveEngine {
 		or UnauthorizedAccessException
 		or NotSupportedException
 		or System.Security.SecurityException;
-
-	private const ulong LinuxFiclone = 0x40049409;
-
-	[DllImport( "libc", SetLastError = true )]
-	private static extern int ioctl( int fileDescriptor, ulong request, int argument );
-
-	[DllImport( "libc", SetLastError = true )]
-	private static extern nint copy_file_range(
-		int sourceFileDescriptor,
-		IntPtr sourceOffset,
-		int destinationFileDescriptor,
-		IntPtr destinationOffset,
-		nuint count,
-		uint flags
-	);
 }
