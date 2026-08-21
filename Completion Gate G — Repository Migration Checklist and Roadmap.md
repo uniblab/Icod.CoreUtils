@@ -240,7 +240,7 @@ No projects move during this phase.
 - [x] **G3C1 — Platform consumer cut-over**
   - move consumers of identity, capability/result, and SELinux contracts to `Icod.CommandFramework.Platform`;
   - retain Coreutils-local login-accounting, process-information, system-information, system-metrics, and user-information providers.
-- [ ] **G3C2 — Platform implementation excision**
+- [x] **G3C2 — Platform implementation excision**
   - remove the duplicated framework-owned Platform implementation and framework-owned Platform tests;
   - contract the Platform README to the retained Coreutils responsibilities.
 - [ ] Audit and contract the remaining split namespaces, especially filesystem/mode boundaries.
@@ -385,7 +385,7 @@ Current sequence:
 - [x] G3A — contract the split `Text` namespace.
 - [x] G3B — contract the split `Time` namespace.
 - [x] G3C1 — cut identity/capability/SELinux consumers over to `Icod.CommandFramework.Platform`.
-- [ ] G3C2 — delete the duplicated framework-owned Platform implementation and tests.
+- [x] G3C2 — delete the duplicated framework-owned Platform implementation and tests.
 - [ ] Contract the remaining split namespaces, including filesystem/mode boundaries.
 - [ ] Excise namespaces that are wholly owned by `Icod.CommandFramework`.
 - [ ] Audit and remove/rehome framework-owned `Shared.Tests` and `ProcessTestHost` infrastructure.
