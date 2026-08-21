@@ -218,11 +218,11 @@ No projects move during this phase.
 **Exit criterion met:** sibling suites can compile against the published framework binary.
 ## G3 — Contract `Icod.CoreUtils.Shared` — ACTIVE
 
-- [ ] Remove every API now owned by `Icod.CommandFramework`.
-- [ ] Keep only demonstrated Coreutils/Fileutils/Textutils-specific reuse.
+- [x] Remove every API now owned by `Icod.CommandFramework`.
+- [x] Keep only demonstrated Coreutils/Fileutils/Textutils-specific reuse.
 - [x] Make it depend on `Icod.CommandFramework`.
 - [x] Add the published `Icod.Path` package dependency where genuinely required.
-- [ ] Split/rehome tests appropriately.
+- [x] Split/rehome tests appropriately.
 - [ ] Publish `Icod.CoreUtils.Shared`.
 - [ ] Convert Coreutils commands to package references.
 - [ ] Build/test Coreutils without sibling-suite source projects being needed.
@@ -281,13 +281,22 @@ No projects move during this phase.
 - [x] **G3K1 — Remaining framework-owned namespace consumer cut-over**
   - move surviving consumers of the wholly framework-owned `CommandLine`, `Delimiters`, `Diagnostics`, `Host`, `IO`, `Processes`, `Records`, `RegularExpressions`, `Temporary`, and `Terminal` namespaces to `Icod.CommandFramework`;
   - preserve Coreutils-specific namespaces such as formatting/escape policy, numeric operand grammar, ownership, listing, copy/move, and filesystem-usage behavior.
-- [ ] **G3K2 — Remaining framework-owned namespace/test excision**
+- [x] **G3K2 — Remaining framework-owned namespace/test excision**
   - remove the duplicated implementations for the G3K1 namespaces from `Icod.CoreUtils.Shared`;
   - remove or rehome their duplicated Shared tests, retaining only tests for Coreutils-owned behavior;
   - complete the intentionally deferred `tests/Shared.Tests` namespace cut-over while distinguishing authoritative framework tests from retained Coreutils tests.
-- [ ] Audit `Icod.CoreUtils.ProcessTestHost` after framework-owned process tests are removed.
-- [ ] Complete `Icod.CoreUtils.Shared` packaging and convert retained Coreutils commands to package references.
-- [ ] Validate the contracted Coreutils suite without sibling-suite source projects.
+- [ ] **G3L — ProcessTestHost audit and contraction**
+  - audit the remaining consumers of `Icod.CoreUtils.ProcessTestHost` now that framework-owned process tests are removed;
+  - remove the Shared.Tests project reference and/or repository-local host if no retained Coreutils tests require it;
+  - preserve only genuinely Coreutils-local process test infrastructure.
+- [ ] **G3M — `Icod.CoreUtils.Shared` package closure**
+  - finalize package metadata/versioning for the contracted Shared library;
+  - pack and validate the package against the published `Icod.CommandFramework` and `Icod.Path` dependencies;
+  - convert retained Coreutils command projects from the transitional Shared project reference to the published Shared package.
+- [ ] **G3N — Isolated Coreutils validation and G3 closure**
+  - build/test Coreutils without sibling-suite source projects;
+  - remove stale solution, CI, output-path, packaging, and documentation references exposed by the isolation build;
+  - mark G3 complete only after the contracted repository succeeds independently.
 
 **Exit criterion:** `Icod.CoreUtils.Shared` is no longer an incubation project.
 ## G4 — Pilot repository extractions

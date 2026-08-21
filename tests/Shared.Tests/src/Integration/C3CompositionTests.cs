@@ -3,7 +3,7 @@ namespace Icod.CoreUtils.Shared.Tests.Integration;
 using System.Text;
 using Icod.CoreUtils.Shared.Escapes;
 using Icod.CoreUtils.Shared.Ranges;
-using Icod.CoreUtils.Shared.Records;
+using Icod.CommandFramework.Records;
 using Icod.CommandFramework.Text;
 using Xunit;
 
