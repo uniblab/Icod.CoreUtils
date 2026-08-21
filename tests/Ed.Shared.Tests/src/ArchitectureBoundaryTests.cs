@@ -7,19 +7,20 @@ using Icod.LineEditor.Ed;
 /// </summary>
 public sealed class ArchitectureBoundaryTests {
 	/// <summary>
-	/// Verifies that the Ed/Red engine consumes the neutral Shared incubation
-	/// assembly without taking a dependency on Sed, an executable, or a
+	/// Verifies that the Ed/Red engine consumes the neutral command framework
+	/// without taking a dependency on Sed, an executable, or a
 	/// speculative LineEditor-family wrapper.
 	/// </summary>
 	[Fact]
-	public void EdSharedReferencesOnlyTheNeutralSharedLayerWithinTheFamily() {
+	public void EdSharedReferencesOnlyTheNeutralFoundationWithinTheFamily() {
 		var references = typeof( EditorEngine )
 			.Assembly
 			.GetReferencedAssemblies()
 			.Select( reference => reference.Name ?? string.Empty )
 			.ToArray();
 
-		Assert.Contains( "Icod.CoreUtils.Shared", references );
+		Assert.Contains( "Icod.CommandFramework", references );
+		Assert.DoesNotContain( "Icod.CoreUtils.Shared", references );
 		Assert.DoesNotContain( "Icod.LineEditor.Sed", references );
 		Assert.DoesNotContain( "Icod.LineEditor.Shared", references );
 		Assert.DoesNotContain( "Icod.LineEditor.Ed", references );

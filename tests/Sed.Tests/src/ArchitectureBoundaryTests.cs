@@ -7,19 +7,20 @@ using Xunit;
 /// </summary>
 public sealed class ArchitectureBoundaryTests {
 	/// <summary>
-	/// Verifies that Sed consumes the neutral Shared incubation assembly without
+	/// Verifies that Sed consumes the neutral command framework without
 	/// taking a dependency on the Ed/Red engine, an executable, or a speculative
 	/// LineEditor-family wrapper.
 	/// </summary>
 	[Fact]
-	public void SedReferencesOnlyTheNeutralSharedLayerWithinTheFamily() {
+	public void SedReferencesOnlyTheNeutralFoundationWithinTheFamily() {
 		var references = typeof( Icod.LineEditor.Sed.Command )
 			.Assembly
 			.GetReferencedAssemblies()
 			.Select( reference => reference.Name ?? string.Empty )
 			.ToArray();
 
-		Assert.Contains( "Icod.CoreUtils.Shared", references );
+		Assert.Contains( "Icod.CommandFramework", references );
+		Assert.DoesNotContain( "Icod.CoreUtils.Shared", references );
 		Assert.DoesNotContain( "Icod.LineEditor.Ed.Shared", references );
 		Assert.DoesNotContain( "Icod.LineEditor.Shared", references );
 		Assert.DoesNotContain( "Icod.LineEditor.Ed", references );
