@@ -25,6 +25,7 @@ public sealed class RecordWriterAndCompatibilityTests {
 	/// <summary>Verifies separate content and separator operations.</summary>
 	[Fact]
 	public async Task WriterExposesContentAndSeparatorOperations() {
+		using var output = new MemoryStream();
 		var writer = new DelimitedByteRecordWriter( output );
 		await writer.WriteContentAsync( Encoding.ASCII.GetBytes( "value" ) );
 		await writer.WriteSeparatorAsync();
@@ -34,6 +35,7 @@ public sealed class RecordWriterAndCompatibilityTests {
 	/// <summary>Verifies that the writer does not own the destination stream.</summary>
 	[Fact]
 	public async Task WriterDoesNotOwnDestinationStream() {
+		using var output = new MemoryStream();
 		var writer = new DelimitedByteRecordWriter( output );
 		await writer.WriteRecordAsync( ReadOnlyMemory<byte>.Empty, terminate: true );
 		Assert.True( output.CanWrite );
@@ -63,6 +65,7 @@ public sealed class RecordWriterAndCompatibilityTests {
 	/// <summary>Verifies that the compatibility reader still includes present separators.</summary>
 	[Fact]
 	public async Task CompatibilityReaderPreservesExistingReturnContract() {
+		using var input = new MemoryStream( Encoding.ASCII.GetBytes( "a\n\nb" ), writable: false );
 		using var reader = new DelimitedByteRecordReader( input, bufferSize: 1 );
 		Assert.Equal( Encoding.ASCII.GetBytes( "a\n" ), await reader.ReadAsync() );
 		Assert.Equal( Encoding.ASCII.GetBytes( "\n" ), await reader.ReadAsync() );

@@ -19,6 +19,7 @@ public sealed class CommandTests {
 
 	[Fact]
 	public async Task ProcOperandIsAcceptedAndPreservedInOutput() {
+		using var output = new MemoryStream();
 		var status = await Command.RunAsync(
 			[ "/proc/101" ],
 			stdout: output,
@@ -31,6 +32,7 @@ public sealed class CommandTests {
 
 	[Fact]
 	public async Task VanishedTargetDoesNotPreventLaterTargets() {
+		using var output = new MemoryStream();
 		using var error = new MemoryStream();
 		var status = await Command.RunAsync(
 			[ "101", "202" ],
@@ -46,6 +48,7 @@ public sealed class CommandTests {
 
 	[Fact]
 	public async Task UnsupportedWorkingDirectoryIsControlledFailure() {
+		using var error = new MemoryStream();
 		var status = await Command.RunAsync(
 			[ "101" ],
 			stderr: error,
@@ -58,6 +61,7 @@ public sealed class CommandTests {
 
 	[Fact]
 	public async Task InvalidTargetFailsImmediately() {
+		using var error = new MemoryStream();
 		var status = await Command.RunAsync( [ "not-a-pid", "202" ], stderr: error, processProvider: new FakeProcessProvider().Add( 202 ), pathProvider: new FakePathProvider().WorkingDirectory( 202, "/two" ) );
 		Assert.Equal( 1, status );
 		Assert.Equal( $"pwdx: invalid process id: not-a-pid{Environment.NewLine}", TestSupport.Text( error ) );
@@ -65,6 +69,7 @@ public sealed class CommandTests {
 
 	[Fact]
 	public async Task HelpUsesHostNewlinesWithoutCrLfDoubling() {
+		using var output = new MemoryStream();
 		var status = await Command.RunAsync( [ "--help" ], stdout: output );
 		Assert.Equal( 0, status );
 		Assert.StartsWith( $"{Environment.NewLine}Usage:{Environment.NewLine} pwdx [options]", TestSupport.Text( output ) );

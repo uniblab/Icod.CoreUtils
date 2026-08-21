@@ -40,7 +40,9 @@ public sealed class SedOrchestrationAndCapabilityTests {
 	/// <summary>Verifies that a binary input stream remains authoritative with text output.</summary>
 	[Fact]
 	public async Task CommandContextUsesBinaryInputIndependently() {
+		using var input = new MemoryStream( Encoding.UTF8.GetBytes( "alpha\n" ) );
 		using var output = new StringWriter();
+		using var error = new StringWriter();
 		var context = new CommandContext(
 			"sed",
 			new StringReader( "wrong\n" ),
@@ -62,6 +64,9 @@ public sealed class SedOrchestrationAndCapabilityTests {
 	/// <summary>Verifies that a binary output stream remains authoritative with text input.</summary>
 	[Fact]
 	public async Task CommandContextUsesBinaryOutputIndependently() {
+		using var output = new MemoryStream();
+		using var textOutput = new StringWriter();
+		using var error = new StringWriter();
 		var context = new CommandContext(
 			"sed",
 			new StringReader( "alpha\n" ),
@@ -115,6 +120,8 @@ public sealed class SedOrchestrationAndCapabilityTests {
 	/// <summary>Verifies that parser diagnostics identify the responsible script source.</summary>
 	[Fact]
 	public async Task InvalidLaterExpressionReportsItsStableSourceName() {
+		using var output = new StringWriter();
+		using var error = new StringWriter();
 
 		var exitCode = await SedCommand.RunAsync(
 			new string[] { "-e", "p", "-e", "{" },
@@ -301,6 +308,7 @@ public sealed class SedOrchestrationAndCapabilityTests {
 		using var standardInput = new MemoryStream( Encoding.UTF8.GetBytes( input ) );
 		using var standardOutput = new MemoryStream();
 		using var presentation = new StringWriter();
+		using var error = new StringWriter();
 		var context = new CommandContext(
 			"sed",
 			TextReader.Null,

@@ -35,6 +35,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies that <c>--no-create</c> leaves a missing operand absent.</summary>
 	[Fact]
 	public async Task NoCreateLeavesMissingFileAbsent() {
+		using var workspace = new TemporaryWorkspace();
 		var file = System.IO.Path.Combine( workspace.Path, "absent" );
 		var exitCode = await Command.RunAsync(
 			new[] { "--no-create", file }, TextReader.Null, new StringWriter(), new StringWriter()
@@ -46,6 +47,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies GNU epoch-date parsing for both selected timestamps.</summary>
 	[Fact]
 	public async Task DateOptionSetsAccessAndModificationTimes() {
+		using var workspace = new TemporaryWorkspace();
 		var file = await workspace.CreateFileAsync( "dated", "content" );
 		var expected = DateTimeOffset.FromUnixTimeSeconds( 946684800 );
 		var exitCode = await Command.RunAsync(
@@ -63,6 +65,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies that <c>-a</c> preserves the modification timestamp.</summary>
 	[Fact]
 	public async Task AccessOnlyPreservesModificationTime() {
+		using var workspace = new TemporaryWorkspace();
 		var file = await workspace.CreateFileAsync( "access-only", "content" );
 		var originalAccess = DateTimeOffset.FromUnixTimeSeconds( 978307200 );
 		var originalModification = DateTimeOffset.FromUnixTimeSeconds( 1009843200 );
@@ -85,6 +88,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies that <c>-m</c> preserves the access timestamp.</summary>
 	[Fact]
 	public async Task ModificationOnlyPreservesAccessTime() {
+		using var workspace = new TemporaryWorkspace();
 		var file = await workspace.CreateFileAsync( "modification-only", "content" );
 		var originalAccess = DateTimeOffset.FromUnixTimeSeconds( 1009843200 );
 		var originalModification = DateTimeOffset.FromUnixTimeSeconds( 1041379200 );
@@ -111,6 +115,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies <c>--time=mtime</c> selects only the modification timestamp.</summary>
 	[Fact]
 	public async Task TimeWordSelectsModificationTimestamp() {
+		using var workspace = new TemporaryWorkspace();
 		var file = await workspace.CreateFileAsync( "time-word", "content" );
 		var originalAccess = DateTimeOffset.FromUnixTimeSeconds( 1072915200 );
 		await SetTimesAsync(
@@ -135,6 +140,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies that reference timestamps are copied independently.</summary>
 	[Fact]
 	public async Task ReferenceCopiesSelectedTimestamps() {
+		using var workspace = new TemporaryWorkspace();
 		var reference = await workspace.CreateFileAsync( "reference", "r" );
 		var target = await workspace.CreateFileAsync( "target", "t" );
 		var referenceAccess = DateTimeOffset.FromUnixTimeSeconds( 1072915200 );
@@ -161,6 +167,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies GNU relative dates use the corresponding reference timestamp as their origin.</summary>
 	[Fact]
 	public async Task RelativeDateUsesReferenceModificationTime() {
+		using var workspace = new TemporaryWorkspace();
 		var reference = await workspace.CreateFileAsync( "reference-relative", "r" );
 		var target = await workspace.CreateFileAsync( "target-relative", "t" );
 		var referenceModification = DateTimeOffset.FromUnixTimeSeconds( 1136073600 );
@@ -185,6 +192,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies POSIX <c>[[CC]YY]MMDDhhmm[.ss]</c> parsing.</summary>
 	[Fact]
 	public async Task TimestampOptionUsesLocalCalendarFields() {
+		using var workspace = new TemporaryWorkspace();
 		var file = await workspace.CreateFileAsync( "timestamp", "content" );
 		var exitCode = await Command.RunAsync(
 			new[] { "-t", "200001020304.05", file },
@@ -209,6 +217,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies a POSIX leap-second value normalizes into the following minute.</summary>
 	[Fact]
 	public async Task TimestampOptionNormalizesLeapSecond() {
+		using var workspace = new TemporaryWorkspace();
 		var file = await workspace.CreateFileAsync( "leap-second", "content" );
 		var exitCode = await Command.RunAsync(
 			new[] { "-t", "200001020304.60", file },
@@ -233,6 +242,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies that directory timestamps can be changed.</summary>
 	[Fact]
 	public async Task UpdatesDirectoryModificationTime() {
+		using var workspace = new TemporaryWorkspace();
 		var directory = System.IO.Path.Combine( workspace.Path, "directory" );
 		Directory.CreateDirectory( directory );
 		var expected = DateTimeOffset.FromUnixTimeSeconds( 1167609600 );
@@ -250,6 +260,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies no-follow mutation changes the link object without changing its target when supported.</summary>
 	[Fact]
 	public async Task NoDereferenceUpdatesSymbolicLinkObjectWhenSupported() {
+		using var workspace = new TemporaryWorkspace();
 		var target = await workspace.CreateFileAsync( "link-target", "content" );
 		var link = System.IO.Path.Combine( workspace.Path, "link" );
 		try {
@@ -290,6 +301,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies no-create suppresses a missing no-follow operand without an error.</summary>
 	[Fact]
 	public async Task NoCreateAndNoDereferenceSkipMissingOperand() {
+		using var workspace = new TemporaryWorkspace();
 		var missing = System.IO.Path.Combine( workspace.Path, "missing-link" );
 		var standardError = new StringWriter();
 		var exitCode = await Command.RunAsync(
@@ -306,6 +318,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies incompatible date-source options fail before mutating an operand.</summary>
 	[Fact]
 	public async Task TimestampAndDateOptionsAreMutuallyExclusive() {
+		using var workspace = new TemporaryWorkspace();
 		var file = await workspace.CreateFileAsync( "exclusive", "content" );
 		var standardError = new StringWriter();
 		var exitCode = await Command.RunAsync(
@@ -321,6 +334,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies an unknown <c>--time</c> selector is rejected.</summary>
 	[Fact]
 	public async Task InvalidTimeWordFails() {
+		using var workspace = new TemporaryWorkspace();
 		var file = await workspace.CreateFileAsync( "invalid-time-word", "content" );
 		var standardError = new StringWriter();
 		var exitCode = await Command.RunAsync(

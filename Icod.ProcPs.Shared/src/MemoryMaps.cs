@@ -95,6 +95,7 @@ public static class ProcMemoryMapParsers {
 		ProcMemoryMapEntry? currentMap = null;
 		var metrics = new List<ProcMemoryMapMetric>();
 		string? vmFlags = null;
+		using var reader = new StringReader( text );
 		while ( reader.ReadLine() is { } line ) {
 			if ( string.IsNullOrWhiteSpace( line ) ) continue;
 			if ( IsMapHeader( line ) ) {

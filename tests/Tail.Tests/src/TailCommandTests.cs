@@ -294,6 +294,8 @@ public sealed class TailCommandTests {
 			)
 		;
 		using var outputStream = new MemoryStream();
+		using var outputText = new StringWriter();
+		using var error = new StringWriter();
 		var exitCode = await TailCommand.RunAsync(
 			args,
 			stdin: new StringReader( string.Empty ),

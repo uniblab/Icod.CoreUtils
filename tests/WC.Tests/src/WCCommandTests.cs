@@ -411,6 +411,8 @@ public sealed class WcCommandTests {
 			input,
 			writable: false
 		);
+		using var output = new StringWriter();
+		using var error = new StringWriter();
 		var exitCode = await WcCommand.RunAsync(
 			args,
 			new CommandContext(

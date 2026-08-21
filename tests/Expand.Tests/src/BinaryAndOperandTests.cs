@@ -69,6 +69,7 @@ public sealed class BinaryAndOperandTests {
 	[Fact]
 	public async Task CallerOwnedBinaryStreamsRemainOpen() {
 		using var input = new MemoryStream( "x"u8.ToArray() );
+		using var output = new MemoryStream();
 		var context = new CommandContext( "expand", new StringReader( string.Empty ), new StringWriter(), new StringWriter(), input, output );
 		await Command.RunAsync( [ ], context );
 		Assert.True( input.CanRead );

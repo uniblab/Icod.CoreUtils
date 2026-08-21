@@ -170,6 +170,8 @@ public sealed class TeeCommandTests {
 			writable: false
 		);
 		await using var failingOutput = new ThrowingWriteStream();
+		using var outputText = new StringWriter();
+		using var errorText = new StringWriter();
 		var exitCode = await TeeCommand.RunAsync(
 			Array.Empty<string>(),
 			new CommandContext(
@@ -235,6 +237,7 @@ public sealed class TeeCommandTests {
 
 	[Fact]
 	public async Task CancellationWithoutIgnoreReturnsConventionalExitCode() {
+		using var cancellation = new CancellationTokenSource();
 		cancellation.Cancel();
 		var result = await RunAsync(
 			Array.Empty<string>(),
@@ -290,6 +293,8 @@ public sealed class TeeCommandTests {
 			writable: false
 		);
 		await using var outputStream = new MemoryStream();
+		using var outputText = new StringWriter();
+		using var errorText = new StringWriter();
 		var exitCode = await TeeCommand.RunAsync(
 			args,
 			new CommandContext(

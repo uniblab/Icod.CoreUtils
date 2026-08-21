@@ -40,6 +40,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task AppliesExplicitNumericModeOnUnix() {
 		if ( OperatingSystem.IsWindows() ) return;
+		using var temporary = new TemporaryDirectory();
 		var directory = System.IO.Path.Combine( temporary.Path, "private" );
 		var context = CreateContext( new StringWriter(), new StringWriter() );
 
@@ -73,6 +74,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task AppliesUmaskToOmittedSymbolicModeSubjectsOnUnix() {
 		if ( OperatingSystem.IsWindows() ) return;
+		using var temporary = new TemporaryDirectory();
 		var directory = System.IO.Path.Combine( temporary.Path, "symbolic" );
 		var context = CreateContext( new StringWriter(), new StringWriter() );
 
@@ -102,6 +104,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task ParentDirectoriesRetainOwnerWriteAndSearch() {
 		if ( OperatingSystem.IsWindows() ) return;
+		using var temporary = new TemporaryDirectory();
 		var parent = System.IO.Path.Combine( temporary.Path, "parent" );
 		var child = System.IO.Path.Combine( parent, "child" );
 		var context = CreateContext( new StringWriter(), new StringWriter() );
@@ -123,6 +126,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies deterministic failure when a destination already exists without <c>-p</c>.</summary>
 	[Fact]
 	public async Task ExistingDirectoryFailsWithoutParentsOption() {
+		using var temporary = new TemporaryDirectory();
 		var directory = System.IO.Path.Combine( temporary.Path, "existing" );
 		Directory.CreateDirectory( directory );
 		var error = new StringWriter();
@@ -139,6 +143,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies that an explicit unsupported security context receives a controlled warning.</summary>
 	[Fact]
 	public async Task ExplicitContextProducesControlledWarning() {
+		using var temporary = new TemporaryDirectory();
 		var directory = System.IO.Path.Combine( temporary.Path, "labeled" );
 		var error = new StringWriter();
 
@@ -154,6 +159,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies GNU's quiet default-context behavior on hosts without labeling support.</summary>
 	[Fact]
 	public async Task DefaultContextOptionIsAControlledNoOp() {
+		using var temporary = new TemporaryDirectory();
 		var directory = System.IO.Path.Combine( temporary.Path, "default-context" );
 		var error = new StringWriter();
 

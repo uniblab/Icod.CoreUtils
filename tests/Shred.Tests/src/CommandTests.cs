@@ -26,6 +26,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies that a short random source fails rather than silently falling back.</summary>
 	[Fact]
 	public async Task ReportsExhaustedRandomSource() {
+		using var temporary = new TemporaryDirectory();
 		var target = temporary.PathFor( "target.bin" );
 		var source = temporary.PathFor( "random.bin" );
 		await File.WriteAllBytesAsync( target, new byte[ 8 ] );
@@ -42,6 +43,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies the requested final zero pass.</summary>
 	[Fact]
 	public async Task WritesFinalZeroPass() {
+		using var temporary = new TemporaryDirectory();
 		var target = temporary.PathFor( "target.bin" );
 		await File.WriteAllBytesAsync( target, Enumerable.Repeat( (byte)0x7F, 32 ).ToArray() );
 
@@ -54,6 +56,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies explicit-size extension while preserving exact byte count.</summary>
 	[Fact]
 	public async Task ExtendsFileToExplicitExactSize() {
+		using var temporary = new TemporaryDirectory();
 		var target = temporary.PathFor( "target.bin" );
 		await File.WriteAllBytesAsync( target, new byte[ 3 ] );
 
@@ -67,6 +70,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies regular-file block rounding when exact mode is not selected.</summary>
 	[Fact]
 	public async Task RoundsRegularFilesToCompleteBlock() {
+		using var temporary = new TemporaryDirectory();
 		var target = temporary.PathFor( "target.bin" );
 		await File.WriteAllBytesAsync( target, new byte[ 7 ] );
 
@@ -79,6 +83,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies that force mode clears a read-only marker before opening the target.</summary>
 	[Fact]
 	public async Task ForceMakesReadOnlyTargetWritable() {
+		using var temporary = new TemporaryDirectory();
 		var target = temporary.PathFor( "target.bin" );
 		await File.WriteAllBytesAsync( target, Enumerable.Repeat( (byte)0x7F, 8 ).ToArray() );
 		File.SetAttributes( target, File.GetAttributes( target ) | FileAttributes.ReadOnly );
@@ -97,6 +102,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies direct unlink removal after successful overwriting.</summary>
 	[Fact]
 	public async Task RemovesWithUnlinkPolicy() {
+		using var temporary = new TemporaryDirectory();
 		var target = temporary.PathFor( "target.bin" );
 		await File.WriteAllBytesAsync( target, new byte[ 4 ] );
 
@@ -109,6 +115,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies default wipe-and-synchronize removal.</summary>
 	[Fact]
 	public async Task RemovesWithWipeSyncPolicy() {
+		using var temporary = new TemporaryDirectory();
 		var target = temporary.PathFor( "recognizable-name.bin" );
 		await File.WriteAllBytesAsync( target, new byte[ 4 ] );
 
@@ -121,6 +128,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies that a target-local failure does not prevent later operands from being processed.</summary>
 	[Fact]
 	public async Task ContinuesAfterMissingOperand() {
+		using var temporary = new TemporaryDirectory();
 		var missing = temporary.PathFor( "missing.bin" );
 		var target = temporary.PathFor( "target.bin" );
 		await File.WriteAllBytesAsync( target, Enumerable.Repeat( (byte)0xA5, 8 ).ToArray() );
@@ -163,6 +171,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies finite binary output for the dash operand.</summary>
 	[Fact]
 	public async Task WritesSizedStandardOutput() {
+		using var storage = new MemoryStream();
 		await using var output = new NonSeekableWriteStream( storage );
 		await using var writer = new StreamWriter( output, new UTF8Encoding( false ), 1024, leaveOpen: true );
 
@@ -175,6 +184,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies progress and removal reporting.</summary>
 	[Fact]
 	public async Task ReportsVerboseProgress() {
+		using var temporary = new TemporaryDirectory();
 		var target = temporary.PathFor( "target.bin" );
 		await File.WriteAllBytesAsync( target, new byte[ 8 ] );
 		var error = new StringWriter();

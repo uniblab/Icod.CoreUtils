@@ -41,6 +41,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies that only nonempty-directory failure is ignored.</summary>
 	[Fact]
 	public async Task IgnoreFailOnNonEmptyLeavesDirectoryAndReturnsSuccess() {
+		using var temporary = new TemporaryDirectory();
 		var directory = System.IO.Path.Combine( temporary.Path, "nonempty" );
 		Directory.CreateDirectory( directory );
 		File.WriteAllText( System.IO.Path.Combine( directory, "item" ), "data" );
@@ -59,6 +60,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies that a directory symbolic link is not followed or removed by <c>rmdir</c>.</summary>
 	[Fact]
 	public async Task RefusesDirectorySymbolicLink() {
+		using var temporary = new TemporaryDirectory();
 		var target = System.IO.Path.Combine( temporary.Path, "target" );
 		var link = System.IO.Path.Combine( temporary.Path, "link" );
 		Directory.CreateDirectory( target );

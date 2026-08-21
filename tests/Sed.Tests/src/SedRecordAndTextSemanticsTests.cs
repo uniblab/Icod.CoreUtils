@@ -493,6 +493,7 @@ public sealed class SedRecordAndTextSemanticsTests {
 		string input
 	) {
 		using var output = new StringWriter { NewLine = "\n" };
+		using var error = new StringWriter { NewLine = "\n" };
 		var exitCode = await SedCommand.RunAsync(
 			args,
 			new StringReader( input ),

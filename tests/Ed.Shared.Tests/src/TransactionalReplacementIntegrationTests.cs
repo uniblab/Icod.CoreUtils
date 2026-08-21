@@ -51,6 +51,7 @@ public sealed class TransactionalReplacementIntegrationTests {
 	/// <summary>Verifies that an absent Ed destination is published through the E6 transaction.</summary>
 	[Fact]
 	public async Task WriteCreatesAbsentDestinationTransactionally() {
+		using var directory = new TemporaryDirectory();
 		var path = System.IO.Path.Combine( directory.Path, "new.txt" );
 		var injector = new RecordingFailureInjector();
 		var access = new StandardEditorFileAccess(
@@ -75,6 +76,7 @@ public sealed class TransactionalReplacementIntegrationTests {
 	/// <summary>Verifies rollback after a failure injected after destination publication.</summary>
 	[Fact]
 	public async Task PostCommitFailureRollsBackAndCleansTransactionArtifacts() {
+		using var directory = new TemporaryDirectory();
 		var path = System.IO.Path.Combine( directory.Path, "buffer.txt" );
 		await File.WriteAllTextAsync( path, "original\n" );
 		var injector = new ThrowAtStageFailureInjector(
@@ -103,6 +105,7 @@ public sealed class TransactionalReplacementIntegrationTests {
 	/// <summary>Verifies that cancellation leaves the observed destination unchanged.</summary>
 	[Fact]
 	public async Task CanceledOverwritePreservesOriginalAndCleansArtifacts() {
+		using var directory = new TemporaryDirectory();
 		var path = System.IO.Path.Combine( directory.Path, "buffer.txt" );
 		await File.WriteAllTextAsync( path, "original\n" );
 		using var cancellation = new CancellationTokenSource();
@@ -126,6 +129,7 @@ public sealed class TransactionalReplacementIntegrationTests {
 	/// <summary>Verifies that Ed append remains a direct append policy rather than replacement.</summary>
 	[Fact]
 	public async Task AppendBypassesTransactionalReplacement() {
+		using var directory = new TemporaryDirectory();
 		var path = System.IO.Path.Combine( directory.Path, "buffer.txt" );
 		await File.WriteAllTextAsync( path, "original\n" );
 		var injector = new ThrowAtStageFailureInjector(
@@ -151,6 +155,7 @@ public sealed class TransactionalReplacementIntegrationTests {
 	/// <summary>Verifies that Ed resolves terminal symbolic links before no-follow E6 planning.</summary>
 	[Fact]
 	public async Task TransactionalOverwriteFollowsTerminalSymbolicLink() {
+		using var directory = new TemporaryDirectory();
 		var target = System.IO.Path.Combine( directory.Path, "target.txt" );
 		var link = System.IO.Path.Combine( directory.Path, "link.txt" );
 		await File.WriteAllTextAsync( target, "target\n" );

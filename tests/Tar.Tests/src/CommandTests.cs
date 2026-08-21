@@ -42,6 +42,7 @@ public sealed class CommandTests {
 	[InlineData( "pax", TarEntryFormat.Pax )]
 	[InlineData( "posix", TarEntryFormat.Pax )]
 	public void WritesRequestedArchiveFormat( string format, TarEntryFormat expected ) {
+		using var tree = new TestTree();
 		var source = tree.CreateDirectory( "source" );
 		File.WriteAllText( System.IO.Path.Combine( source, "file.txt" ), "format" );
 		var archive = tree.PathFor( string.Concat( format, ".tar" ) );
@@ -53,6 +54,7 @@ public sealed class CommandTests {
 
 	[Fact]
 	public void AppendAndUpdateKeepHistoricalMemberVersions() {
+		using var tree = new TestTree();
 		var source = tree.CreateDirectory( "source" );
 		var file = System.IO.Path.Combine( source, "value.txt" );
 		File.WriteAllText( file, "one" );
@@ -76,6 +78,7 @@ public sealed class CommandTests {
 
 	[Fact]
 	public void DeleteAndConcatenateRewriteArchives() {
+		using var tree = new TestTree();
 		var source = tree.CreateDirectory( "source" );
 		File.WriteAllText( System.IO.Path.Combine( source, "a.txt" ), "a" );
 		File.WriteAllText( System.IO.Path.Combine( source, "b.txt" ), "b" );
@@ -91,6 +94,7 @@ public sealed class CommandTests {
 
 	[Fact]
 	public void CompareReportsDifferences() {
+		using var tree = new TestTree();
 		var source = tree.CreateDirectory( "source" );
 		var file = System.IO.Path.Combine( source, "file.txt" );
 		File.WriteAllText( file, "same" );
@@ -105,6 +109,7 @@ public sealed class CommandTests {
 
 	[Fact]
 	public void GzipRoundTripsAndAutodetectsNamedArchiveOnRead() {
+		using var tree = new TestTree();
 		var source = tree.CreateDirectory( "source" );
 		File.WriteAllText( System.IO.Path.Combine( source, "file.txt" ), "gzip" );
 		var archive = tree.PathFor( "archive.tar.gz" );
@@ -119,6 +124,7 @@ public sealed class CommandTests {
 
 	[Fact]
 	public void ExclusionsAndMemberSelectionAreApplied() {
+		using var tree = new TestTree();
 		var source = tree.CreateDirectory( "source" );
 		File.WriteAllText( System.IO.Path.Combine( source, "keep.txt" ), "keep" );
 		File.WriteAllText( System.IO.Path.Combine( source, "drop.log" ), "drop" );
@@ -136,6 +142,7 @@ public sealed class CommandTests {
 	[InlineData( "C:/drive-root.txt" )]
 	[InlineData( "//server/share.txt" )]
 	public void ExtractionRejectsEscapingOrRootedMemberNames( string memberName ) {
+		using var tree = new TestTree();
 		var archive = tree.PathFor( "unsafe.tar" );
 		WriteArchive( archive, RegularEntry( memberName, "payload" ) );
 		var destination = tree.CreateDirectory( "destination" );
@@ -150,6 +157,7 @@ public sealed class CommandTests {
 	[InlineData( "pax" )]
 	public void CreationPreservesHardLinkIdentityOnUnix( string format ) {
 		if ( OperatingSystem.IsWindows() ) return;
+		using var tree = new TestTree();
 		var source = tree.CreateDirectory( "source" );
 		var original = System.IO.Path.Combine( source, "original.txt" );
 		var linked = System.IO.Path.Combine( source, "linked.txt" );
@@ -167,6 +175,8 @@ public sealed class CommandTests {
 		}
 		var archive = tree.PathFor( "hardlinks.tar" );
 		Assert.Equal( 0, Command.Run( new[] { "-cf", archive, "--format", format, "-C", source, "original.txt", "linked.txt" } ) );
+		using var stream = File.OpenRead( archive );
+		using var reader = new TarReader( stream );
 		var first = Assert.IsAssignableFrom<TarEntry>( reader.GetNextEntry() );
 		var second = Assert.IsAssignableFrom<TarEntry>( reader.GetNextEntry() );
 		Assert.Equal( TarEntryType.RegularFile, first.EntryType );
@@ -177,6 +187,7 @@ public sealed class CommandTests {
 	[Fact]
 	public void ExtractionRejectsSymbolicAndHardLinkEscapes() {
 		if ( OperatingSystem.IsWindows() ) return;
+		using var tree = new TestTree();
 		var archive = tree.PathFor( "links.tar" );
 		var symlink = new PaxTarEntry( TarEntryType.SymbolicLink, "sub/link" ) { LinkName = "../../outside" };
 		var hardlink = new PaxTarEntry( TarEntryType.HardLink, "hard" ) { LinkName = "../outside" };
@@ -190,6 +201,7 @@ public sealed class CommandTests {
 	[Fact]
 	public void ExtractsContainedSymbolicAndHardLinks() {
 		if ( OperatingSystem.IsWindows() ) return;
+		using var tree = new TestTree();
 		var archive = tree.PathFor( "contained-links.tar" );
 		var target = RegularEntry( "target.txt", "linked" );
 		var symlink = new PaxTarEntry( TarEntryType.SymbolicLink, "symbolic.txt" ) { LinkName = "target.txt" };
@@ -204,6 +216,7 @@ public sealed class CommandTests {
 	[Fact]
 	public void ExtractionRejectsSymlinkedParentDirectory() {
 		if ( OperatingSystem.IsWindows() ) return;
+		using var tree = new TestTree();
 		var archive = tree.PathFor( "parent-link.tar" );
 		WriteArchive( archive, RegularEntry( "redirect/file.txt", "archive" ) );
 		var destination = tree.CreateDirectory( "destination" );
@@ -216,6 +229,7 @@ public sealed class CommandTests {
 	[Fact]
 	public void ExistingSymlinkCannotRedirectRegularFileOverwrite() {
 		if ( OperatingSystem.IsWindows() ) return;
+		using var tree = new TestTree();
 		var archive = tree.PathFor( "overwrite.tar" );
 		WriteArchive( archive, RegularEntry( "victim", "archive" ) );
 		var destination = tree.CreateDirectory( "destination" );
@@ -229,6 +243,7 @@ public sealed class CommandTests {
 	[Fact]
 	public void SpecialFilesAreNotMaterialized() {
 		if ( OperatingSystem.IsWindows() ) return;
+		using var tree = new TestTree();
 		var archive = tree.PathFor( "special.tar" );
 		WriteArchive( archive, new PaxTarEntry( TarEntryType.Fifo, "pipe" ) );
 		var destination = tree.CreateDirectory( "destination" );
@@ -238,6 +253,7 @@ public sealed class CommandTests {
 
 	[Fact]
 	public void ExtractionRestoresModificationTimeAndRequestedPermissions() {
+		using var tree = new TestTree();
 		var archive = tree.PathFor( "metadata.tar" );
 		var expectedTime = new DateTimeOffset( 2024, 2, 3, 4, 5, 6, TimeSpan.Zero );
 		var entry = RegularEntry( "metadata.txt", "metadata" );
@@ -256,6 +272,7 @@ public sealed class CommandTests {
 	[Fact]
 	public void CaseFoldingCollisionsAreRejectedOnWindows() {
 		if ( !OperatingSystem.IsWindows() ) return;
+		using var tree = new TestTree();
 		var archive = tree.PathFor( "case.tar" );
 		WriteArchive( archive, RegularEntry( "Name.txt", "one" ), RegularEntry( "name.txt", "two" ) );
 		var destination = tree.CreateDirectory( "destination" );
@@ -264,6 +281,7 @@ public sealed class CommandTests {
 
 	[Fact]
 	public void MalformedSparseMapsAreRejectedBeforePublication() {
+		using var tree = new TestTree();
 		var archive = tree.PathFor( "bad-sparse.tar" );
 		var attributes = new Dictionary<string, string> {
 			["GNU.sparse.size"] = "1024",
@@ -282,6 +300,7 @@ public sealed class CommandTests {
 
 	[Fact]
 	public void SparsePaxRoundTripRestoresLogicalContent() {
+		using var tree = new TestTree();
 		var source = tree.CreateDirectory( "source" );
 		var sparse = System.IO.Path.Combine( source, "sparse.bin" );
 		using ( var stream = new FileStream( sparse, FileMode.Create, FileAccess.Write ) ) {
@@ -301,6 +320,7 @@ public sealed class CommandTests {
 
 	[Fact]
 	public void ExtractionBudgetAndDecompressionFailuresAreControlled() {
+		using var tree = new TestTree();
 		var archive = tree.PathFor( "budget.tar" );
 		WriteArchive( archive, RegularEntry( "large.txt", "12" ) );
 		var destination = tree.CreateDirectory( "destination" );
@@ -318,6 +338,7 @@ public sealed class CommandTests {
 
 	[Fact]
 	public async Task CancellationReturnsSignalStyleStatus() {
+		using var tree = new TestTree();
 		var archive = tree.PathFor( "cancel.tar" );
 		WriteArchive( archive, RegularEntry( "file.txt", "x" ) );
 		using var cancellation = new CancellationTokenSource();
@@ -341,6 +362,7 @@ public sealed class CommandTests {
 	private static IReadOnlyList<string> ReadMemberNames( string path ) {
 		var result = new List<string>();
 		using var stream = File.OpenRead( path );
+		using var reader = new TarReader( stream );
 		TarEntry? entry;
 		while ( (entry = reader.GetNextEntry()) is not null ) {
 			if ( entry is PaxTarEntry pax && pax.ExtendedAttributes.TryGetValue( "GNU.sparse.name", out var sparseName ) ) result.Add( sparseName );

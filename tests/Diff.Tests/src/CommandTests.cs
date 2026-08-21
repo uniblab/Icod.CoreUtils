@@ -23,6 +23,7 @@ public sealed class CommandTests {
 	/// <summary>Unified output uses labels and zero-context ranges consumable by patch.</summary>
 	[Fact]
 	public async Task UnifiedFormatUsesLabelsAndRanges() {
+		using var fixture = new FileFixture();
 		var first = fixture.Write( "first", "one\ntwo\nthree\n" );
 		var second = fixture.Write( "second", "one\nTWO\nthree\n" );
 		var result = await RunAsync( "-U0", "--label", "OLD", "--label", "NEW", first, second );
@@ -36,6 +37,7 @@ public sealed class CommandTests {
 	/// <summary>Context output omits the unchanged old body for a pure insertion.</summary>
 	[Fact]
 	public async Task ContextFormatHandlesPureInsertion() {
+		using var fixture = new FileFixture();
 		var first = fixture.Write( "first", "one\n" );
 		var second = fixture.Write( "second", "x\none\n" );
 		var result = await RunAsync( "-C1", "--label", "A", "--label", "B", first, second );
@@ -48,6 +50,7 @@ public sealed class CommandTests {
 	/// <summary>Function context appears on the context hunk separator.</summary>
 	[Fact]
 	public async Task ContextFunctionAppearsOnHunkSeparator() {
+		using var fixture = new FileFixture();
 		var first = fixture.Write( "first", "SECTION one\nline\nold\n" );
 		var second = fixture.Write( "second", "SECTION one\nline\nnew\n" );
 		var result = await RunAsync( "-C0", "-F", "^SECTION", "--label", "A", "--label", "B", first, second );
@@ -60,6 +63,7 @@ public sealed class CommandTests {
 	/// <summary>The reverse-order ed format can change the first input into the second.</summary>
 	[Fact]
 	public async Task EdFormatWritesEdScript() {
+		using var fixture = new FileFixture();
 		var first = fixture.Write( "first", "one\ntwo\nthree\n" );
 		var second = fixture.Write( "second", "one\nTWO\nthree\n" );
 		var result = await RunAsync( "-e", first, second );
@@ -69,6 +73,7 @@ public sealed class CommandTests {
 	/// <summary>Forward ed format uses space-separated ranges and leaves period lines unescaped.</summary>
 	[Fact]
 	public async Task ForwardEdFormatUsesItsHistoricalSyntax() {
+		using var fixture = new FileFixture();
 		var first = fixture.Write( "first", "a\nb\nc\nd\n" );
 		var second = fixture.Write( "second", "a\nX\nY\nd\n.\n" );
 		var result = await RunAsync( "-f", first, second );
@@ -81,6 +86,7 @@ public sealed class CommandTests {
 	/// <summary>Ed formats diagnose incomplete text inputs and return trouble.</summary>
 	[Fact]
 	public async Task EdFormatTreatsIncompleteInputAsTrouble() {
+		using var fixture = new FileFixture();
 		var first = fixture.Write( "first", "same" );
 		var second = fixture.Write( "second", "same" );
 		var result = await RunAsync( "-e", first, second );
@@ -95,6 +101,7 @@ public sealed class CommandTests {
 	/// <summary>RCS format emits deletion and insertion commands.</summary>
 	[Fact]
 	public async Task RcsFormatWritesCommands() {
+		using var fixture = new FileFixture();
 		var first = fixture.Write( "first", "one\ntwo\nthree\n" );
 		var second = fixture.Write( "second", "one\nTWO\nthree\n" );
 		var result = await RunAsync( "-n", first, second );
@@ -104,6 +111,7 @@ public sealed class CommandTests {
 	/// <summary>Conditional format retains both alternatives.</summary>
 	[Fact]
 	public async Task IfDefFormatWritesConditionalMerge() {
+		using var fixture = new FileFixture();
 		var first = fixture.Write( "first", "one\ntwo\nthree\n" );
 		var second = fixture.Write( "second", "one\nTWO\nthree\n" );
 		var result = await RunAsync( "-D", "FEATURE", first, second );
@@ -116,6 +124,7 @@ public sealed class CommandTests {
 	/// <summary>Whitespace and case policies affect comparison but preserve original output.</summary>
 	[Fact]
 	public async Task ComparisonPoliciesCanMakeInputsEquivalent() {
+		using var fixture = new FileFixture();
 		var first = fixture.Write( "first", "Alpha   beta \n" );
 		var second = fixture.Write( "second", "alpha BETA\t\n" );
 		var result = await RunAsync( "-i", "-b", first, second );
@@ -126,6 +135,7 @@ public sealed class CommandTests {
 	/// <summary>Ignore-space-change preserves a leading-space difference when the other line has none.</summary>
 	[Fact]
 	public async Task IgnoreSpaceChangeDoesNotEraseLeadingWhitespace() {
+		using var fixture = new FileFixture();
 		var first = fixture.Write( "first", "Alpha beta\n" );
 		var second = fixture.Write( "second", " Alpha beta\n" );
 		var result = await RunAsync( "-b", first, second );
@@ -135,6 +145,7 @@ public sealed class CommandTests {
 	/// <summary>An incomplete changed line receives the standard marker.</summary>
 	[Fact]
 	public async Task IncompleteLinesAreMarked() {
+		using var fixture = new FileFixture();
 		var first = fixture.Write( "first", "old" );
 		var second = fixture.Write( "second", "new" );
 		var result = await RunAsync( first, second );
@@ -147,6 +158,7 @@ public sealed class CommandTests {
 	/// <summary>Initial-tab mode preserves context prefixes before the alignment tab.</summary>
 	[Fact]
 	public async Task InitialTabPreservesContextPrefixes() {
+		using var fixture = new FileFixture();
 		var first = fixture.Write( "first", "one\ntwo\n" );
 		var second = fixture.Write( "second", "one\nTWO\n" );
 		var result = await RunAsync( "-U1", "-T", "--label", "A", "--label", "B", first, second );
@@ -159,6 +171,7 @@ public sealed class CommandTests {
 	/// <summary>Ifdef output terminates incomplete source lines before directives.</summary>
 	[Fact]
 	public async Task IfDefFormatTerminatesIncompleteLines() {
+		using var fixture = new FileFixture();
 		var first = fixture.Write( "first", "old" );
 		var second = fixture.Write( "second", "new" );
 		var result = await RunAsync( "-D", "FEATURE", first, second );
@@ -171,6 +184,7 @@ public sealed class CommandTests {
 	/// <summary>NUL-containing inputs use the binary report unless text is forced.</summary>
 	[Fact]
 	public async Task BinaryInputsUseBinaryReport() {
+		using var fixture = new FileFixture();
 		var first = fixture.WriteBytes( "first", new byte[] { 0, 1 } );
 		var second = fixture.WriteBytes( "second", new byte[] { 0, 2 } );
 		var result = await RunAsync( first, second );
@@ -181,6 +195,7 @@ public sealed class CommandTests {
 	/// <summary>Recursive comparison reports changes in matching descendants.</summary>
 	[Fact]
 	public async Task RecursiveDirectoriesCompareDescendants() {
+		using var fixture = new FileFixture();
 		var firstDirectory = fixture.Directory( "first" );
 		var secondDirectory = fixture.Directory( "second" );
 		Directory.CreateDirectory( System.IO.Path.Combine( firstDirectory, "nested" ) );
@@ -197,6 +212,7 @@ public sealed class CommandTests {
 	/// <summary>New-file mode compares an absent operand as an empty file.</summary>
 	[Fact]
 	public async Task NewFileTreatsAbsentInputAsEmpty() {
+		using var fixture = new FileFixture();
 		var missing = System.IO.Path.Combine( fixture.Root, "missing" );
 		var present = fixture.Write( "present", "new\n" );
 		var result = await RunAsync( "-N", missing, present );
@@ -207,6 +223,7 @@ public sealed class CommandTests {
 	/// <summary>New-file mode does not descend into absent subdirectories without recursion.</summary>
 	[Fact]
 	public async Task NewFileRequiresRecursiveOptionForAbsentSubdirectories() {
+		using var fixture = new FileFixture();
 		var missing = System.IO.Path.Combine( fixture.Root, "missing" );
 		var present = fixture.Directory( "present" );
 		var child = System.IO.Path.Combine( present, "nested" );

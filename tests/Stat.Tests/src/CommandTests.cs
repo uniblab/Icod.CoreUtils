@@ -46,6 +46,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies that printf escapes are interpreted without an added newline.</summary>
 	[Fact]
 	public async Task PrintfInterpretsEscapesWithoutGeneratedNewline() {
+		using var workspace = new TemporaryWorkspace();
 		var file = System.IO.Path.Combine( workspace.Path, "item" );
 		await File.WriteAllTextAsync( file, "x" );
 		var standardOutput = new StringWriter();
@@ -59,6 +60,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies unrecognized printf escapes emit their character without terminating the format.</summary>
 	[Fact]
 	public async Task PrintfRetainsUnknownEscapeCharacter() {
+		using var workspace = new TemporaryWorkspace();
 		var file = System.IO.Path.Combine( workspace.Path, "item-escape" );
 		await File.WriteAllTextAsync( file, "x" );
 		var standardOutput = new StringWriter();
@@ -75,6 +77,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies filesystem-format output.</summary>
 	[Fact]
 	public async Task FileSystemModeReportsOperandAndType() {
+		using var workspace = new TemporaryWorkspace();
 		var standardOutput = new StringWriter();
 		var exitCode = await Command.RunAsync(
 			new[] { "--file-system", "--format=%n|%T", workspace.Path },
@@ -119,6 +122,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies that directories are reported through the metadata adapter.</summary>
 	[Fact]
 	public async Task DefaultReportRecognizesDirectory() {
+		using var workspace = new TemporaryWorkspace();
 		var standardOutput = new StringWriter();
 		var exitCode = await Command.RunAsync(
 			new[] { workspace.Path }, TextReader.Null, standardOutput, new StringWriter()
@@ -132,6 +136,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies link-object and dereferenced-target reporting where links are available.</summary>
 	[Fact]
 	public async Task DereferenceOptionChangesSymbolicLinkKindWhenSupported() {
+		using var workspace = new TemporaryWorkspace();
 		var target = System.IO.Path.Combine( workspace.Path, "target" );
 		var link = System.IO.Path.Combine( workspace.Path, "link" );
 		await File.WriteAllTextAsync( target, "abc" );
@@ -160,6 +165,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies major/minor modifiers and timestamp precision syntax are accepted.</summary>
 	[Fact]
 	public async Task SupportsExtendedDeviceAndTimestampDirectives() {
+		using var workspace = new TemporaryWorkspace();
 		var file = System.IO.Path.Combine( workspace.Path, "extended" );
 		await File.WriteAllTextAsync( file, "x" );
 		var standardOutput = new StringWriter();
@@ -334,6 +340,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies a failed operand does not suppress a later successful report.</summary>
 	[Fact]
 	public async Task ContinuesAfterMissingOperand() {
+		using var workspace = new TemporaryWorkspace();
 		var present = System.IO.Path.Combine( workspace.Path, "present" );
 		await File.WriteAllTextAsync( present, "ok" );
 		var missing = System.IO.Path.Combine( workspace.Path, "missing" );
@@ -351,6 +358,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies an invalid directive produces a controlled command error.</summary>
 	[Fact]
 	public async Task InvalidFormatDirectiveFails() {
+		using var workspace = new TemporaryWorkspace();
 		var file = System.IO.Path.Combine( workspace.Path, "invalid-format" );
 		await File.WriteAllTextAsync( file, "x" );
 		var standardError = new StringWriter();

@@ -25,6 +25,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies byte splitting does not require seeking standard input.</summary>
 	[Fact]
 	public async Task SplitsNonseekableInputByBytes() {
+		using var directory = new TemporaryDirectory();
 		var prefix = directory.File( "byte" );
 		await using var input = new NonSeekableReadStream( "abcdef"u8.ToArray() );
 
@@ -39,6 +40,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies line-byte mode keeps ordinary records intact and splits oversized records.</summary>
 	[Fact]
 	public async Task HonorsLineByteBoundaries() {
+		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "piece" );
 		await File.WriteAllBytesAsync( input, "abcdef\nX\n"u8.ToArray() );
@@ -54,6 +56,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies numeric suffix starts and additional suffixes.</summary>
 	[Fact]
 	public async Task GeneratesNumericAndAdditionalSuffixes() {
+		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "piece" );
 		await File.WriteAllBytesAsync( input, "a\nb\nc\n"u8.ToArray() );
@@ -71,6 +74,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies hexadecimal suffix starts.</summary>
 	[Fact]
 	public async Task GeneratesHexadecimalSuffixes() {
+		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "piece" );
 		await File.WriteAllBytesAsync( input, "a\nb\nc\n"u8.ToArray() );
@@ -86,6 +90,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies size-balanced chunk generation.</summary>
 	[Fact]
 	public async Task BalancesByteChunks() {
+		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "piece" );
 		await File.WriteAllBytesAsync( input, "abcdefg"u8.ToArray() );
@@ -110,6 +115,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies line-balanced chunks never split records.</summary>
 	[Fact]
 	public async Task BalancesWholeRecords() {
+		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "piece" );
 		await File.WriteAllTextAsync( input, string.Concat( Enumerable.Range( 1, 10 ).Select( value => $"{value}\n" ) ) );
@@ -125,6 +131,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies round-robin distribution with a NUL record separator.</summary>
 	[Fact]
 	public async Task DistributesRecordsRoundRobinWithNulSeparator() {
+		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "piece" );
 		await File.WriteAllBytesAsync( input, new byte[] { (byte)'a', 0, (byte)'b', 0, (byte)'c', 0, (byte)'d', 0, (byte)'e' } );
@@ -139,6 +146,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies empty outputs from number mode can be omitted.</summary>
 	[Fact]
 	public async Task ElidesEmptyNumberOutputs() {
+		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "piece" );
 		await File.WriteAllBytesAsync( input, new byte[] { 1, 2 } );
@@ -155,6 +163,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies a short oversized-record remainder can share a later complete record.</summary>
 	[Fact]
 	public async Task CombinesLineByteRemainderWithFollowingRecord() {
+		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "piece" );
 		await File.WriteAllBytesAsync( input, "abcde\nX\n"u8.ToArray() );
@@ -170,6 +179,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies number mode selects a fixed suffix width from its output count.</summary>
 	[Fact]
 	public async Task SizesNumberModeSuffixesBeforeWriting() {
+		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "piece" );
 		await File.WriteAllBytesAsync( input, Array.Empty<byte>() );
@@ -185,6 +195,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies an explicit suffix start disables automatic suffix expansion.</summary>
 	[Fact]
 	public async Task ExplicitNumericStartUsesFixedDefaultWidth() {
+		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "piece" );
 		await File.WriteAllBytesAsync( input, "abcdef"u8.ToArray() );
@@ -200,6 +211,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies suffix length zero restores automatic suffix expansion.</summary>
 	[Fact]
 	public async Task ZeroSuffixLengthRestoresAutomaticExpansion() {
+		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "piece" );
 		await File.WriteAllBytesAsync( input, Enumerable.Repeat( (byte)'x', 91 ).ToArray() );
@@ -214,6 +226,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies line-balanced mode assigns records by byte-balanced source regions.</summary>
 	[Fact]
 	public async Task LineBalancedModeCanCreateAnEmptyMiddleChunk() {
+		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "piece" );
 		await File.WriteAllBytesAsync( input, "abcdefghij\nx\n"u8.ToArray() );
@@ -241,6 +254,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies mode-specific flags are harmless when their mode is not selected.</summary>
 	[Fact]
 	public async Task AcceptsIrrelevantElideAndUnbufferedOptions() {
+		using var directory = new TemporaryDirectory();
 		var prefix = directory.File( "piece" );
 
 		var result = await RunAsync(
@@ -264,6 +278,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies an output piece cannot overwrite its input pathname.</summary>
 	[Fact]
 	public async Task PreventsOutputFromOverwritingInput() {
+		using var directory = new TemporaryDirectory();
 		var prefix = directory.File( "piece" );
 		var input = prefix + "aa";
 		await File.WriteAllBytesAsync( input, "original"u8.ToArray() );
@@ -278,6 +293,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies the obsolete numeric line-count syntax is routed through the shared parser.</summary>
 	[Fact]
 	public async Task SupportsLegacyNumericLineCount() {
+		using var directory = new TemporaryDirectory();
 		var prefix = directory.File( "piece" );
 
 		var result = await RunAsync(
@@ -293,6 +309,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies suffix exhaustion preserves pieces already created.</summary>
 	[Fact]
 	public async Task PreservesCreatedFilesWhenSuffixesAreExhausted() {
+		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "piece" );
 		await File.WriteAllBytesAsync( input, Enumerable.Range( 0, 27 ).Select( value => (byte)value ).ToArray() );
@@ -308,6 +325,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies filter failures preserve output and propagate the filter status.</summary>
 	[Fact]
 	public async Task PreservesFilterOutputAfterFilterFailure() {
+		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "piece" );
 		await File.WriteAllBytesAsync( input, "abc\n"u8.ToArray() );
@@ -326,6 +344,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies empty input does not create a default output piece.</summary>
 	[Fact]
 	public async Task DoesNotCreateOutputForEmptyInput() {
+		using var directory = new TemporaryDirectory();
 		var input = directory.File( "input" );
 		var prefix = directory.File( "piece" );
 		await File.WriteAllBytesAsync( input, Array.Empty<byte>() );

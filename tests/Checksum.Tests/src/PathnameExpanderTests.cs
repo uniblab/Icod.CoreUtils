@@ -64,6 +64,7 @@ public sealed class PathnameExpanderTests {
 
 	[Fact]
 	public void DoubleAsteriskMatchesZeroAndMultipleDirectories() {
+		using var directory = new TemporaryDirectory();
 		File.WriteAllText(
 			System.IO.Path.Combine(
 				directory.Path,
@@ -127,6 +128,7 @@ public sealed class PathnameExpanderTests {
 
 	[Fact]
 	public void TerminalDoubleAsteriskReturnsFilesRecursively() {
+		using var directory = new TemporaryDirectory();
 		File.WriteAllText(
 			System.IO.Path.Combine(
 				directory.Path,
@@ -168,6 +170,7 @@ public sealed class PathnameExpanderTests {
 
 	[Fact]
 	public void PreservesUnmatchedPatternsByDefault() {
+		using var directory = new TemporaryDirectory();
 		var pattern = System.IO.Path.Combine(
 			"missing",
 			"**",
@@ -190,6 +193,7 @@ public sealed class PathnameExpanderTests {
 
 	[Fact]
 	public void KeepsOperandOrderAndSortsMatchesPerOperand() {
+		using var directory = new TemporaryDirectory();
 		File.WriteAllText( System.IO.Path.Combine( directory.Path, "b.txt" ), string.Empty );
 		File.WriteAllText( System.IO.Path.Combine( directory.Path, "a.txt" ), string.Empty );
 		File.WriteAllText( System.IO.Path.Combine( directory.Path, "z.bin" ), string.Empty );
@@ -216,6 +220,7 @@ public sealed class PathnameExpanderTests {
 
 	[Fact]
 	public void DoesNotTraverseDirectorySymlinksByDefault() {
+		using var directory = new TemporaryDirectory();
 		var target = Directory.CreateDirectory(
 			System.IO.Path.Combine(
 				directory.Path,

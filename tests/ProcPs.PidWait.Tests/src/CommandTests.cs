@@ -78,6 +78,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task CountIsPrintedBeforeCanceledWaitReturnsFatalStatus() {
 		var control = new FakeControl { CancelWaits = true };
+		using var output = new MemoryStream();
 		var status = await Command.RunAsync(
 			[ "-c", "worker" ],
 			stdout: output,

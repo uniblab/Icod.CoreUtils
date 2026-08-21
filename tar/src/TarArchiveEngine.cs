@@ -88,6 +88,7 @@ internal sealed class TarArchiveEngine {
 		var count = 0;
 		long logicalBytes = 0;
 		await using var input = await TarCompression.OpenReadAsync( options, cancellationToken ).ConfigureAwait( false );
+		using var reader = new TarReader( input.Stream, leaveOpen: true );
 		TarEntry? entry;
 		while ( (entry = reader.GetNextEntry()) is not null ) {
 			cancellationToken.ThrowIfCancellationRequested();
@@ -219,6 +220,7 @@ internal sealed class TarArchiveEngine {
 		var differences = false;
 		var count = 0;
 		await using var input = await TarCompression.OpenReadAsync( options, cancellationToken ).ConfigureAwait( false );
+		using var reader = new TarReader( input.Stream, leaveOpen: true );
 		TarEntry? entry;
 		while ( (entry = reader.GetNextEntry()) is not null ) {
 			cancellationToken.ThrowIfCancellationRequested();
@@ -330,6 +332,7 @@ internal sealed class TarArchiveEngine {
 	private async Task<IReadOnlyDictionary<string, DateTimeOffset>> ReadLatestTimesAsync( string archivePath, TarOptions options, CancellationToken cancellationToken ) {
 		var result = new Dictionary<string, DateTimeOffset>( StringComparer.Ordinal );
 		await using var source = new FileStream( archivePath, FileMode.Open, FileAccess.Read, FileShare.Read, 128 * 1024, FileOptions.Asynchronous | FileOptions.SequentialScan );
+		using var reader = new TarReader( source, leaveOpen: true );
 		var count = 0;
 		TarEntry? entry;
 		while ( (entry = reader.GetNextEntry()) is not null ) {
@@ -348,6 +351,7 @@ internal sealed class TarArchiveEngine {
 
 	private async Task<TarEntryFormat> DetectArchiveFormatAsync( string archivePath, CancellationToken cancellationToken ) {
 		await using var source = new FileStream( archivePath, FileMode.Open, FileAccess.Read, FileShare.Read, 128 * 1024, FileOptions.Asynchronous | FileOptions.SequentialScan );
+		using var reader = new TarReader( source, leaveOpen: true );
 		cancellationToken.ThrowIfCancellationRequested();
 		return reader.GetNextEntry()?.Format ?? TarEntryFormat.Pax;
 	}

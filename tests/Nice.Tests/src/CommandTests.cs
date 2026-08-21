@@ -52,6 +52,7 @@ public sealed class CommandTests {
 	public async Task PermissionFailureStillAttemptsCommand() {
 		var priorities = new FakePriorityProvider { SetFailure = ProcessOperationStatus.AccessDenied };
 		var executor = new ThrowingExecutor();
+		using var error = new MemoryStream();
 		var status = await Command.RunAsync( new[] { "child" }, stderr: error, processExecutor: executor, priorityProvider: priorities );
 		Assert.Equal( 125, status );
 		Assert.True( executor.Called );
@@ -63,6 +64,7 @@ public sealed class CommandTests {
 	public async Task GetPriorityFailurePreventsCommandLaunch() {
 		var priorities = new FakePriorityProvider { GetFailure = ProcessOperationStatus.Failed };
 		var executor = new ThrowingExecutor();
+		using var error = new MemoryStream();
 		var status = await Command.RunAsync( new[] { "child" }, stderr: error, processExecutor: executor, priorityProvider: priorities );
 		Assert.Equal( 125, status );
 		Assert.False( executor.Called );
@@ -72,6 +74,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies explicit adjustment without a command is a GNU internal failure.</summary>
 	[Fact]
 	public async Task AdjustmentRequiresCommand() {
+		using var error = new MemoryStream();
 		var status = await Command.RunAsync( new[] { "-n", "4" }, stderr: error, priorityProvider: new FakePriorityProvider() );
 		Assert.Equal( 125, status );
 		Assert.Contains( "a command must be given", Encoding.UTF8.GetString( error.ToArray() ), StringComparison.Ordinal );
@@ -93,6 +96,7 @@ public sealed class CommandTests {
 	/// <summary>Verifies command-not-found maps to 127.</summary>
 	[Fact]
 	public async Task MissingCommandReturns127() {
+		using var error = new MemoryStream();
 		var status = await Command.RunAsync(
 			new[] { $"icod-nice-missing-{Guid.NewGuid():N}" },
 			stderr: error,

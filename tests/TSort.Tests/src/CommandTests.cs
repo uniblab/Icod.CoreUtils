@@ -318,6 +318,7 @@ public sealed class CommandTests {
 	public async Task ReadFailureIsControlled() {
 		using var input = new ThrowingReadStream();
 		using var output = new MemoryStream();
+		using var error = new MemoryStream();
 		var status = await Command.RunAsync(
 			Array.Empty<string>(),
 			new CommandContext(
@@ -339,7 +340,9 @@ public sealed class CommandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task WriteFailureIsControlled() {
+		using var input = new MemoryStream( Encoding.UTF8.GetBytes( "a b" ), writable: false );
 		using var output = new ThrowingWriteStream();
+		using var error = new MemoryStream();
 		var status = await Command.RunAsync(
 			Array.Empty<string>(),
 			new CommandContext(

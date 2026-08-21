@@ -27,6 +27,7 @@ public sealed class CommandTests {
 	/// <summary>Equal inputs return status zero.</summary>
 	[Fact]
 	public async Task EqualInputsReturnZero() {
+		using var fixture = new FileFixture();
 		var left = fixture.Write( "left", "same\n" );
 		var right = fixture.Write( "right", "same\n" );
 		var result = await RunAsync( "-t", "-w", "25", left, right );
@@ -37,6 +38,7 @@ public sealed class CommandTests {
 	/// <summary>Common-line controls affect only common rows.</summary>
 	[Fact]
 	public async Task CommonLineControlsAreHonored() {
+		using var fixture = new FileFixture();
 		var left = fixture.Write( "left", "same\nleft\n" );
 		var right = fixture.Write( "right", "same\nright\n" );
 		var suppressed = await RunAsync( "-s", "-t", "-w", "25", left, right );
@@ -49,6 +51,7 @@ public sealed class CommandTests {
 	/// <summary>Case and whitespace policies can make source lines equivalent.</summary>
 	[Fact]
 	public async Task ComparisonPoliciesCanMakeInputsEquivalent() {
+		using var fixture = new FileFixture();
 		var left = fixture.Write( "left", "Alpha  beta\n" );
 		var right = fixture.Write( "right", "alpha beta   \n" );
 		var result = await RunAsync( "-ib", "-w", "35", left, right );
@@ -59,6 +62,7 @@ public sealed class CommandTests {
 	/// <summary>Output tab expansion removes literal tabs while retaining alignment.</summary>
 	[Fact]
 	public async Task ExpandTabsUsesConfiguredTabStops() {
+		using var fixture = new FileFixture();
 		var left = fixture.Write( "left", "a\tb\n" );
 		var right = fixture.Write( "right", "a\tb\n" );
 		var result = await RunAsync( "-t", "--tabsize=4", "-w", "25", left, right );
@@ -71,6 +75,7 @@ public sealed class CommandTests {
 	/// <summary>Default output uses tab stops to align the right column like GNU <c>sdiff</c>.</summary>
 	[Fact]
 	public async Task DefaultLayoutUsesOutputTabs() {
+		using var fixture = new FileFixture();
 		var left = fixture.Write( "left", "same\nleft\n" );
 		var right = fixture.Write( "right", "same\nright\n" );
 		var result = await RunAsync( "-w", "25", left, right );
@@ -84,6 +89,7 @@ public sealed class CommandTests {
 	[InlineData( 2, "  ", "| " )]
 	[InlineData( 3, "   ", " | " )]
 	public async Task NarrowWidthsRemainBounded( int width, string common, string changed ) {
+		using var fixture = new FileFixture();
 		var left = fixture.Write( "left", "same\nleft\n" );
 		var right = fixture.Write( "right", "same\nright\n" );
 		var result = await RunAsync( "-w", width.ToString( System.Globalization.CultureInfo.InvariantCulture ), left, right );
@@ -96,6 +102,7 @@ public sealed class CommandTests {
 	[InlineData( "left\n", "right", '/' )]
 	[InlineData( "left", "right\n", '\\' )]
 	public async Task AsymmetricIncompleteLinesUseDirectionalMarker( string leftText, string rightText, char marker ) {
+		using var fixture = new FileFixture();
 		var left = fixture.Write( "left", leftText );
 		var right = fixture.Write( "right", rightText );
 		var result = await RunAsync( "-t", "-w", "25", left, right );
@@ -106,6 +113,7 @@ public sealed class CommandTests {
 	/// <summary>Incomplete changed lines use GNU's slash markers and do not invent a final newline.</summary>
 	[Fact]
 	public async Task IncompleteLinesUseTerminationMarkers() {
+		using var fixture = new FileFixture();
 		var left = fixture.Write( "left", "left" );
 		var right = fixture.Write( "right", "right" );
 		var result = await RunAsync( "-t", "-w", "25", left, right );
@@ -116,6 +124,7 @@ public sealed class CommandTests {
 	/// <summary>Binary differences use the standard binary report unless text is forced.</summary>
 	[Fact]
 	public async Task BinaryInputsUseBinaryReport() {
+		using var fixture = new FileFixture();
 		var left = fixture.WriteBytes( "left", new byte[] { (byte)'a', 0, (byte)'b' } );
 		var right = fixture.WriteBytes( "right", new byte[] { (byte)'a', 0, (byte)'c' } );
 		var result = await RunAsync( left, right );
@@ -132,6 +141,7 @@ public sealed class CommandTests {
 	[InlineData( true, 0 )]
 	[InlineData( false, 1 )]
 	public async Task BinaryMergeOutputIsEmpty( bool equal, int expectedStatus ) {
+		using var fixture = new FileFixture();
 		var left = fixture.WriteBytes( "left", new byte[] { (byte)'a', 0, (byte)'b' } );
 		var right = fixture.WriteBytes(
 			"right",
@@ -151,6 +161,7 @@ public sealed class CommandTests {
 	[InlineData( "r\n", "right" )]
 	[InlineData( "2\n", "right" )]
 	public async Task InteractiveChoicesSelectOneSide( string command, string selected ) {
+		using var fixture = new FileFixture();
 		var left = fixture.Write( "left", "before\nleft\nafter\n" );
 		var right = fixture.Write( "right", "before\nright\nafter\n" );
 		var output = fixture.PathFor( "merged" );
@@ -164,6 +175,7 @@ public sealed class CommandTests {
 	/// <summary>Interactive output preserves a single carriage return from CRLF input.</summary>
 	[Fact]
 	public async Task MergeDoesNotDuplicateCarriageReturns() {
+		using var fixture = new FileFixture();
 		var left = fixture.WriteBytes( "left", new byte[] { (byte)'l', (byte)'e', (byte)'f', (byte)'t', 13, 10 } );
 		var right = fixture.WriteBytes( "right", new byte[] { (byte)'r', (byte)'i', (byte)'g', (byte)'h', (byte)'t', 13, 10 } );
 		var output = fixture.PathFor( "merged" );
@@ -175,6 +187,7 @@ public sealed class CommandTests {
 	/// <summary>Silent and verbose commands change later common-line display without changing merged content.</summary>
 	[Fact]
 	public async Task InteractiveSilentCommandSuppressesFollowingCommonDisplay() {
+		using var fixture = new FileFixture();
 		var left = fixture.Write( "left", "before\nleft\nafter\n" );
 		var right = fixture.Write( "right", "before\nright\nafter\n" );
 		var output = fixture.PathFor( "merged" );
@@ -187,6 +200,7 @@ public sealed class CommandTests {
 	/// <summary>Quit abandons the temporary output and preserves an existing destination.</summary>
 	[Fact]
 	public async Task QuitDoesNotCommitOutput() {
+		using var fixture = new FileFixture();
 		var left = fixture.Write( "left", "left\n" );
 		var right = fixture.Write( "right", "right\n" );
 		var output = fixture.Write( "merged", "original\n" );
@@ -198,6 +212,7 @@ public sealed class CommandTests {
 	/// <summary>Nonterminal EOF is trouble and leaves the destination untouched.</summary>
 	[Fact]
 	public async Task NonterminalEofDoesNotCommitOutput() {
+		using var fixture = new FileFixture();
 		var left = fixture.Write( "left", "left\n" );
 		var right = fixture.Write( "right", "right\n" );
 		var output = fixture.Write( "merged", "original\n" );
@@ -216,6 +231,7 @@ public sealed class CommandTests {
 	[InlineData( "er\n", 1 )]
 	[InlineData( "e2\n", 1 )]
 	public async Task EditorCommandsProvideExpectedInitialContent( string command, int expectedCount ) {
+		using var fixture = new FileFixture();
 		var left = fixture.Write( "left", "left\n" );
 		var right = fixture.Write( "right", "right\n" );
 		var output = fixture.PathFor( "merged" );
@@ -229,6 +245,7 @@ public sealed class CommandTests {
 	/// <summary>The decorated editor command identifies both source ranges.</summary>
 	[Fact]
 	public async Task DecoratedEditorCommandAddsHeaders() {
+		using var fixture = new FileFixture();
 		var left = fixture.Write( "left", "before\nleft\n" );
 		var right = fixture.Write( "right", "before\nright\n" );
 		var output = fixture.PathFor( "merged" );
@@ -243,6 +260,7 @@ public sealed class CommandTests {
 	/// <summary>Editor failure aborts the output transaction.</summary>
 	[Fact]
 	public async Task EditorFailureDoesNotCommitOutput() {
+		using var fixture = new FileFixture();
 		var left = fixture.Write( "left", "left\n" );
 		var right = fixture.Write( "right", "right\n" );
 		var output = fixture.Write( "merged", "original\n" );
@@ -255,6 +273,7 @@ public sealed class CommandTests {
 	/// <summary>Matching-line suppression removes a difference from status and prompting.</summary>
 	[Fact]
 	public async Task IgnoreMatchingLinesSuppressesDifference() {
+		using var fixture = new FileFixture();
 		var left = fixture.Write( "left", "DEBUG one\n" );
 		var right = fixture.Write( "right", "DEBUG two\n" );
 		var result = await RunAsync( "-I", "^DEBUG", "-w", "35", left, right );
@@ -266,6 +285,7 @@ public sealed class CommandTests {
 	/// <summary>Ignored one-sided changes use common-line gutters and respect left-column mode.</summary>
 	[Fact]
 	public async Task IgnoredInsertionsUseCommonLineLayout() {
+		using var fixture = new FileFixture();
 		var left = fixture.Write( "left", string.Empty );
 		var right = fixture.Write( "right", "DEBUG two\n" );
 		var result = await RunAsync( "-t", "-I", "^DEBUG", "-w", "35", left, right );
@@ -279,6 +299,7 @@ public sealed class CommandTests {
 	/// <summary>A directory operand resolves the basename of the file operand.</summary>
 	[Fact]
 	public async Task DirectoryOperandResolvesMatchingFile() {
+		using var fixture = new FileFixture();
 		var file = fixture.Write( "left/name.txt", "same\n" );
 		var directory = fixture.Directory( "right" );
 		fixture.Write( "right/name.txt", "same\n" );
@@ -297,6 +318,7 @@ public sealed class CommandTests {
 	/// <summary>Interactive mode rejects a standard-input file before consuming merge commands.</summary>
 	[Fact]
 	public async Task InteractiveModeRejectsStandardInputFile() {
+		using var fixture = new FileFixture();
 		var right = fixture.Write( "right", "right\n" );
 		var output = fixture.PathFor( "merged" );
 		var result = await RunWithInputAsync( "left\nl\n", "-o", output, "-", right );

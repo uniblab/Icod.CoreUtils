@@ -77,6 +77,7 @@ public sealed class TruncateCommandTests {
 
 	[Fact]
 	public async Task AbsoluteSizeCreatesAFile() {
+		using var temporary = new TemporaryDirectory();
 		var path = temporary.PathFor( "created.bin" );
 		var result = await RunAsync(
 			[ "--size=4096", path ]
@@ -90,6 +91,7 @@ public sealed class TruncateCommandTests {
 
 	[Fact]
 	public async Task NoCreateSilentlyIgnoresAMissingFile() {
+		using var temporary = new TemporaryDirectory();
 		var path = temporary.PathFor( "missing.bin" );
 		var result = await RunAsync(
 			[ "--no-create", "--size=10", path ]
@@ -102,6 +104,7 @@ public sealed class TruncateCommandTests {
 
 	[Fact]
 	public async Task NoCreateSilentlyIgnoresAMissingParentDirectory() {
+		using var temporary = new TemporaryDirectory();
 		var path = temporary.PathFor( System.IO.Path.Combine( "missing", "target.bin" ) );
 		var result = await RunAsync(
 			[ "-c", "--size=10", path ]
@@ -114,6 +117,7 @@ public sealed class TruncateCommandTests {
 
 	[Fact]
 	public async Task AbsoluteSizeShrinksExistingData() {
+		using var temporary = new TemporaryDirectory();
 		var path = temporary.PathFor( "target.bin" );
 		await File.WriteAllBytesAsync( path, Enumerable.Range( 0, 32 ).Select( value => ( byte )value ).ToArray() );
 
@@ -127,6 +131,7 @@ public sealed class TruncateCommandTests {
 
 	[Fact]
 	public async Task ExtensionPreservesExistingDataAndReadsAsZero() {
+		using var temporary = new TemporaryDirectory();
 		var path = temporary.PathFor( "target.bin" );
 		await File.WriteAllBytesAsync(
 			path,
@@ -146,6 +151,7 @@ public sealed class TruncateCommandTests {
 
 	[Fact]
 	public async Task PositiveRelativeSizeExtendsFromTheCurrentLength() {
+		using var temporary = new TemporaryDirectory();
 		var path = temporary.CreateFile( "target.bin", 10 );
 		var result = await RunAsync(
 			[ "-s", "+7", path ]
@@ -157,6 +163,7 @@ public sealed class TruncateCommandTests {
 
 	[Fact]
 	public async Task NegativeRelativeSizeClampsAtZero() {
+		using var temporary = new TemporaryDirectory();
 		var path = temporary.CreateFile( "target.bin", 10 );
 		var result = await RunAsync(
 			[ "-s-20", path ]
@@ -176,6 +183,7 @@ public sealed class TruncateCommandTests {
 		int initialLength,
 		int expectedLength
 	) {
+		using var temporary = new TemporaryDirectory();
 		var path = temporary.CreateFile( "target.bin", initialLength );
 		var result = await RunAsync(
 			[ "--size", size, path ]
@@ -195,6 +203,7 @@ public sealed class TruncateCommandTests {
 		int initialLength,
 		int expectedLength
 	) {
+		using var temporary = new TemporaryDirectory();
 		var path = temporary.CreateFile( "target.bin", initialLength );
 		var result = await RunAsync(
 			[ "-s", size, path ]
@@ -206,6 +215,7 @@ public sealed class TruncateCommandTests {
 
 	[Fact]
 	public async Task ReferenceCopiesTheReferenceLength() {
+		using var temporary = new TemporaryDirectory();
 		var reference = temporary.CreateFile( "reference.bin", 37 );
 		var target = temporary.CreateFile( "target.bin", 4 );
 		var result = await RunAsync(
@@ -218,6 +228,7 @@ public sealed class TruncateCommandTests {
 
 	[Fact]
 	public async Task MissingReferenceFailsBeforeTargetsAreOpened() {
+		using var temporary = new TemporaryDirectory();
 		var reference = temporary.PathFor( "missing-reference.bin" );
 		var target = temporary.PathFor( "target.bin" );
 		var result = await RunAsync(
@@ -231,6 +242,7 @@ public sealed class TruncateCommandTests {
 
 	[Fact]
 	public async Task RelativeReferenceSizeIsBasedOnTheReferenceNotTheTarget() {
+		using var temporary = new TemporaryDirectory();
 		var reference = temporary.CreateFile( "reference.bin", 37 );
 		var target = temporary.CreateFile( "target.bin", 100 );
 		var result = await RunAsync(
@@ -243,6 +255,7 @@ public sealed class TruncateCommandTests {
 
 	[Fact]
 	public async Task AbsoluteSizeCannotBeCombinedWithReference() {
+		using var temporary = new TemporaryDirectory();
 		var reference = temporary.CreateFile( "reference.bin", 37 );
 		var target = temporary.CreateFile( "target.bin", 10 );
 		var result = await RunAsync(
@@ -265,6 +278,7 @@ public sealed class TruncateCommandTests {
 		string size,
 		int expectedLength
 	) {
+		using var temporary = new TemporaryDirectory();
 		var path = temporary.PathFor( "target.bin" );
 		var result = await RunAsync(
 			[ "--size", size, path ]
@@ -282,6 +296,7 @@ public sealed class TruncateCommandTests {
 		string size,
 		int expectedLength
 	) {
+		using var temporary = new TemporaryDirectory();
 		var path = temporary.PathFor( "target.bin" );
 		var result = await RunAsync(
 			[ "--size", size, path ]
@@ -293,6 +308,7 @@ public sealed class TruncateCommandTests {
 
 	[Fact]
 	public async Task ZeroWithAnOtherwiseHugeSuffixIsValid() {
+		using var temporary = new TemporaryDirectory();
 		var path = temporary.CreateFile( "target.bin", 4 );
 		var result = await RunAsync(
 			[ "--size=0Q", path ]
@@ -304,6 +320,7 @@ public sealed class TruncateCommandTests {
 
 	[Fact]
 	public async Task IoBlocksMultipliesSizeByThePerFileBlockSize() {
+		using var temporary = new TemporaryDirectory();
 		var path = temporary.PathFor( "target.bin" );
 		var platform = new FakeTruncatePlatform {
 			IoBlockSize = 4096,
@@ -320,6 +337,7 @@ public sealed class TruncateCommandTests {
 
 	[Fact]
 	public async Task IoBlocksScalesARelativeReferenceAdjustmentOnly() {
+		using var temporary = new TemporaryDirectory();
 		var reference = temporary.CreateFile( "reference.bin", 100 );
 		var target = temporary.CreateFile( "target.bin", 1 );
 		var platform = new FakeTruncatePlatform {
@@ -337,6 +355,7 @@ public sealed class TruncateCommandTests {
 
 	[Fact]
 	public async Task IoBlocksRequiresSize() {
+		using var temporary = new TemporaryDirectory();
 		var reference = temporary.CreateFile( "reference.bin", 8 );
 		var target = temporary.PathFor( "target.bin" );
 		var result = await RunAsync(
@@ -349,6 +368,7 @@ public sealed class TruncateCommandTests {
 
 	[Fact]
 	public async Task IoBlockDiscoveryFailuresBecomePerFileDiagnostics() {
+		using var temporary = new TemporaryDirectory();
 		var path = temporary.PathFor( "target.bin" );
 		var platform = new FakeTruncatePlatform {
 			IoBlockSizeFailure = "simulated block-size failure",
@@ -364,6 +384,7 @@ public sealed class TruncateCommandTests {
 
 	[Fact]
 	public async Task IoBlockMultiplicationOverflowIsReportedPerFile() {
+		using var temporary = new TemporaryDirectory();
 		var path = temporary.PathFor( "target.bin" );
 		var platform = new FakeTruncatePlatform {
 			IoBlockSize = 4096,
@@ -389,6 +410,7 @@ public sealed class TruncateCommandTests {
 		string size,
 		string expectedDiagnostic
 	) {
+		using var temporary = new TemporaryDirectory();
 		var path = temporary.PathFor( "target.bin" );
 		var result = await RunAsync(
 			[ "--size", size, path ]
@@ -401,6 +423,7 @@ public sealed class TruncateCommandTests {
 
 	[Fact]
 	public async Task RepeatedSizeWithoutAModifierInheritsTheEarlierMode() {
+		using var temporary = new TemporaryDirectory();
 		var path = temporary.CreateFile( "target.bin", 20 );
 		var result = await RunAsync(
 			[ "--size=<5", "--size=12", path ]
@@ -412,6 +435,7 @@ public sealed class TruncateCommandTests {
 
 	[Fact]
 	public async Task RepeatedSizeWithoutAModifierInheritsRelativeMode() {
+		using var temporary = new TemporaryDirectory();
 		var path = temporary.CreateFile( "target.bin", 20 );
 		var result = await RunAsync(
 			[ "--size=+5", "--size=7", path ]
@@ -423,6 +447,7 @@ public sealed class TruncateCommandTests {
 
 	[Fact]
 	public async Task RepeatedSignedRelativeModifiersAreRejected() {
+		using var temporary = new TemporaryDirectory();
 		var path = temporary.CreateFile( "target.bin", 20 );
 		var result = await RunAsync(
 			[ "--size=+5", "--size=-7", path ]
@@ -435,6 +460,7 @@ public sealed class TruncateCommandTests {
 
 	[Fact]
 	public async Task RepeatedExplicitSizeModifierReplacesTheEarlierMode() {
+		using var temporary = new TemporaryDirectory();
 		var path = temporary.CreateFile( "target.bin", 20 );
 		var result = await RunAsync(
 			[ "--size=<5", "--size=>24", path ]
@@ -446,6 +472,7 @@ public sealed class TruncateCommandTests {
 
 	[Fact]
 	public async Task OptionsArePermutedAroundOperands() {
+		using var temporary = new TemporaryDirectory();
 		var first = temporary.PathFor( "first.bin" );
 		var second = temporary.PathFor( "second.bin" );
 		var result = await RunAsync(
@@ -459,6 +486,7 @@ public sealed class TruncateCommandTests {
 
 	[Fact]
 	public async Task WildcardOperandsExpandDeterministically() {
+		using var temporary = new TemporaryDirectory();
 		var first = temporary.CreateFile( "first.dat", 1 );
 		var second = temporary.CreateFile( "second.dat", 2 );
 		temporary.CreateFile( "other.bin", 3 );
@@ -474,6 +502,7 @@ public sealed class TruncateCommandTests {
 
 	[Fact]
 	public async Task AFailureDoesNotPreventLaterFilesFromBeingProcessed() {
+		using var temporary = new TemporaryDirectory();
 		var directory = temporary.PathFor( "directory" );
 		Directory.CreateDirectory( directory );
 		var target = temporary.PathFor( "target.bin" );
@@ -488,6 +517,7 @@ public sealed class TruncateCommandTests {
 
 	[Fact]
 	public async Task GrowthUsesTheSparseAwarePlatformBoundary() {
+		using var temporary = new TemporaryDirectory();
 		var path = temporary.PathFor( "target.bin" );
 		var platform = new FakeTruncatePlatform();
 		var result = await RunAsync(
@@ -503,6 +533,7 @@ public sealed class TruncateCommandTests {
 
 	[Fact]
 	public async Task AnUnchangedLengthDoesNotInvokeThePlatformMutation() {
+		using var temporary = new TemporaryDirectory();
 		var path = temporary.CreateFile( "target.bin", 16 );
 		var platform = new FakeTruncatePlatform();
 		var result = await RunAsync(
@@ -516,6 +547,7 @@ public sealed class TruncateCommandTests {
 
 	[Fact]
 	public async Task PlatformFailuresBecomeConventionalDiagnostics() {
+		using var temporary = new TemporaryDirectory();
 		var path = temporary.CreateFile( "target.bin", 4 );
 		var platform = new FakeTruncatePlatform {
 			SetLengthFailure = "simulated failure",
@@ -531,6 +563,7 @@ public sealed class TruncateCommandTests {
 
 	[Fact]
 	public async Task PreCanceledCommandsReturnTheCanceledExitCode() {
+		using var temporary = new TemporaryDirectory();
 		var path = temporary.PathFor( "target.bin" );
 		using var cancellation = new CancellationTokenSource();
 		cancellation.Cancel();
@@ -554,6 +587,7 @@ public sealed class TruncateCommandTests {
 		) {
 			return;
 		}
+		using var temporary = new TemporaryDirectory();
 		var path = temporary.CreateFile( "target.bin", 1 );
 		await using var file = new FileStream(
 			path,
@@ -578,7 +612,9 @@ public sealed class TruncateCommandTests {
 		ITruncatePlatform? platform = null,
 		CancellationToken cancellationToken = default
 	) {
+		using var input = new StringReader( string.Empty );
 		using var output = new StringWriter();
+		using var error = new StringWriter();
 		var context = new CommandContext(
 			"truncate",
 			input,

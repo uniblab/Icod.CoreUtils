@@ -376,6 +376,7 @@ public sealed class GnuBasicRegularExpressionTests {
 
 	[Fact]
 	public void MatchHonorsCancellationDuringEvaluation() {
+		using var cancellation = new CancellationTokenSource();
 		var provider = new GnuBasicRegularExpressionProvider(
 			new CancellingCharacterProvider( cancellation, 32 )
 		);

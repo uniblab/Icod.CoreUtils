@@ -19,6 +19,7 @@ public sealed class MkTempCommandTests {
 
 	[Fact]
 	public async Task DirectoryOptionCreatesDirectory() {
+		using var workspace = new Workspace();
 		var result = await RunAsync( workspace, [ "-d", "-p", workspace.Root, "folder.XXXX" ] );
 		Assert.Equal( 0, result.Status );
 		Assert.True( Directory.Exists( result.Path ) );
@@ -27,6 +28,7 @@ public sealed class MkTempCommandTests {
 
 	[Fact]
 	public async Task ExplicitSuffixIsAppendedAfterReplacementRun() {
+		using var workspace = new Workspace();
 		var result = await RunAsync(
 			workspace,
 			[ "-p", workspace.Root, "--suffix=.txt", "report.XXXX" ]
@@ -38,6 +40,7 @@ public sealed class MkTempCommandTests {
 
 	[Fact]
 	public async Task InferredSuffixIsPreserved() {
+		using var workspace = new Workspace();
 		var result = await RunAsync(
 			workspace,
 			[ "-p", workspace.Root, "report.XXXX.json" ]
@@ -49,6 +52,7 @@ public sealed class MkTempCommandTests {
 
 	[Fact]
 	public async Task BareLongTmpDirUsesTmpDirEnvironmentWithoutConsumingTemplate() {
+		using var workspace = new Workspace();
 		var result = await RunAsync(
 			workspace,
 			[ "--tmpdir", "name.XXXX" ]
@@ -59,6 +63,7 @@ public sealed class MkTempCommandTests {
 
 	[Fact]
 	public async Task ExplicitTmpDirOverridesEnvironment() {
+		using var workspace = new Workspace();
 		var other = Directory.CreateDirectory( System.IO.Path.Combine( workspace.Root, "other" ) ).FullName;
 		var result = await RunAsync(
 			workspace,
@@ -70,6 +75,7 @@ public sealed class MkTempCommandTests {
 
 	[Fact]
 	public async Task TraditionalModeGivesTmpDirPrecedenceOverP() {
+		using var workspace = new Workspace();
 		var other = Directory.CreateDirectory( System.IO.Path.Combine( workspace.Root, "other" ) ).FullName;
 		var result = await RunAsync(
 			workspace,
@@ -81,6 +87,7 @@ public sealed class MkTempCommandTests {
 
 	[Fact]
 	public async Task TmpDirAllowsRelativeSubdirectoriesButCreatesOnlyFinalComponent() {
+		using var workspace = new Workspace();
 		var existing = Directory.CreateDirectory( System.IO.Path.Combine( workspace.Root, "existing" ) ).FullName;
 		var result = await RunAsync(
 			workspace,
@@ -100,6 +107,7 @@ public sealed class MkTempCommandTests {
 
 	[Fact]
 	public async Task TmpDirRejectsAbsoluteTemplate() {
+		using var workspace = new Workspace();
 		var result = await RunAsync(
 			workspace,
 			[ "-p", workspace.Root, System.IO.Path.Combine( workspace.Root, "name.XXXX" ) ]
@@ -110,6 +118,7 @@ public sealed class MkTempCommandTests {
 
 	[Fact]
 	public async Task TraditionalModeRejectsDirectorySeparators() {
+		using var workspace = new Workspace();
 		var result = await RunAsync( workspace, [ "-t", System.IO.Path.Combine( "sub", "name.XXXX" ) ] );
 		Assert.Equal( 1, result.Status );
 		Assert.Contains( "contains directory separator", result.Error );
@@ -117,6 +126,7 @@ public sealed class MkTempCommandTests {
 
 	[Fact]
 	public async Task TooFewReplacementCharactersAreRejected() {
+		using var workspace = new Workspace();
 		var result = await RunAsync( workspace, [ "-p", workspace.Root, "name.XX" ] );
 		Assert.Equal( 1, result.Status );
 		Assert.Contains( "too few X's", result.Error );
@@ -124,6 +134,7 @@ public sealed class MkTempCommandTests {
 
 	[Fact]
 	public async Task ExplicitSuffixRequiresTemplateEndingInX() {
+		using var workspace = new Workspace();
 		var result = await RunAsync(
 			workspace,
 			[ "-p", workspace.Root, "--suffix=.txt", "name.XXXX.old" ]
@@ -134,6 +145,7 @@ public sealed class MkTempCommandTests {
 
 	[Fact]
 	public async Task SuffixMayNotContainDirectorySeparator() {
+		using var workspace = new Workspace();
 		var suffix = string.Concat( ".a", System.IO.Path.DirectorySeparatorChar, "b" );
 		var result = await RunAsync(
 			workspace,
@@ -145,6 +157,7 @@ public sealed class MkTempCommandTests {
 
 	[Fact]
 	public async Task MoreThanOneTemplateIsRejected() {
+		using var workspace = new Workspace();
 		var result = await RunAsync( workspace, [ "one.XXXX", "two.XXXX" ] );
 		Assert.Equal( 1, result.Status );
 		Assert.Contains( "too many templates", result.Error );
@@ -152,6 +165,7 @@ public sealed class MkTempCommandTests {
 
 	[Fact]
 	public async Task DryRunPrintsUnusedNameWithoutCreatingIt() {
+		using var workspace = new Workspace();
 		var result = await RunAsync(
 			workspace,
 			[ "-u", "-p", workspace.Root, "name.XXXX" ]
@@ -163,6 +177,7 @@ public sealed class MkTempCommandTests {
 
 	[Fact]
 	public async Task DryRunMayReportANameBeneathAMissingDirectory() {
+		using var workspace = new Workspace();
 		var result = await RunAsync(
 			workspace,
 			[ "-u", "-p", workspace.Root, System.IO.Path.Combine( "missing", "name.XXXX" ) ]
@@ -178,6 +193,7 @@ public sealed class MkTempCommandTests {
 
 	[Fact]
 	public async Task DryRunRejectsAnExistingNonDirectoryPathComponent() {
+		using var workspace = new Workspace();
 		await File.WriteAllTextAsync( System.IO.Path.Combine( workspace.Root, "parent" ), "file" );
 		var result = await RunAsync(
 			workspace,
@@ -189,6 +205,7 @@ public sealed class MkTempCommandTests {
 
 	[Fact]
 	public async Task QuietSuppressesCreationDiagnostics() {
+		using var workspace = new Workspace();
 		var result = await RunAsync(
 			workspace,
 			[ "-q", "-p", System.IO.Path.Combine( workspace.Root, "missing" ), "name.XXXX" ]
@@ -199,6 +216,7 @@ public sealed class MkTempCommandTests {
 
 	[Fact]
 	public async Task CollisionsAreRetriedWithNewRandomCharacters() {
+		using var workspace = new Workspace();
 		var collision = System.IO.Path.Combine( workspace.Root, "name.aaaa" );
 		await File.WriteAllTextAsync( collision, "existing" );
 		var random = new SequenceRandomSource(
@@ -216,6 +234,7 @@ public sealed class MkTempCommandTests {
 
 	[Fact]
 	public async Task ExistingSymbolicLinkIsANameCollisionAndIsNotFollowed() {
+		using var workspace = new Workspace();
 		var target = System.IO.Path.Combine( workspace.Root, "target" );
 		var link = System.IO.Path.Combine( workspace.Root, "name.aaaa" );
 		await File.WriteAllTextAsync( target, "preserve" );
@@ -243,6 +262,7 @@ public sealed class MkTempCommandTests {
 		if ( OperatingSystem.IsWindows() ) {
 			return;
 		}
+		using var workspace = new Workspace();
 		var fileResult = await RunAsync( workspace, [ "-p", workspace.Root, "file.XXXX" ] );
 		var directoryResult = await RunAsync( workspace, [ "-d", "-p", workspace.Root, "dir.XXXX" ] );
 		var forbidden = UnixFileMode.GroupRead
@@ -257,6 +277,7 @@ public sealed class MkTempCommandTests {
 
 	[Fact]
 	public async Task OutputFailureRemovesCreatedFile() {
+		using var workspace = new Workspace();
 		var output = new ThrowingTextWriter();
 		var result = await RunAsync(
 			workspace,
@@ -269,6 +290,7 @@ public sealed class MkTempCommandTests {
 
 	[Fact]
 	public async Task QuietSuppressesOutputFailureDiagnosticAndStillCleansUp() {
+		using var workspace = new Workspace();
 		var result = await RunAsync(
 			workspace,
 			[ "-q", "-p", workspace.Root, "name.XXXX" ],
@@ -281,6 +303,7 @@ public sealed class MkTempCommandTests {
 
 	[Fact]
 	public async Task OutputFailureRemovesCreatedDirectory() {
+		using var workspace = new Workspace();
 		var result = await RunAsync(
 			workspace,
 			[ "-d", "-p", workspace.Root, "name.XXXX" ],
@@ -292,6 +315,7 @@ public sealed class MkTempCommandTests {
 
 	[Fact]
 	public async Task CancellationWhileReportingNameRemovesCreatedObject() {
+		using var workspace = new Workspace();
 		using var source = new CancellationTokenSource();
 		var output = new CancelingTextWriter( source );
 		var result = await RunAsync(
@@ -306,6 +330,7 @@ public sealed class MkTempCommandTests {
 
 	[Fact]
 	public async Task HelpAndVersionDoNotCreateObjects() {
+		using var workspace = new Workspace();
 		var help = await RunAsync( workspace, [ "--help" ] );
 		var version = await RunAsync( workspace, [ "--version" ] );
 		var shortVersion = await RunAsync( workspace, [ "-V" ] );
@@ -319,6 +344,7 @@ public sealed class MkTempCommandTests {
 
 	[Fact]
 	public async Task UnknownOptionReturnsFailure() {
+		using var workspace = new Workspace();
 		var result = await RunAsync( workspace, [ "--not-an-option" ] );
 		Assert.Equal( 1, result.Status );
 		Assert.Contains( "unrecognized option", result.Error );
@@ -326,6 +352,7 @@ public sealed class MkTempCommandTests {
 
 	[Fact]
 	public async Task CallerOwnedWritersAreNotDisposed() {
+		using var workspace = new Workspace();
 		var output = new TrackingTextWriter();
 		var error = new TrackingTextWriter();
 		var result = await RunAsync(

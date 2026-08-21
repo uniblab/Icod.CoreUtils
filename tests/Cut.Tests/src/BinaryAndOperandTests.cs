@@ -71,6 +71,7 @@ public sealed class BinaryAndOperandTests {
 	[Fact]
 	public async Task ReportsReadFailures() {
 		using var input = new ThrowingReadStream();
+		using var output = new MemoryStream();
 		var error = new StringWriter();
 		var context = new CommandContext( "cut", new StringReader( string.Empty ), new StringWriter(), error, input, output );
 		var status = await Command.RunAsync( [ "-b", "1" ], context );
@@ -82,6 +83,7 @@ public sealed class BinaryAndOperandTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task ReportsWriteFailures() {
+		using var input = new MemoryStream( "x\n"u8.ToArray() );
 		using var output = new ThrowingWriteStream();
 		var error = new StringWriter();
 		var context = new CommandContext( "cut", new StringReader( string.Empty ), new StringWriter(), error, input, output );
@@ -96,6 +98,8 @@ public sealed class BinaryAndOperandTests {
 	public async Task HonorsCancellation() {
 		using var cancellation = new CancellationTokenSource();
 		cancellation.Cancel();
+		using var input = new MemoryStream( "x\n"u8.ToArray() );
+		using var output = new MemoryStream();
 		var context = new CommandContext( "cut", new StringReader( string.Empty ), new StringWriter(), new StringWriter(), input, output, cancellationToken: cancellation.Token );
 		var status = await Command.RunAsync( [ "-b", "1" ], context );
 		Assert.Equal( CommandExitCodes.Canceled, status );

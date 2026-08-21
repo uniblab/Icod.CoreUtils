@@ -57,6 +57,7 @@ public sealed class ByteTokenReaderTests {
 	[Fact]
 	public async Task HonorsCancellation() {
 		using var input = new MemoryStream( Encoding.UTF8.GetBytes( "a" ) );
+		using var reader = new ByteTokenReader( input, Separators );
 		using var cancellation = new CancellationTokenSource();
 		cancellation.Cancel();
 		await Assert.ThrowsAsync<OperationCanceledException>( async () => {
@@ -69,6 +70,8 @@ public sealed class ByteTokenReaderTests {
 	[Fact]
 	public async Task CancelsBlockedRead() {
 		using var input = new BlockingReadStream();
+		using var reader = new ByteTokenReader( input, Separators );
+		using var cancellation = new CancellationTokenSource();
 		var read = reader.ReadTokenAsync( cancellation.Token ).AsTask();
 		await input.ReadStarted;
 		cancellation.Cancel();
@@ -93,6 +96,7 @@ public sealed class ByteTokenReaderTests {
 	/// <returns>A task representing the test.</returns>
 	[Fact]
 	public async Task RejectsReadsAfterDisposal() {
+		using var input = new MemoryStream( Encoding.UTF8.GetBytes( "a" ) );
 		var reader = new ByteTokenReader( input, Separators );
 		reader.Dispose();
 		await Assert.ThrowsAsync<ObjectDisposedException>( async () => {
