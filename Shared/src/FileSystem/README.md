@@ -62,10 +62,9 @@ Completion Gate E3 metadata is now owned by `Icod.CommandFramework.FileSystem.Me
 ## Framework-owned single-path mutation
 
 Completion Gate E4 mutation is owned by `Icod.CommandFramework.FileSystem.Mutation`. Coreutils consumes the framework race-aware single-path creation, linking, removal, mode mutation, UID/GID mutation, capability reporting, and identity-precondition contracts directly. G3G2 removes the duplicate local Mutation implementation and its duplicate Shared tests.
-## Recursive mutation and copying
+## Framework-owned recursive mutation and copying
 
-Completion Gate E5 lives in `Icod.CoreUtils.Shared.FileSystem.RecursiveMutation`. It consumes E1 events and E4 mutation preconditions instead of introducing another walker. It adds preserve-root and destination-containment preflight, root-relative destination mapping, hard-link identity tracking, sparse-range copying, requested-versus-required metadata policy, and deterministic reverse-order rollback. See [`RecursiveMutation/README.md`](RecursiveMutation/README.md).
-
+Completion Gate E5 recursive mutation is owned by `Icod.CommandFramework.FileSystem.RecursiveMutation`. Coreutils consumes the framework traversal planning, preserve-root and containment checks, hard-link identity tracking, sparse copying, metadata-preservation plans, and rollback journal directly. G3H2 removes the duplicate local RecursiveMutation implementation and tests.
 ## Transactional replacement
 
 Completion Gate E6 lives in `Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement`. It consumes secure sibling temporary creation, E3 metadata and stable identities, E4 mutation preconditions, E5 containment and metadata-preservation plans, and the existing file/directory durability operations. The transaction stages complete destination and recovery files before mutation, revalidates every pathname immediately before commit, supports GNU simple/numbered/existing backup naming, commits explicit recovery units, and continues rollback and cleanup after individual failures.

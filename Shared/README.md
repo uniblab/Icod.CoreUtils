@@ -16,7 +16,7 @@
 - `Icod.CommandFramework.FileSystem.Metadata` (package dependency): authoritative entry and filesystem metadata, explicit availability, E1 identity reuse, allocated-block accounting, and selective timestamp mutation.
 - `FileSystem.Ownership`: GNU/POSIX user and group resolution plus shared `chown`/`chgrp` recursive command policy.
 - `Icod.CommandFramework.FileSystem.Mutation` (package dependency): race-aware single-path creation, linking, removal, mode mutation, and UID/GID mutation with explicit capability and identity preconditions.
-- `FileSystem.RecursiveMutation`: E1-based recursive mutation/copy planning, preserve-root and containment preflight, hard-link and sparse-file preservation, metadata policy, and rollback cleanup.
+- `Icod.CommandFramework.FileSystem.RecursiveMutation` (package dependency): recursive mutation/copy planning, preserve-root and containment preflight, hard-link and sparse-file preservation, metadata policy, and rollback cleanup.
 - `FileSystem.TransactionalReplacement`: secure sibling staging, E3/E4 revalidation, atomic publication, GNU backup naming, per-file recovery units, metadata restoration, rollback, durability reporting, and deterministic cleanup.
 - `Platform`: BCL-first capability reporting and controlled unsupported results.
 
