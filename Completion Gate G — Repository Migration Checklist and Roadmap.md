@@ -246,7 +246,7 @@ No projects move during this phase.
 - [x] **G3D1 — File-mode value-model consumer cut-over**
   - move `PosixFileMode`, `PosixFileModeBits`, and `FileCreationMask` consumers to `Icod.CommandFramework.FileSystem.Modes`;
   - retain GNU mode parsing/expression policy and the Coreutils creation-mask provider in `Icod.CoreUtils.Shared.FileSystem.Modes`.
-- [ ] **G3D2 — File-mode value-model excision**
+- [x] **G3D2 — File-mode value-model excision**
   - remove the duplicate CoreUtils `PosixFileMode.cs`;
   - contract the Modes README around the retained GNU/Coreutils policy and framework value model.
 - [ ] Audit and contract the remaining filesystem boundaries (`Metadata`, `Mutation`, `RecursiveMutation`, `TransactionalReplacement`, `Traversal`, and root filesystem operations).
@@ -393,7 +393,7 @@ Current sequence:
 - [x] G3C1 — cut identity/capability/SELinux consumers over to `Icod.CommandFramework.Platform`.
 - [x] G3C2 — delete the duplicated framework-owned Platform implementation and tests.
 - [x] G3D1 — cut the neutral file-mode value model over to `Icod.CommandFramework.FileSystem.Modes`.
-- [ ] G3D2 — delete the duplicate CoreUtils file-mode value model and contract its documentation.
+- [x] G3D2 — delete the duplicate CoreUtils file-mode value model and contract its documentation.
 - [ ] Contract the remaining framework-owned filesystem boundaries.
 - [ ] Excise namespaces that are wholly owned by `Icod.CommandFramework`.
 - [ ] Audit and remove/rehome framework-owned `Shared.Tests` and `ProcessTestHost` infrastructure.
