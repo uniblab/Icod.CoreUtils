@@ -3,6 +3,8 @@ namespace Icod.CoreUtils.MkNod.Tests;
 using NodeCommand = Icod.CoreUtils.MkNod.Command;
 using Icod.CoreUtils.Shared.Diagnostics;
 using Icod.CoreUtils.Shared.FileSystem.Modes;
+using FileCreationMask = Icod.CommandFramework.FileSystem.Modes.FileCreationMask;
+using PosixFileMode = Icod.CommandFramework.FileSystem.Modes.PosixFileMode;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
 using Xunit;

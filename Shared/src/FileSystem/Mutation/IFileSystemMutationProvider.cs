@@ -1,4 +1,4 @@
-using Icod.CoreUtils.Shared.FileSystem.Modes;
+using Icod.CommandFramework.FileSystem.Modes;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
 
 namespace Icod.CoreUtils.Shared.FileSystem.Mutation;

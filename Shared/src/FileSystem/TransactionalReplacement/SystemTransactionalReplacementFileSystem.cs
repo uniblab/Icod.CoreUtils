@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using Icod.CoreUtils.Shared.FileSystem.Metadata;
-using Icod.CoreUtils.Shared.FileSystem.Modes;
+using Icod.CommandFramework.FileSystem.Modes;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
 using Icod.CoreUtils.Shared.FileSystem.RecursiveMutation;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;

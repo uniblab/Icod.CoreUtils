@@ -243,7 +243,13 @@ No projects move during this phase.
 - [x] **G3C2 — Platform implementation excision**
   - remove the duplicated framework-owned Platform implementation and framework-owned Platform tests;
   - contract the Platform README to the retained Coreutils responsibilities.
-- [ ] Audit and contract the remaining split namespaces, especially filesystem/mode boundaries.
+- [x] **G3D1 — File-mode value-model consumer cut-over**
+  - move `PosixFileMode`, `PosixFileModeBits`, and `FileCreationMask` consumers to `Icod.CommandFramework.FileSystem.Modes`;
+  - retain GNU mode parsing/expression policy and the Coreutils creation-mask provider in `Icod.CoreUtils.Shared.FileSystem.Modes`.
+- [ ] **G3D2 — File-mode value-model excision**
+  - remove the duplicate CoreUtils `PosixFileMode.cs`;
+  - contract the Modes README around the retained GNU/Coreutils policy and framework value model.
+- [ ] Audit and contract the remaining filesystem boundaries (`Metadata`, `Mutation`, `RecursiveMutation`, `TransactionalReplacement`, `Traversal`, and root filesystem operations).
 - [ ] Remove namespaces and tests that are wholly owned by `Icod.CommandFramework`.
 - [ ] Audit `Icod.CoreUtils.ProcessTestHost` after framework-owned process tests are removed.
 - [ ] Complete `Icod.CoreUtils.Shared` packaging and convert retained Coreutils commands to package references.
@@ -386,7 +392,9 @@ Current sequence:
 - [x] G3B — contract the split `Time` namespace.
 - [x] G3C1 — cut identity/capability/SELinux consumers over to `Icod.CommandFramework.Platform`.
 - [x] G3C2 — delete the duplicated framework-owned Platform implementation and tests.
-- [ ] Contract the remaining split namespaces, including filesystem/mode boundaries.
+- [x] G3D1 — cut the neutral file-mode value model over to `Icod.CommandFramework.FileSystem.Modes`.
+- [ ] G3D2 — delete the duplicate CoreUtils file-mode value model and contract its documentation.
+- [ ] Contract the remaining framework-owned filesystem boundaries.
 - [ ] Excise namespaces that are wholly owned by `Icod.CommandFramework`.
 - [ ] Audit and remove/rehome framework-owned `Shared.Tests` and `ProcessTestHost` infrastructure.
 - [ ] Publish the contracted `Icod.CoreUtils.Shared` package and convert retained Coreutils commands to package references.

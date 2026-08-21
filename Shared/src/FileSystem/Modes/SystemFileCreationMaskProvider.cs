@@ -1,5 +1,7 @@
 using System.Runtime.InteropServices;
 
+using FrameworkModes = Icod.CommandFramework.FileSystem.Modes;
+
 namespace Icod.CoreUtils.Shared.FileSystem.Modes;
 
 /// <summary>
@@ -13,7 +15,7 @@ namespace Icod.CoreUtils.Shared.FileSystem.Modes;
 public interface IFileCreationMaskProvider {
 	/// <summary>Gets the current ordinary-permission creation mask.</summary>
 	/// <returns>The current mask.</returns>
-	FileCreationMask GetCurrentMask();
+	FrameworkModes.FileCreationMask GetCurrentMask();
 }
 
 /// <summary>
@@ -29,9 +31,9 @@ public sealed class SystemFileCreationMaskProvider : IFileCreationMaskProvider {
 	public SystemFileCreationMaskProvider() { }
 
 	/// <inheritdoc/>
-	public FileCreationMask GetCurrentMask() {
+	public FrameworkModes.FileCreationMask GetCurrentMask() {
 		if ( OperatingSystem.IsWindows() ) {
-			return FileCreationMask.None;
+			return FrameworkModes.FileCreationMask.None;
 		}
 		if ( OperatingSystem.IsLinux() && TryReadLinuxProcMask( out var linuxMask ) ) {
 			return linuxMask;
@@ -42,19 +44,19 @@ public sealed class SystemFileCreationMaskProvider : IFileCreationMaskProvider {
 		if ( OperatingSystem.IsMacOS() ) {
 			return QueryAndRestoreUnixMask( NativeUmaskDarwin );
 		}
-		return FileCreationMask.None;
+		return FrameworkModes.FileCreationMask.None;
 	}
 
-	private static FileCreationMask QueryAndRestoreUnixMask( Func<uint, uint> nativeUmask ) {
+	private static FrameworkModes.FileCreationMask QueryAndRestoreUnixMask( Func<uint, uint> nativeUmask ) {
 		lock ( NativeUmaskLock ) {
 			var previous = nativeUmask( 0 );
 			_ = nativeUmask( previous );
-			return new FileCreationMask( checked((int)(previous & 0x01ffU)) );
+			return new FrameworkModes.FileCreationMask( checked((int)(previous & 0x01ffU)) );
 		}
 	}
 
-	private static bool TryReadLinuxProcMask( out FileCreationMask mask ) {
-		mask = FileCreationMask.None;
+	private static bool TryReadLinuxProcMask( out FrameworkModes.FileCreationMask mask ) {
+		mask = FrameworkModes.FileCreationMask.None;
 		try {
 			foreach ( var line in File.ReadLines( "/proc/self/status" ) ) {
 				if ( !line.StartsWith( "Umask:", StringComparison.Ordinal ) ) {
@@ -65,7 +67,7 @@ public sealed class SystemFileCreationMaskProvider : IFileCreationMaskProvider {
 					return false;
 				}
 				var parsed = Convert.ToInt32( value, 8 );
-				mask = new FileCreationMask( parsed & 0x01ff );
+				mask = new FrameworkModes.FileCreationMask( parsed & 0x01ff );
 				return true;
 			}
 		} catch ( IOException ) {

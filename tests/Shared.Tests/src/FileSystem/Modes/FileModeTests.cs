@@ -1,4 +1,6 @@
 using Icod.CoreUtils.Shared.FileSystem.Modes;
+using FileCreationMask = Icod.CommandFramework.FileSystem.Modes.FileCreationMask;
+using PosixFileMode = Icod.CommandFramework.FileSystem.Modes.PosixFileMode;
 using Xunit;
 
 namespace Icod.CoreUtils.Shared.Tests.FileSystem.Modes;
