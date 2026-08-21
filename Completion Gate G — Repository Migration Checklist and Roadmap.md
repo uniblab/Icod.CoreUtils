@@ -292,7 +292,7 @@ No projects move during this phase.
   - contracted the host to the two Coreutils-required behaviors: `exit` and `sleep`;
   - kept the framework test host independent in the `Icod.CommandFramework` repository.
 - [ ] **G3M — `Icod.CoreUtils.Shared` package closure**
-  - [ ] **G3M1 — package metadata freeze and local package validation**
+  - [x] **G3M1 — package metadata freeze and local package validation**
     - freeze the contracted package identity at `Icod.CoreUtils.Shared` 1.0.0 for `net10.0`;
     - align symbols, deterministic build, repository metadata, package icon, README, license, and package tags with the published foundation-package conventions;
     - pack and smoke-restore the package against published `Icod.CommandFramework` 1.0.0 and `Icod.Path` 1.0.0 dependencies before publication.
