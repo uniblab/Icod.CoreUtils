@@ -2,14 +2,13 @@ using Path = global::System.IO.Path;
 using System.Runtime.InteropServices;
 using PathIndirectionInfo = Icod.Path.PathIndirectionInfo;
 using PathIndirectionKind = Icod.Path.PathIndirectionKind;
-using FrameworkFileSystemOperations = Icod.CommandFramework.FileSystem.IFileSystemOperations;
-using FrameworkSystemFileSystemOperations = Icod.CommandFramework.FileSystem.SystemFileSystemOperations;
 using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CommandFramework.FileSystem.Mutation;
 using Icod.CommandFramework.FileSystem.RecursiveMutation;
 using Icod.CommandFramework.FileSystem.TransactionalReplacement;
 using Icod.CommandFramework.FileSystem.Traversal;
 
+using Icod.CommandFramework.FileSystem;
 namespace Icod.CoreUtils.Shared.FileSystem.CopyMove;
 
 /// <summary>
@@ -31,7 +30,7 @@ public sealed class CopyMoveEngine {
 			SystemReadOnlyFileSystemProvider.Instance,
 			SystemFileSystemMetadataProvider.Instance,
 			SystemTransactionalReplacementFileSystem.Instance,
-			FrameworkSystemFileSystemOperations.Instance
+			SystemFileSystemOperations.Instance
 		) {
 	}
 
@@ -44,7 +43,7 @@ public sealed class CopyMoveEngine {
 		IReadOnlyFileSystemProvider readOnlyProvider,
 		IFileSystemMetadataProvider metadataProvider,
 		ITransactionalReplacementFileSystem replacementFileSystem,
-		FrameworkFileSystemOperations fileSystemOperations
+		IFileSystemOperations fileSystemOperations
 	) : this(
 		readOnlyProvider,
 		metadataProvider,
@@ -64,7 +63,7 @@ public sealed class CopyMoveEngine {
 		IReadOnlyFileSystemProvider readOnlyProvider,
 		IFileSystemMetadataProvider metadataProvider,
 		ITransactionalReplacementFileSystem replacementFileSystem,
-		FrameworkFileSystemOperations fileSystemOperations,
+		IFileSystemOperations fileSystemOperations,
 		IFileSystemMutationProvider mutationProvider
 	) {
 		this.readOnlyProvider = readOnlyProvider ?? throw new ArgumentNullException( nameof( readOnlyProvider ) );

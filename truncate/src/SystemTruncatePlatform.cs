@@ -3,7 +3,7 @@ namespace Icod.CoreUtils.Truncate;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text;
-using Icod.CoreUtils.Shared.FileSystem;
+using Icod.CommandFramework.FileSystem;
 using Icod.CoreUtils.Shared.Platform;
 
 /// <summary>

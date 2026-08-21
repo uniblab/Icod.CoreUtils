@@ -1,10 +1,12 @@
 # Shared.FileSystem
 
-`Shared.FileSystem` contains the Coreutils-specific filesystem policy that remains after neutral host-filesystem mechanism moved to `Icod.CommandFramework`. The local operations/copy layers still support Coreutils behavior such as flush/allocation policy, GNU ownership handling, recursive mutation/copy policy, and transactional replacement. Read-only traversal, authoritative metadata, and single-path mutation are now consumed from the published framework package.
+`Shared.FileSystem` contains the Coreutils-specific filesystem policy that remains after neutral host-filesystem mechanism moved to `Icod.CommandFramework`. Coreutils-local code now concentrates on GNU copy/move policy, ownership handling, mode parsing, and filesystem-usage reporting. Neutral durable-flush, sparse-allocation, traversal, metadata, mutation, recursive-mutation, and transactional-replacement mechanisms are consumed from the published framework package.
 
 The operations layer distinguishes operating-system API availability from the behavior of an individual filesystem or volume. Every operation therefore returns `PlatformOperationResult` rather than silently claiming unsupported semantics. The traversal layer yields caller-independent roots, entries, event phases, identities, boundaries, cycles, and structured errors. The metadata layer enriches those same identities with typed values whose availability is always explicit.
 
-## Operations
+## Framework-owned root filesystem operations
+
+G3J confirms that `FileSystemCapabilities`, `IFileSystemOperations`, and `SystemFileSystemOperations` are neutral framework mechanism. Coreutils consumes those contracts directly from `Icod.CommandFramework.FileSystem`; the duplicate CoreUtils root declarations and their duplicate Shared tests are removed.
 
 | Requirement | API |
 |---|---|
