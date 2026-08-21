@@ -2,7 +2,7 @@ namespace Icod.CoreUtils.Mv.Tests;
 
 using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
-using Icod.CoreUtils.Shared.FileSystem.Traversal;
+using Icod.CommandFramework.FileSystem.Traversal;
 using MvCommand = Icod.CoreUtils.Mv.Command;
 using Xunit;
 

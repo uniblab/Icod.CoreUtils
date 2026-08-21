@@ -7,7 +7,7 @@ using Icod.CoreUtils.Shared.Diagnostics;
 using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
 using Icod.CoreUtils.Shared.FileSystem.Ownership;
-using Icod.CoreUtils.Shared.FileSystem.Traversal;
+using Icod.CommandFramework.FileSystem.Traversal;
 using Icod.CommandFramework.Platform;
 
 /// <summary>Implements GNU <c>chown</c> through the shared ownership policy.</summary>

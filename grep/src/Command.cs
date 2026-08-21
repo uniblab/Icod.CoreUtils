@@ -7,7 +7,7 @@ using System.Globalization;
 using System.Text;
 using Icod.CoreUtils.Shared.CommandLine;
 using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.FileSystem.Traversal;
+using Icod.CommandFramework.FileSystem.Traversal;
 using Icod.CoreUtils.Shared.IO;
 using Icod.CoreUtils.Shared.Records;
 using Icod.CoreUtils.Shared.RegularExpressions;

@@ -11,7 +11,7 @@ using FileCreationMask = Icod.CommandFramework.FileSystem.Modes.FileCreationMask
 using PosixFileMode = Icod.CommandFramework.FileSystem.Modes.PosixFileMode;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
 using Icod.CoreUtils.Shared.FileSystem.RecursiveMutation;
-using Icod.CoreUtils.Shared.FileSystem.Traversal;
+using Icod.CommandFramework.FileSystem.Traversal;
 
 /// <summary>
 /// Implements GNU <c>chmod</c> over the shared metadata, traversal, and mutation contracts.

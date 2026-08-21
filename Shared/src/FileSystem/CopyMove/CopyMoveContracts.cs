@@ -1,7 +1,7 @@
 using Path = global::System.IO.Path;
 using Icod.CoreUtils.Shared.FileSystem.RecursiveMutation;
 using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;
-using Icod.CoreUtils.Shared.FileSystem.Traversal;
+using Icod.CommandFramework.FileSystem.Traversal;
 
 namespace Icod.CoreUtils.Shared.FileSystem.CopyMove;
 

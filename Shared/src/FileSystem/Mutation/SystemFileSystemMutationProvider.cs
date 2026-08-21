@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CommandFramework.FileSystem.Modes;
-using Icod.CoreUtils.Shared.FileSystem.Traversal;
+using Icod.CommandFramework.FileSystem.Traversal;
 using Microsoft.Win32.SafeHandles;
 
 namespace Icod.CoreUtils.Shared.FileSystem.Mutation;

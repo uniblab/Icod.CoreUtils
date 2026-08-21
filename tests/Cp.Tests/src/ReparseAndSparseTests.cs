@@ -3,7 +3,7 @@ namespace Icod.CoreUtils.Cp.Tests;
 using Icod.CoreUtils.Shared.FileSystem;
 using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
-using Icod.CoreUtils.Shared.FileSystem.Traversal;
+using Icod.CommandFramework.FileSystem.Traversal;
 using CpCommand = Icod.CoreUtils.Cp.Command;
 using Xunit;
 

@@ -252,6 +252,7 @@ No projects move during this phase.
 - [x] **G3E1 — Metadata consumer cut-over**
   - move every surviving consumer of `Icod.CoreUtils.Shared.FileSystem.Metadata` to `Icod.CommandFramework.FileSystem.Metadata`;
   - leave the duplicate Metadata implementation and its duplicated Shared tests in place only until G3E2.
+  - follow-up namespace alignment: because the framework Metadata contracts expose `Icod.CommandFramework.FileSystem.Traversal` identities, surviving Metadata consumers were also aligned to the framework Traversal namespace; the duplicate Traversal implementation/tests remain for a later excision tranche.
 - [ ] **G3E2 — Metadata implementation/test excision**
   - remove the duplicate CoreUtils Metadata source directory;
   - remove the duplicated Metadata tests from `Icod.CoreUtils.Shared.Tests`.

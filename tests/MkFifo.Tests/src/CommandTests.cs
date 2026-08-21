@@ -7,7 +7,7 @@ using Icod.CoreUtils.Shared.FileSystem.Modes;
 using FileCreationMask = Icod.CommandFramework.FileSystem.Modes.FileCreationMask;
 using PosixFileMode = Icod.CommandFramework.FileSystem.Modes.PosixFileMode;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
-using Icod.CoreUtils.Shared.FileSystem.Traversal;
+using Icod.CommandFramework.FileSystem.Traversal;
 using Xunit;
 
 /// <summary>Exercises GNU-compatible <c>mkfifo</c> behavior.</summary>

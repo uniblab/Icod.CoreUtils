@@ -3,7 +3,7 @@ namespace Icod.CoreUtils.Stat;
 using System.Globalization;
 using System.Text;
 using Icod.CommandFramework.FileSystem.Metadata;
-using Icod.CoreUtils.Shared.FileSystem.Traversal;
+using Icod.CommandFramework.FileSystem.Traversal;
 
 /// <summary>Expands GNU <c>stat</c> file and filesystem format directives.</summary>
 internal static class StatFormatEngine {

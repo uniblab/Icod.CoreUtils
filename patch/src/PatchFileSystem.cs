@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 using Icod.CoreUtils.Shared.FileSystem;
 using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
-using Icod.CoreUtils.Shared.FileSystem.Traversal;
+using Icod.CommandFramework.FileSystem.Traversal;
 using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;
 using Icod.CoreUtils.Shared.Temporary;
 using Icod.Path;
