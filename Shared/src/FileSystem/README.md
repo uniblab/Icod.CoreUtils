@@ -65,12 +65,9 @@ Completion Gate E4 mutation is owned by `Icod.CommandFramework.FileSystem.Mutati
 ## Framework-owned recursive mutation and copying
 
 Completion Gate E5 recursive mutation is owned by `Icod.CommandFramework.FileSystem.RecursiveMutation`. Coreutils consumes the framework traversal planning, preserve-root and containment checks, hard-link identity tracking, sparse copying, metadata-preservation plans, and rollback journal directly. G3H2 removes the duplicate local RecursiveMutation implementation and tests.
-## Transactional replacement
+## Framework-owned transactional replacement
 
-Completion Gate E6 lives in `Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement`. It consumes secure sibling temporary creation, E3 metadata and stable identities, E4 mutation preconditions, E5 containment and metadata-preservation plans, and the existing file/directory durability operations. The transaction stages complete destination and recovery files before mutation, revalidates every pathname immediately before commit, supports GNU simple/numbered/existing backup naming, commits explicit recovery units, and continues rollback and cleanup after individual failures.
-
-Atomicity, durability, rollback, cleanup, and partial-commit states are returned explicitly. Commands retain policy for prompts, force/update decisions, and GNU-visible multi-file behavior. See [`TransactionalReplacement/README.md`](TransactionalReplacement/README.md).
-
+Completion Gate E6 transactional replacement is owned by `Icod.CommandFramework.FileSystem.TransactionalReplacement`. Coreutils consumes the framework staging, pathname revalidation, backup-name generation, recovery-unit, commit, rollback, cleanup, durability, and partial-commit contracts directly. G3I2 removes the duplicate local TransactionalReplacement implementation and tests. Commands retain GNU-visible prompting, force/update, and multi-file policy.
 ## Ownership mutation
 
 Batch 42 extends the E4 provider with explicit UID/GID mutation and ownership-aware `--from` preconditions, and adds `Icod.CoreUtils.Shared.FileSystem.Ownership` for GNU name/ID resolution plus the common `chown`/`chgrp` recursive policy. Recursive directory mutation is applied in postorder, and traversal-link policy remains independent of terminal dereferencing. Windows reports POSIX ownership mutation as unsupported rather than approximating it with ACLs or file attributes. See [`Ownership/README.md`](Ownership/README.md).

@@ -272,9 +272,12 @@ No projects move during this phase.
 - [x] **G3I1 — TransactionalReplacement consumer cut-over**
   - move surviving consumers of `Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement` to `Icod.CommandFramework.FileSystem.TransactionalReplacement`;
   - leave the duplicate TransactionalReplacement implementation and duplicated Shared tests in place until G3I2.
-- [ ] **G3I2 — TransactionalReplacement implementation/test excision**
+- [x] **G3I2 — TransactionalReplacement implementation/test excision**
   - remove the duplicate CoreUtils `FileSystem.TransactionalReplacement` implementation and duplicated Shared tests.
-- [ ] Audit and contract root filesystem operations.
+- [ ] **G3J — Root filesystem operations audit and contraction**
+  - compare `FileSystemCapabilities`, `IFileSystemOperations`, and `SystemFileSystemOperations` with the framework package;
+  - cut neutral consumers to `Icod.CommandFramework.FileSystem` where contracts match;
+  - preserve any Coreutils-only delta explicitly rather than deleting it blindly.
 - [ ] Remove namespaces and tests that are wholly owned by `Icod.CommandFramework`.
 - [ ] Audit `Icod.CoreUtils.ProcessTestHost` after framework-owned process tests are removed.
 - [ ] Complete `Icod.CoreUtils.Shared` packaging and convert retained Coreutils commands to package references.
@@ -427,8 +430,11 @@ Current sequence:
 - [x] G3H1 — cut RecursiveMutation consumers over to `Icod.CommandFramework.FileSystem.RecursiveMutation`.
 - [x] G3H2 — remove the duplicate CoreUtils RecursiveMutation implementation and tests.
 - [x] G3I1 — cut TransactionalReplacement consumers over to `Icod.CommandFramework.FileSystem.TransactionalReplacement`.
-- [ ] G3I2 — remove the duplicate CoreUtils TransactionalReplacement implementation and tests.
-- [ ] Audit and contract root filesystem operations.
+- [x] G3I2 — remove the duplicate CoreUtils TransactionalReplacement implementation and tests.
+- [ ] **G3J — Root filesystem operations audit and contraction**
+  - compare `FileSystemCapabilities`, `IFileSystemOperations`, and `SystemFileSystemOperations` with the framework package;
+  - cut neutral consumers to `Icod.CommandFramework.FileSystem` where contracts match;
+  - preserve any Coreutils-only delta explicitly rather than deleting it blindly.
 - [ ] Excise namespaces that are wholly owned by `Icod.CommandFramework`.
 - [ ] Audit and remove/rehome framework-owned `Shared.Tests` and `ProcessTestHost` infrastructure.
 - [ ] Publish the contracted `Icod.CoreUtils.Shared` package and convert retained Coreutils commands to package references.
