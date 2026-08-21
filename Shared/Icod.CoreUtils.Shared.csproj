@@ -45,26 +45,6 @@
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
 	</PropertyGroup>
-	<PropertyGroup>
-		<PackageId>Icod.CoreUtils.Shared</PackageId>
-		<PackageVersion>1.0.0</PackageVersion>
-		<PackageReleaseNotes>Initial contracted Coreutils shared-policy release</PackageReleaseNotes>
-		<Authors>Timothy J. Bruce</Authors>
-		<Description>GNU Coreutils/Fileutils/Textutils-specific shared policy and behavior for the Icod command implementations.</Description>
-		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<PackageIcon>icon.png</PackageIcon>
-		<PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
-		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-		<IncludeContentInPack>true</IncludeContentInPack>
-		<IncludeSymbols>True</IncludeSymbols>
-		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-		<PublishRepositoryUrl>true</PublishRepositoryUrl>
-		<Deterministic>true</Deterministic>
-		<PackageTags>gnu;coreutils;fileutils;textutils;shared;command-line;filesystem;formatting;numerics;date;directory-listing;dotnet;csharp</PackageTags>
-		<RepositoryUrl>https://github.com/uniblab/Icod.CoreUtils</RepositoryUrl>
-		<RepositoryType>git</RepositoryType>
-		<GenerateAppxPackageOnBuild>False</GenerateAppxPackageOnBuild>
-	</PropertyGroup>
 	<ItemGroup>
 		<None Include="icon.png" Pack="true" PackagePath="" />
 	</ItemGroup>

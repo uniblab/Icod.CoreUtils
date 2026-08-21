@@ -4,21 +4,26 @@
 
 Completion Gate G converts the present multi-suite incubation repository into the final repository and package architecture without changing command semantics.
 
-The intended dependency model is provisionally:
+The intended dependency model distinguishes published neutral foundations from repository-local suite implementation libraries:
 
 ```text
-Icod.Path
-    ↓ where canonical-path contracts are required
-Icod.CommandFramework
-    ↓
-suite-specific Shared / engine library, where required
-    ↓
-individual command projects
+Published neutral foundations
+    Icod.CommandFramework
+    Icod.Path, where canonical-path contracts are required
+            ↓ external PackageReference
+Extracted suite repository
+    suite-specific Shared / engine library, where required
+            ↓ repository-local ProjectReference
+    individual command projects
 ```
 
-`Icod.Path` is retained as a separate neutral package. Gate G1 is complete, and CoreUtils consumes the published package rather than a source-tree project.
+Individual commands may also reference the published neutral foundations directly when they consume those contracts without a suite-specific Shared layer.
 
-No command suite may become a production dependency of `Icod.CommandFramework`, and sibling command suites must not acquire runtime dependencies on one another merely because they were developed together.
+`Icod.Path` is retained as a separate neutral package. Gate G1 is complete, and CoreUtils consumes the published package rather than a source-tree project. `Icod.CommandFramework` is likewise an independent published foundation.
+
+A suite-specific Shared/engine class library is **not automatically a package boundary**. In particular, `Icod.CoreUtils.Shared` is the permanent repository-local Shared library for the GNU Coreutils/Fileutils/Textutils family: it remains in the `Icod.CoreUtils` repository, is built and released with that suite, and is consumed by same-repository Coreutils projects through `ProjectReference`. It is **not** an independently published NuGet.org or GitHub Packages dependency.
+
+No command suite may become a production dependency of `Icod.CommandFramework`, and sibling command suites must not acquire runtime dependencies on one another merely because they were developed together. Sibling suites must consume neutral contracts from `Icod.CommandFramework` and `Icod.Path` directly rather than using `Icod.CoreUtils.Shared` as a package bridge.
 
 ---
 
@@ -43,16 +48,18 @@ No command suite may become a production dependency of `Icod.CommandFramework`, 
 ## Icod.CoreUtils
 
 - [ ] Retain all genuine GNU Coreutils/Fileutils/Textutils command projects.
-- [ ] Audit `Icod.CoreUtils.Shared`.
-- [ ] Move demonstrated cross-suite APIs from `Icod.CoreUtils.Shared` to `Icod.CommandFramework`.
-- [ ] Retain only Coreutils/Fileutils/Textutils-specific behavior in `Icod.CoreUtils.Shared`.
-- [ ] Split `Shared.Tests` between framework tests and remaining Coreutils Shared tests.
+- [x] Audit `Icod.CoreUtils.Shared`.
+- [x] Move demonstrated cross-suite APIs from `Icod.CoreUtils.Shared` to `Icod.CommandFramework`.
+- [x] Retain only Coreutils/Fileutils/Textutils-specific behavior in `Icod.CoreUtils.Shared`.
+- [x] Split `Shared.Tests` between framework tests and remaining Coreutils Shared tests.
 - [x] Audit `Icod.CoreUtils.ProcessTestHost`.
   - Decision: retain it as a small repository-local test host for Coreutils integration tests.
   - `Nice.Tests` requires only deterministic child exit behavior.
   - `Timeout.Tests` requires only deterministic child sleep behavior.
   - Framework process-runner tests use the independent `Icod.CommandFramework.ProcessTestHost`; Coreutils does not reference that test project.
-- [ ] Convert retained Coreutils projects from transitional source-tree references to published package references.
+- [ ] Retain `Icod.CoreUtils.Shared` as a repository-local class-library project and do not publish it as an independently downloadable package.
+- [ ] Preserve `ProjectReference` from genuine Coreutils/Fileutils/Textutils consumers to `Icod.CoreUtils.Shared` where that suite-local reuse is required.
+- [ ] Use published `Icod.CommandFramework` and `Icod.Path` packages for neutral cross-repository dependencies; do not route sibling suites through `Icod.CoreUtils.Shared`.
 - [ ] Remove every sibling-suite project after successful extraction.
 - [ ] Remove stale solution folders, packaging entries, output-path exceptions, CI references, and documentation references.
 
@@ -224,8 +231,9 @@ No projects move during this phase.
 - [x] Make it depend on `Icod.CommandFramework`.
 - [x] Add the published `Icod.Path` package dependency where genuinely required.
 - [x] Split/rehome tests appropriately.
-- [ ] Publish `Icod.CoreUtils.Shared`.
-- [ ] Convert Coreutils commands to package references.
+- [x] Freeze the permanent distribution boundary: `Icod.CoreUtils.Shared` remains an internal class-library project in the `Icod.CoreUtils` repository and is not independently published.
+- [ ] Retain same-repository `ProjectReference` relationships from genuine Coreutils consumers to `Icod.CoreUtils.Shared`.
+- [ ] Ensure neutral external dependencies resolve through published `Icod.CommandFramework` and `Icod.Path` packages rather than through a published CoreUtils Shared package.
 - [ ] Build/test Coreutils without sibling-suite source projects being needed.
 
 ### G3 contraction progress
@@ -291,24 +299,30 @@ No projects move during this phase.
   - retained `Icod.CoreUtils.ProcessTestHost` as a repository-local integration-test executable because `Nice.Tests` and `Timeout.Tests` still require real child processes;
   - contracted the host to the two Coreutils-required behaviors: `exit` and `sleep`;
   - kept the framework test host independent in the `Icod.CommandFramework` repository.
-- [ ] **G3M — `Icod.CoreUtils.Shared` package closure**
-  - [x] **G3M1 — package metadata freeze and local package validation**
-    - freeze the contracted package identity at `Icod.CoreUtils.Shared` 1.0.0 for `net10.0`;
-    - align symbols, deterministic build, repository metadata, package icon, README, license, and package tags with the published foundation-package conventions;
-    - pack and smoke-restore the package against published `Icod.CommandFramework` 1.0.0 and `Icod.Path` 1.0.0 dependencies before publication.
-  - [ ] **G3M2 — publish and Coreutils consumer cut-over**
-    - publish `Icod.CoreUtils.Shared` 1.0.0 to the permanent package feeds;
-    - convert retained Coreutils command projects from the transitional Shared project reference to `PackageReference Include="Icod.CoreUtils.Shared" Version="1.0.0"`;
-    - build/test the in-repository Coreutils consumers against the published package before entering G3N.
+- [ ] **G3M — `Icod.CoreUtils.Shared` internal-library boundary closure**
+  - [x] **G3M1 — package-boundary evaluation and local validation**
+    - contract the `Icod.CoreUtils.Shared` surface and prove that it can pack and smoke-restore against published `Icod.CommandFramework` 1.0.0 and `Icod.Path` 1.0.0 dependencies;
+    - record that technical packageability was successfully demonstrated;
+    - architecture review nevertheless found no independently justified distribution boundary: the retained library is Coreutils-family implementation, not a cross-suite foundation, so separate publication is rejected.
+  - [ ] **G3M2 — internal-library boundary freeze and Coreutils consumer validation**
+    - remove publication-only intent from the Shared project, release workflow, and package-install documentation; do not publish `Icod.CoreUtils.Shared` independently to NuGet.org or GitHub Packages;
+    - retain `ProjectReference` from genuine Coreutils/Fileutils/Textutils command projects to `Icod.CoreUtils.Shared`;
+    - continue consuming published `Icod.CommandFramework` 1.0.0 and `Icod.Path` 1.0.0 as the neutral external package dependencies where required;
+    - treat any remaining sibling-suite `Icod.CoreUtils.Shared` references as transitional extraction debt to be replaced directly by the appropriate neutral foundation packages during G4 through G8; no sibling suite may consume a published `Icod.CoreUtils.Shared` package;
+    - build/test the in-repository Coreutils consumers with `Icod.CoreUtils.Shared` built from source before entering G3N.
 - [ ] **G3N — Isolated Coreutils validation and G3 closure**
-  - build/test Coreutils without sibling-suite source projects;
+  - build/test the retained Coreutils projects, `Icod.CoreUtils.Shared`, its tests, and the repository-local ProcessTestHost without sibling-suite source projects;
+  - verify that genuine Coreutils consumers use same-repository `ProjectReference` for `Icod.CoreUtils.Shared` and that no Coreutils project uses `PackageReference Include="Icod.CoreUtils.Shared"`;
+  - verify that all cross-repository dependencies required by this isolated build resolve from the published neutral packages;
   - remove stale solution, CI, output-path, packaging, and documentation references exposed by the isolation build;
   - mark G3 complete only after the contracted repository succeeds independently.
 
-**Exit criterion:** `Icod.CoreUtils.Shared` is no longer an incubation project.
+**Exit criterion:** `Icod.CoreUtils.Shared` is no longer an incubation project: it is the permanent repository-local Shared library for Coreutils/Fileutils/Textutils, contains no cross-suite foundation ownership, is not independently published, and is not a permitted dependency of extracted sibling suites.
 ## G4 — Pilot repository extractions
 
-Use small suites first to prove the packaging procedure before moving the large families.
+Use small suites first to prove the repository-extraction and external-package procedure before moving the large families.
+
+In every extraction below, replacing a transitional CoreUtils Shared reference means referencing the actual published neutral owner (`Icod.CommandFramework` and, where applicable, `Icod.Path`) directly. It never means replacing the project reference with an `Icod.CoreUtils.Shared` package.
 
 ### G4.1 — Icod.UtilLinux
 
@@ -385,7 +399,8 @@ Patch is deliberately late because it exercises both `Icod.Path` and some of the
 - [ ] Remove stale CI and packaging references.
 - [ ] Remove stale roadmap inventory text.
 - [ ] Confirm no production CoreUtils project references a sibling suite.
-- [ ] Confirm CoreUtils uses only published neutral/CoreUtils packages.
+- [ ] Confirm every CoreUtils **external** dependency is a published neutral package and that `Icod.CoreUtils.Shared` remains a same-repository project dependency.
+- [ ] Confirm no CoreUtils project uses a package reference to `Icod.CoreUtils.Shared`.
 - [ ] Run complete Debug/Staging/Release build.
 - [ ] Run Windows/Ubuntu/macOS CI.
 - [ ] Verify clean checkout package restore.
@@ -395,15 +410,15 @@ Patch is deliberately late because it exercises both `Icod.Path` and some of the
 ## G10 — Architecture closure
 
 - [ ] Publish final architecture/migration document.
-- [ ] Document repository URLs and package names.
+- [ ] Document repository URLs, published external package names, and repository-local Shared/engine boundaries.
 - [ ] Document executable ownership.
-- [ ] Document package dependency direction.
+- [ ] Document external package dependency direction and internal project-reference direction.
 - [ ] Document versioning policy.
 - [ ] Document release/CI policy.
 - [ ] Document textual interoperability boundaries.
 - [ ] Confirm no circular dependency.
 - [ ] Confirm `Icod.CommandFramework` has no command-suite dependency.
-- [ ] Confirm every repository builds using **published packages**, not neighboring source trees.
+- [ ] Confirm every repository builds using published **external** dependency packages plus its own repository-local project references, never neighboring source trees.
 - [ ] Tick Completion Gate G complete.
 
 ---
@@ -425,10 +440,13 @@ Every extracted repository must retain:
 - [ ] UTF-8/LF policy;
 - [ ] Windows/Ubuntu/macOS CI;
 - [ ] deterministic package restore;
-- [ ] package/version metadata;
+- [ ] repository version/release metadata, with package metadata only for artifacts intentionally published as packages;
+- [ ] repository-local `ProjectReference` relationships for suite-specific Shared/engine libraries unless a separate package boundary is independently justified;
 - [ ] no references back into the old CoreUtils repository.
 
-A migration is **not complete merely because the files have moved**. It is complete only when the extracted repository builds and tests independently from a clean checkout using the published dependency packages.
+A migration is **not complete merely because the files have moved**. It is complete only when the extracted repository builds and tests independently from a clean checkout using published external dependency packages together with its own repository-local project references.
+
+A suite-specific Shared/engine assembly does not become a separately published package merely because multiple projects inside one repository consume it. Cross-repository reuse must be satisfied by the neutral published foundations or by another independently justified package boundary.
 
 ---
 
@@ -457,9 +475,10 @@ Current sequence:
   - compare `FileSystemCapabilities`, `IFileSystemOperations`, and `SystemFileSystemOperations` with the framework package;
   - cut neutral consumers to `Icod.CommandFramework.FileSystem` where contracts match;
   - preserve any Coreutils-only delta explicitly rather than deleting it blindly.
-- [ ] Excise namespaces that are wholly owned by `Icod.CommandFramework`.
-- [ ] Audit and remove/rehome framework-owned `Shared.Tests` and `ProcessTestHost` infrastructure.
-- [ ] Publish the contracted `Icod.CoreUtils.Shared` package and convert retained Coreutils commands to package references.
-- [ ] Run the G3 clean-checkout/build/test closure before beginning G4 repository extraction.
+- [x] **G3K1/G3K2 — Remaining framework-owned namespace consumer cut-over and implementation/test excision.**
+- [x] **G3L — ProcessTestHost audit and contraction.**
+- [x] **G3M1 — Package-boundary evaluation and local validation:** local pack/restore proved the contracted library is technically packageable, but the architecture review rejected an independent distribution boundary.
+- [ ] **G3M2 — Internal-library boundary freeze and Coreutils consumer validation:** keep `Icod.CoreUtils.Shared` in-repository, remove independent-publication intent, retain same-repository project references, and validate its published neutral dependencies.
+- [ ] **G3N — Isolated Coreutils validation and G3 closure:** run the clean-checkout/build/test closure before beginning G4 repository extraction.
 
 Do not begin G4 pilot extractions until the G3 exit criterion is satisfied.
