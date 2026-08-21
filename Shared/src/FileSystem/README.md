@@ -1,6 +1,6 @@
 # Shared.FileSystem
 
-`Shared.FileSystem` contains the Coreutils-specific filesystem policy that remains after neutral host-filesystem mechanism moved to `Icod.CommandFramework`. The local operations/copy/mutation layers still support Coreutils behavior such as flush/allocation policy, GNU ownership handling, recursive mutation/copy policy, and transactional replacement. Read-only traversal and authoritative metadata are now consumed from the published framework package.
+`Shared.FileSystem` contains the Coreutils-specific filesystem policy that remains after neutral host-filesystem mechanism moved to `Icod.CommandFramework`. The local operations/copy layers still support Coreutils behavior such as flush/allocation policy, GNU ownership handling, recursive mutation/copy policy, and transactional replacement. Read-only traversal, authoritative metadata, and single-path mutation are now consumed from the published framework package.
 
 The operations layer distinguishes operating-system API availability from the behavior of an individual filesystem or volume. Every operation therefore returns `PlatformOperationResult` rather than silently claiming unsupported semantics. The traversal layer yields caller-independent roots, entries, event phases, identities, boundaries, cycles, and structured errors. The metadata layer enriches those same identities with typed values whose availability is always explicit.
 
@@ -59,6 +59,9 @@ Completion Gate E1 traversal is owned by `Icod.CommandFramework.FileSystem.Trave
 ## Framework-owned authoritative metadata and timestamps
 
 Completion Gate E3 metadata is now owned by `Icod.CommandFramework.FileSystem.Metadata`. Coreutils consumes `IFileSystemMetadataProvider`, `SystemFileSystemMetadataProvider`, `FileSystemMetadata`, `FileSystemInformation`, timestamp-mutation requests, and explicit metadata-availability values from the published framework package. The duplicate local Metadata implementation and its duplicate tests are removed by G3E2.
+## Framework-owned single-path mutation
+
+Completion Gate E4 mutation is owned by `Icod.CommandFramework.FileSystem.Mutation`. Coreutils consumes the framework race-aware single-path creation, linking, removal, mode mutation, UID/GID mutation, capability reporting, and identity-precondition contracts directly. G3G2 removes the duplicate local Mutation implementation and its duplicate Shared tests.
 ## Recursive mutation and copying
 
 Completion Gate E5 lives in `Icod.CoreUtils.Shared.FileSystem.RecursiveMutation`. It consumes E1 events and E4 mutation preconditions instead of introducing another walker. It adds preserve-root and destination-containment preflight, root-relative destination mapping, hard-link identity tracking, sparse-range copying, requested-versus-required metadata policy, and deterministic reverse-order rollback. See [`RecursiveMutation/README.md`](RecursiveMutation/README.md).
