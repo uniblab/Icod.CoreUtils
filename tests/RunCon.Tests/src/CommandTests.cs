@@ -37,9 +37,16 @@ public sealed class CommandTests {
 	[Fact]
 	public void InvalidOptionBeforeHelpIsStillAnError() {
 		var output = new StringWriter();
-		var status = Command.Run( new[] { "--invalid", "--help" }, stdout: output, platform: new FakeSelinuxPlatform { IsSupported = false } );
+		var error = new StringWriter();
+		var status = Command.Run(
+			new[] { "--invalid", "--help" },
+			stdout: output,
+			stderr: error,
+			platform: new FakeSelinuxPlatform { IsSupported = false }
+		);
 		Assert.Equal( 125, status );
 		Assert.DoesNotContain( "Usage: runcon", output.ToString() );
+		Assert.Contains( "unrecognized option '--invalid'", error.ToString() );
 	}
 
 	[Fact]
@@ -94,15 +101,32 @@ public sealed class CommandTests {
 
 	[Fact]
 	public void DuplicateComponentIsRejected() {
-		var status = Command.Run( new[] { "-u", "one", "--user=two", "program" }, platform: new FakeSelinuxPlatform() );
+		var error = new StringWriter();
+		var status = Command.Run(
+			new[] { "-u", "one", "--user=two", "program" },
+			stderr: error,
+			platform: new FakeSelinuxPlatform()
+		);
 		Assert.Equal( 125, status );
+		Assert.Contains(
+			"option '--user' specified more than once",
+			error.ToString()
+		);
 	}
 
 	[Fact]
 	public void CommandLookupFailureStatusIsPreserved() {
-		var platform = new FakeSelinuxPlatform { ExecutionResult = new SelinuxExecutionResult( 127, 2, "not found" ) };
-		var status = Command.Run( new[] { "u:r:t:s0", "missing-command" }, platform: platform );
+		var error = new StringWriter();
+		var platform = new FakeSelinuxPlatform {
+			ExecutionResult = new SelinuxExecutionResult( 127, 2, "not found" )
+		};
+		var status = Command.Run(
+			new[] { "u:r:t:s0", "missing-command" },
+			stderr: error,
+			platform: platform
+		);
 		Assert.Equal( 127, status );
+		Assert.Contains( "runcon: not found", error.ToString() );
 	}
 
 	[Fact]

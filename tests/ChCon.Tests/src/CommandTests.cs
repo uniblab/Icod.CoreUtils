@@ -18,9 +18,16 @@ public sealed class CommandTests {
 	[Fact]
 	public void InvalidOptionBeforeHelpIsStillAnError() {
 		var output = new StringWriter();
-		var status = Command.Run( new[] { "--invalid", "--help" }, stdout: output, platform: new FakeSelinuxPlatform { IsSupported = false } );
+		var error = new StringWriter();
+		var status = Command.Run(
+			new[] { "--invalid", "--help" },
+			stdout: output,
+			stderr: error,
+			platform: new FakeSelinuxPlatform { IsSupported = false }
+		);
 		Assert.Equal( 1, status );
 		Assert.DoesNotContain( "Usage: chcon", output.ToString() );
+		Assert.Contains( "unrecognized option '--invalid'", error.ToString() );
 	}
 
 	[Fact]
@@ -124,8 +131,17 @@ public sealed class CommandTests {
 
 	[Fact]
 	public void ReferenceAndComponentsConflict() {
-		var status = Command.Run( new[] { "--reference=ref", "--type=x_t", "target" }, platform: new FakeSelinuxPlatform() );
+		var error = new StringWriter();
+		var status = Command.Run(
+			new[] { "--reference=ref", "--type=x_t", "target" },
+			stderr: error,
+			platform: new FakeSelinuxPlatform()
+		);
 		Assert.Equal( 1, status );
+		Assert.Contains(
+			"conflicting security context specifiers given",
+			error.ToString()
+		);
 	}
 
 	[Fact]
