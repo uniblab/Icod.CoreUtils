@@ -1,23 +1,23 @@
 # Icod.CoreUtils.Shared
 
-`Icod.CoreUtils.Shared` contains reusable behavior that is specific to the GNU Coreutils/Fileutils/Textutils command family. Neutral command-host, stream, process, terminal, record, regular-expression, temporary-resource, and low-level filesystem mechanisms live in published foundation packages instead of being duplicated here.
+`Icod.CoreUtils.Shared` is the permanent repository-local shared library for the GNU Coreutils/Fileutils/Textutils command family. Neutral command-host, stream, process, terminal, record, regular-expression, temporary-resource, pathname, and low-level filesystem mechanisms live in published foundation packages instead of being duplicated here.
 
-## Package dependencies
+## External foundation dependencies
 
-- `Icod.CommandFramework` 1.0.0 owns the neutral `CommandLine`, `Delimiters`, `Diagnostics`, `Host`, `IO`, `Processes`, `Records`, `RegularExpressions`, `Temporary`, `Terminal`, general text/time mechanism, and neutral filesystem contracts/providers consumed by Coreutils.
-- `Icod.Path` 1.0.0 owns canonical and platform-aware path behavior used by the suite.
+- `Icod.CommandFramework` 1.1.0 owns neutral command infrastructure, general text/time mechanism, process and terminal mechanism, filesystem traversal and metadata, inode-pool observation, current-process creation-mask observation, and host file-clone/reflink mechanism consumed by Coreutils.
+- `Icod.Path` 1.0.0 owns canonical and platform-aware pathname behavior used by the suite.
 
-`Icod.CoreUtils.Shared` must not reintroduce copies of framework-owned public types. A shared API that exposes a framework concept uses the `Icod.CommandFramework` type directly so consumers see one CLR type identity.
+`Icod.CoreUtils.Shared` must not reintroduce copies of framework-owned public types. A shared API that exposes a framework concept uses the permanent foundation type directly so consumers see one CLR type identity.
 
-## Package identity
+## Repository-local identity
 
-Completion Gate G3M freezes the first contracted package as `Icod.CoreUtils.Shared` 1.0.0 for `net10.0`. The package is LGPL-3.0-or-later, produces a symbol package, publishes repository metadata, and has direct package dependencies on `Icod.CommandFramework` 1.0.0 and `Icod.Path` 1.0.0.
+`Icod.CoreUtils.Shared` is deliberately **not** an independently published NuGet package. Its project is non-packable and genuine Coreutils/Fileutils/Textutils consumers use a same-repository `ProjectReference`, for example:
 
-G3M1 validates the package locally before publication. After G3M2 publishes version 1.0.0, retained Coreutils command projects will consume it with:
-
-```text
-dotnet add package Icod.CoreUtils.Shared --version 1.0.0
+```xml
+<ProjectReference Include="..\Shared\Icod.CoreUtils.Shared.csproj" />
 ```
+
+Do not add a `PackageReference` to `Icod.CoreUtils.Shared` and do not publish it to NuGet.org or GitHub Packages. Any remaining co-resident sibling-suite `ProjectReference` to this library is transitional Gate G extraction debt. G4 through G8 must replace that dependency with the actual published neutral owner, normally `Icod.CommandFramework` and, where applicable, `Icod.Path`.
 
 ## Coreutils-owned areas
 
@@ -28,10 +28,10 @@ The contracted library retains the following command-family behavior:
 - `Codecs`: Coreutils base-encoding command policy.
 - `DirectoryListing`: shared `ls`, `dir`, `vdir`, and `dircolors` policy and presentation orchestration.
 - `Escapes`: GNU command-specific escape grammars such as `paste`/`tr` behavior; neutral delimiter mechanism comes from `Icod.CommandFramework.Delimiters`.
-- `FileSystem.CopyMove`: GNU `cp`/`mv` copy/move policy and orchestration.
-- `FileSystem.Modes`: GNU symbolic/numeric mode parsing plus the Coreutils creation-mask provider; the POSIX mode value model comes from `Icod.CommandFramework.FileSystem.Modes`.
+- `FileSystem.CopyMove`: GNU `cp`/`mv` copy/move policy and orchestration; host clone execution is framework-owned.
+- `FileSystem.Modes`: GNU symbolic/numeric mode parsing; POSIX mode values and current-process creation-mask observation are framework-owned.
 - `FileSystem.Ownership`: GNU/POSIX user/group resolution and shared `chown`/`chgrp` policy.
-- `FileSystem.Usage`: GNU block-size, filesystem-usage, and reporting policy.
+- `FileSystem.Usage`: GNU block-size, filesystem-usage, accounting, and reporting policy; inode-pool observations come from framework metadata.
 - `Formatting`: GNU-compatible format-string and escaped-operand behavior.
 - `Numerics`: GNU/Coreutils numeric operand, suffix, rounding, and quantity grammar.
 - `Ordering`: Coreutils external-ordering policy and codecs, using framework record and temporary-resource contracts.
@@ -45,25 +45,27 @@ The contracted library retains the following command-family behavior:
 
 Coreutils consumes the following directly from `Icod.CommandFramework.FileSystem` and its subnamespaces:
 
-- root filesystem capabilities and operations;
+- root filesystem capabilities and operations, including capability-aware whole-file clone/reflink;
 - read-only traversal and pathname expansion;
-- authoritative metadata and timestamp mutation;
-- POSIX mode value models;
+- authoritative metadata, timestamp mutation, and filesystem inode-pool observation;
+- POSIX mode value models and current-process creation-mask observation;
 - single-path mutation;
 - recursive mutation/copy planning;
 - transactional replacement.
 
-GNU-visible prompting, operand interpretation, overwrite/update behavior, backup policy selection, ownership rules, and other command semantics remain in Coreutils code.
+GNU-visible prompting, operand interpretation, reflink selection policy, overwrite/update behavior, backup policy selection, ownership rules, and other command semantics remain in Coreutils code.
 
 ## Boundary rules
 
 1. `Icod.CommandFramework` contains mechanism that is useful independently of Coreutils.
 2. `Icod.CoreUtils.Shared` contains demonstrated Coreutils/Fileutils/Textutils reuse, not general CLI infrastructure.
-3. Individual commands retain command-specific grammar and presentation when reuse is not demonstrated.
-4. Public signatures use the permanent package owner of a type; duplicate lookalike value models are not permitted.
-5. Injected standard streams are not owned or disposed by shared command logic.
-6. Naturally asynchronous operations accept cancellation and do not use `Task.Run` as an I/O substitute.
+3. `Icod.CoreUtils.Shared` remains in this repository and is consumed by same-repository `ProjectReference`, never by package reference.
+4. Remaining sibling-suite references are temporary extraction debt and do not establish a public CoreUtils package boundary.
+5. Individual commands retain command-specific grammar and presentation when reuse is not demonstrated.
+6. Public signatures use the permanent package owner of a type; duplicate lookalike value models are not permitted.
+7. Injected standard streams are not owned or disposed by shared command logic.
+8. Naturally asynchronous operations accept cancellation and do not use `Task.Run` as an I/O substitute.
 
 ## Compatibility
 
-The contraction performed by Completion Gate G is a repository/package ownership change, not a command-semantics change. Existing command behavior remains the compatibility target while implementation dependencies move to the published foundation packages.
+The contraction performed by Completion Gate G is an ownership and dependency-boundary change, not a command-semantics change. Existing command behavior remains the compatibility target while neutral implementation dependencies are supplied by published foundation packages and Coreutils-specific reuse remains source-built inside this repository.

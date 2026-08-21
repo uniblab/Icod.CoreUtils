@@ -5,10 +5,10 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `67`, `69` through Batch `72`; Batch `68` (`Icod.ProcPs.Top`) is deliberately deferred until after `Icod.ProcPs` extraction|
-| Current engineering milestone | Completion Gate G — G3M2B CoreUtils filesystem consumer cut-over and prudent pruning |
-| Completed infrastructure milestone | Completion Gates E2 through E6, F1 through F4, and P1 — filesystem, terminal, process-control, and ProcPs provider foundations; three-platform ProcPs provider correction validated and merged |
-| Active infrastructure dependency | consume published `Icod.CommandFramework` 1.1.0, cut CoreUtils filesystem consumers over to the neutral mechanisms, and prune only the superseded local implementations; preserve the ProcPs extraction boundary for deferred Batch 68 |
-| Next engineering step | G3M2B — validate the Framework 1.1.0 consumer cut-over for Shared, `cp`, `mv`, `df`, `du`, `chmod`, `mkdir`, `mkfifo`, and `mknod` on the required runners; then proceed to G3M3 |
+| Current engineering milestone | Completion Gate G — G3M3 internal-library boundary freeze and Coreutils consumer validation |
+| Completed infrastructure milestone | Completion Gates E2 through E6, F1 through F4, and P1 — filesystem, terminal, process-control, and ProcPs provider foundations; G3M2 filesystem consumer cut-over completed against `Icod.CommandFramework` 1.1.0 |
+| Active infrastructure dependency | freeze `Icod.CoreUtils.Shared` as a non-packable repository-local Coreutils library, retain published `Icod.CommandFramework` 1.1.0 and `Icod.Path` 1.0.0 dependencies, and validate in-repository Coreutils consumers |
+| Next engineering step | G3M3 — run the repository-local Shared boundary and Coreutils consumer validation; then proceed to isolated G3N closure |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -41,14 +41,11 @@ No separate `[` project will be added. The existing `test` project remains the c
 
 ## Development architecture
 
-The present repository is deliberately a **multi-suite incubation workspace**. It is not yet the final repository layout.
+The present repository is deliberately a **multi-suite extraction workspace**. It is not yet the final repository layout.
 
-The current `Shared` project continues to incubate both:
+Before Completion Gate G, `Icod.CoreUtils.Shared` incubated both neutral cross-suite mechanism and Coreutils-family behavior. G3M2 completes the approved neutral migration. From G3M3 onward the boundary is frozen: `Icod.CoreUtils.Shared` contains only GNU Coreutils/Fileutils/Textutils shared behavior and remains a repository-local project, while neutral mechanism is consumed from published `Icod.CommandFramework` and `Icod.Path` packages.
 
-1. functionality that may ultimately become cross-suite `Icod.CommandFramework` APIs; and
-2. functionality that may remain specific to GNU Coreutils, Fileutils, and Textutils in `Icod.CoreUtils.Shared`.
-
-The project's present physical name does not establish permanent ownership. The common argument processor is the existing example: it resides in the current `Icod.CoreUtils.Shared` project during incubation, but use by independent suites makes it a likely `Icod.CommandFramework` candidate. The same rule applies to host, processor-resource, process-identity, process-targeting, process-launch, waiting, signal, priority, clock, and terminal mechanics that are consumed by both Coreutils and ProcPs or by other suites.
+Any remaining sibling-suite `ProjectReference` to `Icod.CoreUtils.Shared` is transitional extraction debt rather than evidence for a public CoreUtils package. G4 through G8 replace those references with the appropriate published neutral foundations as each suite moves to its permanent repository.
 
 The suite projects developed here may add their own Shared libraries when the reuse is genuinely suite-specific:
 
@@ -1762,15 +1759,15 @@ This gate is deliberately last. By this point the Coreutils, Diffutils, Grep, Pa
   - [x] move/rehome the corresponding tests to the framework repository;
   - [x] audit the CoreUtils `copy_file_range` helper and delete it if unused rather than creating an unnecessary framework abstraction;
   - [x] build/test the framework on Windows, Ubuntu, and macOS and publish `Icod.CommandFramework` 1.1.0 before pruning CoreUtils consumers.
-- [ ] CoreUtils filesystem consumer cut-over:
-  - [ ] consume framework inode-pool observations from `SystemFileSystemUsageProvider` and remove its duplicate local `statvfs` ABI;
-  - [ ] consume the framework creation-mask provider;
-  - [ ] consume the framework file-clone primitive from `CopyMoveEngine` while retaining GNU policy locally;
-  - [ ] route directory metadata preservation through the existing framework metadata-preservation/application path so ownership, mode, timestamps including birth time, attributes, and required-versus-best-effort semantics match regular-file handling;
-  - [ ] prune migrated CoreUtils code and tests only after the corresponding consumers validate against the refreshed package.
-- [ ] Retain `Icod.CoreUtils.Shared` permanently as a repository-local Coreutils/Fileutils/Textutils class library; make it depend on published neutral foundations rather than duplicate framework behavior.
-- [ ] Do **not** publish `Icod.CoreUtils.Shared` independently to NuGet.org or GitHub Packages.
-- [ ] Retain same-repository `ProjectReference` dependencies from genuine Coreutils command projects to `Icod.CoreUtils.Shared`; use direct neutral `PackageReference` dependencies where no Coreutils-specific layer is required.
+- [x] CoreUtils filesystem consumer cut-over:
+  - [x] consume framework inode-pool observations from `SystemFileSystemUsageProvider` and remove its duplicate local `statvfs` ABI;
+  - [x] consume the framework creation-mask provider;
+  - [x] consume the framework file-clone primitive from `CopyMoveEngine` while retaining GNU policy locally;
+  - [x] route directory metadata preservation through the existing framework metadata-preservation/application path so ownership, mode, timestamps including birth time, attributes, and required-versus-best-effort semantics match regular-file handling;
+  - [x] prune migrated CoreUtils code and tests only after the corresponding consumers validate against the refreshed package.
+- [x] Retain `Icod.CoreUtils.Shared` permanently as a repository-local Coreutils/Fileutils/Textutils class library; make it depend on published neutral foundations rather than duplicate framework behavior.
+- [x] Do **not** publish `Icod.CoreUtils.Shared` independently to NuGet.org or GitHub Packages.
+- [x] Retain same-repository `ProjectReference` dependencies from genuine Coreutils command projects to `Icod.CoreUtils.Shared`; use direct neutral `PackageReference` dependencies where no Coreutils-specific layer is required.
 - [ ] Split the co-resident suite projects into their final solutions and repositories:
   - [ ] `Icod.DiffUtils`;
   - [ ] `Icod.Grep`;

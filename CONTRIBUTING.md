@@ -22,14 +22,17 @@ Each command is a standalone executable project. Suite and shared-library names 
 
 Examples include:
 
-- `Icod.CoreUtils.Shared` for common Coreutils facilities and provisional cross-suite infrastructure during incubation;
-- `Icod.Path` for neutral canonical-path behavior;
+- `Icod.CoreUtils.Shared` for repository-local behavior shared by GNU Coreutils/Fileutils/Textutils commands; it is not an independently published package;
+- `Icod.CommandFramework` for published neutral cross-suite command, process, terminal, text, and filesystem mechanism;
+- `Icod.Path` for published neutral canonical-path behavior;
 - `Icod.DiffUtils.*` for Diffutils commands and shared code;
 - `Icod.Patch` for `patch`;
 - `Icod.LineEditor.*` for `ed`, `red`, and `sed` work;
 - `Icod.ProcPs.*` and other suite-specific projects as scheduled by the roadmap.
 
-Production command projects must not reference sibling command projects. Shared behavior belongs in the appropriate shared or neutral library only after a real cross-command contract has been identified. Do not create command-local replacements for an existing shared pathname, filesystem, record, regex, metadata, or transaction model.
+Genuine Coreutils/Fileutils/Textutils projects that need suite-shared behavior use a same-repository `ProjectReference` to `Icod.CoreUtils.Shared`. Never add a `PackageReference` to `Icod.CoreUtils.Shared`. Co-resident sibling suites may retain transitional project references only until their Gate G extraction, at which point they must reference the published neutral owner directly.
+
+Production command projects must not reference sibling command projects. Shared behavior belongs in the appropriate suite-local or neutral library only after a real cross-command contract has been identified. Do not create command-local replacements for an existing shared pathname, filesystem, record, regex, metadata, or transaction model.
 
 The production implementation must not delegate ordinary behavior to the host command being ported. Native GNU tools may be used only by clearly opt-in differential tests.
 
