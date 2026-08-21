@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Install;
 
-using Icod.CoreUtils.Shared.FileSystem.Metadata;
+using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Modes;
 using FileCreationMask = Icod.CommandFramework.FileSystem.Modes.FileCreationMask;
 using PosixFileMode = Icod.CommandFramework.FileSystem.Modes.PosixFileMode;

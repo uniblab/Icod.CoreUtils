@@ -2,7 +2,7 @@ namespace Icod.Patch;
 
 using System.Collections.ObjectModel;
 using Icod.CoreUtils.Shared.FileSystem;
-using Icod.CoreUtils.Shared.FileSystem.Metadata;
+using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
 using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;

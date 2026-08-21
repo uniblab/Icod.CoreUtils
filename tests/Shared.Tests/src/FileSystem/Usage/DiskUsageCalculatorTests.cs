@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Shared.Tests.FileSystem.Usage;
 
-using Icod.CoreUtils.Shared.FileSystem.Metadata;
+using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
 using Icod.CoreUtils.Shared.FileSystem.Usage;
 using Xunit;

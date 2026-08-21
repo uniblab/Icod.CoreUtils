@@ -2,7 +2,7 @@ namespace Icod.CoreUtils.Test.Tests;
 
 using System.Globalization;
 using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.FileSystem.Metadata;
+using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
 using Icod.CommandFramework.Platform;
 using Xunit;

@@ -3,7 +3,7 @@ namespace Icod.CoreUtils.Rmdir.Tests;
 using RmDirCommand = Icod.CoreUtils.Rmdir.Command;
 using Xunit;
 using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.FileSystem.Metadata;
+using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
 
 /// <summary>Exercises GNU-compatible <c>rmdir</c> behavior.</summary>

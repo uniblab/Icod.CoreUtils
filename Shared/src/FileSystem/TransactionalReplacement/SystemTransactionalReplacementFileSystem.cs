@@ -2,7 +2,7 @@ using Path = global::System.IO.Path;
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.InteropServices;
-using Icod.CoreUtils.Shared.FileSystem.Metadata;
+using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CommandFramework.FileSystem.Modes;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
 using Icod.CoreUtils.Shared.FileSystem.RecursiveMutation;

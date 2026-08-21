@@ -6,7 +6,7 @@ namespace Icod.CoreUtils.Rm;
 using System.Globalization;
 using Icod.CoreUtils.Shared.CommandLine;
 using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.FileSystem.Metadata;
+using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
 using Icod.CoreUtils.Shared.FileSystem.RecursiveMutation;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;

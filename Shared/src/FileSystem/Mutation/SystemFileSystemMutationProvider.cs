@@ -3,7 +3,7 @@ using System.Buffers.Binary;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text;
-using Icod.CoreUtils.Shared.FileSystem.Metadata;
+using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CommandFramework.FileSystem.Modes;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
 using Microsoft.Win32.SafeHandles;

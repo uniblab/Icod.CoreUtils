@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Shared.Tests.FileSystem.Mutation;
 
 using System.Globalization;
-using Icod.CoreUtils.Shared.FileSystem.Metadata;
+using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
 using Icod.CommandFramework.Platform;

@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using System.Net.Sockets;
-using Icod.CoreUtils.Shared.FileSystem.Metadata;
+using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
 using Xunit;
 using SystemPath = System.IO.Path;

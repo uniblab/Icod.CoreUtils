@@ -3,7 +3,7 @@ namespace Icod.CoreUtils.Shared.DirectoryListing;
 
 using System.Globalization;
 using System.Text;
-using Icod.CoreUtils.Shared.FileSystem.Metadata;
+using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.Terminal;
 
 /// <summary>Hosts <c>ls</c>, <c>dir</c>, and <c>vdir</c> over one reusable listing engine.</summary>

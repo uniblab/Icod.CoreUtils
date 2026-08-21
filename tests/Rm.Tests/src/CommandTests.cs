@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Rm.Tests;
 
 using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.FileSystem.Metadata;
+using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CommandFramework.FileSystem.Modes;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;

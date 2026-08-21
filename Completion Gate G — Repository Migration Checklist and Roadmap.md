@@ -249,7 +249,13 @@ No projects move during this phase.
 - [x] **G3D2 — File-mode value-model excision**
   - remove the duplicate CoreUtils `PosixFileMode.cs`;
   - contract the Modes README around the retained GNU/Coreutils policy and framework value model.
-- [ ] Audit and contract the remaining filesystem boundaries (`Metadata`, `Mutation`, `RecursiveMutation`, `TransactionalReplacement`, `Traversal`, and root filesystem operations).
+- [x] **G3E1 — Metadata consumer cut-over**
+  - move every surviving consumer of `Icod.CoreUtils.Shared.FileSystem.Metadata` to `Icod.CommandFramework.FileSystem.Metadata`;
+  - leave the duplicate Metadata implementation and its duplicated Shared tests in place only until G3E2.
+- [ ] **G3E2 — Metadata implementation/test excision**
+  - remove the duplicate CoreUtils Metadata source directory;
+  - remove the duplicated Metadata tests from `Icod.CoreUtils.Shared.Tests`.
+- [ ] Audit and contract the remaining filesystem boundaries (`Mutation`, `RecursiveMutation`, `TransactionalReplacement`, `Traversal`, and root filesystem operations).
 - [ ] Remove namespaces and tests that are wholly owned by `Icod.CommandFramework`.
 - [ ] Audit `Icod.CoreUtils.ProcessTestHost` after framework-owned process tests are removed.
 - [ ] Complete `Icod.CoreUtils.Shared` packaging and convert retained Coreutils commands to package references.
@@ -394,6 +400,8 @@ Current sequence:
 - [x] G3C2 — delete the duplicated framework-owned Platform implementation and tests.
 - [x] G3D1 — cut the neutral file-mode value model over to `Icod.CommandFramework.FileSystem.Modes`.
 - [x] G3D2 — delete the duplicate CoreUtils file-mode value model and contract its documentation.
+- [x] G3E1 — cut Metadata consumers over to `Icod.CommandFramework.FileSystem.Metadata`.
+- [ ] G3E2 — remove the duplicate CoreUtils Metadata implementation and tests.
 - [ ] Contract the remaining framework-owned filesystem boundaries.
 - [ ] Excise namespaces that are wholly owned by `Icod.CommandFramework`.
 - [ ] Audit and remove/rehome framework-owned `Shared.Tests` and `ProcessTestHost` infrastructure.
