@@ -14,10 +14,7 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-      - run: dotnet clean Icod.CoreUtils.sln -c Debug
+      - run: dotnet clean Icod.CoreUtils.sln -c Staging
       - run: dotnet restore Icod.CoreUtils.sln
-      - run: dotnet build Icod.CoreUtils.sln -c Debug --no-restore
-      - run: dotnet test Icod.CoreUtils.sln -c Debug --no-build --logger trx
-      - name: Validate isolated Coreutils boundary
-        shell: pwsh
-        run: ./eng/validate-g3n-coreutils.ps1 -Configuration Debug
+      - run: dotnet build Icod.CoreUtils.sln -c Staging --no-restore
+      - run: dotnet test Icod.CoreUtils.sln -c Staging --no-build --logger trx

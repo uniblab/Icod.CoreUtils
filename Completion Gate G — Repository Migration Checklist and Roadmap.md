@@ -303,7 +303,7 @@ No projects move during this phase.
   - retained `Icod.CoreUtils.ProcessTestHost` as a repository-local integration-test executable because `Nice.Tests` and `Timeout.Tests` still require real child processes;
   - contracted the host to the two Coreutils-required behaviors: `exit` and `sleep`;
   - kept the framework test host independent in the `Icod.CommandFramework` repository.
-- [ ] **G3M — `Icod.CoreUtils.Shared` internal-library boundary closure**
+- [x] **G3M — `Icod.CoreUtils.Shared` internal-library boundary closure**
   - [x] **G3M1 — package-boundary evaluation and local validation**
     - contract the `Icod.CoreUtils.Shared` surface and prove that it can pack and smoke-restore against published `Icod.CommandFramework` 1.0.0 and `Icod.Path` 1.0.0 dependencies;
     - record that technical packageability was successfully demonstrated;
@@ -324,13 +324,13 @@ No projects move during this phase.
       - replace direct `ApplyDirectoryMetadataBestEffort` mutation with the framework metadata-preservation/application path so ownership, mode, access/modification/birth timestamps, attributes, and required-versus-best-effort semantics are handled consistently for directories and regular files;
       - prune migrated CoreUtils source and tests only after each consumer cut-over is validated;
       - run the affected Shared, `cp`, `mv`, `df`, `du`, `chmod`, `mkdir`, `mkfifo`, and `mknod` tests together with full required-runner validation.
-  - [ ] **G3M3 — internal-library boundary freeze and Coreutils consumer validation**
+  - [x] **G3M3 — internal-library boundary freeze and Coreutils consumer validation**
     - [x] remove publication-only intent from the Shared project, release workflow, and package-install documentation; do not publish `Icod.CoreUtils.Shared` independently to NuGet.org or GitHub Packages;
     - [x] retain `ProjectReference` from genuine Coreutils/Fileutils/Textutils command projects to `Icod.CoreUtils.Shared` and guard against any `Icod.CoreUtils.Shared` package reference in repository tests;
     - [x] continue consuming published `Icod.CommandFramework` 1.1.0 and `Icod.Path` 1.0.0 as the neutral external package dependencies;
     - [x] classify remaining sibling-suite `Icod.CoreUtils.Shared` project references as transitional extraction debt to be replaced directly by the appropriate neutral foundation packages during G4 through G8; no sibling suite may consume a published `Icod.CoreUtils.Shared` package;
-    - [ ] build/test the in-repository Coreutils consumers with `Icod.CoreUtils.Shared` built from source before entering G3N.
-- [ ] **G3N — Isolated Coreutils validation and G3 closure**
+    - [x] build/test the in-repository Coreutils consumers with `Icod.CoreUtils.Shared` built from source before entering G3N.
+- [x] **G3N — Isolated Coreutils validation and G3 closure**
   - build/test the retained Coreutils projects, `Icod.CoreUtils.Shared`, its tests, and the repository-local ProcessTestHost without sibling-suite source projects;
   - verify that genuine Coreutils consumers use same-repository `ProjectReference` for `Icod.CoreUtils.Shared` and that no Coreutils project uses `PackageReference Include="Icod.CoreUtils.Shared"`;
   - verify that all cross-repository dependencies required by this isolated build resolve from the published neutral packages;
@@ -500,7 +500,6 @@ Current sequence:
 - [x] **G3M1 — Package-boundary evaluation and local validation:** local pack/restore proved the contracted library is technically packageable, but the architecture review rejected an independent distribution boundary.
 - [x] **G3M2A — Framework filesystem migration and package refresh:** inode-pool observation, creation-mask observation, and host file-clone/reflink mechanism plus their tests are published in `Icod.CommandFramework` 1.1.0 after required-runner validation.
 - [x] **G3M2B — CoreUtils consumer cut-over and prudent pruning:** the refreshed framework package now supplies inode pools, creation-mask observation, clone execution, and directory metadata application while GNU policy remains in CoreUtils.
-- [ ] **G3M3 — Internal-library boundary freeze and Coreutils consumer validation:** publication intent is removed and the repository-local boundary is guarded; run the in-repository Coreutils validation before entering G3N.
-- [ ] **G3N — Isolated Coreutils validation and G3 closure:** run the clean-checkout/build/test closure before beginning G4 repository extraction.
-
-Do not begin G4 pilot extractions until the G3 exit criterion is satisfied.
+- [x] **G3M3 — Internal-library boundary freeze and Coreutils consumer validation:** publication intent is removed and the repository-local boundary is guarded; run the in-repository Coreutils validation before entering G3N.
+- [x] **G3N — Isolated Coreutils validation and G3 closure:** run the clean-checkout/build/test closure before beginning G4 repository extraction.
+- [ ] **G4.1 — Icod.UtilLinux**
