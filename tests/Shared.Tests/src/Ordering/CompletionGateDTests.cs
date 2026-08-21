@@ -3,8 +3,8 @@ namespace Icod.CoreUtils.Shared.Tests.Ordering;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Icod.CoreUtils.Shared.Ordering;
-using Icod.CoreUtils.Shared.Records;
-using Icod.CoreUtils.Shared.Temporary;
+using Icod.CommandFramework.Records;
+using Icod.CommandFramework.Temporary;
 using Xunit;
 
 /// <summary>Tests the locale, key, stability, spill, merge, workspace, and cleanup contracts introduced by Completion Gate D.</summary>

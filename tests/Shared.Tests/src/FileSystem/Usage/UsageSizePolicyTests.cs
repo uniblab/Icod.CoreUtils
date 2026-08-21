@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Shared.Tests.FileSystem.Usage;
 
 using Icod.CoreUtils.Shared.FileSystem.Usage;
-using Icod.CoreUtils.Shared.Terminal;
+using Icod.CommandFramework.Terminal;
 using Xunit;
 
 /// <summary>Verifies GNU block-size resolution and formatting policy.</summary>
