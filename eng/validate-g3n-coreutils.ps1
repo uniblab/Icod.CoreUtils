@@ -55,7 +55,7 @@ function Get-ProjectReferencePaths {
 		if ( [string]::IsNullOrWhiteSpace( $include ) ) {
 			continue
 		}
-		if ( $include.Contains( "$(" ) ) {
+		if ( $include.Contains( '$(' ) ) {
 			throw "G3N cannot statically validate the ProjectReference '$include' in '$($Project.FullName)'."
 		}
 		[System.IO.Path]::GetFullPath(
