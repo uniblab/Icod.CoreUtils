@@ -58,10 +58,19 @@ function Get-ProjectReferencePaths {
 		if ( $include.Contains( '$(' ) ) {
 			throw "G3N cannot statically validate the ProjectReference '$include' in '$($Project.FullName)'."
 		}
+		$normalizedInclude = $include
+			.Replace(
+				'\',
+				[System.IO.Path]::DirectorySeparatorChar.ToString()
+			)
+			.Replace(
+				'/',
+				[System.IO.Path]::DirectorySeparatorChar.ToString()
+			)
 		[System.IO.Path]::GetFullPath(
 			[System.IO.Path]::Combine(
 				$Project.DirectoryName,
-				$include
+				$normalizedInclude
 			)
 		)
 	}
