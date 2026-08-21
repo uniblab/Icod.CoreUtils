@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
+		<Copyright>2026</Copyright>
 		<LangVersion>13.0</LangVersion>
 		<OutputType>Library</OutputType>
 		<TargetFramework>net10.0</TargetFramework>
@@ -10,6 +11,7 @@
 		<OutputPath>..\bin\$(Configuration)\</OutputPath>
 		<AssemblyName>Icod.CoreUtils.Shared</AssemblyName>
 		<RootNamespace>Icod.CoreUtils.Shared</RootNamespace>
+		<Configurations>Debug;Release;Staging</Configurations>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
 		<PlatformTarget>AnyCPU</PlatformTarget>
@@ -37,16 +39,18 @@
 	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
 		<ErrorReport>prompt</ErrorReport>
 		<WarningLevel>4</WarningLevel>
-		<DebugType>pdbonly</DebugType>
+		<DebugType>portable</DebugType>
 		<Optimize>true</Optimize>
 		<SignAssembly>false</SignAssembly>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
 	</PropertyGroup>
 	<PropertyGroup>
-		<PackageVersion>1.0.0-WIP1</PackageVersion>
-		<PackageReleaseNotes>Initial release of Icod.CoreUtils.Shared</PackageReleaseNotes>
+		<PackageId>Icod.CoreUtils.Shared</PackageId>
+		<PackageVersion>1.0.0</PackageVersion>
+		<PackageReleaseNotes>Initial contracted Coreutils shared-policy release</PackageReleaseNotes>
 		<Authors>Timothy J. Bruce</Authors>
+		<Description>GNU Coreutils/Fileutils/Textutils-specific shared policy and behavior for the Icod command implementations.</Description>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageIcon>icon.png</PackageIcon>
 		<PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
@@ -54,7 +58,16 @@
 		<IncludeContentInPack>true</IncludeContentInPack>
 		<IncludeSymbols>True</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<Deterministic>true</Deterministic>
+		<PackageTags>gnu;coreutils;fileutils;textutils;shared;command-line;filesystem;formatting;numerics;date;directory-listing;dotnet;csharp</PackageTags>
+		<RepositoryUrl>https://github.com/uniblab/Icod.CoreUtils</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<GenerateAppxPackageOnBuild>False</GenerateAppxPackageOnBuild>
 	</PropertyGroup>
+	<ItemGroup>
+		<None Include="icon.png" Pack="true" PackagePath="" />
+	</ItemGroup>
 	<ItemGroup>
 		<Content Include="README.md">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -71,7 +84,7 @@
 		</Content>
 	</ItemGroup>
 	<ItemGroup>
-	  <PackageReference Include="Icod.CommandFramework" Version="1.0.0" />
-	  <PackageReference Include="Icod.Path" Version="1.0.0" />
+		<PackageReference Include="Icod.CommandFramework" Version="1.0.0" />
+		<PackageReference Include="Icod.Path" Version="1.0.0" />
 	</ItemGroup>
 </Project>

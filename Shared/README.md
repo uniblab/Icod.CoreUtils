@@ -9,6 +9,16 @@
 
 `Icod.CoreUtils.Shared` must not reintroduce copies of framework-owned public types. A shared API that exposes a framework concept uses the `Icod.CommandFramework` type directly so consumers see one CLR type identity.
 
+## Package identity
+
+Completion Gate G3M freezes the first contracted package as `Icod.CoreUtils.Shared` 1.0.0 for `net10.0`. The package is LGPL-3.0-or-later, produces a symbol package, publishes repository metadata, and has direct package dependencies on `Icod.CommandFramework` 1.0.0 and `Icod.Path` 1.0.0.
+
+G3M1 validates the package locally before publication. After G3M2 publishes version 1.0.0, retained Coreutils command projects will consume it with:
+
+```text
+dotnet add package Icod.CoreUtils.Shared --version 1.0.0
+```
+
 ## Coreutils-owned areas
 
 The contracted library retains the following command-family behavior:

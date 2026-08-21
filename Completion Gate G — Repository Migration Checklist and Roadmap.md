@@ -292,9 +292,14 @@ No projects move during this phase.
   - contracted the host to the two Coreutils-required behaviors: `exit` and `sleep`;
   - kept the framework test host independent in the `Icod.CommandFramework` repository.
 - [ ] **G3M — `Icod.CoreUtils.Shared` package closure**
-  - finalize package metadata/versioning for the contracted Shared library;
-  - pack and validate the package against the published `Icod.CommandFramework` and `Icod.Path` dependencies;
-  - convert retained Coreutils command projects from the transitional Shared project reference to the published Shared package.
+  - [ ] **G3M1 — package metadata freeze and local package validation**
+    - freeze the contracted package identity at `Icod.CoreUtils.Shared` 1.0.0 for `net10.0`;
+    - align symbols, deterministic build, repository metadata, package icon, README, license, and package tags with the published foundation-package conventions;
+    - pack and smoke-restore the package against published `Icod.CommandFramework` 1.0.0 and `Icod.Path` 1.0.0 dependencies before publication.
+  - [ ] **G3M2 — publish and Coreutils consumer cut-over**
+    - publish `Icod.CoreUtils.Shared` 1.0.0 to the permanent package feeds;
+    - convert retained Coreutils command projects from the transitional Shared project reference to `PackageReference Include="Icod.CoreUtils.Shared" Version="1.0.0"`;
+    - build/test the in-repository Coreutils consumers against the published package before entering G3N.
 - [ ] **G3N — Isolated Coreutils validation and G3 closure**
   - build/test Coreutils without sibling-suite source projects;
   - remove stale solution, CI, output-path, packaging, and documentation references exposed by the isolation build;
