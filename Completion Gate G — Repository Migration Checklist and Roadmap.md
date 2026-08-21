@@ -47,10 +47,11 @@ No command suite may become a production dependency of `Icod.CommandFramework`, 
 - [ ] Move demonstrated cross-suite APIs from `Icod.CoreUtils.Shared` to `Icod.CommandFramework`.
 - [ ] Retain only Coreutils/Fileutils/Textutils-specific behavior in `Icod.CoreUtils.Shared`.
 - [ ] Split `Shared.Tests` between framework tests and remaining Coreutils Shared tests.
-- [ ] Audit `Icod.CoreUtils.ProcessTestHost` and decide whether it is:
-  - Coreutils-local test infrastructure;
-  - framework test infrastructure; or
-  - a small repository-local test host replicated independently where needed.
+- [x] Audit `Icod.CoreUtils.ProcessTestHost`.
+  - Decision: retain it as a small repository-local test host for Coreutils integration tests.
+  - `Nice.Tests` requires only deterministic child exit behavior.
+  - `Timeout.Tests` requires only deterministic child sleep behavior.
+  - Framework process-runner tests use the independent `Icod.CommandFramework.ProcessTestHost`; Coreutils does not reference that test project.
 - [ ] Convert retained Coreutils projects from transitional source-tree references to published package references.
 - [ ] Remove every sibling-suite project after successful extraction.
 - [ ] Remove stale solution folders, packaging entries, output-path exceptions, CI references, and documentation references.
@@ -285,10 +286,11 @@ No projects move during this phase.
   - remove the duplicated implementations for the G3K1 namespaces from `Icod.CoreUtils.Shared`;
   - remove or rehome their duplicated Shared tests, retaining only tests for Coreutils-owned behavior;
   - complete the intentionally deferred `tests/Shared.Tests` namespace cut-over while distinguishing authoritative framework tests from retained Coreutils tests.
-- [ ] **G3L — ProcessTestHost audit and contraction**
-  - audit the remaining consumers of `Icod.CoreUtils.ProcessTestHost` now that framework-owned process tests are removed;
-  - remove the Shared.Tests project reference and/or repository-local host if no retained Coreutils tests require it;
-  - preserve only genuinely Coreutils-local process test infrastructure.
+- [x] **G3L — ProcessTestHost audit and contraction**
+  - removed the stale `Shared.Tests` project reference after framework-owned process tests left the repository;
+  - retained `Icod.CoreUtils.ProcessTestHost` as a repository-local integration-test executable because `Nice.Tests` and `Timeout.Tests` still require real child processes;
+  - contracted the host to the two Coreutils-required behaviors: `exit` and `sleep`;
+  - kept the framework test host independent in the `Icod.CommandFramework` repository.
 - [ ] **G3M — `Icod.CoreUtils.Shared` package closure**
   - finalize package metadata/versioning for the contracted Shared library;
   - pack and validate the package against the published `Icod.CommandFramework` and `Icod.Path` dependencies;
