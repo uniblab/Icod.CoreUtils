@@ -21,6 +21,8 @@ Individual commands may also reference the published neutral foundations directl
 
 `Icod.Path` is retained as a separate neutral package. Gate G1 is complete, and CoreUtils consumes the published package rather than a source-tree project. `Icod.CommandFramework` is likewise an independent published foundation.
 
+The final G3 filesystem ownership audit identified a small residual mechanism set still physically located in `Icod.CoreUtils.Shared`: current-process file-creation-mask observation, POSIX filesystem inode-pool observation, and host file-clone/reflink execution. These mechanisms are approved for migration into `Icod.CommandFramework`; GNU mode grammar, GNU copy/move reflink policy, `df`/`du` accounting and presentation policy, and GNU ownership policy remain Coreutils-owned. No additional `Icod.Path` migration is required by this audit.
+
 A suite-specific Shared/engine class library is **not automatically a package boundary**. In particular, `Icod.CoreUtils.Shared` is the permanent repository-local Shared library for the GNU Coreutils/Fileutils/Textutils family: it remains in the `Icod.CoreUtils` repository, is built and released with that suite, and is consumed by same-repository Coreutils projects through `ProjectReference`. It is **not** an independently published NuGet.org or GitHub Packages dependency.
 
 No command suite may become a production dependency of `Icod.CommandFramework`, and sibling command suites must not acquire runtime dependencies on one another merely because they were developed together. Sibling suites must consume neutral contracts from `Icod.CommandFramework` and `Icod.Path` directly rather than using `Icod.CoreUtils.Shared` as a package bridge.
@@ -50,7 +52,8 @@ No command suite may become a production dependency of `Icod.CommandFramework`, 
 - [ ] Retain all genuine GNU Coreutils/Fileutils/Textutils command projects.
 - [x] Audit `Icod.CoreUtils.Shared`.
 - [x] Move demonstrated cross-suite APIs from `Icod.CoreUtils.Shared` to `Icod.CommandFramework`.
-- [x] Retain only Coreutils/Fileutils/Textutils-specific behavior in `Icod.CoreUtils.Shared`.
+- [ ] Retain only Coreutils/Fileutils/Textutils-specific behavior in `Icod.CoreUtils.Shared` after the approved final filesystem mechanism migration and consumer cut-over.
+- [ ] Migrate the approved neutral filesystem remainder to `Icod.CommandFramework`: creation-mask observation, inode-pool observation, and host file-clone/reflink mechanism; then prune the corresponding CoreUtils implementations only after validated consumer cut-over.
 - [x] Split `Shared.Tests` between framework tests and remaining Coreutils Shared tests.
 - [x] Audit `Icod.CoreUtils.ProcessTestHost`.
   - Decision: retain it as a small repository-local test host for Coreutils integration tests.
@@ -226,11 +229,12 @@ No projects move during this phase.
 **Exit criterion met:** sibling suites can compile against the published framework binary.
 ## G3 — Contract `Icod.CoreUtils.Shared` — ACTIVE
 
-- [x] Remove every API now owned by `Icod.CommandFramework`.
-- [x] Keep only demonstrated Coreutils/Fileutils/Textutils-specific reuse.
+- [x] Remove every API already owned by `Icod.CommandFramework`.
+- [ ] Keep only demonstrated Coreutils/Fileutils/Textutils-specific reuse; the approved final filesystem mechanism migration remains open.
 - [x] Make it depend on `Icod.CommandFramework`.
 - [x] Add the published `Icod.Path` package dependency where genuinely required.
 - [x] Split/rehome tests appropriately.
+- [ ] Refresh the published `Icod.CommandFramework` filesystem foundation with the approved neutral remainder, migrate its tests, and cut CoreUtils consumers over before pruning migrated source.
 - [x] Freeze the permanent distribution boundary: `Icod.CoreUtils.Shared` remains an internal class-library project in the `Icod.CoreUtils` repository and is not independently published.
 - [ ] Retain same-repository `ProjectReference` relationships from genuine Coreutils consumers to `Icod.CoreUtils.Shared`.
 - [ ] Ensure neutral external dependencies resolve through published `Icod.CommandFramework` and `Icod.Path` packages rather than through a published CoreUtils Shared package.
@@ -254,7 +258,7 @@ No projects move during this phase.
   - contract the Platform README to the retained Coreutils responsibilities.
 - [x] **G3D1 — File-mode value-model consumer cut-over**
   - move `PosixFileMode`, `PosixFileModeBits`, and `FileCreationMask` consumers to `Icod.CommandFramework.FileSystem.Modes`;
-  - retain GNU mode parsing/expression policy and the Coreutils creation-mask provider in `Icod.CoreUtils.Shared.FileSystem.Modes`.
+  - retain GNU mode parsing/expression policy; the creation-mask provider remained temporarily Coreutils-owned pending the final filesystem ownership audit.
 - [x] **G3D2 — File-mode value-model excision**
   - remove the duplicate CoreUtils `PosixFileMode.cs`;
   - contract the Modes README around the retained GNU/Coreutils policy and framework value model.
@@ -304,10 +308,26 @@ No projects move during this phase.
     - contract the `Icod.CoreUtils.Shared` surface and prove that it can pack and smoke-restore against published `Icod.CommandFramework` 1.0.0 and `Icod.Path` 1.0.0 dependencies;
     - record that technical packageability was successfully demonstrated;
     - architecture review nevertheless found no independently justified distribution boundary: the retained library is Coreutils-family implementation, not a cross-suite foundation, so separate publication is rejected.
-  - [ ] **G3M2 — internal-library boundary freeze and Coreutils consumer validation**
+  - [ ] **G3M2 — final filesystem mechanism migration and framework package refresh**
+    - [ ] **G3M2A — migrate neutral mechanism and tests to `Icod.CommandFramework`**
+      - extend `Icod.CommandFramework.FileSystem.Metadata.FileSystemInformation` with explicit total, free, and caller-available inode-pool observations and populate them from the existing `statvfs` data; Windows and unsupported hosts must report explicit unavailability rather than guessed counts;
+      - move `IFileCreationMaskProvider` and `SystemFileCreationMaskProvider` into `Icod.CommandFramework.FileSystem.Modes`, preserving Linux non-mutating observation and guarded Unix query-and-restore behavior;
+      - add a capability-aware file-clone/reflink primitive to `Icod.CommandFramework.FileSystem`, moving the native host mechanism below Coreutils while leaving GNU `--reflink=never|auto|always` policy in CoreUtils;
+      - move/rehome the corresponding tests so the neutral mechanisms are validated in the framework repository;
+      - audit the local `copy_file_range` helper; delete it if it has no production call site, and move it only if a demonstrated neutral accelerated-copy contract is actually required;
+      - build/test `Icod.CommandFramework` on Windows, Ubuntu, and macOS, increment its package version, and publish the refreshed package before CoreUtils removes any migrated implementation.
+    - [ ] **G3M2B — CoreUtils consumer cut-over and prudent pruning**
+      - update `Icod.CoreUtils.Shared` to the refreshed `Icod.CommandFramework` package;
+      - make `SystemFileSystemUsageProvider` consume inode-pool values from framework `FileSystemInformation` and remove the duplicate local `statvfs` ABI;
+      - replace CoreUtils-local creation-mask observation with the framework provider;
+      - make `CopyMoveEngine` consume the framework file-clone primitive while retaining GNU copy/move policy;
+      - replace direct `ApplyDirectoryMetadataBestEffort` mutation with the framework metadata-preservation/application path so ownership, mode, access/modification/birth timestamps, attributes, and required-versus-best-effort semantics are handled consistently for directories and regular files;
+      - prune migrated CoreUtils source and tests only after each consumer cut-over is validated;
+      - run the affected Shared, `cp`, `mv`, `df`, `du`, `chmod`, `mkdir`, `mkfifo`, and `mknod` tests together with full required-runner validation.
+  - [ ] **G3M3 — internal-library boundary freeze and Coreutils consumer validation**
     - remove publication-only intent from the Shared project, release workflow, and package-install documentation; do not publish `Icod.CoreUtils.Shared` independently to NuGet.org or GitHub Packages;
     - retain `ProjectReference` from genuine Coreutils/Fileutils/Textutils command projects to `Icod.CoreUtils.Shared`;
-    - continue consuming published `Icod.CommandFramework` 1.0.0 and `Icod.Path` 1.0.0 as the neutral external package dependencies where required;
+    - continue consuming the refreshed published `Icod.CommandFramework` package and `Icod.Path` 1.0.0 as the neutral external package dependencies where required;
     - treat any remaining sibling-suite `Icod.CoreUtils.Shared` references as transitional extraction debt to be replaced directly by the appropriate neutral foundation packages during G4 through G8; no sibling suite may consume a published `Icod.CoreUtils.Shared` package;
     - build/test the in-repository Coreutils consumers with `Icod.CoreUtils.Shared` built from source before entering G3N.
 - [ ] **G3N — Isolated Coreutils validation and G3 closure**
@@ -317,7 +337,7 @@ No projects move during this phase.
   - remove stale solution, CI, output-path, packaging, and documentation references exposed by the isolation build;
   - mark G3 complete only after the contracted repository succeeds independently.
 
-**Exit criterion:** `Icod.CoreUtils.Shared` is no longer an incubation project: it is the permanent repository-local Shared library for Coreutils/Fileutils/Textutils, contains no cross-suite foundation ownership, is not independently published, and is not a permitted dependency of extracted sibling suites.
+**Exit criterion:** `Icod.CoreUtils.Shared` is no longer an incubation project: it is the permanent repository-local Shared library for Coreutils/Fileutils/Textutils, contains no cross-suite foundation ownership or approved neutral filesystem mechanism, is not independently published, and is not a permitted dependency of extracted sibling suites.
 ## G4 — Pilot repository extractions
 
 Use small suites first to prove the repository-extraction and external-package procedure before moving the large families.
@@ -478,7 +498,9 @@ Current sequence:
 - [x] **G3K1/G3K2 — Remaining framework-owned namespace consumer cut-over and implementation/test excision.**
 - [x] **G3L — ProcessTestHost audit and contraction.**
 - [x] **G3M1 — Package-boundary evaluation and local validation:** local pack/restore proved the contracted library is technically packageable, but the architecture review rejected an independent distribution boundary.
-- [ ] **G3M2 — Internal-library boundary freeze and Coreutils consumer validation:** keep `Icod.CoreUtils.Shared` in-repository, remove independent-publication intent, retain same-repository project references, and validate its published neutral dependencies.
+- [ ] **G3M2A — Framework filesystem migration and package refresh:** move inode-pool observation, creation-mask observation, and host file-clone/reflink mechanism plus their tests to `Icod.CommandFramework`; audit the dead/unused `copy_file_range` helper; build/test and publish the refreshed framework package.
+- [ ] **G3M2B — CoreUtils consumer cut-over and prudent pruning:** consume the refreshed framework package, cut `df`/mode/copy-move/directory-metadata paths over to the neutral APIs, and remove migrated CoreUtils code/tests only after validation.
+- [ ] **G3M3 — Internal-library boundary freeze and Coreutils consumer validation:** keep `Icod.CoreUtils.Shared` in-repository, remove independent-publication intent, retain same-repository project references, and validate its published neutral dependencies.
 - [ ] **G3N — Isolated Coreutils validation and G3 closure:** run the clean-checkout/build/test closure before beginning G4 repository extraction.
 
 Do not begin G4 pilot extractions until the G3 exit criterion is satisfied.
