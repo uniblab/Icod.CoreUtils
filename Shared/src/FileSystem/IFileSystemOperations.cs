@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Shared.FileSystem;
 
-using Icod.CoreUtils.Shared.Platform;
+using Icod.CommandFramework.Platform;
 
 /// <summary>
 /// Supplies injectable, capability-aware durable-flush and sparse-file operations.

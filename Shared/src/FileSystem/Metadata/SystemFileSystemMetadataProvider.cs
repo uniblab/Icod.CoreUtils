@@ -5,7 +5,7 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
-using Icod.CoreUtils.Shared.Platform;
+using Icod.CommandFramework.Platform;
 using Microsoft.Win32.SafeHandles;
 
 namespace Icod.CoreUtils.Shared.FileSystem.Metadata;

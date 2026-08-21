@@ -3,7 +3,7 @@ namespace Icod.CoreUtils.ID;
 using System.Text;
 using Icod.CoreUtils.Shared.CommandLine;
 using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.Platform;
+using Icod.CommandFramework.Platform;
 
 /// <summary>Implements the <c>id</c> command.</summary>
 public static class Command {

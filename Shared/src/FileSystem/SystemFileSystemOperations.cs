@@ -46,7 +46,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 	}
 
 	/// <inheritdoc />
-	public async ValueTask<PlatformOperationResult> FlushFileAsync(
+	public async ValueTask<global::Icod.CommandFramework.Platform.PlatformOperationResult> FlushFileAsync(
 		FileStream file,
 		FileFlushMode mode,
 		CancellationToken cancellationToken = default
@@ -59,14 +59,14 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			FileFlushMode.DataOnly != mode
 			&& FileFlushMode.DataAndMetadata != mode
 		) {
-			return PlatformOperationResult.Failure(
+			return global::Icod.CommandFramework.Platform.PlatformOperationResult.Failure(
 				"the requested file-flush mode is invalid"
 			);
 		}
 
 		try {
 			if ( !file.CanWrite ) {
-				return PlatformOperationResult.Failure(
+				return global::Icod.CommandFramework.Platform.PlatformOperationResult.Failure(
 					"the file is not open for writing"
 				);
 			}
@@ -74,7 +74,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 				FileFlushMode.DataOnly == mode
 				&& !this.Capabilities.SupportsDataOnlyFileFlush
 			) {
-				return PlatformOperationResult.Unsupported(
+				return global::Icod.CommandFramework.Platform.PlatformOperationResult.Unsupported(
 					"data-only file flushing is unavailable on this platform"
 				);
 			}
@@ -82,7 +82,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 				FileFlushMode.DataAndMetadata == mode
 				&& !this.Capabilities.SupportsDataAndMetadataFileFlush
 			) {
-				return PlatformOperationResult.Unsupported(
+				return global::Icod.CommandFramework.Platform.PlatformOperationResult.Unsupported(
 					"data-and-metadata file flushing is unavailable on this platform"
 				);
 			}
@@ -93,7 +93,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			cancellationToken.ThrowIfCancellationRequested();
 			if ( OperatingSystem.IsWindows() ) {
 				if ( NativeMethods.FlushFileBuffers( file.SafeFileHandle ) ) {
-					return PlatformOperationResult.Success();
+					return global::Icod.CommandFramework.Platform.PlatformOperationResult.Success();
 				}
 				return CreateWindowsFailure(
 					"FlushFileBuffers failed"
@@ -112,7 +112,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 					: NativeMethods.FlushDataAndMetadata( descriptor )
 				;
 				if ( 0 == result ) {
-					return PlatformOperationResult.Success();
+					return global::Icod.CommandFramework.Platform.PlatformOperationResult.Success();
 				}
 				return CreateUnixFailure(
 					FileFlushMode.DataOnly == mode
@@ -125,14 +125,14 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 				}
 			}
 		} catch ( EntryPointNotFoundException exception ) {
-			return PlatformOperationResult.Unsupported(
+			return global::Icod.CommandFramework.Platform.PlatformOperationResult.Unsupported(
 				System.String.Concat(
 					"the requested file-flush primitive is unavailable: ",
 					exception.Message
 				)
 			);
 		} catch ( DllNotFoundException exception ) {
-			return PlatformOperationResult.Unsupported(
+			return global::Icod.CommandFramework.Platform.PlatformOperationResult.Unsupported(
 				System.String.Concat(
 					"the native filesystem library is unavailable: ",
 					exception.Message
@@ -145,7 +145,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			or NotSupportedException
 			or ArgumentException
 		) {
-			return PlatformOperationResult.Failure(
+			return global::Icod.CommandFramework.Platform.PlatformOperationResult.Failure(
 				exception.Message,
 				exception
 			);
@@ -154,7 +154,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 
 
 	/// <inheritdoc />
-	public ValueTask<PlatformOperationResult> FlushFileAsync(
+	public ValueTask<global::Icod.CommandFramework.Platform.PlatformOperationResult> FlushFileAsync(
 		string path,
 		FileFlushMode mode,
 		CancellationToken cancellationToken = default
@@ -168,7 +168,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			&& FileFlushMode.DataAndMetadata != mode
 		) {
 			return ValueTask.FromResult(
-				PlatformOperationResult.Failure(
+				global::Icod.CommandFramework.Platform.PlatformOperationResult.Failure(
 					"the requested file-flush mode is invalid"
 				)
 			);
@@ -178,7 +178,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			&& !this.Capabilities.SupportsDataOnlyFileFlush
 		) {
 			return ValueTask.FromResult(
-				PlatformOperationResult.Unsupported(
+				global::Icod.CommandFramework.Platform.PlatformOperationResult.Unsupported(
 					"data-only file flushing is unavailable on this platform"
 				)
 			);
@@ -188,7 +188,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			&& !this.Capabilities.SupportsDataAndMetadataFileFlush
 		) {
 			return ValueTask.FromResult(
-				PlatformOperationResult.Unsupported(
+				global::Icod.CommandFramework.Platform.PlatformOperationResult.Unsupported(
 					"data-and-metadata file flushing is unavailable on this platform"
 				)
 			);
@@ -209,7 +209,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			);
 		} catch ( EntryPointNotFoundException exception ) {
 			return ValueTask.FromResult(
-				PlatformOperationResult.Unsupported(
+				global::Icod.CommandFramework.Platform.PlatformOperationResult.Unsupported(
 					System.String.Concat(
 						"the requested pathname-flush primitive is unavailable: ",
 						exception.Message
@@ -218,7 +218,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			);
 		} catch ( DllNotFoundException exception ) {
 			return ValueTask.FromResult(
-				PlatformOperationResult.Unsupported(
+				global::Icod.CommandFramework.Platform.PlatformOperationResult.Unsupported(
 					System.String.Concat(
 						"the native filesystem library is unavailable: ",
 						exception.Message
@@ -234,7 +234,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			or Win32Exception
 		) {
 			return ValueTask.FromResult(
-				PlatformOperationResult.Failure(
+				global::Icod.CommandFramework.Platform.PlatformOperationResult.Failure(
 					exception.Message,
 					exception
 				)
@@ -243,7 +243,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 	}
 
 	/// <inheritdoc />
-	public ValueTask<PlatformOperationResult> FlushFileSystemAsync(
+	public ValueTask<global::Icod.CommandFramework.Platform.PlatformOperationResult> FlushFileSystemAsync(
 		string path,
 		CancellationToken cancellationToken = default
 	) {
@@ -253,7 +253,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 		cancellationToken.ThrowIfCancellationRequested();
 		if ( !this.Capabilities.SupportsFileSystemFlush ) {
 			return ValueTask.FromResult(
-				PlatformOperationResult.Unsupported(
+				global::Icod.CommandFramework.Platform.PlatformOperationResult.Unsupported(
 					"filesystem-specific flushing is available only where syncfs is exposed"
 				)
 			);
@@ -269,7 +269,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			);
 		} catch ( EntryPointNotFoundException exception ) {
 			return ValueTask.FromResult(
-				PlatformOperationResult.Unsupported(
+				global::Icod.CommandFramework.Platform.PlatformOperationResult.Unsupported(
 					System.String.Concat(
 						"syncfs is unavailable: ",
 						exception.Message
@@ -278,7 +278,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			);
 		} catch ( DllNotFoundException exception ) {
 			return ValueTask.FromResult(
-				PlatformOperationResult.Unsupported(
+				global::Icod.CommandFramework.Platform.PlatformOperationResult.Unsupported(
 					System.String.Concat(
 						"the native filesystem library is unavailable: ",
 						exception.Message
@@ -293,7 +293,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			or Win32Exception
 		) {
 			return ValueTask.FromResult(
-				PlatformOperationResult.Failure(
+				global::Icod.CommandFramework.Platform.PlatformOperationResult.Failure(
 					exception.Message,
 					exception
 				)
@@ -302,13 +302,13 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 	}
 
 	/// <inheritdoc />
-	public ValueTask<PlatformOperationResult> FlushAllFileSystemsAsync(
+	public ValueTask<global::Icod.CommandFramework.Platform.PlatformOperationResult> FlushAllFileSystemsAsync(
 		CancellationToken cancellationToken = default
 	) {
 		cancellationToken.ThrowIfCancellationRequested();
 		if ( !this.Capabilities.SupportsGlobalFlush ) {
 			return ValueTask.FromResult(
-				PlatformOperationResult.Unsupported(
+				global::Icod.CommandFramework.Platform.PlatformOperationResult.Unsupported(
 					"a process-level request to flush all mounted filesystems is unavailable on this platform"
 				)
 			);
@@ -317,11 +317,11 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			NativeMethods.FlushAllFileSystems();
 			cancellationToken.ThrowIfCancellationRequested();
 			return ValueTask.FromResult(
-				PlatformOperationResult.Success()
+				global::Icod.CommandFramework.Platform.PlatformOperationResult.Success()
 			);
 		} catch ( EntryPointNotFoundException exception ) {
 			return ValueTask.FromResult(
-				PlatformOperationResult.Unsupported(
+				global::Icod.CommandFramework.Platform.PlatformOperationResult.Unsupported(
 					System.String.Concat(
 						"sync is unavailable: ",
 						exception.Message
@@ -330,7 +330,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			);
 		} catch ( DllNotFoundException exception ) {
 			return ValueTask.FromResult(
-				PlatformOperationResult.Unsupported(
+				global::Icod.CommandFramework.Platform.PlatformOperationResult.Unsupported(
 					System.String.Concat(
 						"the native filesystem library is unavailable: ",
 						exception.Message
@@ -341,7 +341,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 	}
 
 	/// <inheritdoc />
-	public async ValueTask<PlatformOperationResult<SparseExtensionInfo>> ExtendSparseAsync(
+	public async ValueTask<global::Icod.CommandFramework.Platform.PlatformOperationResult<SparseExtensionInfo>> ExtendSparseAsync(
 		FileStream file,
 		long newLength,
 		CancellationToken cancellationToken = default
@@ -351,26 +351,26 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 		);
 		cancellationToken.ThrowIfCancellationRequested();
 		if ( 0 > newLength ) {
-			return PlatformOperationResult<SparseExtensionInfo>.Failure(
+			return global::Icod.CommandFramework.Platform.PlatformOperationResult<SparseExtensionInfo>.Failure(
 				"the requested file length cannot be negative"
 			);
 		}
 		if ( !this.Capabilities.SupportsSparseExtension ) {
-			return PlatformOperationResult<SparseExtensionInfo>.Unsupported(
+			return global::Icod.CommandFramework.Platform.PlatformOperationResult<SparseExtensionInfo>.Unsupported(
 				"sparse file extension is unavailable on this platform"
 			);
 		}
 
 		try {
 			if ( !file.CanWrite || !file.CanSeek ) {
-				return PlatformOperationResult<SparseExtensionInfo>.Failure(
+				return global::Icod.CommandFramework.Platform.PlatformOperationResult<SparseExtensionInfo>.Failure(
 					"the file must be open for writing and seeking"
 				);
 			}
 
 			var originalLength = file.Length;
 			if ( newLength < originalLength ) {
-				return PlatformOperationResult<SparseExtensionInfo>.Failure(
+				return global::Icod.CommandFramework.Platform.PlatformOperationResult<SparseExtensionInfo>.Failure(
 					"sparse extension cannot reduce the file length"
 				);
 			}
@@ -380,7 +380,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 					file,
 					cancellationToken
 				).ConfigureAwait( false );
-				return PlatformOperationResult<SparseExtensionInfo>.Success(
+				return global::Icod.CommandFramework.Platform.PlatformOperationResult<SparseExtensionInfo>.Success(
 					new SparseExtensionInfo(
 						originalLength,
 						newLength,
@@ -395,11 +395,11 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 				);
 				if ( !sparseResult.Succeeded ) {
 					return sparseResult.Supported
-						? PlatformOperationResult<SparseExtensionInfo>.Failure(
+						? global::Icod.CommandFramework.Platform.PlatformOperationResult<SparseExtensionInfo>.Failure(
 							sparseResult.Message ?? "could not mark the file sparse",
 							sparseResult.Exception
 						)
-						: PlatformOperationResult<SparseExtensionInfo>.Unsupported(
+						: global::Icod.CommandFramework.Platform.PlatformOperationResult<SparseExtensionInfo>.Unsupported(
 							sparseResult.Message ?? "sparse files are unavailable"
 						)
 					;
@@ -420,7 +420,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 				file,
 				cancellationToken
 			).ConfigureAwait( false );
-			return PlatformOperationResult<SparseExtensionInfo>.Success(
+			return global::Icod.CommandFramework.Platform.PlatformOperationResult<SparseExtensionInfo>.Success(
 				new SparseExtensionInfo(
 					originalLength,
 					newLength,
@@ -435,7 +435,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			or ArgumentException
 			or OverflowException
 		) {
-			return PlatformOperationResult<SparseExtensionInfo>.Failure(
+			return global::Icod.CommandFramework.Platform.PlatformOperationResult<SparseExtensionInfo>.Failure(
 				exception.Message,
 				exception
 			);
@@ -443,7 +443,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 	}
 
 	/// <inheritdoc />
-	public ValueTask<PlatformOperationResult<FileAllocationMap>> GetAllocatedRangesAsync(
+	public ValueTask<global::Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap>> GetAllocatedRangesAsync(
 		FileStream file,
 		CancellationToken cancellationToken = default
 	) {
@@ -453,7 +453,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 		cancellationToken.ThrowIfCancellationRequested();
 		if ( !this.Capabilities.SupportsAllocatedRangeQuery ) {
 			return ValueTask.FromResult(
-				PlatformOperationResult<FileAllocationMap>.Unsupported(
+				global::Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap>.Unsupported(
 					"allocated-range queries are unavailable on this platform"
 				)
 			);
@@ -462,7 +462,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 		try {
 			if ( !file.CanSeek ) {
 				return ValueTask.FromResult(
-					PlatformOperationResult<FileAllocationMap>.Failure(
+					global::Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap>.Failure(
 						"allocated ranges require a seekable file"
 					)
 				);
@@ -478,7 +478,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			);
 		} catch ( EntryPointNotFoundException exception ) {
 			return ValueTask.FromResult(
-				PlatformOperationResult<FileAllocationMap>.Unsupported(
+				global::Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap>.Unsupported(
 					System.String.Concat(
 						"allocated-range discovery is unavailable: ",
 						exception.Message
@@ -487,7 +487,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			);
 		} catch ( DllNotFoundException exception ) {
 			return ValueTask.FromResult(
-				PlatformOperationResult<FileAllocationMap>.Unsupported(
+				global::Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap>.Unsupported(
 					System.String.Concat(
 						"the native filesystem library is unavailable: ",
 						exception.Message
@@ -503,7 +503,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			or OverflowException
 		) {
 			return ValueTask.FromResult(
-				PlatformOperationResult<FileAllocationMap>.Failure(
+				global::Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap>.Failure(
 					exception.Message,
 					exception
 				)
@@ -512,7 +512,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 	}
 
 	/// <inheritdoc />
-	public async ValueTask<PlatformOperationResult<FileAllocationMap>> GetAllocatedRangesAsync(
+	public async ValueTask<global::Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap>> GetAllocatedRangesAsync(
 		string path,
 		CancellationToken cancellationToken = default
 	) {
@@ -541,7 +541,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			or NotSupportedException
 			or ArgumentException
 		) {
-			return PlatformOperationResult<FileAllocationMap>.Failure(
+			return global::Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap>.Failure(
 				exception.Message,
 				exception
 			);
@@ -549,7 +549,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 	}
 
 
-	private static PlatformOperationResult FlushPathOnWindows(
+	private static global::Icod.CommandFramework.Platform.PlatformOperationResult FlushPathOnWindows(
 		string path
 	) {
 		using var handle = NativeMethods.OpenWindowsPath(
@@ -571,7 +571,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			);
 		}
 		if ( NativeMethods.FlushFileBuffers( handle ) ) {
-			return PlatformOperationResult.Success();
+			return global::Icod.CommandFramework.Platform.PlatformOperationResult.Success();
 		}
 		return CreateWindowsFailure(
 			System.String.Concat(
@@ -582,7 +582,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 		);
 	}
 
-	private static PlatformOperationResult FlushPathOnUnix(
+	private static global::Icod.CommandFramework.Platform.PlatformOperationResult FlushPathOnUnix(
 		string path,
 		FileFlushMode mode,
 		CancellationToken cancellationToken
@@ -673,7 +673,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 					closeError
 				);
 			}
-			return PlatformOperationResult.Success();
+			return global::Icod.CommandFramework.Platform.PlatformOperationResult.Success();
 		} finally {
 			if ( 0 <= descriptor ) {
 				_ = NativeMethods.CloseFile(
@@ -684,7 +684,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 	}
 
 
-	private static PlatformOperationResult FlushFileSystemPathOnUnix(
+	private static global::Icod.CommandFramework.Platform.PlatformOperationResult FlushFileSystemPathOnUnix(
 		string path,
 		CancellationToken cancellationToken
 	) {
@@ -771,7 +771,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 					closeError
 				);
 			}
-			return PlatformOperationResult.Success();
+			return global::Icod.CommandFramework.Platform.PlatformOperationResult.Success();
 		} finally {
 			if ( 0 <= descriptor ) {
 				_ = NativeMethods.CloseFile(
@@ -959,7 +959,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 		}
 	}
 
-	private static PlatformOperationResult TryMarkSparseOnWindows(
+	private static global::Icod.CommandFramework.Platform.PlatformOperationResult TryMarkSparseOnWindows(
 		FileStream file
 	) {
 		try {
@@ -974,10 +974,10 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 				out var error
 			);
 			if ( succeeded ) {
-				return PlatformOperationResult.Success();
+				return global::Icod.CommandFramework.Platform.PlatformOperationResult.Success();
 			}
 			if ( IsWindowsUnsupportedError( error ) ) {
-				return PlatformOperationResult.Unsupported(
+				return global::Icod.CommandFramework.Platform.PlatformOperationResult.Unsupported(
 					new Win32Exception( error ).Message
 				);
 			}
@@ -992,19 +992,19 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 			or NotSupportedException
 			or ArgumentException
 		) {
-			return PlatformOperationResult.Failure(
+			return global::Icod.CommandFramework.Platform.PlatformOperationResult.Failure(
 				exception.Message,
 				exception
 			);
 		}
 	}
 
-	private static PlatformOperationResult<FileAllocationMap> QueryAllocatedRangesOnWindows(
+	private static global::Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap> QueryAllocatedRangesOnWindows(
 		FileStream file
 	) {
 		var length = file.Length;
 		if ( 0 == length ) {
-			return PlatformOperationResult<FileAllocationMap>.Success(
+			return global::Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap>.Success(
 				new FileAllocationMap(
 					0,
 					Array.Empty<FileAllocationRange>()
@@ -1044,12 +1044,12 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 
 				if ( !succeeded && ErrorMoreData != error ) {
 					if ( IsWindowsUnsupportedError( error ) ) {
-						return PlatformOperationResult<FileAllocationMap>.Unsupported(
+						return global::Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap>.Unsupported(
 							new Win32Exception( error ).Message
 						);
 					}
 					var exception = new Win32Exception( error );
-					return PlatformOperationResult<FileAllocationMap>.Failure(
+					return global::Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap>.Failure(
 						System.String.Concat(
 							"FSCTL_QUERY_ALLOCATED_RANGES failed: ",
 							exception.Message
@@ -1063,7 +1063,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 					|| WindowsRangeBufferSize < returnedBytes
 					|| 0 != returnedBytes % nativeRangeSize
 				) {
-					return PlatformOperationResult<FileAllocationMap>.Failure(
+					return global::Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap>.Failure(
 						"FSCTL_QUERY_ALLOCATED_RANGES returned an invalid buffer length"
 					);
 				}
@@ -1077,7 +1077,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 						)
 					);
 					if ( 0 > native.FileOffset || 0 >= native.Length ) {
-						return PlatformOperationResult<FileAllocationMap>.Failure(
+						return global::Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap>.Failure(
 							"FSCTL_QUERY_ALLOCATED_RANGES returned an invalid range"
 						);
 					}
@@ -1087,7 +1087,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 							native.FileOffset + native.Length
 						);
 					} catch ( OverflowException exception ) {
-						return PlatformOperationResult<FileAllocationMap>.Failure(
+						return global::Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap>.Failure(
 							"FSCTL_QUERY_ALLOCATED_RANGES returned an overflowing range",
 							exception
 						);
@@ -1096,7 +1096,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 						length <= native.FileOffset
 						|| nativeEnd <= queryOffset
 					) {
-						return PlatformOperationResult<FileAllocationMap>.Failure(
+						return global::Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap>.Failure(
 							"FSCTL_QUERY_ALLOCATED_RANGES returned a range outside the requested interval"
 						);
 					}
@@ -1109,7 +1109,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 				}
 
 				if ( succeeded ) {
-					return PlatformOperationResult<FileAllocationMap>.Success(
+					return global::Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap>.Success(
 						new FileAllocationMap(
 							length,
 							ranges
@@ -1118,19 +1118,19 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 				}
 
 				if ( 0 == ranges.Count ) {
-					return PlatformOperationResult<FileAllocationMap>.Failure(
+					return global::Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap>.Failure(
 						"FSCTL_QUERY_ALLOCATED_RANGES returned ERROR_MORE_DATA without a usable range"
 					);
 				}
 				var nextOffset = ranges[^1].End;
 				if ( nextOffset <= queryOffset ) {
-					return PlatformOperationResult<FileAllocationMap>.Failure(
+					return global::Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap>.Failure(
 						"FSCTL_QUERY_ALLOCATED_RANGES did not advance the query"
 					);
 				}
 				queryOffset = nextOffset;
 			}
-			return PlatformOperationResult<FileAllocationMap>.Success(
+			return global::Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap>.Success(
 				new FileAllocationMap(
 					length,
 					ranges
@@ -1146,12 +1146,12 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 		}
 	}
 
-	private static PlatformOperationResult<FileAllocationMap> QueryAllocatedRangesOnUnix(
+	private static global::Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap> QueryAllocatedRangesOnUnix(
 		FileStream file
 	) {
 		var length = file.Length;
 		if ( 0 == length ) {
-			return PlatformOperationResult<FileAllocationMap>.Success(
+			return global::Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap>.Success(
 				new FileAllocationMap(
 					0,
 					Array.Empty<FileAllocationRange>()
@@ -1182,7 +1182,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 						break;
 					}
 					if ( IsUnixSeekUnsupportedError( error ) ) {
-						return PlatformOperationResult<FileAllocationMap>.Unsupported(
+						return global::Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap>.Unsupported(
 							new Win32Exception( error ).Message
 						);
 					}
@@ -1202,7 +1202,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 					if ( ErrorNoSuchDeviceOrAddress == error ) {
 						hole = length;
 					} else if ( IsUnixSeekUnsupportedError( error ) ) {
-						return PlatformOperationResult<FileAllocationMap>.Unsupported(
+						return global::Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap>.Unsupported(
 							new Win32Exception( error ).Message
 						);
 					} else {
@@ -1213,7 +1213,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 					}
 				}
 				if ( hole <= data ) {
-					return PlatformOperationResult<FileAllocationMap>.Failure(
+					return global::Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap>.Failure(
 						"SEEK_HOLE did not advance beyond SEEK_DATA"
 					);
 				}
@@ -1225,7 +1225,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 				);
 				offset = hole;
 			}
-			return PlatformOperationResult<FileAllocationMap>.Success(
+			return global::Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap>.Success(
 				new FileAllocationMap(
 					length,
 					ranges
@@ -1353,7 +1353,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 		;
 	}
 
-	private static PlatformOperationResult CreateWindowsFailure(
+	private static global::Icod.CommandFramework.Platform.PlatformOperationResult CreateWindowsFailure(
 		string operation,
 		int? error = null
 	) {
@@ -1361,7 +1361,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 		var exception = new Win32Exception(
 			actualError
 		);
-		return PlatformOperationResult.Failure(
+		return global::Icod.CommandFramework.Platform.PlatformOperationResult.Failure(
 			System.String.Concat(
 				operation,
 				": ",
@@ -1371,14 +1371,14 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 		);
 	}
 
-	private static PlatformOperationResult CreateUnixFailure(
+	private static global::Icod.CommandFramework.Platform.PlatformOperationResult CreateUnixFailure(
 		string operation
 	) {
 		var error = Marshal.GetLastPInvokeError();
 		var exception = new Win32Exception(
 			error
 		);
-		return PlatformOperationResult.Failure(
+		return global::Icod.CommandFramework.Platform.PlatformOperationResult.Failure(
 			System.String.Concat(
 				operation,
 				": ",
@@ -1389,7 +1389,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 	}
 
 
-	private static PlatformOperationResult CreateUnixPathFailure(
+	private static global::Icod.CommandFramework.Platform.PlatformOperationResult CreateUnixPathFailure(
 		string operation,
 		string path,
 		int error
@@ -1397,7 +1397,7 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 		var exception = new Win32Exception(
 			error
 		);
-		return PlatformOperationResult.Failure(
+		return global::Icod.CommandFramework.Platform.PlatformOperationResult.Failure(
 			System.String.Concat(
 				operation,
 				" '",
@@ -1409,14 +1409,14 @@ public sealed class SystemFileSystemOperations : IFileSystemOperations {
 		);
 	}
 
-	private static PlatformOperationResult<FileAllocationMap> CreateUnixAllocationFailure(
+	private static global::Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap> CreateUnixAllocationFailure(
 		string operation,
 		int error
 	) {
 		var exception = new Win32Exception(
 			error
 		);
-		return PlatformOperationResult<FileAllocationMap>.Failure(
+		return global::Icod.CommandFramework.Platform.PlatformOperationResult<FileAllocationMap>.Failure(
 			System.String.Concat(
 				operation,
 				": ",

@@ -10,7 +10,7 @@ using Icod.CoreUtils.Shared.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
 using Icod.CoreUtils.Shared.FileSystem.RecursiveMutation;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
-using Icod.CoreUtils.Shared.Platform;
+using Icod.CommandFramework.Platform;
 
 /// <summary>
 /// Implements GNU <c>rm</c> over the shared pathname-expansion, traversal, metadata, and mutation contracts.

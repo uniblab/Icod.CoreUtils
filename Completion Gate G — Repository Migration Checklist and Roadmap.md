@@ -16,7 +16,7 @@ suite-specific Shared / engine library, where required
 individual command projects
 ```
 
-`Icod.Path` remains a separate neutral package unless the Gate G API audit demonstrates that incorporating it into `Icod.CommandFramework` is materially cleaner.
+`Icod.Path` is retained as a separate neutral package. Gate G1 is complete, and CoreUtils consumes the published package rather than a source-tree project.
 
 No command suite may become a production dependency of `Icod.CommandFramework`, and sibling command suites must not acquire runtime dependencies on one another merely because they were developed together.
 
@@ -29,10 +29,10 @@ No command suite may become a production dependency of `Icod.CommandFramework`, 
 - [x] **Icod.Path**
   - `Icod.Path`
   - `Icod.Path.Tests`
-  - Proposed destination: `Icod.Path` repository and NuGet package.
+  - Destination: independent `Icod.Path` repository and published package.
   - Gate G roadmap should explicitly add this repository decision.
 
-- [ ] **Icod.CommandFramework**
+- [x] **Icod.CommandFramework**
   - New class-library project extracted from demonstrated cross-suite portions of the present `Icod.CoreUtils.Shared`.
   - New dedicated test project assembled from the applicable portions of `Shared.Tests`.
   - New independent solution.
@@ -191,48 +191,65 @@ No projects move during this phase.
 
 **Exit criterion:** every shared API has a proposed permanent owner and every existing project reference has a proposed replacement.
 
-## G1 — Freeze `Icod.Path`
+## G1 — Freeze `Icod.Path` — COMPLETE
 
-- [ ] Audit its public API and actual consumers.
-- [ ] Confirm whether it remains independent or moves into `Icod.CommandFramework`.
-- [ ] Preferred decision: retain independent `Icod.Path`.
-- [ ] Freeze namespace and package surface.
-- [ ] Establish package versioning, symbols, SourceLink, deterministic builds, README, license, and CI.
-- [ ] Extract repository history.
-- [ ] Publish a prerelease package.
-- [ ] Convert a controlled in-tree consumer to the package and validate all three runners.
+- [x] Audit its public API and actual consumers.
+- [x] Confirm that it remains an independent neutral package.
+- [x] Freeze namespace and package surface.
+- [x] Establish package versioning, symbols, deterministic builds, README, license, and CI.
+- [x] Extract the repository.
+- [x] Publish the versioned package; `Icod.Path` 1.0.0 is the current CoreUtils dependency.
+- [x] Convert in-tree consumers to the package and validate the split.
 
-**Exit criterion:** canonical-path behavior can be consumed without a source-tree project reference.
+**Exit criterion met:** canonical-path behavior is consumed without a source-tree `Icod.Path` project reference.
+## G2 — Extract `Icod.CommandFramework` — COMPLETE
 
-## G2 — Extract `Icod.CommandFramework`
+- [x] Create the independent repository and solution.
+- [x] Move only APIs demonstrated to have independent-suite consumers.
+- [x] Move/split their tests out of `Icod.CoreUtils.Shared.Tests`.
+- [x] Remove Coreutils-specific names and assumptions from the framework public API.
+- [x] Audit accessibility and XML documentation during extraction.
+- [x] Audit native ABI boundaries during extraction and three-platform validation.
+- [x] Ensure no command-suite production dependency exists.
+- [x] Package with symbols and repository metadata.
+- [x] Publish the versioned package; `Icod.CommandFramework` 1.0.0 is the current CoreUtils dependency.
+- [x] Validate against real CoreUtils and sibling-suite consumers.
 
-- [ ] Create the new repository/solution.
-- [ ] Move only APIs demonstrated to have independent-suite consumers.
-- [ ] Move/split their tests out of `Icod.CoreUtils.Shared.Tests`.
-- [ ] Remove Coreutils-specific names and assumptions from the new public API.
-- [ ] Audit accessibility and XML documentation.
-- [ ] Audit trimming and AOT behavior.
-- [ ] Audit native ABI boundaries on Windows/Linux/macOS.
-- [ ] Ensure no suite dependency exists.
-- [ ] Package with symbols and SourceLink.
-- [ ] Publish prerelease package.
-- [ ] Validate against several real consumers before declaring the API frozen.
-
-**Exit criterion:** sibling suites can compile against a published framework binary.
-
-## G3 — Contract `Icod.CoreUtils.Shared`
+**Exit criterion met:** sibling suites can compile against the published framework binary.
+## G3 — Contract `Icod.CoreUtils.Shared` — ACTIVE
 
 - [ ] Remove every API now owned by `Icod.CommandFramework`.
 - [ ] Keep only demonstrated Coreutils/Fileutils/Textutils-specific reuse.
-- [ ] Make it depend on `Icod.CommandFramework`.
-- [ ] Add `Icod.Path` package dependency where genuinely required.
+- [x] Make it depend on `Icod.CommandFramework`.
+- [x] Add the published `Icod.Path` package dependency where genuinely required.
 - [ ] Split/rehome tests appropriately.
 - [ ] Publish `Icod.CoreUtils.Shared`.
 - [ ] Convert Coreutils commands to package references.
 - [ ] Build/test Coreutils without sibling-suite source projects being needed.
 
-**Exit criterion:** `Icod.CoreUtils.Shared` is no longer an incubation project.
+### G3 contraction progress
 
+- [x] **G3A — Text split**
+  - move general text consumers to `Icod.CommandFramework.Text`;
+  - retain the GNU tab-stop parser policy in `Icod.CoreUtils.Shared.Text`;
+  - remove duplicated framework-owned text mechanisms and tests.
+- [x] **G3B — Time split**
+  - move monotonic-clock and periodic-scheduler consumers to `Icod.CommandFramework.Time`;
+  - retain GNU date parsing/formatting and wall-clock mutation policy in `Icod.CoreUtils.Shared.Time`;
+  - remove duplicated framework-owned monotonic timing mechanisms and tests.
+- [x] **G3C1 — Platform consumer cut-over**
+  - move consumers of identity, capability/result, and SELinux contracts to `Icod.CommandFramework.Platform`;
+  - retain Coreutils-local login-accounting, process-information, system-information, system-metrics, and user-information providers.
+- [ ] **G3C2 — Platform implementation excision**
+  - remove the duplicated framework-owned Platform implementation and framework-owned Platform tests;
+  - contract the Platform README to the retained Coreutils responsibilities.
+- [ ] Audit and contract the remaining split namespaces, especially filesystem/mode boundaries.
+- [ ] Remove namespaces and tests that are wholly owned by `Icod.CommandFramework`.
+- [ ] Audit `Icod.CoreUtils.ProcessTestHost` after framework-owned process tests are removed.
+- [ ] Complete `Icod.CoreUtils.Shared` packaging and convert retained Coreutils commands to package references.
+- [ ] Validate the contracted Coreutils suite without sibling-suite source projects.
+
+**Exit criterion:** `Icod.CoreUtils.Shared` is no longer an incubation project.
 ## G4 — Pilot repository extractions
 
 Use small suites first to prove the packaging procedure before moving the large families.
@@ -361,14 +378,18 @@ A migration is **not complete merely because the files have moved**. It is compl
 
 # D. Immediate Next Work
 
-The next Gate G implementation tranche should contain **analysis artifacts only**, not repository extraction:
+Completion Gate G is active. `Icod.Path` and `Icod.CommandFramework` are now independent published foundations, so the current work is the G3 contraction of `Icod.CoreUtils.Shared`.
 
-- [ ] Update the main roadmap status to make Completion Gate G active.
-- [ ] Add the `Icod.Path` decision explicitly to Gate G.
-- [ ] Add this migration roadmap as the Gate G working document.
-- [ ] Produce the complete project dependency graph.
-- [ ] Produce the complete Shared API → consumer matrix.
-- [ ] Produce an initial proposed ownership classification for every Shared source area.
-- [ ] Review that classification before moving a single source file.
+Current sequence:
 
-Only after that review should G1 (`Icod.Path`) and G2 (`Icod.CommandFramework`) begin.
+- [x] G3A — contract the split `Text` namespace.
+- [x] G3B — contract the split `Time` namespace.
+- [x] G3C1 — cut identity/capability/SELinux consumers over to `Icod.CommandFramework.Platform`.
+- [ ] G3C2 — delete the duplicated framework-owned Platform implementation and tests.
+- [ ] Contract the remaining split namespaces, including filesystem/mode boundaries.
+- [ ] Excise namespaces that are wholly owned by `Icod.CommandFramework`.
+- [ ] Audit and remove/rehome framework-owned `Shared.Tests` and `ProcessTestHost` infrastructure.
+- [ ] Publish the contracted `Icod.CoreUtils.Shared` package and convert retained Coreutils commands to package references.
+- [ ] Run the G3 clean-checkout/build/test closure before beginning G4 repository extraction.
+
+Do not begin G4 pilot extractions until the G3 exit criterion is satisfied.

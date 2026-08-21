@@ -6,7 +6,7 @@ using Icod.CoreUtils.Shared.FileSystem.Mutation;
 using Icod.CoreUtils.Shared.FileSystem.Ownership;
 using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
-using Icod.CoreUtils.Shared.Platform;
+using Icod.CommandFramework.Platform;
 
 /// <summary>Executes GNU <c>install</c> plans through E3, E4, and E6 shared primitives.</summary>
 internal sealed class InstallEngine {

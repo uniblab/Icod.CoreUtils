@@ -10,7 +10,7 @@ using Icod.CoreUtils.Shared.Platform;
 /// Implements <see cref="ITruncatePlatform"/> with BCL file operations and platform-specific block-size queries.
 /// </summary>
 /// <remarks>
-/// The implementation prefers managed APIs, uses narrowly scoped native metadata calls where required, and reports unsupported or failed operations through <c>PlatformOperationResult</c>.
+/// The implementation prefers managed APIs, uses narrowly scoped native metadata calls where required, and reports unsupported or failed operations through <c>global::Icod.CommandFramework.Platform.PlatformOperationResult</c>.
 /// </remarks>
 public sealed class SystemTruncatePlatform : ITruncatePlatform {
 
@@ -48,7 +48,7 @@ public sealed class SystemTruncatePlatform : ITruncatePlatform {
 	/// <param name="path">The file pathname used by path-based host metadata APIs.</param>
 	/// <param name="cancellationToken">The token checked before and during the host metadata query.</param>
 	/// <returns>A capability result containing the positive preferred block size on success.</returns>
-	public ValueTask<PlatformOperationResult<long>> GetIoBlockSizeAsync(
+	public ValueTask<global::Icod.CommandFramework.Platform.PlatformOperationResult<long>> GetIoBlockSizeAsync(
 		FileStream file,
 		string path,
 		CancellationToken cancellationToken = default
@@ -82,31 +82,31 @@ public sealed class SystemTruncatePlatform : ITruncatePlatform {
 				);
 			}
 			return ValueTask.FromResult(
-				PlatformOperationResult<long>.Unsupported(
+				global::Icod.CommandFramework.Platform.PlatformOperationResult<long>.Unsupported(
 					"preferred I/O block-size discovery is not implemented on this platform"
 				)
 			);
 		} catch ( EntryPointNotFoundException exception ) {
 			return ValueTask.FromResult(
-				PlatformOperationResult<long>.Unsupported(
+				global::Icod.CommandFramework.Platform.PlatformOperationResult<long>.Unsupported(
 					String.Concat( "the required native entry point is unavailable: ", exception.Message )
 				)
 			);
 		} catch ( DllNotFoundException exception ) {
 			return ValueTask.FromResult(
-				PlatformOperationResult<long>.Unsupported(
+				global::Icod.CommandFramework.Platform.PlatformOperationResult<long>.Unsupported(
 					String.Concat( "the required native library is unavailable: ", exception.Message )
 				)
 			);
 		} catch ( BadImageFormatException exception ) {
 			return ValueTask.FromResult(
-				PlatformOperationResult<long>.Unsupported(
+				global::Icod.CommandFramework.Platform.PlatformOperationResult<long>.Unsupported(
 					String.Concat( "the native platform ABI is incompatible: ", exception.Message )
 				)
 			);
 		} catch ( ObjectDisposedException exception ) {
 			return ValueTask.FromResult(
-				PlatformOperationResult<long>.Failure(
+				global::Icod.CommandFramework.Platform.PlatformOperationResult<long>.Failure(
 					"the file handle is closed",
 					exception
 				)
@@ -119,7 +119,7 @@ public sealed class SystemTruncatePlatform : ITruncatePlatform {
 			or OverflowException
 		) {
 			return ValueTask.FromResult(
-				PlatformOperationResult<long>.Failure(
+				global::Icod.CommandFramework.Platform.PlatformOperationResult<long>.Failure(
 					exception.Message,
 					exception
 				)
@@ -134,7 +134,7 @@ public sealed class SystemTruncatePlatform : ITruncatePlatform {
 	/// <param name="length">The requested non-negative logical length in bytes.</param>
 	/// <param name="cancellationToken">The token used to cancel sparse extension or length adjustment.</param>
 	/// <returns>A capability result describing the length-change outcome.</returns>
-	public async ValueTask<PlatformOperationResult> SetLengthAsync(
+	public async ValueTask<global::Icod.CommandFramework.Platform.PlatformOperationResult> SetLengthAsync(
 		FileStream file,
 		long length,
 		CancellationToken cancellationToken = default
@@ -165,15 +165,15 @@ public sealed class SystemTruncatePlatform : ITruncatePlatform {
 				file.SetLength(
 					length
 				);
-				return PlatformOperationResult.Success();
+				return global::Icod.CommandFramework.Platform.PlatformOperationResult.Success();
 			}
 
 			file.SetLength(
 				length
 			);
-			return PlatformOperationResult.Success();
+			return global::Icod.CommandFramework.Platform.PlatformOperationResult.Success();
 		} catch ( ObjectDisposedException exception ) {
-			return PlatformOperationResult.Failure(
+			return global::Icod.CommandFramework.Platform.PlatformOperationResult.Failure(
 				"the file handle is closed",
 				exception
 			);
@@ -183,14 +183,14 @@ public sealed class SystemTruncatePlatform : ITruncatePlatform {
 			or ArgumentException
 			or NotSupportedException
 		) {
-			return PlatformOperationResult.Failure(
+			return global::Icod.CommandFramework.Platform.PlatformOperationResult.Failure(
 				exception.Message,
 				exception
 			);
 		}
 	}
 
-	private static PlatformOperationResult<long> GetWindowsIoBlockSize(
+	private static global::Icod.CommandFramework.Platform.PlatformOperationResult<long> GetWindowsIoBlockSize(
 		string path
 	) {
 		var fullPath = System.IO.Path.GetFullPath(
@@ -206,7 +206,7 @@ public sealed class SystemTruncatePlatform : ITruncatePlatform {
 		) ) {
 			var error = Marshal.GetLastPInvokeError();
 			var exception = new Win32Exception( error );
-			return PlatformOperationResult<long>.Failure(
+			return global::Icod.CommandFramework.Platform.PlatformOperationResult<long>.Failure(
 				exception.Message,
 				exception
 			);
@@ -220,7 +220,7 @@ public sealed class SystemTruncatePlatform : ITruncatePlatform {
 		) ) {
 			var error = Marshal.GetLastPInvokeError();
 			var exception = new Win32Exception( error );
-			return PlatformOperationResult<long>.Failure(
+			return global::Icod.CommandFramework.Platform.PlatformOperationResult<long>.Failure(
 				exception.Message,
 				exception
 			);
@@ -233,7 +233,7 @@ public sealed class SystemTruncatePlatform : ITruncatePlatform {
 		);
 	}
 
-	private static PlatformOperationResult<long> GetLinuxIoBlockSize(
+	private static global::Icod.CommandFramework.Platform.PlatformOperationResult<long> GetLinuxIoBlockSize(
 		FileStream file
 	) {
 		return WithFileDescriptor(
@@ -257,7 +257,7 @@ public sealed class SystemTruncatePlatform : ITruncatePlatform {
 		);
 	}
 
-	private static PlatformOperationResult<long> GetMacOsIoBlockSize(
+	private static global::Icod.CommandFramework.Platform.PlatformOperationResult<long> GetMacOsIoBlockSize(
 		FileStream file
 	) {
 		return WithFileDescriptor(
@@ -278,7 +278,7 @@ public sealed class SystemTruncatePlatform : ITruncatePlatform {
 		);
 	}
 
-	private static PlatformOperationResult<long> GetFreeBsdIoBlockSize(
+	private static global::Icod.CommandFramework.Platform.PlatformOperationResult<long> GetFreeBsdIoBlockSize(
 		FileStream file
 	) {
 		return WithFileDescriptor(
@@ -299,9 +299,9 @@ public sealed class SystemTruncatePlatform : ITruncatePlatform {
 		);
 	}
 
-	private static PlatformOperationResult<long> WithFileDescriptor(
+	private static global::Icod.CommandFramework.Platform.PlatformOperationResult<long> WithFileDescriptor(
 		FileStream file,
-		Func<int, PlatformOperationResult<long>> operation
+		Func<int, global::Icod.CommandFramework.Platform.PlatformOperationResult<long>> operation
 	) {
 		var handle = file.SafeFileHandle;
 		var referenceAdded = false;
@@ -314,7 +314,7 @@ public sealed class SystemTruncatePlatform : ITruncatePlatform {
 				descriptorValue < int.MinValue
 				|| descriptorValue > int.MaxValue
 			) {
-				return PlatformOperationResult<long>.Failure(
+				return global::Icod.CommandFramework.Platform.PlatformOperationResult<long>.Failure(
 					"the native file descriptor is outside the supported range"
 				);
 			}
@@ -328,23 +328,23 @@ public sealed class SystemTruncatePlatform : ITruncatePlatform {
 		}
 	}
 
-	private static PlatformOperationResult<long> ValidateBlockSize(
+	private static global::Icod.CommandFramework.Platform.PlatformOperationResult<long> ValidateBlockSize(
 		long blockSize
 	) {
 		return 0 < blockSize
-			? PlatformOperationResult<long>.Success( blockSize )
-			: PlatformOperationResult<long>.Failure(
+			? global::Icod.CommandFramework.Platform.PlatformOperationResult<long>.Success( blockSize )
+			: global::Icod.CommandFramework.Platform.PlatformOperationResult<long>.Failure(
 				"the operating system returned an invalid I/O block size"
 			)
 		;
 	}
 
-	private static PlatformOperationResult<long> NativeFailure(
+	private static global::Icod.CommandFramework.Platform.PlatformOperationResult<long> NativeFailure(
 		string operation
 	) {
 		var error = Marshal.GetLastPInvokeError();
 		var exception = new Win32Exception( error );
-		return PlatformOperationResult<long>.Failure(
+		return global::Icod.CommandFramework.Platform.PlatformOperationResult<long>.Failure(
 			String.Concat( operation, ": ", exception.Message ),
 			exception
 		);

@@ -4,7 +4,7 @@ using Icod.CoreUtils.Shared.CommandLine;
 using Icod.CoreUtils.Shared.Diagnostics;
 using Icod.CoreUtils.Shared.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
-using Icod.CoreUtils.Shared.Platform;
+using Icod.CommandFramework.Platform;
 using Xunit;
 
 /// <summary>Exercises the Batch 36 <c>stat</c> command.</summary>

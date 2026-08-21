@@ -2,7 +2,7 @@ namespace Icod.UtilLinux.Renice;
 
 using System.Globalization;
 using System.Text;
-using Icod.CoreUtils.Shared.Platform;
+using Icod.CommandFramework.Platform;
 using Icod.CoreUtils.Shared.Processes;
 
 /// <summary>Implements the util-linux 2.42.2 <c>renice</c> command profile.</summary>

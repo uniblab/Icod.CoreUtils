@@ -11,6 +11,8 @@ using Icod.CoreUtils.Shared.Diagnostics;
 using Icod.CoreUtils.Shared.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
 using Icod.CoreUtils.Shared.Platform;
+using ProcessIdentity = Icod.CommandFramework.Platform.ProcessIdentity;
+using SystemIdentityProvider = Icod.CommandFramework.Platform.SystemIdentityProvider;
 
 /// <summary>Identifies one access mode tested by a <c>test</c> file predicate.</summary>
 public enum TestAccessMode {

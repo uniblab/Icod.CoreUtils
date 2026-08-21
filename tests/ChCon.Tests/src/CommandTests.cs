@@ -2,7 +2,7 @@ namespace Icod.CoreUtils.ChCon.Tests;
 
 using System.Collections.Generic;
 using System.IO;
-using Icod.CoreUtils.Shared.Platform;
+using Icod.CommandFramework.Platform;
 using Xunit;
 
 public sealed class CommandTests {

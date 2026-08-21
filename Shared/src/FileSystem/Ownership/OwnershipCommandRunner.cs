@@ -7,7 +7,7 @@ using Icod.CoreUtils.Shared.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
 using Icod.CoreUtils.Shared.FileSystem.RecursiveMutation;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
-using Icod.CoreUtils.Shared.Platform;
+using Icod.CommandFramework.Platform;
 
 /// <summary>Identifies the ownership-changing command whose policy is being executed.</summary>
 public enum OwnershipCommandKind {

@@ -1,6 +1,6 @@
 using Icod.CoreUtils.Shared.FileSystem;
 using Icod.CoreUtils.Shared.FileSystem.RecursiveMutation;
-using Icod.CoreUtils.Shared.Platform;
+using Icod.CommandFramework.Platform;
 using Xunit;
 
 namespace Icod.CoreUtils.Shared.Tests.FileSystem.RecursiveMutation;

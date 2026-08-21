@@ -2,7 +2,7 @@ namespace Icod.CoreUtils.Truncate.Tests;
 
 using System.Text;
 using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.Platform;
+using Icod.CommandFramework.Platform;
 using Xunit;
 
 public sealed class TruncateCommandTests {

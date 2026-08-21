@@ -1,9 +1,9 @@
 namespace Icod.UtilLinux.Renice.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Platform;
+using Icod.CommandFramework.Platform;
 using Icod.CoreUtils.Shared.Processes;
-using PlatformProcessIdentity = Icod.CoreUtils.Shared.Platform.ProcessIdentity;
+using PlatformProcessIdentity = Icod.CommandFramework.Platform.ProcessIdentity;
 using Xunit;
 
 /// <summary>Exercises util-linux 2.42.2 <c>renice</c> parsing and target semantics.</summary>

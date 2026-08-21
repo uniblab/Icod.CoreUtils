@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Shared.Tests;
 
 using Icod.CoreUtils.Shared.FileSystem;
-using Icod.CoreUtils.Shared.Platform;
+using Icod.CommandFramework.Platform;
 using Xunit;
 
 public sealed class FileSystemOperationsTests {

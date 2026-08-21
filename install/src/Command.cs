@@ -7,7 +7,7 @@ using Icod.CoreUtils.Shared.Diagnostics;
 using Icod.CoreUtils.Shared.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Mutation;
 using Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement;
-using Icod.CoreUtils.Shared.Platform;
+using Icod.CommandFramework.Platform;
 
 /// <summary>Implements GNU <c>install</c> through the shared filesystem contracts.</summary>
 public static class Command {
