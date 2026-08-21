@@ -1,8 +1,8 @@
 namespace Icod.CoreUtils.MkTemp;
 
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.Temporary;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.Temporary;
 
 /// <summary>Implements <c>mktemp [OPTION]... [TEMPLATE]</c> with secure temporary-file and directory creation.</summary>
 public static class Command {

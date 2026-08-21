@@ -1,6 +1,6 @@
 namespace Icod.Patch;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>Supplies deterministic command-line answers to Patch policy questions.</summary>
 internal sealed class CommandPatchDecisionProvider : IPatchDecisionProvider {

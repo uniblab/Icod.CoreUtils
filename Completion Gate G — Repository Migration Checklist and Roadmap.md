@@ -278,12 +278,13 @@ No projects move during this phase.
   - compare `FileSystemCapabilities`, `IFileSystemOperations`, and `SystemFileSystemOperations` with the framework package;
   - cut neutral consumers to `Icod.CommandFramework.FileSystem` where contracts match;
   - preserve any Coreutils-only delta explicitly rather than deleting it blindly.
-- [ ] **G3K1 — Remaining framework-owned namespace consumer cut-over**
+- [x] **G3K1 — Remaining framework-owned namespace consumer cut-over**
   - move surviving consumers of the wholly framework-owned `CommandLine`, `Delimiters`, `Diagnostics`, `Host`, `IO`, `Processes`, `Records`, `RegularExpressions`, `Temporary`, and `Terminal` namespaces to `Icod.CommandFramework`;
   - preserve Coreutils-specific namespaces such as formatting/escape policy, numeric operand grammar, ownership, listing, copy/move, and filesystem-usage behavior.
 - [ ] **G3K2 — Remaining framework-owned namespace/test excision**
   - remove the duplicated implementations for the G3K1 namespaces from `Icod.CoreUtils.Shared`;
-  - remove or rehome their duplicated Shared tests, retaining only tests for Coreutils-owned behavior.
+  - remove or rehome their duplicated Shared tests, retaining only tests for Coreutils-owned behavior;
+  - complete the intentionally deferred `tests/Shared.Tests` namespace cut-over while distinguishing authoritative framework tests from retained Coreutils tests.
 - [ ] Audit `Icod.CoreUtils.ProcessTestHost` after framework-owned process tests are removed.
 - [ ] Complete `Icod.CoreUtils.Shared` packaging and convert retained Coreutils commands to package references.
 - [ ] Validate the contracted Coreutils suite without sibling-suite source projects.

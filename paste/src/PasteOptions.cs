@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Paste;
 
-using Icod.CoreUtils.Shared.Delimiters;
+using Icod.CommandFramework.Delimiters;
 
 /// <summary>Contains validated options for one <c>paste</c> execution.</summary>
 internal sealed class PasteOptions {

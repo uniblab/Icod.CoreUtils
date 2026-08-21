@@ -3,9 +3,9 @@
 
 namespace Icod.CoreUtils.TSort;
 
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.IO;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.IO;
 
 /// <summary>Implements GNU-compatible topological sorting of byte-token pairs.</summary>
 public static class Command {

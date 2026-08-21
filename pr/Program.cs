@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Pr;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 /// <summary>Provides the <c>pr [OPTION]... [FILE]...</c> process entry point.</summary>
 public static class Program {
 	/// <summary>Runs the GNU-compatible page-presentation command.</summary>

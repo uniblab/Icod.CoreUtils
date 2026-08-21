@@ -7,9 +7,9 @@ using System.Buffers;
 using System.Globalization;
 using System.Numerics;
 using System.Security;
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.IO;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.IO;
 using Icod.CoreUtils.Shared.Numerics;
 using Icod.DiffUtils.Shared;
 

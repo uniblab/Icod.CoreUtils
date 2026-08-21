@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Mkdir;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>
 /// Provides the <c>mkdir [OPTION]... DIRECTORY...</c> command entry point.

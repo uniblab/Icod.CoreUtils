@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Shared.Ordering;
 
 using System.Runtime.ExceptionServices;
-using Icod.CoreUtils.Shared.Temporary;
+using Icod.CommandFramework.Temporary;
 
 /// <summary>Coordinates bounded-memory stable run generation, bounded-fan-in merge passes, and deterministic workspace cleanup.</summary>
 /// <typeparam name="T">The ordered value type.</typeparam>

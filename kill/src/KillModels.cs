@@ -1,6 +1,6 @@
 namespace Icod.UtilLinux.Kill;
 
-using Icod.CoreUtils.Shared.Processes;
+using Icod.CommandFramework.Processes;
 
 /// <summary>Describes one delayed follow-up signal requested with <c>--timeout</c>.</summary>
 public sealed record KillTimeout {

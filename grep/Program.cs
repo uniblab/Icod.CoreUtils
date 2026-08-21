@@ -1,6 +1,6 @@
 namespace Icod.Grep;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>Provides the <c>grep [OPTION]... PATTERNS [FILE]...</c> process entry point.</summary>
 public static class Program {

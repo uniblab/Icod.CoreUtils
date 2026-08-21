@@ -3,7 +3,7 @@ namespace Icod.UtilLinux.Kill;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
-using Icod.CoreUtils.Shared.Processes;
+using Icod.CommandFramework.Processes;
 
 /// <summary>Provides util-linux <c>kill</c> host integrations that are not general F4 operations.</summary>
 public sealed class SystemKillPlatform : IKillPlatform {

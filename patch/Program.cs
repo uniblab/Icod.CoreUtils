@@ -1,6 +1,6 @@
 namespace Icod.Patch;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>Provides the process entry point for <c>patch</c>.</summary>
 internal static class Program {

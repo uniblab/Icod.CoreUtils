@@ -1,8 +1,8 @@
 namespace Icod.Tar;
 
 using System.IO.Compression;
-using Icod.CoreUtils.Shared.Processes;
-using Icod.CoreUtils.Shared.Temporary;
+using Icod.CommandFramework.Processes;
+using Icod.CommandFramework.Temporary;
 
 internal sealed class TarInput : IAsyncDisposable {
 	private readonly IAsyncDisposable? owner;

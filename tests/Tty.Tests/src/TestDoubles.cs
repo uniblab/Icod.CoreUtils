@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Tty.Tests;
 
-using Icod.CoreUtils.Shared.Terminal;
+using Icod.CommandFramework.Terminal;
 
 /// <summary>Provides deterministic terminal observations for command tests.</summary>
 public sealed class FakeTerminalProvider : ITerminalControlProvider {

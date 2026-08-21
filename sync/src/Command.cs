@@ -1,7 +1,7 @@
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.FileSystem;
-using Icod.CoreUtils.Shared.IO;
+using Icod.CommandFramework.IO;
 using Icod.CommandFramework.Platform;
 
 namespace Icod.CoreUtils.Sync;

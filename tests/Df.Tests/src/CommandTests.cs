@@ -3,7 +3,7 @@ namespace Icod.CoreUtils.Df.Tests;
 using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CommandFramework.FileSystem.Traversal;
 using Icod.CoreUtils.Shared.FileSystem.Usage;
-using Icod.CoreUtils.Shared.Terminal;
+using Icod.CommandFramework.Terminal;
 using Xunit;
 
 /// <summary>Verifies the public <c>df</c> command boundary.</summary>

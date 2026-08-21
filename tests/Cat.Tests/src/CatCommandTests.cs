@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Cat.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using CatCommand = Icod.CoreUtils.Cat.Command;
 using Xunit;
 

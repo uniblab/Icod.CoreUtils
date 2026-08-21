@@ -3,11 +3,11 @@ namespace Icod.CoreUtils.Ptx;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.IO;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.IO;
 using Icod.CoreUtils.Shared.Ordering;
-using Icod.CoreUtils.Shared.Records;
-using Icod.CoreUtils.Shared.Temporary;
+using Icod.CommandFramework.Records;
+using Icod.CommandFramework.Temporary;
 
 /// <summary>Coordinates parameter files, context discovery, stable external ordering, and formatted output.</summary>
 internal static class PtxEngine {

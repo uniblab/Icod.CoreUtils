@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Ptx;
 
 using System.Text;
-using Icod.CoreUtils.Shared.RegularExpressions;
+using Icod.CommandFramework.RegularExpressions;
 
 /// <summary>Provides byte-oriented keyword and context matching over the Shared GNU Emacs regular-expression engine.</summary>
 internal sealed class PtxPatterns {

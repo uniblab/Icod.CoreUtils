@@ -2,7 +2,7 @@ namespace Icod.ProcPs.Shared;
 
 using System.Runtime.InteropServices;
 using System.Text;
-using Icod.CoreUtils.Shared.Terminal;
+using Icod.CommandFramework.Terminal;
 
 /// <summary>Abstracts one writable terminal used by a ProcPs full-screen command.</summary>
 public interface IProcFullScreenTerminal : IAsyncDisposable {

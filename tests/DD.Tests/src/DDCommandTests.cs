@@ -1,4 +1,4 @@
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Xunit;
 using Tool = Icod.CoreUtils.DD.Command;
 

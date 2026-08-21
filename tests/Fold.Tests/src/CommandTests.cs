@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Fold.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Xunit;
 
 /// <summary>Tests documented <c>fold</c> option, counting, and control-character behavior.</summary>

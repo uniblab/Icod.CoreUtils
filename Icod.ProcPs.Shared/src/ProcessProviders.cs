@@ -3,8 +3,8 @@ namespace Icod.ProcPs.Shared;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
-using Icod.CoreUtils.Shared.Host;
-using Icod.CoreUtils.Shared.Processes;
+using Icod.CommandFramework.Host;
+using Icod.CommandFramework.Processes;
 
 /// <summary>Enumerates and observes process state using procps-ng field semantics.</summary>
 public interface IProcProcessProvider {

@@ -1,6 +1,6 @@
 namespace Icod.ProcPs.Shared;
 
-using Icod.CoreUtils.Shared.Host;
+using Icod.CommandFramework.Host;
 
 /// <summary>Identifies the source from which a ProcPs observation was obtained.</summary>
 public enum ProcObservationSource {

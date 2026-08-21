@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.TSort;
 
-using Icod.CoreUtils.Shared.IO;
+using Icod.CommandFramework.IO;
 
 /// <summary>
 /// Stores token relations and emits the GNU-compatible deterministic

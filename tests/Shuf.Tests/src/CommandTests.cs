@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Shuf.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Xunit;
 
 /// <summary>Defines a nonparallel collection for tests that inspect the process temporary directory.</summary>

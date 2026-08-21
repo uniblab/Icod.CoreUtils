@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Od;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>
 /// Provides the <c>od</c> process entry point.

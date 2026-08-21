@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Expand;
 
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.IO;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.IO;
 using Icod.CommandFramework.Text;
 
 /// <summary>Performs the byte-preserving <c>expand</c> transformation.</summary>

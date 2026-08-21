@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Expand.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Xunit;
 
 /// <summary>Tests documented <c>expand</c> option and display-column behavior.</summary>

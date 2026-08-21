@@ -1,9 +1,9 @@
 namespace Icod.CoreUtils.Shared.Checksums;
 
 using System.Globalization;
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.IO;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.IO;
 
 /// <summary>
 /// Implements BSD and System V checksum output for the <c>sum</c> command.

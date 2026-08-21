@@ -2,8 +2,8 @@ namespace Icod.CoreUtils.Who;
 
 using System.Net;
 using System.Net.Sockets;
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
 using Icod.CoreUtils.Shared.Platform;
 
 /// <summary>Implements the <c>who</c> command.</summary>

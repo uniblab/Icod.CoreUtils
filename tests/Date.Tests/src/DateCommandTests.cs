@@ -1,4 +1,4 @@
-﻿using Icod.CoreUtils.Shared.Diagnostics;
+﻿using Icod.CommandFramework.Diagnostics;
 using Icod.CoreUtils.Shared.Time;
 using Xunit;
 using Tool = Icod.CoreUtils.Date.Command;

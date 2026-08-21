@@ -1,7 +1,7 @@
 namespace Icod.LineEditor.Ed.Shared.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.RegularExpressions;
+using Icod.CommandFramework.RegularExpressions;
 using Icod.LineEditor.Ed;
 
 public sealed class EditorEngineTests {

@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.MkTemp;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>Provides the <c>mktemp</c> process entry point.</summary>
 public static class Program {

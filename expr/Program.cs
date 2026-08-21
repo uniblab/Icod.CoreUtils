@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Expr;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>Provides the executable entry point for <c>expr</c>.</summary>
 public static class Program {

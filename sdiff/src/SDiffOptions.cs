@@ -1,6 +1,6 @@
 namespace Icod.DiffUtils.SDiff;
 
-using Icod.CoreUtils.Shared.RegularExpressions;
+using Icod.CommandFramework.RegularExpressions;
 using Icod.DiffUtils.Shared.Lines;
 
 /// <summary>Contains validated <c>sdiff</c> options and comparison policies.</summary>

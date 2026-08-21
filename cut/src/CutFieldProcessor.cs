@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Cut;
 
 using System.Buffers;
-using Icod.CoreUtils.Shared.Records;
+using Icod.CommandFramework.Records;
 using Icod.CommandFramework.Text;
 
 /// <summary>Performs streaming field selection, retaining only a potentially ambiguous first field.</summary>

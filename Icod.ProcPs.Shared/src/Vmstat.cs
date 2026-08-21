@@ -1,7 +1,7 @@
 namespace Icod.ProcPs.Shared;
 
 using System.Globalization;
-using Icod.CoreUtils.Shared.Host;
+using Icod.CommandFramework.Host;
 
 /// <summary>Describes the vmstat-oriented observations exposed by a provider.</summary>
 [Flags]

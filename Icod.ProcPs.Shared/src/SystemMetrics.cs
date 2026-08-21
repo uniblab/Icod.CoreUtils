@@ -2,7 +2,7 @@ namespace Icod.ProcPs.Shared;
 
 using System.Globalization;
 using System.Runtime.InteropServices;
-using Icod.CoreUtils.Shared.Host;
+using Icod.CommandFramework.Host;
 
 /// <summary>Contains aggregate CPU counters using Linux <c>/proc/stat</c> tick semantics.</summary>
 public sealed class ProcCpuTimes {

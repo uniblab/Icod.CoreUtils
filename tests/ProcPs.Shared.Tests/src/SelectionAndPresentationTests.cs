@@ -1,8 +1,8 @@
 namespace Icod.ProcPs.Shared.Tests;
 
 using Icod.ProcPs.Shared;
-using Icod.CoreUtils.Shared.Host;
-using Icod.CoreUtils.Shared.Processes;
+using Icod.CommandFramework.Host;
+using Icod.CommandFramework.Processes;
 using Xunit;
 
 public sealed class SelectionAndPresentationTests {

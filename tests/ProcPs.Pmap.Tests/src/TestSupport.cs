@@ -1,7 +1,7 @@
 namespace Icod.ProcPs.Pmap.Tests;
 
-using Icod.CoreUtils.Shared.Host;
-using Icod.CoreUtils.Shared.Processes;
+using Icod.CommandFramework.Host;
+using Icod.CommandFramework.Processes;
 using Icod.ProcPs.Shared;
 
 internal static class TestSupport {

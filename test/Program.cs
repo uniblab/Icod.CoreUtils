@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Test;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>
 /// Provides the <c>test EXPRESSION</c> command entry point. The command exits 0 when the expression is true,

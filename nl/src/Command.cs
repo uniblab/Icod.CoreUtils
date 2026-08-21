@@ -2,10 +2,10 @@ namespace Icod.CoreUtils.NL;
 
 using System.Globalization;
 using System.Numerics;
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.IO;
-using Icod.CoreUtils.Shared.RegularExpressions;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.IO;
+using Icod.CommandFramework.RegularExpressions;
 using Icod.CommandFramework.Text;
 
 /// <summary>Implements GNU <c>nl</c> for .NET.</summary>

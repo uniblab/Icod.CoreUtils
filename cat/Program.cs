@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Cat;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>
 /// Provides the executable entry point for the GNU-compatible <c>cat</c> command for concatenating files and standard input to standard output.

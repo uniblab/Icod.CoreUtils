@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.BaseName;
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>
 /// Implements GNU-compatible <c>basename</c> and removes directory components and an optional suffix from pathnames.

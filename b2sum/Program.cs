@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.B2Sum;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>
 /// Provides the executable entry point for the GNU-compatible <c>b2sum</c> command for computing and verifying BLAKE2 message digests.

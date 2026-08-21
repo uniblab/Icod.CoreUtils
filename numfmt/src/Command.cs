@@ -5,7 +5,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Icod.CoreUtils.Shared.Numerics;
 
 /// <summary>Implements <c>numfmt [OPTION]... [NUMBER]...</c>.</summary>

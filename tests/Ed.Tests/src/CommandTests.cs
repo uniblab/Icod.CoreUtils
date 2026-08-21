@@ -1,7 +1,7 @@
 namespace Icod.LineEditor.Ed.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Icod.LineEditor.Ed;
 using Xunit;
 

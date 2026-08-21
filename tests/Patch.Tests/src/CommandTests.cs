@@ -1,7 +1,7 @@
 namespace Icod.Patch.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using System.IO;
 using Xunit;
 

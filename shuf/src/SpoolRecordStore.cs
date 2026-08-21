@@ -2,8 +2,8 @@ namespace Icod.CoreUtils.Shuf;
 
 using System.Buffers;
 using System.Buffers.Binary;
-using Icod.CoreUtils.Shared.IO;
-using Icod.CoreUtils.Shared.Records;
+using Icod.CommandFramework.IO;
+using Icod.CommandFramework.Records;
 
 /// <summary>Stores arbitrarily large byte records and a fixed-width random-access location index in owned temporary files.</summary>
 internal sealed class SpoolRecordStore : IAsyncDisposable {

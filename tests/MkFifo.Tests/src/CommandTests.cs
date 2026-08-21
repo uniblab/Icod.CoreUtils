@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.MkFifo.Tests;
 
 using FifoCommand = Icod.CoreUtils.MkFifo.Command;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Modes;
 using FileCreationMask = Icod.CommandFramework.FileSystem.Modes.FileCreationMask;

@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.NL.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Xunit;
 
 /// <summary>Tests numeric grammar, option precedence, locale-sensitive delimiters, and persistent blank grouping.</summary>

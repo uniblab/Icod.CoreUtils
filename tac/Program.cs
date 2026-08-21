@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Tac;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>Provides the <c>tac [OPTION]... [FILE]...</c> process entry point.</summary>
 public static class Program {

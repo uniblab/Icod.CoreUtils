@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Timeout;
 
 using System.Runtime.InteropServices;
-using Icod.CoreUtils.Shared.Processes;
+using Icod.CommandFramework.Processes;
 
 /// <summary>Owns POSIX signal registrations used to forward terminal and termination signals to a supervised job.</summary>
 internal sealed class TimeoutSignalForwardingScope : IDisposable {

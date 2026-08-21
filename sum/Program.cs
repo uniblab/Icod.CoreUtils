@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Sum;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>
 /// Provides the executable entry point for the GNU-compatible <c>sum</c> command for computing legacy checksums and block counts.

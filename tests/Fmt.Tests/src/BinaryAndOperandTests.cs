@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Fmt.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Xunit;
 
 /// <summary>Tests binary preservation, operands, failures, and stream ownership.</summary>

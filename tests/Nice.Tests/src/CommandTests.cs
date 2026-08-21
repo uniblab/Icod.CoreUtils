@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Nice.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Processes;
+using Icod.CommandFramework.Processes;
 using Xunit;
 
 /// <summary>Exercises GNU 9.11 <c>nice</c> parsing, priority ordering, launch status, and failures.</summary>

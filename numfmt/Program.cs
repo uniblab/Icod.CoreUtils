@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.NumFmt;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>Provides the <c>numfmt</c> process entry point.</summary>
 public static class Program {

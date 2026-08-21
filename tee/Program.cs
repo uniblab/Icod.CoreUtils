@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Tee;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>
 /// Provides the executable entry point for the GNU-compatible <c>tee</c> command for copying standard input to standard output and files.

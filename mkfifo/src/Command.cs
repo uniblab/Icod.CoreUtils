@@ -3,8 +3,8 @@
 
 namespace Icod.CoreUtils.MkFifo;
 
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
 using Icod.CoreUtils.Shared.FileSystem.Modes;
 using FileCreationMask = Icod.CommandFramework.FileSystem.Modes.FileCreationMask;
 using PosixFileMode = Icod.CommandFramework.FileSystem.Modes.PosixFileMode;

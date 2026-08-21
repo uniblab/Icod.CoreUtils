@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.RealPath.Tests;
 
 using Icod.CoreUtils.PathCommandTests;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Icod.Path;
 using Xunit;
 

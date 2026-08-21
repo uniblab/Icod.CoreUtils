@@ -1,7 +1,7 @@
 namespace Icod.DiffUtils.Cmp.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Icod.DiffUtils.Cmp;
 using Icod.DiffUtils.Shared;
 using Xunit;

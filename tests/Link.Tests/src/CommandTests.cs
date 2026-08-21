@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Link.Tests;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using LinkCommand = Icod.CoreUtils.Link.Command;
 using Xunit;
 

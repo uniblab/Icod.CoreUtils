@@ -1,4 +1,4 @@
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 namespace Icod.CoreUtils.Sync;
 

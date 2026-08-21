@@ -6,10 +6,10 @@ namespace Icod.CoreUtils.Tac;
 using System.Buffers;
 using System.Buffers.Binary;
 using System.Text;
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.IO;
-using Icod.CoreUtils.Shared.RegularExpressions;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.IO;
+using Icod.CommandFramework.RegularExpressions;
 
 /// <summary>Implements GNU-compatible byte-preserving reverse-record output.</summary>
 public static class Command {

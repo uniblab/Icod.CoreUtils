@@ -1,8 +1,8 @@
 namespace Icod.CoreUtils.Nohup.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Processes;
-using Icod.CoreUtils.Shared.Terminal;
+using Icod.CommandFramework.Processes;
+using Icod.CommandFramework.Terminal;
 using Xunit;
 
 /// <summary>Tests GNU <c>nohup</c> command behavior.</summary>

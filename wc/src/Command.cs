@@ -6,9 +6,9 @@ namespace Icod.CoreUtils.WC;
 using System.Buffers;
 using System.Globalization;
 using System.Text;
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.IO;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.IO;
 
 /// <summary>
 /// Counts lines, words, characters, bytes, and maximum display width.

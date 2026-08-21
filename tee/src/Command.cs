@@ -3,9 +3,9 @@
 
 namespace Icod.CoreUtils.Tee;
 
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.IO;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.IO;
 
 /// <summary>
 /// Copies standard input to standard output and each named file.

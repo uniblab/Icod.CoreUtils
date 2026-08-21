@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Arch;
 using System.Runtime.InteropServices;
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>
 /// Implements GNU-compatible <c>arch</c> and prints the host machine architecture name.

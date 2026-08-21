@@ -4,8 +4,8 @@ using System.Buffers;
 using System.Buffers.Text;
 using System.Numerics;
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.IO;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.IO;
 
 /// <summary>Executes validated <c>shuf</c> operations using bounded memory and owned external storage.</summary>
 internal static class ShufEngine {

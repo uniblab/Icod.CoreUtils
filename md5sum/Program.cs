@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.MD5Sum;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>
 /// Provides the executable entry point for the GNU-compatible <c>md5sum</c> command for computing and verifying MD5 message digests.

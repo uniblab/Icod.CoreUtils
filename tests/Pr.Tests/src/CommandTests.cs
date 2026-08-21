@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Pr.Tests;
 
 using System.Globalization;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Xunit;
 
 /// <summary>Tests GNU-compatible <c>pr</c> pagination, layout, and option behavior.</summary>

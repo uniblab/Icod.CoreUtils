@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Shared.Escapes;
 
-using Icod.CoreUtils.Shared.Delimiters;
+using Icod.CommandFramework.Delimiters;
 
 /// <summary>Contains either a GNU <c>paste</c> separator cycle or structured diagnostics.</summary>
 public sealed class PasteDelimiterParseResult {

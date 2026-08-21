@@ -1,6 +1,6 @@
 using System.Globalization;
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
 using Icod.CoreUtils.Shared.Platform;
 
 namespace Icod.CoreUtils.Pinky;

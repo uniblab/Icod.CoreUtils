@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Stty.Tests;
 
-using Icod.CoreUtils.Shared.Terminal;
+using Icod.CommandFramework.Terminal;
 
 /// <summary>Provides deterministic mode reads and mutations for <c>stty</c> tests.</summary>
 public sealed class FakeTerminalProvider : ITerminalControlProvider {

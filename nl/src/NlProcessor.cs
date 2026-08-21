@@ -2,8 +2,8 @@ namespace Icod.CoreUtils.NL;
 
 using System.Globalization;
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.IO;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.IO;
 using Icod.CommandFramework.Text;
 
 /// <summary>Processes all <c>nl</c> operands as one logical document.</summary>

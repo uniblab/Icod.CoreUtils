@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Env;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Processes;
+using Icod.CommandFramework.Processes;
 
 /// <summary>
 /// Implements GNU <c>env</c> 9.11 command behavior.

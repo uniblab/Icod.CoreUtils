@@ -4,7 +4,7 @@ namespace Icod.CoreUtils.StdBuf;
 
 using System.Globalization;
 using System.Numerics;
-using Icod.CoreUtils.Shared.Processes;
+using Icod.CommandFramework.Processes;
 
 /// <summary>
 /// Implements GNU-compatible standard-stream buffering control for child processes.

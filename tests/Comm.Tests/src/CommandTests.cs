@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Comm.Tests;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Xunit;
 
 /// <summary>Tests sorted-stream comparison, formatting, order checks, and control paths.</summary>

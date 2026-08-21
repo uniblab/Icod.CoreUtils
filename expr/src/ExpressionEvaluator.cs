@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Expr;
 
 using System.Numerics;
-using Icod.CoreUtils.Shared.RegularExpressions;
+using Icod.CommandFramework.RegularExpressions;
 
 /// <summary>
 /// Parses and immediately evaluates a tokenized GNU <c>expr</c> expression.

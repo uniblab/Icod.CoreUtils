@@ -1,7 +1,7 @@
 namespace Icod.LineEditor.Sed.Tests;
 
 using System.Text;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.Temporary;
 using SedCommand = Icod.LineEditor.Sed.Command;
 using Xunit;

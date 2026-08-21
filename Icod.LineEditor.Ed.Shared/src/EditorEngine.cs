@@ -2,8 +2,8 @@ namespace Icod.LineEditor.Ed;
 
 using System.Globalization;
 using System.Text;
-using Icod.CoreUtils.Shared.Records;
-using Icod.CoreUtils.Shared.RegularExpressions;
+using Icod.CommandFramework.Records;
+using Icod.CommandFramework.RegularExpressions;
 
 /// <summary>
 /// Executes Ed scripts over a mutable, stable-identity line buffer using injectable regular-expression,

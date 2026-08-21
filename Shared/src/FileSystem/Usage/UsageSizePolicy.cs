@@ -1,5 +1,5 @@
 using System.Globalization;
-using Icod.CoreUtils.Shared.Terminal;
+using Icod.CommandFramework.Terminal;
 
 namespace Icod.CoreUtils.Shared.FileSystem.Usage;
 

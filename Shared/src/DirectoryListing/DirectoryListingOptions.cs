@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Shared.DirectoryListing;
 
 using System.Globalization;
-using Icod.CoreUtils.Shared.Terminal;
+using Icod.CommandFramework.Terminal;
 
 /// <summary>Identifies one executable profile hosted by the shared directory-listing engine.</summary>
 public enum DirectoryListingProfile {

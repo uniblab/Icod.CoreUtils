@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Stty;
 
-using Icod.CoreUtils.Shared.Terminal;
+using Icod.CommandFramework.Terminal;
 
 /// <summary>Implements GNU-compatible terminal-mode reporting and mutation.</summary>
 public static class Command {

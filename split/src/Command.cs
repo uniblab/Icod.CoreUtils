@@ -6,10 +6,10 @@ namespace Icod.CoreUtils.Split;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text;
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.FileSystem.Traversal;
-using Icod.CoreUtils.Shared.IO;
+using Icod.CommandFramework.IO;
 
 /// <summary>Implements GNU-compatible byte-preserving file splitting.</summary>
 public static class Command {

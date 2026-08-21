@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.DirName;
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>
 /// Implements GNU-compatible <c>dirname</c> and removes the final pathname component.

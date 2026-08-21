@@ -1,9 +1,9 @@
 namespace Icod.CoreUtils.Paste;
 
 using System.Buffers;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.IO;
-using Icod.CoreUtils.Shared.Records;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.IO;
+using Icod.CommandFramework.Records;
 
 /// <summary>Performs bounded, byte-preserving parallel or serial pasting.</summary>
 internal sealed class PasteProcessor {

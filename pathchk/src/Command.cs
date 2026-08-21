@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.PathChk;
 using System.Text;
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>
 /// Implements GNU-compatible <c>pathchk</c> and validates pathnames against host or portable filename constraints.

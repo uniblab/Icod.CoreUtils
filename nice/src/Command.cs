@@ -4,7 +4,7 @@ namespace Icod.CoreUtils.Nice;
 
 using System.Globalization;
 using System.Text;
-using Icod.CoreUtils.Shared.Processes;
+using Icod.CommandFramework.Processes;
 
 /// <summary>Implements GNU Coreutils 9.11 <c>nice</c>.</summary>
 public static class Command {

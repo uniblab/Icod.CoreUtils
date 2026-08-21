@@ -5,8 +5,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;
-using Icod.CoreUtils.Shared.Host;
-using Icod.CoreUtils.Shared.Processes;
+using Icod.CommandFramework.Host;
+using Icod.CommandFramework.Processes;
 
 /// <summary>Contains executable, root, and current-working-directory observations for one process.</summary>
 public sealed class ProcProcessPathInfo {

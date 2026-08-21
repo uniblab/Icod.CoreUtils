@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Groups;
 
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.Platform;
 
 /// <summary>Implements the <c>groups</c> command.</summary>

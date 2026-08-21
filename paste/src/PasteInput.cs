@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Paste;
 
-using Icod.CoreUtils.Shared.IO;
-using Icod.CoreUtils.Shared.Records;
+using Icod.CommandFramework.IO;
+using Icod.CommandFramework.Records;
 
 /// <summary>Owns the record reader and optional file resource for one <c>paste</c> input.</summary>
 internal sealed class PasteInput : IAsyncDisposable {

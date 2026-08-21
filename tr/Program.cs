@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Tr;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>Provides the <c>tr [OPTION]... STRING1 [STRING2]</c> process entry point.</summary>
 public static class Program {

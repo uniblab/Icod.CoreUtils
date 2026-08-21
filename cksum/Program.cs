@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Cksum;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>
 /// Provides the executable entry point for the GNU-compatible <c>cksum</c> command for computing and verifying checksums and byte counts.

@@ -2,10 +2,10 @@ namespace Icod.LineEditor.Ed;
 
 using System.Globalization;
 using System.Text;
-using Icod.CoreUtils.Shared.CommandLine;
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.Records;
-using Icod.CoreUtils.Shared.RegularExpressions;
+using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.Records;
+using Icod.CommandFramework.RegularExpressions;
 
 /// <summary>
 /// Implements the GNU-compatible line editor over <see cref="EditorEngine"/>.

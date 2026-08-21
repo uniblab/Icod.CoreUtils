@@ -1,7 +1,7 @@
 namespace Icod.DiffUtils.Shared;
 
-using Icod.CoreUtils.Shared.Diagnostics;
-using Icod.CoreUtils.Shared.IO;
+using Icod.CommandFramework.Diagnostics;
+using Icod.CommandFramework.IO;
 
 /// <summary>
 /// Represents a Diffutils input while delegating general operand and stream

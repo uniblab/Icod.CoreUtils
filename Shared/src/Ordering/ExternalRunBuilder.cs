@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Shared.Ordering;
 
-using Icod.CoreUtils.Shared.Temporary;
+using Icod.CommandFramework.Temporary;
 
 /// <summary>Builds individually sorted stable runs under a caller-selected memory estimate.</summary>
 /// <typeparam name="T">The ordered value type.</typeparam>

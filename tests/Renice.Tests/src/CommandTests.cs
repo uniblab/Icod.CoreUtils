@@ -2,7 +2,7 @@ namespace Icod.UtilLinux.Renice.Tests;
 
 using System.Text;
 using Icod.CommandFramework.Platform;
-using Icod.CoreUtils.Shared.Processes;
+using Icod.CommandFramework.Processes;
 using PlatformProcessIdentity = Icod.CommandFramework.Platform.ProcessIdentity;
 using Xunit;
 

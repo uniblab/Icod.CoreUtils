@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Uniq.Tests;
 
-using Icod.CoreUtils.Shared.Diagnostics;
+using Icod.CommandFramework.Diagnostics;
 using Xunit;
 
 /// <summary>Tests adjacent-record filtering, grouping, comparison slices, and control paths.</summary>
