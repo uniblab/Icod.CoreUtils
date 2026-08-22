@@ -1,4 +1,0 @@
-alpha
-inserted
-gamma
-DELTA
