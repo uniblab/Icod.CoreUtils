@@ -66,22 +66,27 @@ No command suite may become a production dependency of `Icod.CommandFramework`, 
 - [ ] Remove every sibling-suite project after successful extraction.
 - [ ] Remove stale solution folders, packaging entries, output-path exceptions, CI references, and documentation references.
 
-## Icod.DiffUtils
+## Icod.DiffUtils — G6 COMPLETE
 
-- [ ] `Icod.DiffUtils.Shared`
-- [ ] `Icod.DiffUtils.Cmp`
-- [ ] `Icod.DiffUtils.Diff`
-- [ ] `Icod.DiffUtils.Diff3`
-- [ ] `Icod.DiffUtils.SDiff`
-- [ ] `Icod.DiffUtils.Shared.Tests`
-- [ ] `Icod.DiffUtils.Cmp.Tests`
-- [ ] `Icod.DiffUtils.Diff.Tests`
-- [ ] `Icod.DiffUtils.Diff3.Tests`
-- [ ] `Icod.DiffUtils.SDiff.Tests`
-- [ ] Create `Icod.DiffUtils.sln`.
-- [ ] Preserve project references from commands to `Icod.DiffUtils.Shared`.
-- [ ] Replace the present CoreUtils Shared reference with `Icod.CommandFramework`.
-- [ ] Preserve interoperability with Patch and Ed strictly through textual formats/fixtures rather than runtime references.
+Destination: <https://github.com/uniblab/Icod.DiffUtils>
+
+- [x] `Icod.DiffUtils.Shared`
+- [x] `Icod.DiffUtils.Cmp`
+- [x] `Icod.DiffUtils.Diff`
+- [x] `Icod.DiffUtils.Diff3`
+- [x] `Icod.DiffUtils.SDiff`
+- [x] `Icod.DiffUtils.Shared.Tests`
+- [x] `Icod.DiffUtils.Cmp.Tests`
+- [x] `Icod.DiffUtils.Diff.Tests`
+- [x] `Icod.DiffUtils.Diff3.Tests`
+- [x] `Icod.DiffUtils.SDiff.Tests`
+- [x] Create `Icod.DiffUtils.sln`.
+- [x] Preserve project references from commands to `Icod.DiffUtils.Shared`.
+- [x] Replace the CoreUtils Shared dependency with the published neutral `Icod.CommandFramework` boundary.
+- [x] Preserve interoperability with Patch and Ed strictly through textual formats/fixtures rather than runtime references.
+- [x] Remove all DiffUtils tests, executable projects, Shared source, solution folders, configuration mappings, and nesting entries from CoreUtils after the independent repository is proven.
+
+**G6 closure:** no DiffUtils source, test project, or solution entry remains in `Icod.CoreUtils`; the authoritative implementation now lives in the dedicated repository.
 
 ## Icod.Grep
 
@@ -136,36 +141,35 @@ No command suite may become a production dependency of `Icod.CommandFramework`, 
 - [x] Preserve tar-specific archive models, sparse behavior, selection policy, compression integration, and extraction security inside this repository.
 - [x] Preserve native/compression test assets.
 
-## Icod.ProcPs
+## Icod.ProcPs — G5 COMPLETE FOR COREUTILS EXTRACTION
 
-Current extraction set:
+Destination: <https://github.com/uniblab/Icod.ProcPs>
 
-- [ ] `Icod.ProcPs.Shared`
-- [ ] `Icod.ProcPs.Uptime`
-- [ ] `Icod.ProcPs.Free`
-- [ ] `Icod.ProcPs.Vmstat`
-- [ ] `Icod.ProcPs.Pgrep`
-- [ ] `Icod.ProcPs.Pkill`
-- [ ] `Icod.ProcPs.PidWait`
-- [ ] `Icod.ProcPs.PidOf`
-- [ ] `Icod.ProcPs.Pwdx`
-- [ ] `Icod.ProcPs.Pmap`
-- [ ] `Icod.ProcPs.Ps`
-- [ ] `Icod.ProcPs.W`
-- [ ] `Icod.ProcPs.Sysctl`
-- [ ] `Icod.ProcPs.Tload`
-- [ ] `Icod.ProcPs.Watch`
-- [ ] `Icod.ProcPs.HugeTop`
-- [ ] `Icod.ProcPs.SlabTop`
-- [ ] Corresponding command test projects.
-- [ ] `Icod.ProcPs.Shared.Tests`
-- [ ] Create `Icod.ProcPs.sln`.
-- [ ] Replace CoreUtils Shared with `Icod.CommandFramework`.
-- [ ] Preserve project references from commands to `Icod.ProcPs.Shared`.
-- [ ] Retain `/proc`, process-domain, field-catalog, selection, sampling, and screen-model behavior in ProcPs Shared.
-- [ ] After extraction succeeds, implement deferred `Icod.ProcPs.Top`.
-- [ ] Add `Icod.ProcPs.Top.Tests`.
-- [ ] Confirm procps-ng `kill`, `skill`, and `snice` remain deliberately absent.
+Extracted and independently owned baseline:
+
+- [x] `Icod.ProcPs.Shared`
+- [x] `Icod.ProcPs.Uptime`
+- [x] `Icod.ProcPs.Free`
+- [x] `Icod.ProcPs.Vmstat`
+- [x] `Icod.ProcPs.Pgrep`
+- [x] `Icod.ProcPs.Pkill`
+- [x] `Icod.ProcPs.PidWait`
+- [x] `Icod.ProcPs.PidOf`
+- [x] `Icod.ProcPs.Pwdx`
+- [x] `Icod.ProcPs.Pmap`
+- [x] `Icod.ProcPs.Ps`
+- [x] `Icod.ProcPs.W`
+- [x] `Icod.ProcPs.Sysctl`
+- [x] Corresponding command test projects for the extracted baseline.
+- [x] `Icod.ProcPs.Shared.Tests`
+- [x] Create `Icod.ProcPs.sln`.
+- [x] Replace the CoreUtils Shared dependency with published `Icod.CommandFramework` 1.1.0 in the extracted Shared project.
+- [x] Preserve repository-local command → `Icod.ProcPs.Shared` project references.
+- [x] Retain `/proc`, process-domain, field-catalog, selection, sampling, and screen-model behavior in ProcPs Shared.
+- [x] Remove all remaining `Icod.ProcPs` source, project, test, solution-folder, configuration, and nesting entries from CoreUtils.
+- [x] Confirm procps-ng `kill`, `skill`, and `snice` remain deliberately absent.
+
+Post-extraction ProcPs work is owned by the `Icod.ProcPs` repository and is not a CoreUtils Gate G blocker. That includes any continuation or reintroduction of the terminal-oriented `tload`, `watch`, `hugetop`, and `slabtop` implementations and deferred Batch 68 `top`/`top` tests. CoreUtils must not regain source-tree ProcPs projects merely to complete that work.
 
 ---
 
@@ -227,18 +231,18 @@ No projects move during this phase.
 - [x] Validate against real CoreUtils and sibling-suite consumers.
 
 **Exit criterion met:** sibling suites can compile against the published framework binary.
-## G3 — Contract `Icod.CoreUtils.Shared` — ACTIVE
+## G3 — Contract `Icod.CoreUtils.Shared` — COMPLETE
 
 - [x] Remove every API already owned by `Icod.CommandFramework`.
-- [ ] Keep only demonstrated Coreutils/Fileutils/Textutils-specific reuse; the approved final filesystem mechanism migration remains open.
+- [x] Keep only demonstrated Coreutils/Fileutils/Textutils-specific reuse after the approved final filesystem mechanism migration.
 - [x] Make it depend on `Icod.CommandFramework`.
 - [x] Add the published `Icod.Path` package dependency where genuinely required.
 - [x] Split/rehome tests appropriately.
-- [ ] Refresh the published `Icod.CommandFramework` filesystem foundation with the approved neutral remainder, migrate its tests, and cut CoreUtils consumers over before pruning migrated source.
+- [x] Refresh the published `Icod.CommandFramework` filesystem foundation with the approved neutral remainder, migrate its tests, and cut CoreUtils consumers over before pruning migrated source.
 - [x] Freeze the permanent distribution boundary: `Icod.CoreUtils.Shared` remains an internal class-library project in the `Icod.CoreUtils` repository and is not independently published.
-- [ ] Retain same-repository `ProjectReference` relationships from genuine Coreutils consumers to `Icod.CoreUtils.Shared`.
-- [ ] Ensure neutral external dependencies resolve through published `Icod.CommandFramework` and `Icod.Path` packages rather than through a published CoreUtils Shared package.
-- [ ] Build/test Coreutils without sibling-suite source projects being needed.
+- [x] Retain same-repository `ProjectReference` relationships from genuine Coreutils consumers to `Icod.CoreUtils.Shared`.
+- [x] Ensure neutral external dependencies resolve through published `Icod.CommandFramework` and `Icod.Path` packages rather than through a published CoreUtils Shared package.
+- [x] Build/test Coreutils without sibling-suite source projects being needed.
 
 ### G3 contraction progress
 
@@ -337,7 +341,7 @@ No projects move during this phase.
   - remove stale solution, CI, output-path, packaging, and documentation references exposed by the isolation build;
   - mark G3 complete only after the contracted repository succeeds independently.
 
-**Exit criterion:** `Icod.CoreUtils.Shared` is no longer an incubation project: it is the permanent repository-local Shared library for Coreutils/Fileutils/Textutils, contains no cross-suite foundation ownership or approved neutral filesystem mechanism, is not independently published, and is not a permitted dependency of extracted sibling suites.
+**Exit criterion met:** `Icod.CoreUtils.Shared` is no longer an incubation project: it is the permanent repository-local Shared library for Coreutils/Fileutils/Textutils, contains no cross-suite foundation ownership or approved neutral filesystem mechanism, is not independently published, and is not a permitted dependency of extracted sibling suites.
 ## G4 — Pilot repository extractions
 
 Use small suites first to prove the repository-extraction and external-package procedure before moving the large families.
@@ -367,28 +371,39 @@ In every extraction below, replacing a transitional CoreUtils Shared reference m
 
 **Exit criterion met:** three structurally different standalone suites successfully consume published foundation packages.
 
-## G5 — Extract Icod.ProcPs
+## G5 — Extract Icod.ProcPs — COMPLETE FOR COREUTILS EXTRACTION
 
-ProcPs follows the pilot migrations because it is the largest consumer of the cross-suite process/terminal foundation and because successful extraction unblocks deferred Batch 68.
+ProcPs followed the pilot migrations because it was the largest consumer of the cross-suite process/terminal foundation and because extraction was required before deferred Batch 68 could be developed against its permanent dependency boundary.
 
-- [ ] Extract all current ProcPs projects/tests/history.
-- [ ] Convert ProcPs Shared to Framework package references.
-- [ ] Remove transitional direct CoreUtils Shared references from ProcPs command tests.
-- [ ] Validate Linux authoritative behavior.
-- [ ] Validate Windows/macOS portability providers.
-- [ ] Run independent three-runner CI.
-- [ ] Remove ProcPs from `Icod.CoreUtils.sln`.
-- [ ] Implement Batch 68 `top` in the final ProcPs repository.
+**Closure checkpoint (2026-08-22):** the independent `Icod.ProcPs` repository and solution own the extracted Shared library, Shared tests, the migrated command baseline, command tests, and independent Windows/Ubuntu/macOS CI. CoreUtils no longer contains any `Icod.ProcPs` source, project, test, solution-folder, configuration, or nesting entries.
 
-**Exit criterion:** ProcPs is fully independent and `top` can be developed against its permanent dependency boundary.
+- [x] Establish the independent `Icod.ProcPs` repository and `Icod.ProcPs.sln`.
+- [x] Extract `Icod.ProcPs.Shared`, its Shared tests, and the independently validated command/test baseline.
+- [x] Convert the extracted Shared layer to published `Icod.CommandFramework` 1.1.0.
+- [x] Preserve repository-local command → `Icod.ProcPs.Shared` project references.
+- [x] Validate the extracted baseline independently on Windows, Ubuntu, and macOS.
+- [x] Remove all ProcPs production/test projects and solution wiring from CoreUtils.
+- [x] Transfer all remaining ProcPs implementation work to the dedicated repository backlog rather than retaining or recreating placeholders in CoreUtils.
 
-## G6 — Extract Icod.DiffUtils
+The terminal-oriented commands and deferred Batch 68 `top` are now ProcPs-repository concerns. Their implementation status does not keep the CoreUtils repository-extraction step open.
 
-- [ ] Extract Shared, four commands, five test projects, fixtures, and history.
-- [ ] Convert cross-suite dependencies to Framework packages.
-- [ ] Preserve internal project references to DiffUtils Shared.
-- [ ] Run independent CI.
-- [ ] Re-run textual compatibility fixtures consumed by Patch and Ed.
+**Exit criterion met:** ProcPs is fully independent of CoreUtils, and future ProcPs work can proceed against its permanent repository/dependency boundary.
+
+## G6 — Extract Icod.DiffUtils — COMPLETE
+
+**Closure checkpoint (2026-08-22):** the independent `Icod.DiffUtils` repository contains `Icod.DiffUtils.Shared`, `cmp`, `diff`, `diff3`, `sdiff`, all five dedicated test projects, its own solution, documentation, and CI. CoreUtils removal was deliberately staged: DiffUtils tests first, then the four executable projects, then `Icod.DiffUtils.Shared`.
+
+- [x] Extract Shared, four commands, five test projects, fixtures, and history.
+- [x] Convert cross-suite dependencies to published neutral foundation packages.
+- [x] Preserve internal repository-local project references to `Icod.DiffUtils.Shared`.
+- [x] Provide independent repository CI for Windows, Ubuntu, and macOS.
+- [x] Preserve Patch and Ed interoperability as a textual-format boundary rather than a runtime DiffUtils dependency.
+- [x] Remove the five DiffUtils test projects from CoreUtils and clean their solution wiring.
+- [x] Remove `cmp`, `diff`, `diff3`, and `sdiff` from CoreUtils and clean their solution wiring.
+- [x] Remove `Icod.DiffUtils.Shared` from CoreUtils last, after no in-tree consumers remain.
+- [x] Validate the CoreUtils working branch after each removal stage.
+
+**Exit criterion met:** no DiffUtils-specific source, test project, or solution entry remains in CoreUtils; the authoritative implementation lives at <https://github.com/uniblab/Icod.DiffUtils>.
 
 ## G7 — Extract Icod.LineEditor
 
@@ -472,12 +487,14 @@ A suite-specific Shared/engine assembly does not become a separately published p
 
 # D. Immediate Next Work
 
-Completion Gate G remains active. G3 is complete, and the three G4 pilot extractions are now complete:
+Completion Gate G remains active. The completed extraction sequence is now:
 
 - [x] G4.1 — `Icod.UtilLinux`
 - [x] G4.2 — `Icod.Grep`
 - [x] G4.3 — `Icod.Tar`
+- [x] G5 — `Icod.ProcPs` CoreUtils extraction
+- [x] G6 — `Icod.DiffUtils`
 
-All three standalone suites have been migrated to their permanent repositories, consume the published neutral foundation packages, and have been removed from the live `Icod.CoreUtils` source/solution after successful validation.
+These suites have been moved out of the live `Icod.CoreUtils` source/solution after successful extraction validation. Remaining feature work in an extracted suite is owned by that suite's repository and does not require reintroducing its source into CoreUtils.
 
-The next engineering step is **G5 — Extract `Icod.ProcPs`**. Successful ProcPs extraction will unblock deferred Batch 68 (`Icod.ProcPs.Top`) so that `top` can be implemented in its permanent repository against its final dependency boundary.
+The next engineering step is **G7 — Extract `Icod.LineEditor`**. Preserve Ed/Red → Ed.Shared repository-local project references, keep Sed as its separate execution engine, replace any remaining cross-suite CoreUtils Shared dependencies with the published neutral foundations, and validate the extracted repository independently before deleting the in-tree LineEditor source.
