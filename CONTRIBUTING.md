@@ -1,6 +1,6 @@
 # Contributing to Icod.CoreUtils
 
-Thank you for contributing to the Icod command-suite ports. The repository contains managed implementations of GNU Coreutils, Fileutils, Textutils, Diffutils, Patch, and related command families. Changes should preserve command compatibility, cross-platform behavior, and the repository's shared architectural boundaries.
+Thank you for contributing to the Icod command-suite ports. This repository contains the managed GNU Coreutils/Fileutils/Textutils implementation plus the remaining co-resident projects that have not yet completed Gate G extraction, currently Patch and LineEditor work. Diffutils and ProcPs have moved to their dedicated `Icod.DiffUtils` and `Icod.ProcPs` repositories and must not be reintroduced here as source-tree dependencies. Changes should preserve command compatibility, cross-platform behavior, and the repository's shared architectural boundaries.
 
 ## Supported toolchain
 
@@ -25,12 +25,12 @@ Examples include:
 - `Icod.CoreUtils.Shared` for repository-local behavior shared by GNU Coreutils/Fileutils/Textutils commands; it is not an independently published package;
 - `Icod.CommandFramework` for published neutral cross-suite command, process, terminal, text, and filesystem mechanism;
 - `Icod.Path` for published neutral canonical-path behavior;
-- `Icod.DiffUtils.*` for Diffutils commands and shared code;
-- `Icod.Patch` for `patch`;
-- `Icod.LineEditor.*` for `ed`, `red`, and `sed` work;
-- `Icod.ProcPs.*` and other suite-specific projects as scheduled by the roadmap.
+- `Icod.Patch` for `patch` while Gate G extraction remains pending;
+- `Icod.LineEditor.*` for `ed`, `red`, and `sed` work while Gate G extraction remains pending.
 
-Genuine Coreutils/Fileutils/Textutils projects that need suite-shared behavior use a same-repository `ProjectReference` to `Icod.CoreUtils.Shared`. Never add a `PackageReference` to `Icod.CoreUtils.Shared`. Co-resident sibling suites may retain transitional project references only until their Gate G extraction, at which point they must reference the published neutral owner directly.
+Extracted suite families belong in their dedicated repositories: `Icod.DiffUtils.*` in <https://github.com/uniblab/Icod.DiffUtils> and `Icod.ProcPs.*` in <https://github.com/uniblab/Icod.ProcPs>. CoreUtils contributions must not recreate those source trees or introduce runtime dependencies on those sibling suites.
+
+Genuine Coreutils/Fileutils/Textutils projects that need suite-shared behavior use a same-repository `ProjectReference` to `Icod.CoreUtils.Shared`. Never add a `PackageReference` to `Icod.CoreUtils.Shared`. Remaining co-resident sibling suites may retain transitional project references only until their Gate G extraction, at which point they must reference the published neutral owner directly.
 
 Production command projects must not reference sibling command projects. Shared behavior belongs in the appropriate suite-local or neutral library only after a real cross-command contract has been identified. Do not create command-local replacements for an existing shared pathname, filesystem, record, regex, metadata, or transaction model.
 
