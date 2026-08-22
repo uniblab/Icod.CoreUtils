@@ -85,11 +85,11 @@ No command suite may become a production dependency of `Icod.CommandFramework`, 
 
 ## Icod.Grep
 
-- [ ] `Icod.Grep`
-- [ ] `Icod.Grep.Tests`
-- [ ] Create `Icod.Grep.sln`.
-- [ ] Replace the present CoreUtils Shared reference with `Icod.CommandFramework`.
-- [ ] Keep matcher orchestration, binary-input rules, recursive-selection policy, context grouping, and output formatting in Grep.
+- [x] `Icod.Grep`
+- [x] `Icod.Grep.Tests`
+- [x] Create `Icod.Grep.sln`.
+- [x] Replace the present CoreUtils Shared reference with `Icod.CommandFramework`.
+- [x] Keep matcher orchestration, binary-input rules, recursive-selection policy, context grouping, and output formatting in Grep.
 
 ## Icod.Patch
 
@@ -119,22 +119,22 @@ No command suite may become a production dependency of `Icod.CommandFramework`, 
 
 ## Icod.UtilLinux
 
-- [ ] `Icod.UtilLinux.Kill`
-- [ ] `Icod.UtilLinux.Renice`
-- [ ] `Icod.UtilLinux.Kill.Tests`
-- [ ] `Icod.UtilLinux.Renice.Tests`
-- [ ] Create `Icod.UtilLinux.sln`.
-- [ ] Replace CoreUtils Shared references with `Icod.CommandFramework`.
-- [ ] Do not create `Icod.UtilLinux.Shared` unless a genuine suite-local abstraction appears during extraction.
+- [x] `Icod.UtilLinux.Kill`
+- [x] `Icod.UtilLinux.Renice`
+- [x] `Icod.UtilLinux.Kill.Tests`
+- [x] `Icod.UtilLinux.Renice.Tests`
+- [x] Create `Icod.UtilLinux.sln`.
+- [x] Replace CoreUtils Shared references with `Icod.CommandFramework`.
+- [x] Do not create `Icod.UtilLinux.Shared`; the completed extraction did not require a suite-local shared library.
 
 ## Icod.Tar
 
-- [ ] `Icod.Tar`
-- [ ] `Icod.Tar.Tests`
-- [ ] Create `Icod.Tar.sln`.
-- [ ] Replace CoreUtils Shared with `Icod.CommandFramework`.
-- [ ] Preserve tar-specific archive models, sparse behavior, selection policy, compression integration, and extraction security inside this repository.
-- [ ] Preserve native/compression test assets.
+- [x] `Icod.Tar`
+- [x] `Icod.Tar.Tests`
+- [x] Create `Icod.Tar.sln`.
+- [x] Replace CoreUtils Shared with `Icod.CommandFramework`.
+- [x] Preserve tar-specific archive models, sparse behavior, selection policy, compression integration, and extraction security inside this repository.
+- [x] Preserve native/compression test assets.
 
 ## Icod.ProcPs
 
@@ -344,28 +344,28 @@ Use small suites first to prove the repository-extraction and external-package p
 
 In every extraction below, replacing a transitional CoreUtils Shared reference means referencing the actual published neutral owner (`Icod.CommandFramework` and, where applicable, `Icod.Path`) directly. It never means replacing the project reference with an `Icod.CoreUtils.Shared` package.
 
-### G4.1 — Icod.UtilLinux
+### G4.1 — Icod.UtilLinux — COMPLETE
 
-- [ ] Extract repository/history.
-- [ ] Replace Shared reference with Framework package.
-- [ ] Restore/build/test Windows, Ubuntu, macOS independently.
-- [ ] Verify lowercase `kill` and `renice` executable names.
+- [x] Extract repository/history.
+- [x] Replace Shared reference with Framework package.
+- [x] Restore/build/test Windows, Ubuntu, macOS independently.
+- [x] Verify lowercase `kill` and `renice` executable names.
 
-### G4.2 — Icod.Grep
+### G4.2 — Icod.Grep — COMPLETE
 
-- [ ] Extract repository/history.
-- [ ] Replace Shared reference with Framework.
-- [ ] Verify regex, record, traversal, diagnostics, and temporary-resource package dependencies.
-- [ ] Run independent CI.
+- [x] Extract repository/history.
+- [x] Replace Shared reference with Framework.
+- [x] Verify regex, record, traversal, diagnostics, and temporary-resource package dependencies.
+- [x] Run independent CI.
 
-### G4.3 — Icod.Tar
+### G4.3 — Icod.Tar — COMPLETE
 
-- [ ] Extract repository/history.
-- [ ] Replace Shared reference with Framework.
-- [ ] Verify traversal, metadata, transaction, process, signal, temporary-workspace, and native/compressor behavior against packages.
-- [ ] Run independent CI.
+- [x] Extract repository/history.
+- [x] Replace Shared reference with Framework.
+- [x] Verify traversal, metadata, transaction, process, signal, temporary-workspace, and native/compressor behavior against packages.
+- [x] Run independent CI.
 
-**Exit criterion:** three structurally different standalone suites successfully consume published foundation packages.
+**Exit criterion met:** three structurally different standalone suites successfully consume published foundation packages.
 
 ## G5 — Extract Icod.ProcPs
 
@@ -472,34 +472,12 @@ A suite-specific Shared/engine assembly does not become a separately published p
 
 # D. Immediate Next Work
 
-Completion Gate G is active. `Icod.Path` and `Icod.CommandFramework` are now independent published foundations, so the current work is the G3 contraction of `Icod.CoreUtils.Shared`.
+Completion Gate G remains active. G3 is complete, and the three G4 pilot extractions are now complete:
 
-Current sequence:
+- [x] G4.1 — `Icod.UtilLinux`
+- [x] G4.2 — `Icod.Grep`
+- [x] G4.3 — `Icod.Tar`
 
-- [x] G3A — contract the split `Text` namespace.
-- [x] G3B — contract the split `Time` namespace.
-- [x] G3C1 — cut identity/capability/SELinux consumers over to `Icod.CommandFramework.Platform`.
-- [x] G3C2 — delete the duplicated framework-owned Platform implementation and tests.
-- [x] G3D1 — cut the neutral file-mode value model over to `Icod.CommandFramework.FileSystem.Modes`.
-- [x] G3D2 — delete the duplicate CoreUtils file-mode value model and contract its documentation.
-- [x] G3E1 — cut Metadata consumers over to `Icod.CommandFramework.FileSystem.Metadata`.
-- [x] G3E2 — remove the duplicate CoreUtils Metadata implementation and tests.
-- [x] G3F1 — remove the duplicate CoreUtils Traversal implementation and tests.
-- [x] G3G1 — cut Mutation consumers over to `Icod.CommandFramework.FileSystem.Mutation`.
-- [x] G3G2 — remove the duplicate CoreUtils Mutation implementation and tests.
-- [x] G3H1 — cut RecursiveMutation consumers over to `Icod.CommandFramework.FileSystem.RecursiveMutation`.
-- [x] G3H2 — remove the duplicate CoreUtils RecursiveMutation implementation and tests.
-- [x] G3I1 — cut TransactionalReplacement consumers over to `Icod.CommandFramework.FileSystem.TransactionalReplacement`.
-- [x] G3I2 — remove the duplicate CoreUtils TransactionalReplacement implementation and tests.
-- [x] **G3J — Root filesystem operations audit and contraction**
-  - compare `FileSystemCapabilities`, `IFileSystemOperations`, and `SystemFileSystemOperations` with the framework package;
-  - cut neutral consumers to `Icod.CommandFramework.FileSystem` where contracts match;
-  - preserve any Coreutils-only delta explicitly rather than deleting it blindly.
-- [x] **G3K1/G3K2 — Remaining framework-owned namespace consumer cut-over and implementation/test excision.**
-- [x] **G3L — ProcessTestHost audit and contraction.**
-- [x] **G3M1 — Package-boundary evaluation and local validation:** local pack/restore proved the contracted library is technically packageable, but the architecture review rejected an independent distribution boundary.
-- [x] **G3M2A — Framework filesystem migration and package refresh:** inode-pool observation, creation-mask observation, and host file-clone/reflink mechanism plus their tests are published in `Icod.CommandFramework` 1.1.0 after required-runner validation.
-- [x] **G3M2B — CoreUtils consumer cut-over and prudent pruning:** the refreshed framework package now supplies inode pools, creation-mask observation, clone execution, and directory metadata application while GNU policy remains in CoreUtils.
-- [x] **G3M3 — Internal-library boundary freeze and Coreutils consumer validation:** publication intent is removed and the repository-local boundary is guarded; run the in-repository Coreutils validation before entering G3N.
-- [x] **G3N — Isolated Coreutils validation and G3 closure:** run the clean-checkout/build/test closure before beginning G4 repository extraction.
-- [ ] **G4.1 — Icod.UtilLinux**
+All three standalone suites have been migrated to their permanent repositories, consume the published neutral foundation packages, and have been removed from the live `Icod.CoreUtils` source/solution after successful validation.
+
+The next engineering step is **G5 — Extract `Icod.ProcPs`**. Successful ProcPs extraction will unblock deferred Batch 68 (`Icod.ProcPs.Top`) so that `top` can be implemented in its permanent repository against its final dependency boundary.

@@ -5,10 +5,10 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `67`, `69` through Batch `72`; Batch `68` (`Icod.ProcPs.Top`) is deliberately deferred until after `Icod.ProcPs` extraction|
-| Current engineering milestone | Completion Gate G — G3M3 internal-library boundary freeze and Coreutils consumer validation |
-| Completed infrastructure milestone | Completion Gates E2 through E6, F1 through F4, and P1 — filesystem, terminal, process-control, and ProcPs provider foundations; G3M2 filesystem consumer cut-over completed against `Icod.CommandFramework` 1.1.0 |
-| Active infrastructure dependency | freeze `Icod.CoreUtils.Shared` as a non-packable repository-local Coreutils library, retain published `Icod.CommandFramework` 1.1.0 and `Icod.Path` 1.0.0 dependencies, and validate in-repository Coreutils consumers |
-| Next engineering step | G4.1 |
+| Current engineering milestone | Completion Gate G — G5 ProcPs extraction |
+| Completed infrastructure milestone | Completion Gates E2 through E6, F1 through F4, P1, G1 through G3, and pilot repository extractions G4.1 through G4.3 |
+| Active infrastructure dependency | retain `Icod.CoreUtils.Shared` as a non-packable repository-local Coreutils library and consume published `Icod.CommandFramework` 1.1.0 and `Icod.Path` 1.0.0 neutral foundations |
+| Next engineering step | G5 — extract `Icod.ProcPs` |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
