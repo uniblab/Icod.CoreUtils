@@ -141,31 +141,35 @@ No command suite may become a production dependency of `Icod.CommandFramework`, 
 Current extraction set:
 
 - [ ] `Icod.ProcPs.Shared`
-- [ ] `Icod.ProcPs.Uptime`
-- [ ] `Icod.ProcPs.Free`
-- [ ] `Icod.ProcPs.Vmstat`
-- [ ] `Icod.ProcPs.Pgrep`
-- [ ] `Icod.ProcPs.Pkill`
-- [ ] `Icod.ProcPs.PidWait`
-- [ ] `Icod.ProcPs.PidOf`
-- [ ] `Icod.ProcPs.Pwdx`
-- [ ] `Icod.ProcPs.Pmap`
-- [ ] `Icod.ProcPs.Ps`
-- [ ] `Icod.ProcPs.W`
-- [ ] `Icod.ProcPs.Sysctl`
+- [x] `Icod.ProcPs.Uptime`
+- [x] `Icod.ProcPs.Free`
+- [x] `Icod.ProcPs.Vmstat`
+- [x] `Icod.ProcPs.Pgrep`
+- [x] `Icod.ProcPs.Pkill`
+- [x] `Icod.ProcPs.PidWait`
+- [x] `Icod.ProcPs.PidOf`
+- [x] `Icod.ProcPs.Pwdx`
+- [x] `Icod.ProcPs.Pmap`
+- [x] `Icod.ProcPs.Ps`
+- [x] `Icod.ProcPs.W`
+- [x] `Icod.ProcPs.Sysctl`
 - [ ] `Icod.ProcPs.Tload`
 - [ ] `Icod.ProcPs.Watch`
 - [ ] `Icod.ProcPs.HugeTop`
 - [ ] `Icod.ProcPs.SlabTop`
 - [ ] Corresponding command test projects.
+  - [x] Extract and remove from CoreUtils the tests for `Uptime`, `Free`, `Vmstat`, `Pgrep`, `Pkill`, `PidWait`, `PidOf`, `Pwdx`, `Pmap`, `Ps`, `W`, and `Sysctl`.
+  - [ ] Migrate the remaining deferred command tests for `Tload`, `Watch`, `HugeTop`, and `SlabTop`.
 - [ ] `Icod.ProcPs.Shared.Tests`
-- [ ] Create `Icod.ProcPs.sln`.
+- [x] Create `Icod.ProcPs.sln`.
 - [ ] Replace CoreUtils Shared with `Icod.CommandFramework`.
-- [ ] Preserve project references from commands to `Icod.ProcPs.Shared`.
-- [ ] Retain `/proc`, process-domain, field-catalog, selection, sampling, and screen-model behavior in ProcPs Shared.
+  - [x] The extracted repository's `Icod.ProcPs.Shared` consumes published `Icod.CommandFramework` 1.1.0.
+  - [ ] The co-resident CoreUtils copy remains intentionally transitional until the final Shared/Shared.Tests excision.
+- [x] Preserve project references from extracted commands to `Icod.ProcPs.Shared`.
+- [x] Retain `/proc`, process-domain, field-catalog, selection, sampling, and screen-model behavior in ProcPs Shared.
 - [ ] After extraction succeeds, implement deferred `Icod.ProcPs.Top`.
 - [ ] Add `Icod.ProcPs.Top.Tests`.
-- [ ] Confirm procps-ng `kill`, `skill`, and `snice` remain deliberately absent.
+- [x] Confirm procps-ng `kill`, `skill`, and `snice` remain deliberately absent.
 
 ---
 
@@ -367,17 +371,39 @@ In every extraction below, replacing a transitional CoreUtils Shared reference m
 
 **Exit criterion met:** three structurally different standalone suites successfully consume published foundation packages.
 
-## G5 — Extract Icod.ProcPs
+## G5 — Extract Icod.ProcPs — ACTIVE / PARTIAL
 
 ProcPs follows the pilot migrations because it is the largest consumer of the cross-suite process/terminal foundation and because successful extraction unblocks deferred Batch 68.
 
+**Partial-progress checkpoint (2026-08-22):** the independent `Icod.ProcPs` repository and solution are operational. The first extraction tranche migrated `uptime`, `free`, `vmstat`, `pgrep`, `pkill`, `pidwait`, `pidof`, `pwdx`, `pmap`, `ps`, `w`, and `sysctl`, together with their command tests, and validated that tranche independently on Windows, Ubuntu, and macOS. Those 12 command projects and their corresponding tests have now been removed from `Icod.CoreUtils` and from `Icod.CoreUtils.sln`.
+
+`Icod.ProcPs.Shared` and `Icod.ProcPs.Shared.Tests` intentionally remain co-resident in `Icod.CoreUtils` until the remaining ProcPs command migration is complete. The deferred terminal-oriented commands `tload`, `watch`, `hugetop`, and `slabtop` likewise remain to be migrated. Batch 68 (`top`) remains deferred until ProcPs reaches its permanent repository/dependency boundary.
+
 - [ ] Extract all current ProcPs projects/tests/history.
+  - [x] Establish the independent `Icod.ProcPs` repository and `Icod.ProcPs.sln`.
+  - [x] Extract the 12-command non-terminal tranche and its corresponding command tests.
+  - [x] Remove those 12 command projects and their tests from `Icod.CoreUtils`.
+  - [ ] Migrate the remaining `tload`, `watch`, `hugetop`, and `slabtop` projects and tests.
+  - [ ] Excise the co-resident `Icod.ProcPs.Shared` and `Icod.ProcPs.Shared.Tests` last, after all remaining ProcPs consumers have moved.
+  - [ ] Complete any remaining repository-history and migration-bookkeeping closure required by G5.
 - [ ] Convert ProcPs Shared to Framework package references.
+  - [x] The extracted `Icod.ProcPs.Shared` consumes published `Icod.CommandFramework` 1.1.0.
+  - [ ] The co-resident CoreUtils copy remains transitional until final excision.
 - [ ] Remove transitional direct CoreUtils Shared references from ProcPs command tests.
+  - [x] Complete for the 12 extracted command-test projects.
+  - [ ] Complete for the remaining deferred command-test projects during their migration.
 - [ ] Validate Linux authoritative behavior.
+  - [x] Complete for the extracted 12-command tranche.
+  - [ ] Repeat/extend validation for the remaining deferred ProcPs commands before G5 closure.
 - [ ] Validate Windows/macOS portability providers.
+  - [x] Complete for the extracted 12-command tranche.
+  - [ ] Repeat/extend validation for the remaining deferred ProcPs commands before G5 closure.
 - [ ] Run independent three-runner CI.
+  - [x] Independent Windows/Ubuntu/macOS CI is established and green for the extracted tranche.
+  - [ ] Revalidate after the remaining ProcPs projects and Shared boundary are finalized.
 - [ ] Remove ProcPs from `Icod.CoreUtils.sln`.
+  - [x] Remove the 12 extracted command projects and their command-test projects.
+  - [ ] Retain only the intentionally co-resident Shared/Shared.Tests and deferred ProcPs projects until their migration tranches are complete.
 - [ ] Implement Batch 68 `top` in the final ProcPs repository.
 
 **Exit criterion:** ProcPs is fully independent and `top` can be developed against its permanent dependency boundary.

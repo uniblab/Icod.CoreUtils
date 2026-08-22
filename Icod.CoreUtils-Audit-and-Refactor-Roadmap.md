@@ -4,13 +4,16 @@
 
 | Item | Status |
 |---|---|
-| Completed command batches | `0` through `67`, `69` through Batch `72`; Batch `68` (`Icod.ProcPs.Top`) is deliberately deferred until after `Icod.ProcPs` extraction|
-| Current engineering milestone | Completion Gate G — G5 ProcPs extraction |
+| Completed command batches | `0` through `67`, `69` through Batch `72`; Batch `68` (`Icod.ProcPs.Top`) is deliberately deferred until after `Icod.ProcPs` extraction |
+| Current engineering milestone | Completion Gate G — G5 ProcPs extraction — **ACTIVE / PARTIAL** |
 | Completed infrastructure milestone | Completion Gates E2 through E6, F1 through F4, P1, G1 through G3, and pilot repository extractions G4.1 through G4.3 |
-| Active infrastructure dependency | retain `Icod.CoreUtils.Shared` as a non-packable repository-local Coreutils library and consume published `Icod.CommandFramework` 1.1.0 and `Icod.Path` 1.0.0 neutral foundations |
-| Next engineering step | G5 — extract `Icod.ProcPs` |
+| G5 partial progress | independent `Icod.ProcPs` repository/solution established; 12 migrated commands and their command tests excised from CoreUtils after independent three-runner validation |
+| Active infrastructure dependency | retain `Icod.CoreUtils.Shared` as a non-packable repository-local Coreutils library and consume published `Icod.CommandFramework` 1.1.0 and `Icod.Path` 1.0.0 neutral foundations; the co-resident `Icod.ProcPs.Shared` remains a transitional CoreUtils Shared consumer until final G5 excision |
+| Next engineering step | continue G5 with `tload`, `watch`, `hugetop`, and `slabtop`; then remove `Icod.ProcPs.Shared` and `Icod.ProcPs.Shared.Tests` last before implementing deferred Batch 68 `top` in the extracted repository |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
+
+**G5 partial-progress checkpoint (2026-08-22):** the standalone `Icod.ProcPs` repository now contains the extracted Shared library plus the 12-command tranche `uptime`, `free`, `vmstat`, `pgrep`, `pkill`, `pidwait`, `pidof`, `pwdx`, `pmap`, `ps`, `w`, and `sysctl`, together with their corresponding command tests and independent Windows/Ubuntu/macOS CI. Those 12 production projects and command-test projects have been removed from `Icod.CoreUtils`. The co-resident `Icod.ProcPs.Shared`, `tests/ProcPs.Shared.Tests`, and the deferred terminal-oriented ProcPs projects remain intentionally in CoreUtils until their later G5 migration tranches.
 
 ## Scope
 
