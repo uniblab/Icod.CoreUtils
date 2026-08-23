@@ -106,21 +106,27 @@ Destination: <https://github.com/uniblab/Icod.DiffUtils>
 - [ ] Preserve fixture corpora and transactional/security tests.
 - [ ] Keep Diffutils interoperability textual; do not reference `Icod.DiffUtils.Shared`.
 
-## Icod.LineEditor
+## Icod.LineEditor — G7 COMPLETE
 
-- [ ] `Icod.LineEditor.Ed.Shared`
-- [ ] `Icod.LineEditor.Ed`
-- [ ] `Icod.LineEditor.Red`
-- [ ] `Icod.LineEditor.Sed`
-- [ ] `Icod.LineEditor.Ed.Shared.Tests`
-- [ ] `Icod.LineEditor.Ed.Tests`
-- [ ] `Icod.LineEditor.Red.Tests`
-- [ ] `Icod.LineEditor.Sed.Tests`
-- [ ] Create `Icod.LineEditor.sln`.
-- [ ] Retain project references from Ed and Red to `Icod.LineEditor.Ed.Shared`.
-- [ ] Sed remains a separate execution engine.
-- [ ] Do **not** create `Icod.LineEditor.Shared`; the completed sharing audit did not justify it.
-- [ ] Replace cross-suite Shared references with `Icod.CommandFramework`.
+Destination: <https://github.com/uniblab/Icod.LineEditor>
+
+- [x] `Icod.LineEditor.Ed.Shared`
+- [x] `Icod.LineEditor.Ed`
+- [x] `Icod.LineEditor.Red`
+- [x] `Icod.LineEditor.Sed`
+- [x] `Icod.LineEditor.Ed.Shared.Tests`
+- [x] `Icod.LineEditor.Ed.Tests`
+- [x] `Icod.LineEditor.Red.Tests`
+- [x] `Icod.LineEditor.Sed.Tests`
+- [x] Create `Icod.LineEditor.sln`.
+- [x] Retain project references from Ed and Red to `Icod.LineEditor.Ed.Shared`.
+- [x] Sed remains a separate execution engine.
+- [x] Do **not** create `Icod.LineEditor.Shared`; the completed sharing audit did not justify it.
+- [x] Replace cross-suite Shared references with published `Icod.CommandFramework` 1.1.0.
+- [x] Run independent Windows/Ubuntu/macOS CI.
+- [x] Remove LineEditor tests, production projects, solution wiring, and migrated root-level LineEditor documents from CoreUtils.
+
+**G7 closure:** the standalone repository is authoritative for the Ed/Red/Sed family. CoreUtils no longer contains LineEditor source projects, test projects, or solution entries.
 
 ## Icod.UtilLinux
 
@@ -405,14 +411,20 @@ The terminal-oriented commands and deferred Batch 68 `top` are now ProcPs-reposi
 
 **Exit criterion met:** no DiffUtils-specific source, test project, or solution entry remains in CoreUtils; the authoritative implementation lives at <https://github.com/uniblab/Icod.DiffUtils>.
 
-## G7 — Extract Icod.LineEditor
+## G7 — Extract Icod.LineEditor — COMPLETE
 
-- [ ] Extract Ed.Shared, Ed, Red, Sed, all tests, fixtures, and history.
-- [ ] Convert cross-suite dependencies to Framework packages.
-- [ ] Preserve Ed/Red → Ed.Shared project references.
-- [ ] Keep Sed separate.
-- [ ] Confirm no general LineEditor Shared project is introduced.
-- [ ] Run independent CI.
+**Closure checkpoint (2026-08-23):** `Icod.LineEditor` is an independent repository containing `Icod.LineEditor.Ed.Shared`, `ed`, `red`, `sed`, their four dedicated test projects, its own solution, documentation, licensing, and published-neutral dependencies. PR #2 passed the independent Staging clean/restore/build/test matrix on Windows, Ubuntu, and macOS. CoreUtils removal was staged as tests first, then the four production projects, then the migrated root-level LineEditor documents.
+
+- [x] Extract Ed.Shared, Ed, Red, Sed, all tests, fixtures, and history.
+- [x] Convert cross-suite dependencies to published Framework packages.
+- [x] Preserve Ed/Red → Ed.Shared repository-local project references.
+- [x] Keep Sed separate.
+- [x] Confirm no general LineEditor Shared project is introduced.
+- [x] Run independent Windows/Ubuntu/macOS CI.
+- [x] Remove all LineEditor production/test projects and solution wiring from CoreUtils.
+- [x] Remove migrated LineEditor-specific root documentation from CoreUtils.
+
+**Exit criterion met:** LineEditor is fully independent of CoreUtils, and future LineEditor work belongs exclusively in <https://github.com/uniblab/Icod.LineEditor>.
 
 ## G8 — Extract Icod.Patch
 
@@ -494,7 +506,8 @@ Completion Gate G remains active. The completed extraction sequence is now:
 - [x] G4.3 — `Icod.Tar`
 - [x] G5 — `Icod.ProcPs` CoreUtils extraction
 - [x] G6 — `Icod.DiffUtils`
+- [x] G7 — `Icod.LineEditor`
 
 These suites have been moved out of the live `Icod.CoreUtils` source/solution after successful extraction validation. Remaining feature work in an extracted suite is owned by that suite's repository and does not require reintroducing its source into CoreUtils.
 
-The next engineering step is **G7 — Extract `Icod.LineEditor`**. Preserve Ed/Red → Ed.Shared repository-local project references, keep Sed as its separate execution engine, replace any remaining cross-suite CoreUtils Shared dependencies with the published neutral foundations, and validate the extracted repository independently before deleting the in-tree LineEditor source.
+The next engineering step is **G8 — Extract `Icod.Patch`**. Preserve Patch's complete fixture and security corpus, consume published `Icod.CommandFramework` and `Icod.Path`, keep Diffutils interoperability textual, validate the standalone repository independently, and only then remove the in-tree Patch source and tests.
