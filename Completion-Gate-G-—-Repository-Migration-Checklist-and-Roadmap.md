@@ -63,7 +63,7 @@ No command suite may become a production dependency of `Icod.CommandFramework`, 
 - [ ] Retain `Icod.CoreUtils.Shared` as a repository-local class-library project and do not publish it as an independently downloadable package.
 - [ ] Preserve `ProjectReference` from genuine Coreutils/Fileutils/Textutils consumers to `Icod.CoreUtils.Shared` where that suite-local reuse is required.
 - [ ] Use published `Icod.CommandFramework` and `Icod.Path` packages for neutral cross-repository dependencies; do not route sibling suites through `Icod.CoreUtils.Shared`.
-- [ ] Remove every sibling-suite project after successful extraction.
+- [x] Remove every sibling-suite project after successful extraction.
 - [ ] Remove stale solution folders, packaging entries, output-path exceptions, CI references, and documentation references.
 
 ## Icod.DiffUtils — G6 COMPLETE
@@ -96,15 +96,20 @@ Destination: <https://github.com/uniblab/Icod.DiffUtils>
 - [x] Replace the present CoreUtils Shared reference with `Icod.CommandFramework`.
 - [x] Keep matcher orchestration, binary-input rules, recursive-selection policy, context grouping, and output formatting in Grep.
 
-## Icod.Patch
+## Icod.Patch — G8 COMPLETE
 
-- [ ] `Icod.Patch`
-- [ ] `Icod.Patch.Tests`
-- [ ] Create `Icod.Patch.sln`.
-- [ ] Replace the present CoreUtils Shared reference with `Icod.CommandFramework`.
-- [ ] Replace the source-tree `Icod.Path` reference with the published `Icod.Path` package.
-- [ ] Preserve fixture corpora and transactional/security tests.
-- [ ] Keep Diffutils interoperability textual; do not reference `Icod.DiffUtils.Shared`.
+Destination: <https://github.com/uniblab/Icod.Patch>
+
+- [x] `Icod.Patch`
+- [x] `Icod.Patch.Tests`
+- [x] Create `Icod.Patch.sln`.
+- [x] Replace the present CoreUtils Shared reference with published `Icod.CommandFramework` 1.1.0.
+- [x] Replace the source-tree `Icod.Path` reference with the published `Icod.Path` 1.0.0 package.
+- [x] Preserve fixture corpora and transactional/security tests.
+- [x] Keep Diffutils interoperability textual; do not reference `Icod.DiffUtils.Shared`.
+- [x] Remove Patch tests, production source, solution folder/project wiring, configuration mappings, and nesting entries from CoreUtils after standalone validation.
+
+**G8 closure:** no Patch source, test project, or solution entry remains in `Icod.CoreUtils`; the authoritative implementation and Patch-specific roadmap now live in the dedicated repository.
 
 ## Icod.LineEditor — G7 COMPLETE
 
@@ -426,16 +431,19 @@ The terminal-oriented commands and deferred Batch 68 `top` are now ProcPs-reposi
 
 **Exit criterion met:** LineEditor is fully independent of CoreUtils, and future LineEditor work belongs exclusively in <https://github.com/uniblab/Icod.LineEditor>.
 
-## G8 — Extract Icod.Patch
+## G8 — Extract Icod.Patch — COMPLETE
 
-Patch is deliberately late because it exercises both `Icod.Path` and some of the most security-sensitive filesystem/transactional framework APIs.
+**Closure checkpoint (2026-08-23):** `Icod.Patch` is an independent repository containing the production implementation, complete dedicated test/fixture corpus, standalone solution, documentation, published `Icod.CommandFramework` 1.1.0 and `Icod.Path` 1.0.0 dependencies, no runtime Diffutils dependency, and independent Windows/Ubuntu/macOS CI configuration. CoreUtils removal was deliberately staged: Patch tests first, then the 31-file production tree together with the Patch solution folder/project wiring, configuration mappings, and nesting entry.
 
-- [ ] Extract Patch and its complete fixture/test corpus.
-- [ ] Use published `Icod.Path`.
-- [ ] Use published `Icod.CommandFramework`.
-- [ ] Verify no runtime Diffutils dependency.
-- [ ] Re-run all security, canonical-path, race, metadata, transaction, fuzz, offset, reversal, backup, reject, and compatibility tests.
-- [ ] Run independent CI.
+- [x] Extract Patch and its complete fixture/test corpus.
+- [x] Use published `Icod.Path`.
+- [x] Use published `Icod.CommandFramework`.
+- [x] Verify no runtime Diffutils dependency.
+- [x] Re-run all security, canonical-path, race, metadata, transaction, fuzz, offset, reversal, backup, reject, and compatibility tests.
+- [x] Run independent CI.
+- [x] Remove Patch tests, production source, and solution wiring from CoreUtils after validating the standalone repository.
+
+**Exit criterion met:** Patch is fully independent of CoreUtils, and future Patch work belongs exclusively in <https://github.com/uniblab/Icod.Patch>.
 
 ## G9 — Final CoreUtils cleanup
 
@@ -507,7 +515,8 @@ Completion Gate G remains active. The completed extraction sequence is now:
 - [x] G5 — `Icod.ProcPs` CoreUtils extraction
 - [x] G6 — `Icod.DiffUtils`
 - [x] G7 — `Icod.LineEditor`
+- [x] G8 — `Icod.Patch`
 
 These suites have been moved out of the live `Icod.CoreUtils` source/solution after successful extraction validation. Remaining feature work in an extracted suite is owned by that suite's repository and does not require reintroducing its source into CoreUtils.
 
-The next engineering step is **G8 — Extract `Icod.Patch`**. Preserve Patch's complete fixture and security corpus, consume published `Icod.CommandFramework` and `Icod.Path`, keep Diffutils interoperability textual, validate the standalone repository independently, and only then remove the in-tree Patch source and tests.
+The next engineering step is **G9 — Final CoreUtils cleanup**. Remove stale solution, output-path, packaging, CI, and roadmap inventory residue; confirm no sibling-suite production dependencies remain; validate Debug/Staging/Release and the three required runners; verify clean package restore and UTF-8/LF policy; then freeze the final Gate G dependency graph before G10.
