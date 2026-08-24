@@ -5,17 +5,19 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `67`, `69` through Batch `72`; Batch `68` (`Icod.ProcPs.Top`) remains deliberately deferred to the extracted `Icod.ProcPs` repository |
-| Current engineering milestone | Completion Gate G — G8 `Icod.Patch` extraction — **NEXT** |
-| Completed infrastructure milestone | Completion Gates E2 through E6, F1 through F4, P1, G1 through G3, pilot extractions G4.1 through G4.3, G5 `Icod.ProcPs`, G6 `Icod.DiffUtils`, and G7 `Icod.LineEditor` |
-| Completed suite extractions | `Icod.UtilLinux`, `Icod.Grep`, `Icod.Tar`, `Icod.ProcPs`, `Icod.DiffUtils`, and `Icod.LineEditor` |
+| Current engineering milestone | Completion Gate G — G9 final CoreUtils cleanup — **NEXT** |
+| Completed infrastructure milestone | Completion Gates E2 through E6, F1 through F4, P1, G1 through G3, pilot extractions G4.1 through G4.3, G5 `Icod.ProcPs`, G6 `Icod.DiffUtils`, G7 `Icod.LineEditor`, and G8 `Icod.Patch` |
+| Completed suite extractions | `Icod.UtilLinux`, `Icod.Grep`, `Icod.Tar`, `Icod.ProcPs`, `Icod.DiffUtils`, `Icod.LineEditor`, and `Icod.Patch` |
 | Active infrastructure dependency | retain `Icod.CoreUtils.Shared` as a non-packable repository-local Coreutils library and consume published `Icod.CommandFramework` 1.1.0 and `Icod.Path` 1.0.0 neutral foundations; extracted sibling suites must not depend on `Icod.CoreUtils.Shared` |
-| Next engineering step | begin G8 by extracting `Icod.Patch` against the published neutral foundations while preserving Patch-specific parser, matcher, fixture, security, and transaction policy in its dedicated repository |
+| Next engineering step | begin G9 final CoreUtils cleanup: remove stale sibling-suite solution, source/test, output-path, packaging, CI, and roadmap inventory references, then validate the CoreUtils-only repository across Debug/Staging/Release and the three required runners |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
 **G6 closure checkpoint (2026-08-22):** `Icod.DiffUtils` is now an independent repository containing `Icod.DiffUtils.Shared`, `cmp`, `diff`, `diff3`, `sdiff`, their dedicated tests, and independent CI. CoreUtils excised the DiffUtils tests first, then the four executable projects, and finally `Icod.DiffUtils.Shared`; the corresponding solution folders, project mappings, and nesting entries were removed at each stage and the working CoreUtils branch continued to build and test successfully. G5 is likewise closed for CoreUtils repository extraction: no `Icod.ProcPs` source, project, or test paths remain in CoreUtils. Deferred ProcPs feature work, including Batch 68 `top`, is owned by the dedicated `Icod.ProcPs` repository and no longer blocks Gate G progress in CoreUtils.
 
-**G7 closure checkpoint (2026-08-23):** `Icod.LineEditor` is now an independent repository containing `Icod.LineEditor.Ed.Shared`, `ed`, `red`, `sed`, all four dedicated test projects, its own solution, documentation, licensing, and published-neutral dependencies. Its PR #2 Staging matrix passed clean/restore/build/test on `windows-latest`, `ubuntu-latest`, and `macos-latest`. CoreUtils excised the four LineEditor test projects first, then `Icod.LineEditor.Ed.Shared`, `ed`, `red`, and `sed`, and finally the migrated root-level LineEditor planning/audit documents. The current CoreUtils solution contains no LineEditor entries. G8 `Icod.Patch` is now the next extraction tranche.
+**G7 closure checkpoint (2026-08-23):** `Icod.LineEditor` is now an independent repository containing `Icod.LineEditor.Ed.Shared`, `ed`, `red`, `sed`, all four dedicated test projects, its own solution, documentation, licensing, and published-neutral dependencies. Its PR #2 Staging matrix passed clean/restore/build/test on `windows-latest`, `ubuntu-latest`, and `macos-latest`. CoreUtils excised the four LineEditor test projects first, then `Icod.LineEditor.Ed.Shared`, `ed`, `red`, and `sed`, and finally the migrated root-level LineEditor planning/audit documents. The current CoreUtils solution contains no LineEditor entries. G8 has since completed the final sibling-suite extraction.
+
+**G8 closure checkpoint (2026-08-23):** `Icod.Patch` is now an independent repository with its production source, complete dedicated test/fixture corpus, standalone solution, documentation, published `Icod.CommandFramework` 1.1.0 and `Icod.Path` 1.0.0 dependencies, no runtime Diffutils dependency, and independent Windows/Ubuntu/macOS CI configuration. CoreUtils excised the Patch tests first and then the 31-file production tree together with its solution folder/project wiring, configuration mappings, and nesting entry. The standalone repository now owns Patch-specific planning and conformance documentation. G9 final CoreUtils cleanup is next.
 
 ## Scope
 
@@ -38,38 +40,32 @@ The following boundaries have already been extracted from CoreUtils:
 - `Icod.Tar`;
 - `Icod.ProcPs`;
 - `Icod.DiffUtils`;
-- `Icod.LineEditor`.
-
-The only remaining co-resident sibling-suite work scheduled for Gate G extraction is:
-
+- `Icod.LineEditor`;
 - `Icod.Patch`.
 
-The remaining project uses its **final ownership-correct project name and namespace** while it is still co-resident. Already extracted suites consume the published neutral foundations directly and must not be reintroduced as CoreUtils source-tree dependencies.
+All sibling-suite boundaries scheduled for Gate G extraction have now been moved to their dedicated repositories. Those suites consume the published neutral foundations directly and must not be reintroduced as CoreUtils source-tree dependencies.
 
 No separate `[` project will be added. The existing `test` project remains the condition evaluator.
 
 ## Development architecture
 
-The repository is now a **late-stage Gate G extraction workspace** rather than the final repository layout. CoreUtils remains in place while the final co-resident Patch boundary is moved out.
+The repository is now in the **final Gate G cleanup phase**. G8 removed the last co-resident sibling-suite boundary; G9 removes stale repository wiring and documentation, and G10 closes the final architecture record.
 
 Before Completion Gate G, `Icod.CoreUtils.Shared` incubated both neutral cross-suite mechanism and Coreutils-family behavior. G3 completed the approved neutral migration and froze the boundary: `Icod.CoreUtils.Shared` contains only GNU Coreutils/Fileutils/Textutils shared behavior and remains a repository-local project, while neutral mechanism is consumed from published `Icod.CommandFramework` and `Icod.Path` packages.
 
-Any remaining sibling-suite `ProjectReference` to `Icod.CoreUtils.Shared` is transitional extraction debt rather than evidence for a public CoreUtils package. G8 replaces the remaining Patch references with the appropriate published neutral foundations as that suite moves to its permanent repository.
+No sibling-suite `ProjectReference` to `Icod.CoreUtils.Shared` should remain. Extracted suites consume published neutral foundations directly; any stale reference discovered during G9 is cleanup debt rather than evidence for a public CoreUtils package.
 
-`Icod.DiffUtils.Shared`, `Icod.ProcPs.Shared`, and `Icod.LineEditor.Ed.Shared` now live outside CoreUtils in their dedicated repositories and must not be reintroduced here.
-
-During the remaining incubation phase, Patch consumes repository-local and published dependencies only as required by its current pre-extraction project boundary. G8 converts every cross-repository dependency to the published neutral owner before CoreUtils removes the Patch project.
+`Icod.Patch`, `Icod.DiffUtils`, `Icod.ProcPs`, and `Icod.LineEditor` now live outside CoreUtils in their dedicated repositories and must not be reintroduced here as source-tree dependencies.
 
 `Icod.Path` is a parallel neutral foundation rather than a suite-specific Shared library. It has no dependency on an individual command or on `Icod.CoreUtils.Shared`; commands reference it directly when canonical-path behavior is required.
 
-The remaining co-resident namespace families are:
+The live source namespace family is:
 
 ```text
 Icod.CoreUtils.*
-Icod.Patch
 ```
 
-The solution continues to use matching solution folders and suite directories so source ownership is clear until the remaining Patch extraction is complete.
+The solution should now contain only Coreutils/Fileutils/Textutils projects and repository-local CoreUtils support/test infrastructure; G9 removes any stale solution-folder or output-path residue.
 
 ### Co-resident executable-name collisions
 
@@ -184,7 +180,7 @@ Each non-Coreutils suite developed in this repository must:
 
 For GNU Coreutils commands—including the natural historical GNU Fileutils and GNU Textutils command families—the conformance baseline is the pinned GNU Coreutils manual and source. The separate Fileutils and Textutils packages are historical provenance, not competing modern specifications.
 
-For the co-resident sibling-suite projects, use the corresponding upstream project as the primary authority.
+For the extracted sibling-suite projects, use the corresponding upstream project as the primary authority.
 
 | Program family or command | Project family | Primary authority |
 |---|---|---|
@@ -207,7 +203,7 @@ Man7 pages are useful synopses and secondary references, but they must not repla
 - The completed batches established shared command-line, diagnostics, streaming, numeric, platform, identity, process, date/time, and block-I/O abstractions.
 - Batches 1 through 29 have dedicated command-specific tests, together with focused Shared tests for the infrastructure introduced by their completion gates.
 - The complete applicable solution remains subject to the required `windows-latest`, `ubuntu-latest`, and `macos-latest` build-and-test contract; completed batches must remain green on all three runners.
-- Source projects consistently reference `Shared` where common behavior is appropriate; that project currently incubates both future `Icod.CommandFramework` APIs and Coreutils-specific `Icod.CoreUtils.Shared` APIs while co-resident sibling suites supply additional real consumers.
+- Genuine Coreutils projects reference repository-local `Icod.CoreUtils.Shared` where Coreutils-family reuse is appropriate, while cross-repository mechanisms are consumed from the published `Icod.CommandFramework` and `Icod.Path` foundations. No sibling-suite source project remains co-resident.
 - `Icod.LineEditor.Sed` has already completed its project and namespace migration: it uses assembly name `sed`, root namespace and public command class `Icod.LineEditor.Sed.Command`, an asynchronous entry point, a dedicated test identity, and a project reference to the current Shared incubation project.
 - Recent projects use asynchronous entry points, injected streams, cancellation, and provider abstractions more consistently than the original implementations.
 - Cross-platform test failures have exposed and corrected line-ending assumptions, test-vector defects, and native ABI assumptions that Windows- or Linux-only validation would have missed.
@@ -225,7 +221,6 @@ Man7 pages are useful synopses and secondary references, but they must not repla
 
 4. **Some implementations are not yet the command they claim to be.**
    - The existing `diff` implementation is not a complete difference algorithm and does not yet implement the required result-status model; it will be migrated into `Icod.DiffUtils.Diff` and corrected during the consecutive Diffutils batches.
-   - The historical `patch` seed handled a private simplified format rather than GNU patch syntax. Patch Waves A, B1, B2, and C, Phases P0–P8 with P9 started, have retired that format, normalized the co-resident `Icod.Patch` project, added byte-preserving detection and complete parsers, supplied a pure indexed application/matching engine with offsets, fuzz, reversal, prerequisites, and merge output, added secure canonical multi-file planning over `Icod.Path`, implemented explicit backup/reject/output/dry-run/prompt/metadata policy, and placed committed mutation behind a provisional injected transaction boundary. Final E6 atomicity and P9/P10 closure remain scheduled for later waves.
    - `link` behaves like a partial `ln` front end rather than the simple two-operand hard-link command.
    - `chmod` does not yet implement GNU/POSIX numeric and symbolic mode semantics correctly.
    - `tar` needs correct entry typing, metadata handling, and extraction-path safety.
@@ -363,7 +358,7 @@ These conventions apply to every existing project that is altered and every proj
 13. Native structures and calls are defined per supported operating-system ABI; a Linux structure declaration must not be assumed valid on macOS or Windows.
 14. The exact upstream package and version used as the conformance baseline is recorded for every batch.
 15. `Icod.CoreUtils` command projects do not take production dependencies on `Icod.DiffUtils`, `Icod.Grep`, `Icod.Patch`, `Icod.LineEditor.Ed`, `Icod.LineEditor.Red`, `Icod.UtilLinux`, `Icod.ProcPs`, `Icod.LineEditor.Sed`, or `Icod.Tar`.
-16. Remaining co-resident suite projects remain isolated by namespace, solution folder, tests, and output paths until their Gate G extraction. G1 through G6 have already removed the neutral foundations and the UtilLinux, Grep, Tar, ProcPs, and DiffUtils source boundaries from CoreUtils; G7 and G8 perform the remaining LineEditor and Patch extractions.
+16. G4 through G8 have removed all sibling-suite source boundaries from CoreUtils. No sibling-suite project remains co-resident; G9 removes any stale solution, output-path, packaging, CI, or documentation residue left by the staged extractions.
 17. Every substantial Shared API retains its permanent ownership classification: neutral cross-suite mechanism belongs in `Icod.CommandFramework` or another approved neutral package, Coreutils-family reuse belongs in `Icod.CoreUtils.Shared`, suite-specific reuse belongs in that suite's repository, and command-local behavior remains command-local.
 18. A type's former assembly is not proof of final ownership. Cross-suite process and processor mechanics belong in `Icod.CommandFramework`, while ProcPs-specific enumeration, `/proc` parsing, field catalogs, selection grammar, metrics, and screen state belong in `Icod.ProcPs.Shared` in the dedicated `Icod.ProcPs` repository.
 19. Suite-specific projects must not introduce parallel abstractions for processor availability, process identity, targets, launching, waiting, signals, priorities, clocks, or terminals when a published neutral foundation already provides the required cross-suite contract.
@@ -836,9 +831,9 @@ Implement side-by-side layout, width and display-column handling, common-line su
 
 Completion of Batches 30 through 34 left the complete GNU Diffutils family implemented and tested inside the then-current solution. Completion Gate G6 subsequently extracted that family to the dedicated `Icod.DiffUtils` repository and removed its tests, executable projects, Shared library, and solution wiring from CoreUtils.
 
-### In-solution Patch and E-series partial-order workstream
+### Historical in-solution Patch and E-series partial-order workstream
 
-This workstream does not alter command-batch numbering. The detailed Patch architecture, conformance matrix, security model, test requirements, and phase checklists remain in [`Icod.Patch-Development-Roadmap.md`](Icod.Patch-Development-Roadmap.md); this roadmap records the repository-wide ordering constraints and the points at which Patch consumes the E-series infrastructure.
+This workstream does not alter command-batch numbering. The detailed Patch architecture, conformance matrix, security model, test requirements, phase checklists, and future Patch ownership now live in the standalone [Icod.Patch development roadmap](https://github.com/uniblab/Icod.Patch/blob/main/Icod.Patch-Development-Roadmap.md); this roadmap retains the repository-wide historical ordering constraints and the points at which Patch consumed the E-series infrastructure.
 
 Patch is no longer scheduled as one isolated milestone completed before the E series. Its parser and pure application engine can proceed independently, while its path, metadata, mode, symlink, backup, reject, and replacement behavior must consume the corresponding shared gates as soon as they exist. The schedule is therefore a partial order:
 
@@ -1720,12 +1715,12 @@ Creation consumes the established `ReadOnlyPathTraversalEngine`; archive rewrite
 
 Extraction is treated as a security boundary: rooted/platform-root and escaping member paths are rejected, parent symlink/reparse traversal is blocked, symbolic/hard-link targets are containment-checked, special device/FIFO creation is refused, Windows case-fold collisions are detected, sparse arithmetic is checked, and archive/member/extracted-byte ceilings bound hostile inputs. Dedicated `Tar.Tests` cover operations, formats, compression, links, metadata, sparse round trips, malformed sparse maps, integer overflow, path/link escapes, overwrite redirection, decompression failure, cancellation, and resource exhaustion. Detailed notes are recorded in `Icod.CoreUtils-Batch-72-Tar-Archive-Engine.md`; full solution and required-runner validation remain the closure step.
 
-The project remains co-resident until Completion Gate G, when it is moved into its own solution and repository and its cross-suite dependencies are converted to `Icod.CommandFramework` package references.
+Completion Gate G4.3 subsequently moved the project into its own solution and repository and converted its cross-suite dependencies to published neutral foundations.
 
 
 ### Completion Gate G — final classification, foundation refinement, package extraction, and repository split
 
-This gate is deliberately last. By this point the Coreutils, Diffutils, Grep, Patch, Ed, Sed, selected UtilLinux commands, Tar, and ProcPs projects have supplied the shared consumer evidence needed to choose stable API and repository boundaries. The neutral foundations plus UtilLinux, Grep, Tar, ProcPs, DiffUtils, and LineEditor have now been extracted; Gate G continues with the remaining Patch separation before final CoreUtils cleanup and architecture closure.
+This gate is deliberately last. By this point the Coreutils, Diffutils, Grep, Patch, Ed, Sed, selected UtilLinux commands, Tar, and ProcPs projects have supplied the shared consumer evidence needed to choose stable API and repository boundaries. The neutral foundations plus UtilLinux, Grep, Tar, ProcPs, DiffUtils, LineEditor, and Patch have now been extracted; Gate G continues with G9 final CoreUtils cleanup before G10 architecture closure.
 
 - [ ] Inventory every public, protected, and internal API in the current Shared incubation project and record its actual consumers by project and suite.
 - [x] Complete the suite-engine ownership audits required before extracting DiffUtils, LineEditor, and ProcPs; their suite-specific engines now live in their dedicated repositories rather than in CoreUtils.
@@ -1754,10 +1749,10 @@ This gate is deliberately last. By this point the Coreutils, Diffutils, Grep, Pa
 - [x] Retain `Icod.CoreUtils.Shared` permanently as a repository-local Coreutils/Fileutils/Textutils class library; make it depend on published neutral foundations rather than duplicate framework behavior.
 - [x] Do **not** publish `Icod.CoreUtils.Shared` independently to NuGet.org or GitHub Packages.
 - [x] Retain same-repository `ProjectReference` dependencies from genuine Coreutils command projects to `Icod.CoreUtils.Shared`; use direct neutral `PackageReference` dependencies where no Coreutils-specific layer is required.
-- [ ] Split the co-resident suite projects into their final solutions and repositories:
+- [x] Split the co-resident suite projects into their final solutions and repositories:
   - [x] `Icod.DiffUtils` — G6 complete;
   - [x] `Icod.Grep` — G4.2 complete;
-  - [ ] `Icod.Patch`;
+  - [x] `Icod.Patch` — G8 complete;
   - [x] `Icod.LineEditor` — G7 complete; the dedicated repository contains `Icod.LineEditor.Ed.Shared`, `Icod.LineEditor.Ed`, `Icod.LineEditor.Red`, and `Icod.LineEditor.Sed`, with no general `Icod.LineEditor.Shared` project;
   - [x] `Icod.UtilLinux`, containing the selected `kill` and `renice` command projects — G4.1 complete;
   - [x] `Icod.Tar` — G4.3 complete;
@@ -1778,7 +1773,7 @@ Completion of this gate establishes `Icod.CommandFramework` as the neutral cross
 
 - `Icod.CoreUtils` retains GNU Coreutils together with the historical GNU Fileutils and GNU Textutils command families because those packages were merged into GNU Coreutils and now form one natural upstream suite.
 
-- The repository served as a multi-suite incubation workspace while shared ownership was being proven. Completion Gate G is now dismantling that layout in validated stages; after G7, `Icod.Patch` is the only sibling-suite project still co-resident in CoreUtils.
+- The repository served as a multi-suite incubation workspace while shared ownership was being proven. Completion Gate G dismantled that layout in validated stages; G8 completed the final sibling-suite extraction, and no sibling-suite project remains co-resident in CoreUtils.
 
 - Batches 0 through 16 remain the completed historical and infrastructure foundation. They establish command contexts, argument processing, diagnostics, streams, cancellation, numeric operands, temporary objects, regular expressions, platform capabilities, and raw-file behavior used by later Coreutils commands and the co-resident suites.
 
@@ -1834,7 +1829,7 @@ Completion of this gate establishes `Icod.CommandFramework` as the neutral cross
 
 - `Icod.Tar` remains the final major suite before Completion Gate G. Archive correctness depends on the mature filesystem foundation and also benefits from the completed process, signal, terminal, provider, and capability work. Tar-specific archive formats and extraction state stay outside the general Shared project.
 
-- Completion Gate G remains the final architecture gate. The early `Icod.ProcPs` extraction before Batch 68 is a deliberate exception intended to let `top` target the final ProcPs boundary; Gate G still classifies and extracts the remaining suites and verifies the already-extracted ProcPs dependency/package relationships.
+- Completion Gate G remains the final architecture gate. G8 completed the remaining sibling-suite extraction; G9 now performs final CoreUtils cleanup, after which G10 closes the architecture and dependency record.
 
 - Except for the explicit pre-Batch-68 `Icod.ProcPs` migration, the final repository split occurs together with the framework/package extraction. This avoids maintaining multiple repositories against unstable shared APIs during the heaviest refactoring period, while still ensuring that every project already has its final suite namespace and a clean ownership boundary.
 
