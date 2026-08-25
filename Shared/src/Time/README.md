@@ -1,6 +1,8 @@
 # Icod.CoreUtils.Shared.Time
 
-This namespace contains the Coreutils-specific wall-clock and GNU date policy retained after the cross-suite monotonic timing substrate moved to the standalone `Icod.CommandFramework` package.
+This namespace contains the Coreutils-specific wall-clock and GNU date policy
+retained after the cross-suite monotonic timing substrate moved to the
+standalone `Icod.Timing` package.
 
 ## Responsibilities
 
@@ -16,9 +18,10 @@ The retained production types are:
 - `GnuDateParser`
 - `GnuDateFormatter`
 
-## Framework ownership
+## Neutral timing ownership
 
-Cross-suite monotonic timing and scheduling are owned by `Icod.CommandFramework.Time`, including:
+Cross-suite monotonic timing and scheduling are owned by `Icod.Timing`,
+including:
 
 - `IMonotonicClock`
 - `SystemMonotonicClock`
@@ -26,7 +29,9 @@ Cross-suite monotonic timing and scheduling are owned by `Icod.CommandFramework.
 - `MonotonicPeriodicScheduler`
 - `PeriodicTick`
 
-Coreutils commands or co-resident suites that need timeout, elapsed-time, sampling, or refresh-cadence behavior consume those published framework contracts directly.
+Coreutils commands or co-resident suites that need timeout, elapsed-time,
+sampling, or refresh-cadence behavior consume those published timing contracts
+directly.
 
 ## Portability policy
 

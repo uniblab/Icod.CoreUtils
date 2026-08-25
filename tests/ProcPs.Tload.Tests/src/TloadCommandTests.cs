@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using Icod.CommandFramework.Host;
 using Icod.CommandFramework.Terminal;
-using Icod.CommandFramework.Time;
+using Icod.Timing;
 using Icod.ProcPs.Shared;
 using Xunit;
 
@@ -309,7 +309,8 @@ public sealed class TloadCommandTests {
 		public async IAsyncEnumerable<PeriodicTick> ScheduleAsync(
 			TimeSpan interval,
 			bool fireImmediately = false,
-			[EnumeratorCancellation] CancellationToken cancellationToken = default
+			[EnumeratorCancellation] CancellationToken cancellationToken = default,
+			PeriodicMissedTickPolicy missedTickPolicy = PeriodicMissedTickPolicy.SkipMissed
 		) {
 			if ( TimeSpan.Zero >= interval ) {
 				throw new ArgumentOutOfRangeException( nameof( interval ) );
