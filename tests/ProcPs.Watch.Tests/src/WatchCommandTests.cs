@@ -3,7 +3,7 @@ namespace Icod.ProcPs.Watch.Tests;
 using System.Text;
 using Icod.CommandFramework.Processes;
 using Icod.CommandFramework.Terminal;
-using Icod.CommandFramework.Time;
+using Icod.Timing;
 using Icod.ProcPs.Shared;
 using Xunit;
 /// <summary>Exercises Batch 66 procps-ng 4.0.6 <c>watch</c> compatibility and lifecycle behavior.</summary>

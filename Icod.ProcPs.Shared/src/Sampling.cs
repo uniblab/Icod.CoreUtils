@@ -1,7 +1,7 @@
 namespace Icod.ProcPs.Shared;
 
 using System.Runtime.CompilerServices;
-using Icod.CommandFramework.Time;
+using Icod.Timing;
 
 /// <summary>Provides counter-delta calculations with explicit unsigned wraparound semantics.</summary>
 public static class ProcCounterMath {
@@ -91,7 +91,12 @@ public sealed class ProcSampler {
 		[EnumeratorCancellation] CancellationToken cancellationToken = default
 	) {
 		ArgumentNullException.ThrowIfNull( capture );
-		await foreach ( var tick in this._scheduler.ScheduleAsync( interval, fireImmediately, cancellationToken ).ConfigureAwait( false ) ) {
+		await foreach ( var tick in this._scheduler.ScheduleAsync(
+			interval,
+			fireImmediately,
+			cancellationToken,
+			missedTickPolicy: PeriodicMissedTickPolicy.SkipMissed
+		).ConfigureAwait( false ) ) {
 			var value = await capture( cancellationToken ).ConfigureAwait( false );
 			yield return new ProcTimedSample<T>( this._clock.GetTimestamp(), value, tick );
 		}
