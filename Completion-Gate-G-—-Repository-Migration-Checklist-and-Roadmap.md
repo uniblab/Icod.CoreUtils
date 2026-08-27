@@ -481,9 +481,9 @@ The terminal-oriented commands and deferred Batch 68 `top` are now ProcPs-reposi
 - [x] Confirm no production CoreUtils project references a sibling suite.
 - [x] Confirm every CoreUtils **external** dependency is a published neutral package and that `Icod.CoreUtils.Shared` remains a same-repository project dependency.
 - [x] Confirm no CoreUtils project uses a package reference to `Icod.CoreUtils.Shared`.
-- [ ] Run complete Debug/Staging/Release build.
-- [ ] Run Windows/Ubuntu/macOS CI.
-- [ ] Verify clean checkout package restore.
+- [x] Run complete Debug/Staging/Release build.
+- [x] Run Windows/Ubuntu/macOS CI.
+- [x] Verify clean checkout package restore.
 - [ ] Verify repository text-format policy against the authoritative `.editorconfig`.
 - [ ] Freeze final Gate G dependency graph.
 
@@ -496,12 +496,14 @@ The terminal-oriented commands and deferred Batch 68 `top` are now ProcPs-reposi
 - [x] Complete the all-project output-path sweep and distinguish the retained common CoreUtils aggregate output root from obsolete sibling-suite collision directories.
 - [x] Correct the stale G2 current-dependency ledger from `Icod.CommandFramework` 1.0.0 to 1.1.0.
 - [x] Allow the local build entry points to select `Debug`, `Staging`, or `Release`, while preserving `Debug` as the default.
-- [ ] Execute clean restore plus build/test validation for Debug, Staging, and Release.
-- [ ] Run required Windows/Ubuntu/macOS CI validation.
+- [x] Execute clean restore plus build/test validation for Debug, Staging, and Release.
+- [x] Run required Windows/Ubuntu/macOS CI validation.
 - [ ] Verify repository text-format policy against `.editorconfig`.
 - [ ] Freeze the final Gate G dependency graph after execution validation is green.
 
-G9C remains open until the unchecked execution-validation items above are actually proven.
+**Execution-validation checkpoint (2026-08-27):** PR #169 temporarily expanded `pr-build-and-test` to a 3×3 configuration/platform matrix. GitHub Actions run `33041738820` completed successfully for Debug, Staging, and Release on `windows-latest`, `ubuntu-latest`, and `macos-latest`; every job performed checkout, clean, restore, build, and test successfully. After recording this Gate G evidence, the steady-state CI policy returns to Staging-only PR validation and Release-only `main` push validation. Neither workflow publishes packages at this stage.
+
+G9C remains open only for repository text-format verification and the final Gate G dependency-graph freeze.
 
 ## G10 — Architecture closure
 
