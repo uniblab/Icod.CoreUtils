@@ -8,13 +8,14 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
+        configuration: [Debug, Staging, Release]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-      - run: dotnet clean Icod.CoreUtils.sln -c Staging
+      - run: dotnet clean Icod.CoreUtils.sln -c ${{ matrix.configuration }}
       - run: dotnet restore Icod.CoreUtils.sln
-      - run: dotnet build Icod.CoreUtils.sln -c Staging --no-restore
-      - run: dotnet test Icod.CoreUtils.sln -c Staging --no-build --logger trx
+      - run: dotnet build Icod.CoreUtils.sln -c ${{ matrix.configuration }} --no-restore -p:ContinuousIntegrationBuild=true
+      - run: dotnet test Icod.CoreUtils.sln -c ${{ matrix.configuration }} --no-build --logger trx
