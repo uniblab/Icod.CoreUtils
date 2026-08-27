@@ -447,6 +447,14 @@ The terminal-oriented commands and deferred Batch 68 `top` are now ProcPs-reposi
 
 ## G9 — Final CoreUtils cleanup
 
+### G9A — Repository hygiene and documentation truth
+
+- [x] Treat the repository `.editorconfig` as the authoritative text-format and C# formatting policy.
+- [x] Align contributor guidance and active Gate G documentation with the authoritative `.editorconfig`.
+- [x] Update the upstream-version ledger so completed/extracted batches are no longer described as merely planned.
+- [x] Retain extracted-suite batch documents as historical implementation records without treating them as live source ownership.
+- [ ] Continue with G9B mechanical architecture/dependency audit and reconcile any remaining superseded inventory text against its final evidence.
+
 - [ ] Remove all successfully extracted suite projects from `Icod.CoreUtils.sln`.
 - [ ] Remove corresponding source/test directories from the CoreUtils repository.
 - [ ] Remove temporary output-path collision rules.
@@ -459,7 +467,7 @@ The terminal-oriented commands and deferred Batch 68 `top` are now ProcPs-reposi
 - [ ] Run complete Debug/Staging/Release build.
 - [ ] Run Windows/Ubuntu/macOS CI.
 - [ ] Verify clean checkout package restore.
-- [ ] Verify UTF-8/LF policy.
+- [ ] Verify repository text-format policy against the authoritative `.editorconfig`.
 - [ ] Freeze final Gate G dependency graph.
 
 ## G10 — Architecture closure
@@ -492,7 +500,7 @@ Every extracted repository must retain:
 - [ ] warnings-as-errors Release policy;
 - [ ] lowercase executable assembly names;
 - [ ] PascalCase project/namespace conventions;
-- [ ] UTF-8/LF policy;
+- [ ] repository text-format policy as defined by that repository's authoritative `.editorconfig`;
 - [ ] Windows/Ubuntu/macOS CI;
 - [ ] deterministic package restore;
 - [ ] repository version/release metadata, with package metadata only for artifacts intentionally published as packages;

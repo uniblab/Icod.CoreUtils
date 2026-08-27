@@ -5,13 +5,15 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `67`, `69` through Batch `72`; Batch `68` (`Icod.ProcPs.Top`) remains deliberately deferred to the extracted `Icod.ProcPs` repository |
-| Current engineering milestone | Completion Gate G — G9 final CoreUtils cleanup — **NEXT** |
+| Current engineering milestone | Completion Gate G — G9A repository hygiene and documentation truth — **COMPLETE; G9B NEXT** |
 | Completed infrastructure milestone | Completion Gates E2 through E6, F1 through F4, P1, G1 through G3, pilot extractions G4.1 through G4.3, G5 `Icod.ProcPs`, G6 `Icod.DiffUtils`, G7 `Icod.LineEditor`, and G8 `Icod.Patch` |
 | Completed suite extractions | `Icod.UtilLinux`, `Icod.Grep`, `Icod.Tar`, `Icod.ProcPs`, `Icod.DiffUtils`, `Icod.LineEditor`, and `Icod.Patch` |
 | Active infrastructure dependency | retain `Icod.CoreUtils.Shared` as a non-packable repository-local Coreutils library and consume published `Icod.CommandFramework` 1.1.0 and `Icod.Path` 1.0.0 neutral foundations; extracted sibling suites must not depend on `Icod.CoreUtils.Shared` |
-| Next engineering step | begin G9 final CoreUtils cleanup: remove stale sibling-suite solution, source/test, output-path, packaging, CI, and roadmap inventory references, then validate the CoreUtils-only repository across Debug/Staging/Release and the three required runners |
+| Next engineering step | G9B mechanical architecture/dependency audit: freeze the live project and reference inventory, verify no sibling-suite/output-path/packaging residue remains, then proceed to G9C closure validation |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
+
+**G9A closure checkpoint (2026-08-27):** the repository `.editorconfig` is authoritative for text and C# formatting policy; active documentation now follows its current UTF-8/CRLF/no-required-final-newline policy. Contributor guidance no longer describes Patch or any other extracted suite as co-resident. The upstream-version ledger now distinguishes completed historical incubation work from Batch 68, whose live implementation remains owned by `Icod.ProcPs`. Extracted-suite batch documents remain as historical implementation records. G9B is next.
 
 **G6 closure checkpoint (2026-08-22):** `Icod.DiffUtils` is now an independent repository containing `Icod.DiffUtils.Shared`, `cmp`, `diff`, `diff3`, `sdiff`, their dedicated tests, and independent CI. CoreUtils excised the DiffUtils tests first, then the four executable projects, and finally `Icod.DiffUtils.Shared`; the corresponding solution folders, project mappings, and nesting entries were removed at each stage and the working CoreUtils branch continued to build and test successfully. G5 is likewise closed for CoreUtils repository extraction: no `Icod.ProcPs` source, project, or test paths remain in CoreUtils. Deferred ProcPs feature work, including Batch 68 `top`, is owned by the dedicated `Icod.ProcPs` repository and no longer blocks Gate G progress in CoreUtils.
 
@@ -165,7 +167,7 @@ Each non-Coreutils suite developed in this repository must:
 - preserve the lowercase executable assembly name;
 - live in a clearly identified suite directory and solution folder;
 - have command-specific and suite-Shared test projects;
-- reproduce the established `net10.0`, C# 13, Debug/Staging/Release, UTF-8/LF, XML documentation, and three-runner CI policies;
+- reproduce the established `net10.0`, C# 13, Debug/Staging/Release, repository `.editorconfig` text-format, XML documentation, and three-runner CI policies;
 - use project references during co-resident development;
 - keep suite-specific state out of the general Shared incubation project;
 - do not create `Icod.LineEditor.Shared` as a prerequisite or use it to wrap APIs already supplied by the current Shared incubation project; create it only after the completed Sed and Ed engines leave a cohesive, evidence-based family-specific remainder;

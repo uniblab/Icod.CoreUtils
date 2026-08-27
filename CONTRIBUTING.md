@@ -1,6 +1,6 @@
 # Contributing to Icod.CoreUtils
 
-Thank you for contributing to the Icod command-suite ports. This repository contains the managed GNU Coreutils/Fileutils/Textutils implementation plus the remaining co-resident project that has not yet completed Gate G extraction, `Icod.Patch`. Sibling suites already extracted—including `Icod.UtilLinux`, `Icod.Grep`, `Icod.Tar`, `Icod.ProcPs`, `Icod.DiffUtils`, and `Icod.LineEditor`—belong in their dedicated repositories and must not be reintroduced here as source-tree dependencies. Changes should preserve command compatibility, cross-platform behavior, and the repository's shared architectural boundaries.
+Thank you for contributing to Icod.CoreUtils. This repository contains the managed GNU Coreutils/Fileutils/Textutils implementation and its repository-local support infrastructure. All sibling suites formerly incubated here—including `Icod.UtilLinux`, `Icod.Grep`, `Icod.Tar`, `Icod.ProcPs`, `Icod.DiffUtils`, `Icod.LineEditor`, and `Icod.Patch`—have completed Gate G extraction and belong in their dedicated repositories. They must not be reintroduced here as source-tree dependencies. Changes should preserve command compatibility, cross-platform behavior, and the repository's shared architectural boundaries.
 
 ## Supported toolchain
 
@@ -8,7 +8,7 @@ Thank you for contributing to the Icod command-suite ports. This repository cont
 - Language version: C# 13, declared as `<LangVersion>13.0</LangVersion>` in every project.
 - Nullable reference types and implicit global usings remain enabled where the existing project enables them.
 - Supported CI runners are `windows-latest`, `ubuntu-latest`, and `macos-latest`; best-effort BSD portability is also a project goal.
-- Repository text files use UTF-8 with LF line endings. Configure editors and Git to preserve LF; do not commit CRLF-only churn.
+- The repository `.editorconfig` is authoritative for text formatting. Its current policy is UTF-8, CRLF line endings, and no required final newline; configure editors to honor it rather than imposing a separate line-ending convention.
 - Runtime command output should use `Environment.NewLine` unless the command contract requires a byte delimiter or preserves input record terminators.
 - Literal newline escapes such as `\n` and `\r\n` are permitted only when they are part of the utility’s data semantics, escape grammar, or documented byte transformation. They are never used as the host platform’s generated line separator.
 - Generated line endings use `WriteLine`, `WriteLineAsync`, or `Environment.NewLine`. Line-oriented input uses `ReadLine`, `ReadLineAsync`, and `Environment.NewLine` as appropriate. Code must not hard-code `\n` or `\r\n` for host line-reading or line-writing semantics.
@@ -18,18 +18,17 @@ Do not change the target framework, language version, configuration policy, sign
 
 ## Repository architecture
 
-Each command is a standalone executable project. Suite and shared-library names are intentional; do not rename them into a uniform `Icod.CoreUtils.<command>` pattern when the command belongs to another suite.
+Each retained command is a standalone Coreutils/Fileutils/Textutils executable project. Extracted sibling-suite commands are no longer part of this repository.
 
 Examples include:
 
 - `Icod.CoreUtils.Shared` for repository-local behavior shared by GNU Coreutils/Fileutils/Textutils commands; it is not an independently published package;
 - `Icod.CommandFramework` for published neutral cross-suite command, process, terminal, text, and filesystem mechanism;
-- `Icod.Path` for published neutral canonical-path behavior;
-- `Icod.Patch` for `patch` while Gate G extraction remains pending.
+- `Icod.Path` for published neutral canonical-path behavior.
 
-Extracted suite families belong in their dedicated repositories. In particular, `Icod.LineEditor.*` lives at <https://github.com/uniblab/Icod.LineEditor>, `Icod.DiffUtils.*` at <https://github.com/uniblab/Icod.DiffUtils>, and `Icod.ProcPs.*` at <https://github.com/uniblab/Icod.ProcPs>. CoreUtils contributions must not recreate those source trees or introduce runtime dependencies on sibling suites.
+Extracted suite families belong in their dedicated repositories. In particular, `Icod.UtilLinux` lives at <https://github.com/uniblab/Icod.UtilLinux>, `Icod.Grep` at <https://github.com/uniblab/Icod.Grep>, `Icod.Tar` at <https://github.com/uniblab/Icod.Tar>, `Icod.ProcPs` at <https://github.com/uniblab/Icod.ProcPs>, `Icod.DiffUtils` at <https://github.com/uniblab/Icod.DiffUtils>, `Icod.LineEditor` at <https://github.com/uniblab/Icod.LineEditor>, and `Icod.Patch` at <https://github.com/uniblab/Icod.Patch>. CoreUtils contributions must not recreate those source trees or introduce runtime dependencies on sibling suites.
 
-Genuine Coreutils/Fileutils/Textutils projects that need suite-shared behavior use a same-repository `ProjectReference` to `Icod.CoreUtils.Shared`. Never add a `PackageReference` to `Icod.CoreUtils.Shared`. The remaining co-resident Patch project may retain transitional project references only until G8 extraction, at which point it must reference the published neutral owner directly.
+Genuine Coreutils/Fileutils/Textutils projects that need suite-shared behavior use a same-repository `ProjectReference` to `Icod.CoreUtils.Shared`. Never add a `PackageReference` to `Icod.CoreUtils.Shared`.
 
 Production command projects must not reference sibling command projects. Shared behavior belongs in the appropriate suite-local or neutral library only after a real cross-command contract has been identified. Do not create command-local replacements for an existing shared pathname, filesystem, record, regex, metadata, or transaction model.
 

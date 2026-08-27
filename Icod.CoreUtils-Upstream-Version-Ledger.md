@@ -4,6 +4,8 @@
 
 This file records the exact upstream specification baseline for every completed and planned Icod.CoreUtils batch. It is the durable record required by Completion Gate A.
 
+Rows for sibling-suite work that was originally implemented while co-resident in `Icod.CoreUtils` are retained as historical provenance after Gate G extraction. A `Completed` state in this ledger records completion of that incubation batch; it does not imply that the corresponding source remains owned by the CoreUtils repository. Current source ownership is recorded by Completion Gate G and the dedicated extracted repositories.
+
 The version recorded here is the authority for synopsis, options, operands, environment variables, locale behavior, signals, output grammar, diagnostics, and exit statuses. Man7 pages remain useful secondary summaries, but they do not replace the pinned upstream manual and source.
 
 ## Pinning policy
@@ -97,22 +99,22 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 | 54 | Completed | Process priority control: GNU `nice`, util-linux `renice` | `COREUTILS-9.11`; `UTIL-LINUX-2.42.2`; `POSIX-2024` where standardized |
 | 55 | Completed | Time-bounded execution: `timeout` | `COREUTILS-9.11` |
 | 56 | Completed | `Icod.ProcPs.Shared` provider foundation | `PROCPS-4.0.6` |
-| 57 | Planned | ProcPs basic system summaries: `uptime`, `free` | `PROCPS-4.0.6` |
-| 58 | Planned | ProcPs sampled system statistics: `vmstat` | `PROCPS-4.0.6` |
-| 59 | Planned | ProcPs process selection, signaling, and waiting: `pgrep`, `pkill`, `pidwait` | `PROCPS-4.0.6` |
-| 60 | Planned | ProcPs process lookup and working directories: `pidof`, `pwdx` | `PROCPS-4.0.6` |
-| 61 | Planned | ProcPs process memory maps: `pmap` | `PROCPS-4.0.6` |
-| 62 | Planned | ProcPs process reporting: `ps` | `PROCPS-4.0.6` |
-| 63 | Planned | ProcPs user and session reporting: `w` | `PROCPS-4.0.6` |
-| 64 | Planned | ProcPs kernel parameter control: `sysctl` | `PROCPS-4.0.6` |
-| 65 | Planned | ProcPs load display: `tload` | `PROCPS-4.0.6` |
-| 66 | Planned | ProcPs periodic command display: `watch` | `PROCPS-4.0.6` |
-| 67 | Planned | ProcPs specialized kernel-memory displays: `hugetop`, `slabtop` | `PROCPS-4.0.6` |
-| 68 | Planned | ProcPs interactive process monitor: `top` | `PROCPS-4.0.6` |
-| 69 | Planned | Root-directory execution: `chroot` | `COREUTILS-9.11` |
-| 70 | Planned | SELinux context operations: `chcon`, `runcon` | `COREUTILS-9.11` |
-| 71 | Planned | Standard-stream buffering control: `stdbuf` | `COREUTILS-9.11` |
-| 72 | Planned | `Icod.Tar.Tar` archive engine | `TAR-1.35`; Gate E1 authorities for traversal |
+| 57 | Completed | ProcPs basic system summaries: `uptime`, `free` | `PROCPS-4.0.6` |
+| 58 | Completed | ProcPs sampled system statistics: `vmstat` | `PROCPS-4.0.6` |
+| 59 | Completed | ProcPs process selection, signaling, and waiting: `pgrep`, `pkill`, `pidwait` | `PROCPS-4.0.6` |
+| 60 | Completed | ProcPs process lookup and working directories: `pidof`, `pwdx` | `PROCPS-4.0.6` |
+| 61 | Completed | ProcPs process memory maps: `pmap` | `PROCPS-4.0.6` |
+| 62 | Completed | ProcPs process reporting: `ps` | `PROCPS-4.0.6` |
+| 63 | Completed | ProcPs user and session reporting: `w` | `PROCPS-4.0.6` |
+| 64 | Completed | ProcPs kernel parameter control: `sysctl` | `PROCPS-4.0.6` |
+| 65 | Completed | ProcPs load display: `tload` | `PROCPS-4.0.6` |
+| 66 | Completed | ProcPs periodic command display: `watch` | `PROCPS-4.0.6` |
+| 67 | Completed | ProcPs specialized kernel-memory displays: `hugetop`, `slabtop` | `PROCPS-4.0.6` |
+| 68 | Deferred to `Icod.ProcPs` | ProcPs interactive process monitor: `top` | `PROCPS-4.0.6` |
+| 69 | Completed | Root-directory execution: `chroot` | `COREUTILS-9.11` |
+| 70 | Completed | SELinux context operations: `chcon`, `runcon` | `COREUTILS-9.11` |
+| 71 | Completed | Standard-stream buffering control: `stdbuf` | `COREUTILS-9.11` |
+| 72 | Completed | `Icod.Tar.Tar` archive engine | `TAR-1.35`; Gate E1 authorities for traversal |
 
 
 ## Engineering-gate-to-authority mapping
