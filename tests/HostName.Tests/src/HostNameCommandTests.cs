@@ -1,5 +1,5 @@
 using System.ComponentModel;
-using Icod.CommandFramework.CommandLine;
+using Icod.CommandFramework.Diagnostics;
 using Xunit;
 
 namespace Icod.CoreUtils.HostName.Tests;
