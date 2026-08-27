@@ -238,7 +238,7 @@ No projects move during this phase.
 - [x] Audit native ABI boundaries during extraction and three-platform validation.
 - [x] Ensure no command-suite production dependency exists.
 - [x] Package with symbols and repository metadata.
-- [x] Publish the versioned package; `Icod.CommandFramework` 1.0.0 is the current CoreUtils dependency.
+- [x] Publish the versioned package; `Icod.CommandFramework` 1.1.0 is the current CoreUtils dependency.
 - [x] Validate against real CoreUtils and sibling-suite consumers.
 
 **Exit criterion met:** sibling suites can compile against the published framework binary.
@@ -466,16 +466,18 @@ The terminal-oriented commands and deferred Batch 68 `top` are now ProcPs-reposi
 - [x] No CoreUtils project uses `PackageReference Include="Icod.CoreUtils.Shared"`.
 - [x] Published external Icod dependencies are neutral packages: `Icod.CommandFramework` 1.1.0, `Icod.Path` 1.0.0, and direct `Icod.Timing` 1.0.0 where required.
 - [x] PR and `main` workflows target only `Icod.CoreUtils.sln` and retain the required Windows/Ubuntu/macOS matrix.
-- [ ] Perform the final all-project output-path/collision-rule sweep locally during G9C.
-- [ ] Reconcile any remaining stale roadmap inventory text exposed by the G9C validation sweep.
+- [x] Perform the final all-project output-path/collision-rule sweep locally during G9C.
+- [x] Reconcile any remaining stale roadmap inventory text exposed by the G9C validation sweep.
 
 - [x] Remove all successfully extracted suite projects from `Icod.CoreUtils.sln`.
 - [x] Remove corresponding source/test directories from the CoreUtils repository.
-- [ ] Remove temporary output-path collision rules.
+- [x] Remove temporary output-path collision rules.
+  - The historical collision rule used suite-specific output directories only while sibling suites with colliding executable names were co-resident.
+  - The surviving common CoreUtils `..\bin\$(Configuration)\` output root is the suite's aggregate command-output layout and is retained.
 - [x] Remove obsolete solution folders.
 - [x] Remove stale CI references.
 - [x] Remove stale sibling-suite packaging references.
-- [ ] Remove stale roadmap inventory text.
+- [x] Remove stale roadmap inventory text.
 - [x] Confirm no production CoreUtils project references a sibling suite.
 - [x] Confirm every CoreUtils **external** dependency is a published neutral package and that `Icod.CoreUtils.Shared` remains a same-repository project dependency.
 - [x] Confirm no CoreUtils project uses a package reference to `Icod.CoreUtils.Shared`.
@@ -485,7 +487,21 @@ The terminal-oriented commands and deferred Batch 68 `top` are now ProcPs-reposi
 - [ ] Verify repository text-format policy against the authoritative `.editorconfig`.
 - [ ] Freeze final Gate G dependency graph.
 
-**G9B exit state:** the repository/project/package boundary is mechanically consistent with the completed extractions. G9C owns the final local output-path sweep, full configuration builds, clean restore, required-runner validation, text-format verification, remaining stale-roadmap cleanup, and final dependency-graph freeze.
+**G9B exit state:** the repository/project/package boundary is mechanically consistent with the completed extractions.
+
+### G9C — Closure validation
+
+**Mechanical-preparation checkpoint (2026-08-27, `Gate_G9` commit `246b10281a2a374f94e0b01440296eec090f330a`):**
+
+- [x] Complete the all-project output-path sweep and distinguish the retained common CoreUtils aggregate output root from obsolete sibling-suite collision directories.
+- [x] Correct the stale G2 current-dependency ledger from `Icod.CommandFramework` 1.0.0 to 1.1.0.
+- [x] Allow the local build entry points to select `Debug`, `Staging`, or `Release`, while preserving `Debug` as the default.
+- [ ] Execute clean restore plus build/test validation for Debug, Staging, and Release.
+- [ ] Run required Windows/Ubuntu/macOS CI validation.
+- [ ] Verify repository text-format policy against `.editorconfig`.
+- [ ] Freeze the final Gate G dependency graph after execution validation is green.
+
+G9C remains open until the unchecked execution-validation items above are actually proven.
 
 ## G10 — Architecture closure
 
