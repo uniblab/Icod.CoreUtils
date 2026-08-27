@@ -4,6 +4,8 @@
 
 This file records the exact upstream specification baseline for every completed and planned Icod.CoreUtils batch. It is the durable record required by Completion Gate A.
 
+Rows for sibling-suite work that was originally implemented while co-resident in `Icod.CoreUtils` are retained as historical provenance after Gate G extraction. A `Completed` state in this ledger records completion of that incubation batch; it does not imply that the corresponding source remains owned by the CoreUtils repository. Current source ownership is recorded by Completion Gate G and the dedicated extracted repositories.
+
 The version recorded here is the authority for synopsis, options, operands, environment variables, locale behavior, signals, output grammar, diagnostics, and exit statuses. Man7 pages remain useful secondary summaries, but they do not replace the pinned upstream manual and source.
 
 ## Pinning policy
@@ -97,22 +99,22 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 | 54 | Completed | Process priority control: GNU `nice`, util-linux `renice` | `COREUTILS-9.11`; `UTIL-LINUX-2.42.2`; `POSIX-2024` where standardized |
 | 55 | Completed | Time-bounded execution: `timeout` | `COREUTILS-9.11` |
 | 56 | Completed | `Icod.ProcPs.Shared` provider foundation | `PROCPS-4.0.6` |
-| 57 | Planned | ProcPs basic system summaries: `uptime`, `free` | `PROCPS-4.0.6` |
-| 58 | Planned | ProcPs sampled system statistics: `vmstat` | `PROCPS-4.0.6` |
-| 59 | Planned | ProcPs process selection, signaling, and waiting: `pgrep`, `pkill`, `pidwait` | `PROCPS-4.0.6` |
-| 60 | Planned | ProcPs process lookup and working directories: `pidof`, `pwdx` | `PROCPS-4.0.6` |
-| 61 | Planned | ProcPs process memory maps: `pmap` | `PROCPS-4.0.6` |
-| 62 | Planned | ProcPs process reporting: `ps` | `PROCPS-4.0.6` |
-| 63 | Planned | ProcPs user and session reporting: `w` | `PROCPS-4.0.6` |
-| 64 | Planned | ProcPs kernel parameter control: `sysctl` | `PROCPS-4.0.6` |
-| 65 | Planned | ProcPs load display: `tload` | `PROCPS-4.0.6` |
-| 66 | Planned | ProcPs periodic command display: `watch` | `PROCPS-4.0.6` |
-| 67 | Planned | ProcPs specialized kernel-memory displays: `hugetop`, `slabtop` | `PROCPS-4.0.6` |
-| 68 | Planned | ProcPs interactive process monitor: `top` | `PROCPS-4.0.6` |
-| 69 | Planned | Root-directory execution: `chroot` | `COREUTILS-9.11` |
-| 70 | Planned | SELinux context operations: `chcon`, `runcon` | `COREUTILS-9.11` |
-| 71 | Planned | Standard-stream buffering control: `stdbuf` | `COREUTILS-9.11` |
-| 72 | Planned | `Icod.Tar.Tar` archive engine | `TAR-1.35`; Gate E1 authorities for traversal |
+| 57 | Completed | ProcPs basic system summaries: `uptime`, `free` | `PROCPS-4.0.6` |
+| 58 | Completed | ProcPs sampled system statistics: `vmstat` | `PROCPS-4.0.6` |
+| 59 | Completed | ProcPs process selection, signaling, and waiting: `pgrep`, `pkill`, `pidwait` | `PROCPS-4.0.6` |
+| 60 | Completed | ProcPs process lookup and working directories: `pidof`, `pwdx` | `PROCPS-4.0.6` |
+| 61 | Completed | ProcPs process memory maps: `pmap` | `PROCPS-4.0.6` |
+| 62 | Completed | ProcPs process reporting: `ps` | `PROCPS-4.0.6` |
+| 63 | Completed | ProcPs user and session reporting: `w` | `PROCPS-4.0.6` |
+| 64 | Completed | ProcPs kernel parameter control: `sysctl` | `PROCPS-4.0.6` |
+| 65 | Completed | ProcPs load display: `tload` | `PROCPS-4.0.6` |
+| 66 | Completed | ProcPs periodic command display: `watch` | `PROCPS-4.0.6` |
+| 67 | Completed | ProcPs specialized kernel-memory displays: `hugetop`, `slabtop` | `PROCPS-4.0.6` |
+| 68 | Deferred to `Icod.ProcPs` | ProcPs interactive process monitor: `top` | `PROCPS-4.0.6` |
+| 69 | Completed | Root-directory execution: `chroot` | `COREUTILS-9.11` |
+| 70 | Completed | SELinux context operations: `chcon`, `runcon` | `COREUTILS-9.11` |
+| 71 | Completed | Standard-stream buffering control: `stdbuf` | `COREUTILS-9.11` |
+| 72 | Completed | `Icod.Tar.Tar` archive engine | `TAR-1.35`; Gate E1 authorities for traversal |
 
 
 ## Engineering-gate-to-authority mapping
@@ -138,7 +140,7 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 | F3 | Completed | Terminal identification and terminal modes | `COREUTILS-9.11`; `PROCPS-4.0.6`; `POSIX-2024` |
 | F4 | Completed | Process execution, waiting, signals, priorities, clocks, and termination | `COREUTILS-9.11`; `UTIL-LINUX-2.42.2`; `PROCPS-4.0.6`; `POSIX-2024` |
 | P1 | Completed | ProcPs classification and provider foundation | `PROCPS-4.0.6`; `UTIL-LINUX-2.42.2` for excluded/owned process-control profiles |
-| G | Planned | Final API classification, package extraction, and repository split | All pinned suite authorities plus repository architecture policy |
+| G | In progress | Final API classification, package extraction, and repository split | All pinned suite authorities plus repository architecture policy |
 
 
 ## Batch 11 implementation record
@@ -291,7 +293,7 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 - **Intentional boundary:** C3 does not implement `cut`, `paste`, field splitting, the complete `tr` set-expression grammar, sorting, Grep, or Sed policy. It shares byte framing and syntax mechanics while leaving command semantics and final diagnostic wording to consumers.
 - **TAP/TPL and ownership:** naturally asynchronous stream reads, writes, and flushes accept cancellation tokens and use awaited BCL operations. Shared record helpers never dispose caller-owned streams and do not wrap CPU parsing in `Task.Run`.
 - **Documentation and tests:** every public, protected, or internal declaration has XML documentation; each multi-file source and test directory has a README; Shared tests characterize the old materializing record API and cover bounded segmentation, NUL records, final unterminated records, range normalization and errors, complements, delimiter cycles, multibyte matching, all escape profiles, malformed input, cancellation, and stream ownership.
-- **Validation status:** source structure, XML documentation presence, repository-relative placement, UTF-8/LF policy, project wildcard inclusion, and conformance-oriented cases were checked. A .NET SDK was unavailable in the implementation container, so `Shared.Tests` and the complete solution still require build/test validation on `windows-latest`, `ubuntu-latest`, and `macos-latest` before this record is changed to fully validated.
+- **Validation status:** source structure, XML documentation presence, repository-relative placement, the repository `.editorconfig` text-format policy, project wildcard inclusion, and conformance-oriented cases were checked. A .NET SDK was unavailable in the implementation container, so `Shared.Tests` and the complete solution still require build/test validation on `windows-latest`, `ubuntu-latest`, and `macos-latest` before this record is changed to fully validated.
 
 ## Batch 17 implementation record
 
@@ -309,7 +311,7 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 - **TAP/TPL policy:** asynchronous stream opening, reading, output, help, version, usage, and diagnostics are awaited and cancellation-aware. Synchronous compatibility wrappers block only at the public boundary. Operand processing remains ordered and is not wrapped in `Task.Run` or parallelized.
 - **Intentional line-ending interpretation:** untouched input line endings are reproduced exactly. New fold boundaries use `Environment.NewLine`, following the repository's generated-output convention rather than forcing GNU's LF byte on Windows.
 - **Documentation and tests:** each command has command-level and source-directory documentation, class-level XML usage text, dedicated usage/help/version writers, XML documentation on every public, protected, or internal declaration, and a dedicated xUnit test project covering options, binary fidelity, Unicode widths, invalid input, operand boundaries, cancellation, ownership, and read/write failures.
-- **Validation status:** source structure, project and solution wiring, XML documentation presence, UTF-8/LF policy, and conformance-oriented state-machine cases were checked. A .NET SDK was unavailable in the implementation container, so the three dedicated test projects and complete solution still require build/test validation on `windows-latest`, `ubuntu-latest`, and `macos-latest` before the implementation record can be changed to fully validated.
+- **Validation status:** source structure, project and solution wiring, XML documentation presence, the repository `.editorconfig` text-format policy, and conformance-oriented state-machine cases were checked. A .NET SDK was unavailable in the implementation container, so the three dedicated test projects and complete solution still require build/test validation on `windows-latest`, `ubuntu-latest`, and `macos-latest` before the implementation record can be changed to fully validated.
 
 ## Batch 18 implementation record
 

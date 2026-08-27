@@ -117,4 +117,4 @@ The roadmap is advanced through completed/merged Batch 57 and the validated thre
 
 ## Validation note
 
-The implementation environment used to prepare this batch does not contain a .NET SDK, so `dotnet build` and the xUnit suite could not be executed locally. The delivered sources have been statically checked for solution/project structure, XML validity, source delimiter balance, UTF-8 encoding, BOM absence, and LF repository line endings. Final closure still requires the repository's Debug/Release and `windows-latest`, `ubuntu-latest`, and `macos-latest` test runs.
+The implementation environment used to prepare this batch does not contain a .NET SDK, so `dotnet build` and the xUnit suite could not be executed locally. The delivered sources were statically checked for solution/project structure, XML validity, source delimiter balance, and repository text-format compliance; the repository's current authoritative text-format policy is defined by `.editorconfig`. Final closure still requires the repository's Debug/Release and `windows-latest`, `ubuntu-latest`, and `macos-latest` test runs.

@@ -1,10 +1,23 @@
 #!/usr/bin/env sh
 set -eu
 
+CONFIGURATION="${2:-Debug}"
+
+case "$CONFIGURATION" in
+    Debug|Staging|Release)
+        ;;
+
+    *)
+        printf 'Invalid configuration: %s\n' "$CONFIGURATION" >&2
+        printf 'Usage: %s [clean|restore|build|test] [Debug|Staging|Release]\n' "$0" >&2
+        exit 1
+        ;;
+esac
+
 clean()
 {
-    printf '\n=== Clean ===\n'
-    dotnet clean Icod.CoreUtils.sln -c Debug
+    printf '\n=== Clean (%s) ===\n' "$CONFIGURATION"
+    dotnet clean Icod.CoreUtils.sln -c "$CONFIGURATION"
 }
 
 restore()
@@ -15,15 +28,15 @@ restore()
 
 build()
 {
-    printf '\n=== Build ===\n'
-    dotnet build Icod.CoreUtils.sln -c Debug --no-restore
+    printf '\n=== Build (%s) ===\n' "$CONFIGURATION"
+    dotnet build Icod.CoreUtils.sln -c "$CONFIGURATION" --no-restore
 }
 
 test()
 {
-    printf '\n=== Test ===\n'
+    printf '\n=== Test (%s) ===\n' "$CONFIGURATION"
     dotnet test Icod.CoreUtils.sln  \
-        -c Debug \
+        -c "$CONFIGURATION" \
         --no-build
 }
 
@@ -53,7 +66,7 @@ case "${1-}" in
 
     *)
         printf 'Invalid section: %s\n' "$1" >&2
-        printf 'Usage: %s [clean|restore|build|test]\n' "$0" >&2
+        printf 'Usage: %s [clean|restore|build|test] [Debug|Staging|Release]\n' "$0" >&2
         exit 1
         ;;
 esac
