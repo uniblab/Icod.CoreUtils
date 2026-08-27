@@ -2,30 +2,33 @@
 
 ## Objective
 
-Completion Gate G converts the present multi-suite incubation repository into the final repository and package architecture without changing command semantics.
+Completion Gate G converted the former multi-suite incubation repository into independent suite repositories and published neutral foundations without changing command semantics. G9 completed the physical CoreUtils cleanup; G10 freezes and verifies the resulting architecture.
 
-The intended dependency model distinguishes published neutral foundations from repository-local suite implementation libraries:
+The final dependency model distinguishes published neutral foundations from repository-local suite implementation libraries:
 
 ```text
 Published neutral foundations
     Icod.CommandFramework
-    Icod.Path, where canonical-path contracts are required
+    Icod.Path
+    narrower neutral owners where required
+        Icod.Timing / Icod.Host / Icod.Processes
+        Icod.TermInfo / Icod.Terminal / Icod.DCurses
             ↓ external PackageReference
-Extracted suite repository
+Suite repository
     suite-specific Shared / engine library, where required
             ↓ repository-local ProjectReference
-    individual command projects
+    individual command projects / suite router
 ```
 
-Individual commands may also reference the published neutral foundations directly when they consume those contracts without a suite-specific Shared layer.
+Individual commands may reference published neutral foundations directly when they consume those contracts without a suite-specific Shared layer.
 
-`Icod.Path` is retained as a separate neutral package. Gate G1 is complete, and CoreUtils consumes the published package rather than a source-tree project. `Icod.CommandFramework` is likewise an independent published foundation.
+`Icod.Path` and `Icod.CommandFramework` remain independent published foundations. Later neutral packages such as `Icod.Timing`, `Icod.Host`, `Icod.Processes`, `Icod.TermInfo`, `Icod.Terminal`, and `Icod.DCurses` refine the same dependency layer without creating command-suite dependencies.
 
-The final G3 filesystem ownership audit identified a small residual mechanism set still physically located in `Icod.CoreUtils.Shared`: current-process file-creation-mask observation, POSIX filesystem inode-pool observation, and host file-clone/reflink execution. These mechanisms are approved for migration into `Icod.CommandFramework`; GNU mode grammar, GNU copy/move reflink policy, `df`/`du` accounting and presentation policy, and GNU ownership policy remain Coreutils-owned. No additional `Icod.Path` migration is required by this audit.
+The final G3 filesystem ownership audit identified current-process file-creation-mask observation, POSIX filesystem inode-pool observation, and host file-clone/reflink execution as neutral mechanisms. G3M2 moved those mechanisms into `Icod.CommandFramework` 1.1.0 and cut CoreUtils consumers over before pruning the local duplicates. GNU mode grammar, GNU copy/move reflink policy, `df`/`du` accounting and presentation policy, and GNU ownership policy remain Coreutils-owned. No additional `Icod.Path` migration is required by that audit.
 
 A suite-specific Shared/engine class library is **not automatically a package boundary**. In particular, `Icod.CoreUtils.Shared` is the permanent repository-local Shared library for the GNU Coreutils/Fileutils/Textutils family: it remains in the `Icod.CoreUtils` repository, is built and released with that suite, and is consumed by same-repository Coreutils projects through `ProjectReference`. It is **not** an independently published NuGet.org or GitHub Packages dependency.
 
-No command suite may become a production dependency of `Icod.CommandFramework`, and sibling command suites must not acquire runtime dependencies on one another merely because they were developed together. Sibling suites must consume neutral contracts from `Icod.CommandFramework` and `Icod.Path` directly rather than using `Icod.CoreUtils.Shared` as a package bridge.
+No command suite may become a production dependency of a neutral foundation, and sibling command suites must not acquire runtime dependencies on one another merely because they were developed together. Cross-repository reuse must flow through the published neutral owner of the contract rather than through `Icod.CoreUtils.Shared` or a neighboring source tree.
 
 ---
 
@@ -534,18 +537,36 @@ The graph has no production reference to an extracted sibling suite, no `Package
 
 **G9 exit criterion met:** CoreUtils is cleanly separated from the extracted sibling suites and validated against its permanent repository/package boundaries. G10 architecture closure is next.
 
-## G10 — Architecture closure
+## G10 — Architecture closure — ACTIVE
 
-- [ ] Publish final architecture/migration document.
-- [ ] Document repository URLs, published external package names, and repository-local Shared/engine boundaries.
-- [ ] Document executable ownership.
-- [ ] Document external package dependency direction and internal project-reference direction.
-- [ ] Document versioning policy.
-- [ ] Document release/CI policy.
-- [ ] Document textual interoperability boundaries.
-- [ ] Confirm no circular dependency.
-- [ ] Confirm `Icod.CommandFramework` has no command-suite dependency.
-- [ ] Confirm every repository builds using published **external** dependency packages plus its own repository-local project references, never neighboring source trees.
+### G10A — Final architecture and migration record — COMPLETE
+
+- [x] Publish `Icod.CoreUtils-Architecture-and-Migration.md`.
+- [x] Document repository URLs and repository-local Shared/engine boundaries.
+- [x] Document executable ownership.
+- [x] Document external package direction and repository-local `ProjectReference` direction.
+- [x] Document independent per-repository versioning.
+- [x] Document release/CI ownership.
+- [x] Document textual interoperability boundaries.
+- [ ] Confirm the complete cross-repository graph is acyclic.
+- [ ] Confirm every final repository builds using published external packages plus its own repository-local projects, never neighboring source trees.
+
+**G10A exit state:** the architecture is written down. G10B supplies exhaustive dependency and isolation evidence.
+
+### G10B — Cross-repository dependency and isolation verification — NEXT
+
+- [ ] Enumerate every production `PackageReference` and `ProjectReference` in each final repository.
+- [ ] Reject any `ProjectReference` that crosses a repository boundary.
+- [ ] Reject runtime package dependencies from one command suite to another command suite.
+- [ ] Verify neutral-foundation edges do not point back into command suites.
+- [ ] Confirm the complete repository/package graph is acyclic.
+- [ ] Confirm clean restore/build/test or equivalent current CI evidence for each final repository.
+- [ ] Record any required version-pin migrations without imposing ecosystem-wide lockstep versioning.
+
+### G10C — Completion Gate G closure
+
+- [ ] Reconcile the final checklist against G10B evidence.
+- [ ] Record the final closure checkpoint in both roadmaps.
 - [ ] Tick Completion Gate G complete.
 
 ---
@@ -591,4 +612,4 @@ Completion Gate G remains active. The completed extraction sequence is now:
 
 These suites have been moved out of the live `Icod.CoreUtils` source/solution after successful extraction validation. Remaining feature work in an extracted suite is owned by that suite's repository and does not require reintroducing its source into CoreUtils.
 
-The next engineering step is **G9 — Final CoreUtils cleanup**. Remove stale solution, output-path, packaging, CI, and roadmap inventory residue; confirm no sibling-suite production dependencies remain; validate Debug/Staging/Release and the three required runners; verify clean package restore and UTF-8/LF policy; then freeze the final Gate G dependency graph before G10.
+G9 is complete. G10A publishes the final architecture/migration record. The next engineering step is **G10B — Cross-repository dependency and isolation verification**: enumerate every final production dependency edge, reject neighboring source-tree references and command-suite cycles, and verify each repository against published external packages plus its own repository-local projects. G10C then records the evidence and closes Completion Gate G.
