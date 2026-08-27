@@ -49,22 +49,22 @@ No command suite may become a production dependency of `Icod.CommandFramework`, 
 
 ## Icod.CoreUtils
 
-- [ ] Retain all genuine GNU Coreutils/Fileutils/Textutils command projects.
+- [x] Retain all genuine GNU Coreutils/Fileutils/Textutils command projects.
 - [x] Audit `Icod.CoreUtils.Shared`.
 - [x] Move demonstrated cross-suite APIs from `Icod.CoreUtils.Shared` to `Icod.CommandFramework`.
-- [ ] Retain only Coreutils/Fileutils/Textutils-specific behavior in `Icod.CoreUtils.Shared` after the approved final filesystem mechanism migration and consumer cut-over.
-- [ ] Migrate the approved neutral filesystem remainder to `Icod.CommandFramework`: creation-mask observation, inode-pool observation, and host file-clone/reflink mechanism; then prune the corresponding CoreUtils implementations only after validated consumer cut-over.
+- [x] Retain only Coreutils/Fileutils/Textutils-specific behavior in `Icod.CoreUtils.Shared` after the approved final filesystem mechanism migration and consumer cut-over.
+- [x] Migrate the approved neutral filesystem remainder to `Icod.CommandFramework`: creation-mask observation, inode-pool observation, and host file-clone/reflink mechanism; then prune the corresponding CoreUtils implementations only after validated consumer cut-over.
 - [x] Split `Shared.Tests` between framework tests and remaining Coreutils Shared tests.
 - [x] Audit `Icod.CoreUtils.ProcessTestHost`.
   - Decision: retain it as a small repository-local test host for Coreutils integration tests.
   - `Nice.Tests` requires only deterministic child exit behavior.
   - `Timeout.Tests` requires only deterministic child sleep behavior.
   - Framework process-runner tests use the independent `Icod.CommandFramework.ProcessTestHost`; Coreutils does not reference that test project.
-- [ ] Retain `Icod.CoreUtils.Shared` as a repository-local class-library project and do not publish it as an independently downloadable package.
-- [ ] Preserve `ProjectReference` from genuine Coreutils/Fileutils/Textutils consumers to `Icod.CoreUtils.Shared` where that suite-local reuse is required.
-- [ ] Use published `Icod.CommandFramework` and `Icod.Path` packages for neutral cross-repository dependencies; do not route sibling suites through `Icod.CoreUtils.Shared`.
+- [x] Retain `Icod.CoreUtils.Shared` as a repository-local class-library project and do not publish it as an independently downloadable package.
+- [x] Preserve `ProjectReference` from genuine Coreutils/Fileutils/Textutils consumers to `Icod.CoreUtils.Shared` where that suite-local reuse is required.
+- [x] Use published neutral packages for cross-repository dependencies (`Icod.CommandFramework` 1.1.0, `Icod.Path` 1.0.0, and direct `Icod.Timing` 1.0.0 where required); do not route sibling suites through `Icod.CoreUtils.Shared`.
 - [x] Remove every sibling-suite project after successful extraction.
-- [ ] Remove stale solution folders, packaging entries, output-path exceptions, CI references, and documentation references.
+- [ ] Complete G9 cleanup of any remaining stale solution, packaging, output-path, CI, and documentation residue.
 
 ## Icod.DiffUtils — G6 COMPLETE
 
@@ -453,22 +453,39 @@ The terminal-oriented commands and deferred Batch 68 `top` are now ProcPs-reposi
 - [x] Align contributor guidance and active Gate G documentation with the authoritative `.editorconfig`.
 - [x] Update the upstream-version ledger so completed/extracted batches are no longer described as merely planned.
 - [x] Retain extracted-suite batch documents as historical implementation records without treating them as live source ownership.
-- [ ] Continue with G9B mechanical architecture/dependency audit and reconcile any remaining superseded inventory text against its final evidence.
+- [x] Continue with G9B mechanical architecture/dependency audit and reconcile any remaining superseded inventory text against its final evidence.
 
-- [ ] Remove all successfully extracted suite projects from `Icod.CoreUtils.sln`.
-- [ ] Remove corresponding source/test directories from the CoreUtils repository.
+### G9B — Mechanical architecture and dependency audit
+
+**Audit checkpoint (2026-08-27, `Gate_G9` commit `ee02c2ad858a1048908c82a09f3e980dd227f877`):**
+
+- [x] The live solution contains no extracted sibling-suite project entries.
+- [x] The recursive repository tree contains no extracted sibling-suite source, project, or test paths.
+- [x] No production CoreUtils project references an extracted sibling suite.
+- [x] `Icod.CoreUtils.Shared` is non-packable and remains a same-repository `ProjectReference` dependency.
+- [x] No CoreUtils project uses `PackageReference Include="Icod.CoreUtils.Shared"`.
+- [x] Published external Icod dependencies are neutral packages: `Icod.CommandFramework` 1.1.0, `Icod.Path` 1.0.0, and direct `Icod.Timing` 1.0.0 where required.
+- [x] PR and `main` workflows target only `Icod.CoreUtils.sln` and retain the required Windows/Ubuntu/macOS matrix.
+- [ ] Perform the final all-project output-path/collision-rule sweep locally during G9C.
+- [ ] Reconcile any remaining stale roadmap inventory text exposed by the G9C validation sweep.
+
+- [x] Remove all successfully extracted suite projects from `Icod.CoreUtils.sln`.
+- [x] Remove corresponding source/test directories from the CoreUtils repository.
 - [ ] Remove temporary output-path collision rules.
-- [ ] Remove obsolete solution folders.
-- [ ] Remove stale CI and packaging references.
+- [x] Remove obsolete solution folders.
+- [x] Remove stale CI references.
+- [x] Remove stale sibling-suite packaging references.
 - [ ] Remove stale roadmap inventory text.
-- [ ] Confirm no production CoreUtils project references a sibling suite.
-- [ ] Confirm every CoreUtils **external** dependency is a published neutral package and that `Icod.CoreUtils.Shared` remains a same-repository project dependency.
-- [ ] Confirm no CoreUtils project uses a package reference to `Icod.CoreUtils.Shared`.
+- [x] Confirm no production CoreUtils project references a sibling suite.
+- [x] Confirm every CoreUtils **external** dependency is a published neutral package and that `Icod.CoreUtils.Shared` remains a same-repository project dependency.
+- [x] Confirm no CoreUtils project uses a package reference to `Icod.CoreUtils.Shared`.
 - [ ] Run complete Debug/Staging/Release build.
 - [ ] Run Windows/Ubuntu/macOS CI.
 - [ ] Verify clean checkout package restore.
 - [ ] Verify repository text-format policy against the authoritative `.editorconfig`.
 - [ ] Freeze final Gate G dependency graph.
+
+**G9B exit state:** the repository/project/package boundary is mechanically consistent with the completed extractions. G9C owns the final local output-path sweep, full configuration builds, clean restore, required-runner validation, text-format verification, remaining stale-roadmap cleanup, and final dependency-graph freeze.
 
 ## G10 — Architecture closure
 
