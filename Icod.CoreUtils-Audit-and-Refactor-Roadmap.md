@@ -5,11 +5,11 @@
 | Item | Status |
 |---|---|
 | Completed command batches | `0` through `67`, `69` through Batch `72`; Batch `68` (`Icod.ProcPs.Top`) remains deliberately deferred to the extracted `Icod.ProcPs` repository |
-| Current engineering milestone | Completion Gate G — G10A architecture/migration record — **COMPLETE; G10B NEXT** |
+| Current engineering milestone | Completion Gate G — G10B cross-repository dependency/isolation verification — **COMPLETE; G10C NEXT** |
 | Completed infrastructure milestone | Completion Gates E2 through E6, F1 through F4, P1, G1 through G3, pilot extractions G4.1 through G4.3, G5 `Icod.ProcPs`, G6 `Icod.DiffUtils`, G7 `Icod.LineEditor`, G8 `Icod.Patch`, and G9 final CoreUtils cleanup |
 | Completed suite extractions | `Icod.UtilLinux`, `Icod.Grep`, `Icod.Tar`, `Icod.ProcPs`, `Icod.DiffUtils`, `Icod.LineEditor`, and `Icod.Patch` |
 | Active infrastructure dependency | retain `Icod.CoreUtils.Shared` as a non-packable repository-local Coreutils library; consume published neutral `Icod.CommandFramework` 1.1.0 and `Icod.Path` 1.0.0 through Shared, plus direct `Icod.Timing` 1.0.0 where required; extracted sibling suites must not depend on `Icod.CoreUtils.Shared` |
-| Next engineering step | G10B cross-repository dependency and isolation verification: audit every production package/project edge, confirm no command-suite cycles or neighboring source-tree dependencies, and verify each final repository against current build/CI evidence |
+| Next engineering step | G10C Completion Gate G closure: reconcile the final checklist against G10B evidence, record the closure checkpoint, and formally complete Completion Gate G |
 | Current target framework | `net10.0` |
 | Required CI runners | `windows-latest`, `ubuntu-latest`, `macos-latest` |
 
@@ -20,6 +20,8 @@
 **G9 closure checkpoint (2026-08-27):** G9A through G9C are complete. PR #169 supplied a successful temporary Debug/Staging/Release × Windows/Ubuntu/macOS validation matrix, and the restored steady-state Staging-only PR workflow subsequently passed all three runners. Repository text-format guidance is reconciled to the authoritative `.editorconfig`; the final production dependency graph is frozen at repository-local `Icod.CoreUtils.Shared`, published `Icod.CommandFramework` 1.1.0, published `Icod.Path` 1.0.0, and direct `Icod.Timing` 1.0.0 where required. G10 is next.
 
 **G10A architecture checkpoint (2026-08-27):** `Icod.CoreUtils-Architecture-and-Migration.md` records the final repository, executable, suite-engine, dependency-direction, versioning, release/CI, and textual-interoperability boundaries. G10B is the empirical cross-repository dependency/isolation gate.
+
+**G10B dependency/isolation checkpoint (2026-08-27):** audited the final command-suite and neutral-foundation repositories at their current `main` heads. Production cross-repository dependencies resolve through published neutral packages; production `ProjectReference` edges remain inside their owning repositories; no command suite consumes another command suite as a runtime package; neutral foundations have no command-suite back-edge; and the resulting package/repository graph is acyclic. Current successful `main` CI evidence exists for every audited repository. No version-pin migration is required by G10B; mixed package versions remain deliberate consumer-owned choices under the independent-versioning policy. Detailed evidence is recorded in `Icod.CoreUtils-G10B-Dependency-Audit.md`.
 
 **G6 closure checkpoint (2026-08-22):** `Icod.DiffUtils` is now an independent repository containing `Icod.DiffUtils.Shared`, `cmp`, `diff`, `diff3`, `sdiff`, their dedicated tests, and independent CI. CoreUtils excised the DiffUtils tests first, then the four executable projects, and finally `Icod.DiffUtils.Shared`; the corresponding solution folders, project mappings, and nesting entries were removed at each stage and the working CoreUtils branch continued to build and test successfully. G5 is likewise closed for CoreUtils repository extraction: no `Icod.ProcPs` source, project, or test paths remain in CoreUtils. Deferred ProcPs feature work, including Batch 68 `top`, is owned by the dedicated `Icod.ProcPs` repository and no longer blocks Gate G progress in CoreUtils.
 

@@ -1,6 +1,6 @@
 # Icod.CoreUtils Architecture and Migration Record
 
-**Status:** Completion Gate G — G10A architecture record
+**Status:** Completion Gate G — G10B dependency/isolation audit complete
 **Architecture checkpoint:** 2026-08-27
 **CoreUtils baseline:** `main` commit `26d3f4bd9f587eb7d7c32bff03f37fd69138779d`
 
@@ -8,7 +8,7 @@
 
 This document records the repository, package, engine, executable, versioning, release, and interoperability boundaries that remain after Completion Gate G split the former multi-suite `Icod.CoreUtils` incubation repository.
 
-G10A records the intended final architecture. G10B supplies exhaustive dependency and independent-build evidence. G10C closes Completion Gate G only after that evidence is complete.
+G10A records the intended final architecture. G10B has supplied the repository-by-repository dependency and independent-build evidence in `Icod.CoreUtils-G10B-Dependency-Audit.md`. G10C closes Completion Gate G after final roadmap reconciliation.
 
 ## Architectural rules
 
@@ -176,8 +176,8 @@ Complete with this document. Ownership, dependency direction, versioning, releas
 
 ### G10B — Cross-repository dependency and isolation verification
 
-G10B must mechanically enumerate production package/project edges, reject cross-repository source references and command-suite runtime cycles, and confirm current independent restore/build/test evidence for every final repository.
+Complete. `Icod.CoreUtils-G10B-Dependency-Audit.md` records the audited production package/project edges, repository-local engine boundaries, successful current `main` CI evidence, acyclic graph proof, and the conclusion that no G10-required version-pin migration exists.
 
 ### G10C — Final closure
 
-G10C reconciles both roadmaps against G10B evidence, records any required corrections, and marks Completion Gate G complete.
+Next. G10C reconciles both roadmaps against the G10B evidence and marks Completion Gate G complete.

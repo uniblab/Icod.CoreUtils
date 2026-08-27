@@ -217,7 +217,6 @@ No projects move during this phase.
   - obsolete/duplicate.
 - [ ] Detect APIs whose public signatures expose types belonging to another proposed package.
 - [ ] Detect circular package dependencies before moving source.
-
 **Exit criterion:** every shared API has a proposed permanent owner and every existing project reference has a proposed replacement.
 
 ## G1 — Freeze `Icod.Path` — COMPLETE
@@ -437,7 +436,6 @@ The terminal-oriented commands and deferred Batch 68 `top` are now ProcPs-reposi
 ## G8 — Extract Icod.Patch — COMPLETE
 
 **Closure checkpoint (2026-08-23):** `Icod.Patch` is an independent repository containing the production implementation, complete dedicated test/fixture corpus, standalone solution, documentation, published `Icod.CommandFramework` 1.1.0 and `Icod.Path` 1.0.0 dependencies, no runtime Diffutils dependency, and independent Windows/Ubuntu/macOS CI configuration. CoreUtils removal was deliberately staged: Patch tests first, then the 31-file production tree together with the Patch solution folder/project wiring, configuration mappings, and nesting entry.
-
 - [x] Extract Patch and its complete fixture/test corpus.
 - [x] Use published `Icod.Path`.
 - [x] Use published `Icod.CommandFramework`.
@@ -548,22 +546,29 @@ The graph has no production reference to an extracted sibling suite, no `Package
 - [x] Document independent per-repository versioning.
 - [x] Document release/CI ownership.
 - [x] Document textual interoperability boundaries.
-- [ ] Confirm the complete cross-repository graph is acyclic.
-- [ ] Confirm every final repository builds using published external packages plus its own repository-local projects, never neighboring source trees.
+- [x] Confirm the complete cross-repository graph is acyclic.
+- [x] Confirm every final repository builds using published external packages plus its own repository-local projects, never neighboring source trees.
 
-**G10A exit state:** the architecture is written down. G10B supplies exhaustive dependency and isolation evidence.
+**G10A exit state:** the architecture is written down and G10B has supplied the dependency/isolation evidence needed to validate it.
 
-### G10B — Cross-repository dependency and isolation verification — NEXT
+### G10B — Cross-repository dependency and isolation verification — COMPLETE
 
-- [ ] Enumerate every production `PackageReference` and `ProjectReference` in each final repository.
-- [ ] Reject any `ProjectReference` that crosses a repository boundary.
-- [ ] Reject runtime package dependencies from one command suite to another command suite.
-- [ ] Verify neutral-foundation edges do not point back into command suites.
-- [ ] Confirm the complete repository/package graph is acyclic.
-- [ ] Confirm clean restore/build/test or equivalent current CI evidence for each final repository.
-- [ ] Record any required version-pin migrations without imposing ecosystem-wide lockstep versioning.
+**Audit checkpoint (2026-08-27, `Gate_G10` commit `151cc91bf27bfe339bc9f1e5c933b9a527ec527c`):**
 
-### G10C — Completion Gate G closure
+- [x] Enumerate every production `PackageReference` and `ProjectReference` in each final repository.
+- [x] Reject any `ProjectReference` that crosses a repository boundary.
+- [x] Reject runtime package dependencies from one command suite to another command suite.
+- [x] Verify neutral-foundation edges do not point back into command suites.
+- [x] Confirm the complete repository/package graph is acyclic.
+- [x] Confirm clean restore/build/test or equivalent current CI evidence for each final repository.
+- [x] Record required version-pin migrations without imposing ecosystem-wide lockstep versioning.
+  - No G10B dependency migration is required. Existing explicit version pins remain consumer-owned and independently versioned.
+
+See `Icod.CoreUtils-G10B-Dependency-Audit.md` for the repository-by-repository production graph and current CI evidence.
+
+**G10B exit state:** every audited cross-repository production edge is a published neutral package edge; every production `ProjectReference` is repository-local; no command-suite runtime package cycle or neutral-foundation back-edge exists; the graph is acyclic; and current independent CI evidence is green.
+
+### G10C — Completion Gate G closure — NEXT
 
 - [ ] Reconcile the final checklist against G10B evidence.
 - [ ] Record the final closure checkpoint in both roadmaps.
@@ -612,4 +617,4 @@ Completion Gate G remains active. The completed extraction sequence is now:
 
 These suites have been moved out of the live `Icod.CoreUtils` source/solution after successful extraction validation. Remaining feature work in an extracted suite is owned by that suite's repository and does not require reintroducing its source into CoreUtils.
 
-G9 is complete. G10A publishes the final architecture/migration record. The next engineering step is **G10B — Cross-repository dependency and isolation verification**: enumerate every final production dependency edge, reject neighboring source-tree references and command-suite cycles, and verify each repository against published external packages plus its own repository-local projects. G10C then records the evidence and closes Completion Gate G.
+G9 and G10A/G10B are complete. The next engineering step is **G10C — Completion Gate G closure**: reconcile the final checklist against the recorded dependency/isolation evidence, update both roadmaps, and formally close Completion Gate G.
