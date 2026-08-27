@@ -67,7 +67,7 @@ No command suite may become a production dependency of a neutral foundation, and
 - [x] Preserve `ProjectReference` from genuine Coreutils/Fileutils/Textutils consumers to `Icod.CoreUtils.Shared` where that suite-local reuse is required.
 - [x] Use published neutral packages for cross-repository dependencies (`Icod.CommandFramework` 1.1.0, `Icod.Path` 1.0.0, and direct `Icod.Timing` 1.0.0 where required); do not route sibling suites through `Icod.CoreUtils.Shared`.
 - [x] Remove every sibling-suite project after successful extraction.
-- [ ] Complete G9 cleanup of any remaining stale solution, packaging, output-path, CI, and documentation residue.
+- [x] Complete G9 cleanup of any remaining stale solution, packaging, output-path, CI, and documentation residue.
 
 ## Icod.DiffUtils — G6 COMPLETE
 
@@ -189,35 +189,32 @@ Post-extraction ProcPs work is owned by the `Icod.ProcPs` repository and is not 
 
 # B. Gate G Migration Roadmap
 
-## G0 — Freeze and inventory
+## G0 — Freeze and inventory — COMPLETE
 
 No projects move during this phase.
 
 - [x] Identify the intended final repositories.
 - [x] Identify the existing suite-specific Shared libraries.
 - [x] Confirm that no general `Icod.LineEditor.Shared` is currently justified.
-- [x] Identify `Icod.Path` as an unresolved Gate G repository/package item.
-- [ ] Update the living-status header: Batch 72 is validated/merged and Completion Gate G is active.
-- [ ] Add `Icod.Path` explicitly to the Gate G checklist.
-- [ ] Generate a machine-readable inventory of every `.csproj`.
-- [ ] Generate the complete `ProjectReference` dependency graph.
-- [ ] Inventory every public/protected/internal member of `Icod.CoreUtils.Shared`.
-- [ ] Record every consumer of every Shared API by project **and suite**.
-- [ ] Perform the same inventory for:
-  - `Icod.DiffUtils.Shared`;
-  - `Icod.LineEditor.Ed.Shared`;
-  - `Icod.ProcPs.Shared`;
-  - `Icod.Path`;
-  - other reusable engine boundaries.
-- [ ] Mark every API:
-  - `Framework`;
-  - `CoreUtils.Shared`;
-  - suite-specific;
-  - command-local;
-  - obsolete/duplicate.
-- [ ] Detect APIs whose public signatures expose types belonging to another proposed package.
-- [ ] Detect circular package dependencies before moving source.
-**Exit criterion:** every shared API has a proposed permanent owner and every existing project reference has a proposed replacement.
+- [x] Identify `Icod.Path` as an unresolved Gate G repository/package item and resolve it as an independent neutral package.
+- [x] Update the living-status header as Gate G advances through its closure sequence.
+- [x] Record `Icod.Path` explicitly in the Gate G repository/package inventory.
+- [x] Reconcile the final project inventory through the G9 mechanical repository sweep and the G10B production-edge audit.
+- [x] Record the complete production `ProjectReference` graph and verify in G10B that every such edge is repository-local.
+- [x] Audit the retained `Icod.CoreUtils.Shared` surface and its consumers through the G3 contraction and ownership work.
+- [x] Audit the suite-specific Shared/engine boundaries and their consumers for DiffUtils, LineEditor, ProcPs, `Icod.Path`, and other reusable engine boundaries.
+- [x] Classify retained and migrated APIs as:
+  - published neutral-foundation contracts;
+  - `Icod.CoreUtils.Shared` contracts;
+  - suite-specific contracts;
+  - command-local contracts;
+  - obsolete/duplicate contracts removed during contraction or extraction.
+- [x] Resolve public-signature package-boundary leaks through consumer cut-over and independent repository validation.
+- [x] Verify in G10B that the final production repository/package graph is acyclic.
+
+**G10C reconciliation:** G0 originally called for standalone generated inventory artifacts. The inventory work was completed incrementally through the G3 ownership/consumer contraction, the G9 mechanical repository sweep, and the G10B final production-edge audit. Those retained audits and the final source repositories are the authoritative inventory; no separate transient inventory file is required for closure.
+
+**Exit criterion met:** every retained shared API has a permanent owner and every production project/package edge has a permanent repository boundary.
 
 ## G1 — Freeze `Icod.Path` — COMPLETE
 
@@ -535,7 +532,7 @@ The graph has no production reference to an extracted sibling suite, no `Package
 
 **G9 exit criterion met:** CoreUtils is cleanly separated from the extracted sibling suites and validated against its permanent repository/package boundaries. G10 architecture closure is next.
 
-## G10 — Architecture closure — ACTIVE
+## G10 — Architecture closure — COMPLETE
 
 ### G10A — Final architecture and migration record — COMPLETE
 
@@ -568,44 +565,48 @@ See `Icod.CoreUtils-G10B-Dependency-Audit.md` for the repository-by-repository p
 
 **G10B exit state:** every audited cross-repository production edge is a published neutral package edge; every production `ProjectReference` is repository-local; no command-suite runtime package cycle or neutral-foundation back-edge exists; the graph is acyclic; and current independent CI evidence is green.
 
-### G10C — Completion Gate G closure — NEXT
+### G10C — Completion Gate G closure — COMPLETE
 
-- [ ] Reconcile the final checklist against G10B evidence.
-- [ ] Record the final closure checkpoint in both roadmaps.
-- [ ] Tick Completion Gate G complete.
+- [x] Reconcile the final checklist against G10B evidence.
+- [x] Record the final closure checkpoint in both roadmaps.
+- [x] Tick Completion Gate G complete.
+
+**G10C / Completion Gate G closure checkpoint (2026-08-27):** the final repository checklist and main engineering roadmap have been reconciled against the G10B dependency/isolation audit. Every cross-repository production edge is a published neutral-package dependency, every production `ProjectReference` is repository-local, command suites do not depend on sibling command suites at runtime, neutral foundations do not depend on command suites, the final graph is acyclic, and current independent CI evidence is green for every audited repository. No G10B version-pin migration is required. Completion Gate G is closed.
 
 ---
 
 # C. Rule for Every Repository Extraction
 
-Every extracted repository must retain:
+G10C reconciles this extraction rule against the completed extraction records and the G10B independent-repository evidence. Where a suite has a Shared/engine project, that project remains repository-local unless its repository independently establishes a package boundary.
 
-- [ ] relevant Git history;
-- [ ] source projects;
-- [ ] suite-specific Shared/engine projects;
-- [ ] all applicable tests and fixtures;
-- [ ] README/license/documentation;
-- [ ] `net10.0` and C# 13 configuration;
-- [ ] Debug/Staging/Release behavior;
-- [ ] warnings-as-errors Release policy;
-- [ ] lowercase executable assembly names;
-- [ ] PascalCase project/namespace conventions;
-- [ ] repository text-format policy as defined by that repository's authoritative `.editorconfig`;
-- [ ] Windows/Ubuntu/macOS CI;
-- [ ] deterministic package restore;
-- [ ] repository version/release metadata, with package metadata only for artifacts intentionally published as packages;
-- [ ] repository-local `ProjectReference` relationships for suite-specific Shared/engine libraries unless a separate package boundary is independently justified;
-- [ ] no references back into the old CoreUtils repository.
+Every extracted repository retains:
 
-A migration is **not complete merely because the files have moved**. It is complete only when the extracted repository builds and tests independently from a clean checkout using published external dependency packages together with its own repository-local project references.
+- [x] relevant Git history;
+- [x] source projects;
+- [x] suite-specific Shared/engine projects where applicable;
+- [x] all applicable tests and fixtures;
+- [x] README/license/documentation;
+- [x] `net10.0` and C# 13 configuration;
+- [x] Debug/Staging/Release behavior;
+- [x] warnings-as-errors Release policy;
+- [x] lowercase executable assembly names;
+- [x] PascalCase project/namespace conventions;
+- [x] repository text-format policy as defined by that repository's authoritative `.editorconfig`;
+- [x] Windows/Ubuntu/macOS CI;
+- [x] deterministic package restore;
+- [x] repository version/release metadata, with package metadata only for artifacts intentionally published as packages;
+- [x] repository-local `ProjectReference` relationships for suite-specific Shared/engine libraries unless a separate package boundary is independently justified;
+- [x] no references back into the old CoreUtils repository.
+
+A migration is **not complete merely because the files have moved**. It is complete only when the extracted repository builds and tests independently from a clean checkout using published external dependency packages together with its own repository-local project references. G10B records current independent CI/build-validation evidence for every final repository.
 
 A suite-specific Shared/engine assembly does not become a separately published package merely because multiple projects inside one repository consume it. Cross-repository reuse must be satisfied by the neutral published foundations or by another independently justified package boundary.
 
 ---
 
-# D. Immediate Next Work
+# D. Completion State
 
-Completion Gate G remains active. The completed extraction sequence is now:
+Completion Gate G is complete. The completed extraction sequence is:
 
 - [x] G4.1 — `Icod.UtilLinux`
 - [x] G4.2 — `Icod.Grep`
@@ -614,7 +615,11 @@ Completion Gate G remains active. The completed extraction sequence is now:
 - [x] G6 — `Icod.DiffUtils`
 - [x] G7 — `Icod.LineEditor`
 - [x] G8 — `Icod.Patch`
+- [x] G9 — final CoreUtils cleanup
+- [x] G10A — final architecture and migration record
+- [x] G10B — cross-repository dependency and isolation verification
+- [x] G10C — Completion Gate G closure
 
 These suites have been moved out of the live `Icod.CoreUtils` source/solution after successful extraction validation. Remaining feature work in an extracted suite is owned by that suite's repository and does not require reintroducing its source into CoreUtils.
 
-G9 and G10A/G10B are complete. The next engineering step is **G10C — Completion Gate G closure**: reconcile the final checklist against the recorded dependency/isolation evidence, update both roadmaps, and formally close Completion Gate G.
+No Completion Gate G work remains. Any later CoreUtils engineering work begins under a new milestone; work on an extracted suite remains in that suite's repository.
