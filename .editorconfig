@@ -1,8 +1,8 @@
 root = true
 
 [*]
-end_of_line = lf
-insert_final_newline = true
+end_of_line = crlf
+insert_final_newline = false
 trim_trailing_whitespace = true
 charset = utf-8
 indent_style = space
@@ -21,7 +21,10 @@ tab_width = 4
 
 [*.cs]
 # C# style preferences
-csharp_new_line_before_open_brace = all:warning
+csharp_new_line_before_open_brace = none:warning
+csharp_new_line_before_else = false:warning
+csharp_new_line_before_catch = false:warning
+csharp_new_line_before_finally = false:warning
 csharp_prefer_braces = true:warning
 csharp_style_expression_bodied_methods = when_possible:suggestion
 csharp_style_expression_bodied_properties = when_possible:suggestion
