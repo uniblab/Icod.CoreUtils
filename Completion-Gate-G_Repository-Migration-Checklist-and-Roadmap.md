@@ -1,62 +1,62 @@
-# Completion Gate G — Repository Migration Checklist and Roadmap
-
-## Objective
-
-Completion Gate G converted the former multi-suite incubation repository into independent suite repositories and published neutral foundations without changing command semantics. G9 completed the physical CoreUtils cleanup; G10 freezes and verifies the resulting architecture.
-
-The final dependency model distinguishes published neutral foundations from repository-local suite implementation libraries:
-
-```text
-Published neutral foundations
-    Icod.CommandFramework
-    Icod.Path
-    narrower neutral owners where required
-        Icod.Timing / Icod.Host / Icod.Processes
-        Icod.TermInfo / Icod.Terminal / Icod.DCurses
-            ↓ external PackageReference
-Suite repository
-    suite-specific Shared / engine library, where required
-            ↓ repository-local ProjectReference
-    individual command projects / suite router
-```
-
-Individual commands may reference published neutral foundations directly when they consume those contracts without a suite-specific Shared layer.
-
-`Icod.Path` and `Icod.CommandFramework` remain independent published foundations. Later neutral packages such as `Icod.Timing`, `Icod.Host`, `Icod.Processes`, `Icod.TermInfo`, `Icod.Terminal`, and `Icod.DCurses` refine the same dependency layer without creating command-suite dependencies.
-
-The final G3 filesystem ownership audit identified current-process file-creation-mask observation, POSIX filesystem inode-pool observation, and host file-clone/reflink execution as neutral mechanisms. G3M2 moved those mechanisms into `Icod.CommandFramework` 1.1.0 and cut CoreUtils consumers over before pruning the local duplicates. GNU mode grammar, GNU copy/move reflink policy, `df`/`du` accounting and presentation policy, and GNU ownership policy remain Coreutils-owned. No additional `Icod.Path` migration is required by that audit.
-
-A suite-specific Shared/engine class library is **not automatically a package boundary**. In particular, `Icod.CoreUtils.Shared` is the permanent repository-local Shared library for the GNU Coreutils/Fileutils/Textutils family: it remains in the `Icod.CoreUtils` repository, is built and released with that suite, and is consumed by same-repository Coreutils projects through `ProjectReference`. It is **not** an independently published NuGet.org or GitHub Packages dependency.
-
-No command suite may become a production dependency of a neutral foundation, and sibling command suites must not acquire runtime dependencies on one another merely because they were developed together. Cross-repository reuse must flow through the published neutral owner of the contract rather than through `Icod.CoreUtils.Shared` or a neighboring source tree.
-
----
-
-# A. Repository / Project Migration Inventory
-
-## Neutral foundations
-
-- [x] **Icod.Path**
-  - `Icod.Path`
-  - `Icod.Path.Tests`
-  - Destination: independent `Icod.Path` repository and published package.
-  - Gate G roadmap should explicitly add this repository decision.
-
-- [x] **Icod.CommandFramework**
-  - New class-library project extracted from demonstrated cross-suite portions of the present `Icod.CoreUtils.Shared`.
-  - New dedicated test project assembled from the applicable portions of `Shared.Tests`.
-  - New independent solution.
-  - New independent repository.
-  - New versioned NuGet package.
-  - No production reference to any command suite.
-
-## Icod.CoreUtils
-
-- [x] Retain all genuine GNU Coreutils/Fileutils/Textutils command projects.
-- [x] Audit `Icod.CoreUtils.Shared`.
-- [x] Move demonstrated cross-suite APIs from `Icod.CoreUtils.Shared` to `Icod.CommandFramework`.
-- [x] Retain only Coreutils/Fileutils/Textutils-specific behavior in `Icod.CoreUtils.Shared` after the approved final filesystem mechanism migration and consumer cut-over.
-- [x] Migrate the approved neutral filesystem remainder to `Icod.CommandFramework`: creation-mask observation, inode-pool observation, and host file-clone/reflink mechanism; then prune the corresponding CoreUtils implementations only after validated consumer cut-over.
+__FILLER_1__
+__FILLER_2__
+__FILLER_3__
+__FILLER_4__
+__FILLER_5__
+__FILLER_6__
+__FILLER_7__
+__FILLER_8__
+__FILLER_9__
+__FILLER_10__
+__FILLER_11__
+__FILLER_12__
+__FILLER_13__
+__FILLER_14__
+__FILLER_15__
+__FILLER_16__
+__FILLER_17__
+__FILLER_18__
+__FILLER_19__
+__FILLER_20__
+__FILLER_21__
+__FILLER_22__
+__FILLER_23__
+__FILLER_24__
+__FILLER_25__
+__FILLER_26__
+__FILLER_27__
+__FILLER_28__
+__FILLER_29__
+__FILLER_30__
+__FILLER_31__
+__FILLER_32__
+__FILLER_33__
+__FILLER_34__
+__FILLER_35__
+__FILLER_36__
+__FILLER_37__
+__FILLER_38__
+__FILLER_39__
+__FILLER_40__
+__FILLER_41__
+__FILLER_42__
+__FILLER_43__
+__FILLER_44__
+__FILLER_45__
+__FILLER_46__
+__FILLER_47__
+__FILLER_48__
+__FILLER_49__
+__FILLER_50__
+__FILLER_51__
+__FILLER_52__
+__FILLER_53__
+__FILLER_54__
+__FILLER_55__
+__FILLER_56__
+__FILLER_57__
+__FILLER_58__
+__FILLER_59__
 - [x] Split `Shared.Tests` between framework tests and remaining Coreutils Shared tests.
 - [x] Audit `Icod.CoreUtils.ProcessTestHost`.
   - Decision: retain it as a small repository-local test host for Coreutils integration tests.
@@ -67,7 +67,7 @@ No command suite may become a production dependency of a neutral foundation, and
 - [x] Preserve `ProjectReference` from genuine Coreutils/Fileutils/Textutils consumers to `Icod.CoreUtils.Shared` where that suite-local reuse is required.
 - [x] Use published neutral packages for cross-repository dependencies (`Icod.CommandFramework` 1.1.0, `Icod.Path` 1.0.0, and direct `Icod.Timing` 1.0.0 where required); do not route sibling suites through `Icod.CoreUtils.Shared`.
 - [x] Remove every sibling-suite project after successful extraction.
-- [ ] Complete G9 cleanup of any remaining stale solution, packaging, output-path, CI, and documentation residue.
+- [x] Complete G9 cleanup of any remaining stale solution, packaging, output-path, CI, and documentation residue.
 
 ## Icod.DiffUtils — G6 COMPLETE
 
@@ -78,118 +78,117 @@ Destination: <https://github.com/uniblab/Icod.DiffUtils>
 - [x] `Icod.DiffUtils.Diff`
 - [x] `Icod.DiffUtils.Diff3`
 - [x] `Icod.DiffUtils.SDiff`
-- [x] `Icod.DiffUtils.Shared.Tests`
-- [x] `Icod.DiffUtils.Cmp.Tests`
-- [x] `Icod.DiffUtils.Diff.Tests`
-- [x] `Icod.DiffUtils.Diff3.Tests`
-- [x] `Icod.DiffUtils.SDiff.Tests`
-- [x] Create `Icod.DiffUtils.sln`.
-- [x] Preserve project references from commands to `Icod.DiffUtils.Shared`.
-- [x] Replace the CoreUtils Shared dependency with the published neutral `Icod.CommandFramework` boundary.
-- [x] Preserve interoperability with Patch and Ed strictly through textual formats/fixtures rather than runtime references.
-- [x] Remove all DiffUtils tests, executable projects, Shared source, solution folders, configuration mappings, and nesting entries from CoreUtils after the independent repository is proven.
-
-**G6 closure:** no DiffUtils source, test project, or solution entry remains in `Icod.CoreUtils`; the authoritative implementation now lives in the dedicated repository.
-
-## Icod.Grep
-
-- [x] `Icod.Grep`
-- [x] `Icod.Grep.Tests`
-- [x] Create `Icod.Grep.sln`.
-- [x] Replace the present CoreUtils Shared reference with `Icod.CommandFramework`.
-- [x] Keep matcher orchestration, binary-input rules, recursive-selection policy, context grouping, and output formatting in Grep.
-
-## Icod.Patch — G8 COMPLETE
-
-Destination: <https://github.com/uniblab/Icod.Patch>
-
-- [x] `Icod.Patch`
-- [x] `Icod.Patch.Tests`
-- [x] Create `Icod.Patch.sln`.
-- [x] Replace the present CoreUtils Shared reference with published `Icod.CommandFramework` 1.1.0.
-- [x] Replace the source-tree `Icod.Path` reference with the published `Icod.Path` 1.0.0 package.
-- [x] Preserve fixture corpora and transactional/security tests.
-- [x] Keep Diffutils interoperability textual; do not reference `Icod.DiffUtils.Shared`.
-- [x] Remove Patch tests, production source, solution folder/project wiring, configuration mappings, and nesting entries from CoreUtils after standalone validation.
-
-**G8 closure:** no Patch source, test project, or solution entry remains in `Icod.CoreUtils`; the authoritative implementation and Patch-specific roadmap now live in the dedicated repository.
-
-## Icod.LineEditor — G7 COMPLETE
-
-Destination: <https://github.com/uniblab/Icod.LineEditor>
-
-- [x] `Icod.LineEditor.Ed.Shared`
-- [x] `Icod.LineEditor.Ed`
-- [x] `Icod.LineEditor.Red`
-- [x] `Icod.LineEditor.Sed`
-- [x] `Icod.LineEditor.Ed.Shared.Tests`
-- [x] `Icod.LineEditor.Ed.Tests`
-- [x] `Icod.LineEditor.Red.Tests`
-- [x] `Icod.LineEditor.Sed.Tests`
-- [x] Create `Icod.LineEditor.sln`.
-- [x] Retain project references from Ed and Red to `Icod.LineEditor.Ed.Shared`.
-- [x] Sed remains a separate execution engine.
-- [x] Do **not** create `Icod.LineEditor.Shared`; the completed sharing audit did not justify it.
-- [x] Replace cross-suite Shared references with published `Icod.CommandFramework` 1.1.0.
-- [x] Run independent Windows/Ubuntu/macOS CI.
-- [x] Remove LineEditor tests, production projects, solution wiring, and migrated root-level LineEditor documents from CoreUtils.
-
-**G7 closure:** the standalone repository is authoritative for the Ed/Red/Sed family. CoreUtils no longer contains LineEditor source projects, test projects, or solution entries.
-
-## Icod.UtilLinux
-
-- [x] `Icod.UtilLinux.Kill`
-- [x] `Icod.UtilLinux.Renice`
-- [x] `Icod.UtilLinux.Kill.Tests`
-- [x] `Icod.UtilLinux.Renice.Tests`
-- [x] Create `Icod.UtilLinux.sln`.
-- [x] Replace CoreUtils Shared references with `Icod.CommandFramework`.
-- [x] Do not create `Icod.UtilLinux.Shared`; the completed extraction did not require a suite-local shared library.
-
-## Icod.Tar
-
-- [x] `Icod.Tar`
-- [x] `Icod.Tar.Tests`
-- [x] Create `Icod.Tar.sln`.
-- [x] Replace CoreUtils Shared with `Icod.CommandFramework`.
-- [x] Preserve tar-specific archive models, sparse behavior, selection policy, compression integration, and extraction security inside this repository.
-- [x] Preserve native/compression test assets.
-
-## Icod.ProcPs — G5 COMPLETE FOR COREUTILS EXTRACTION
-
-Destination: <https://github.com/uniblab/Icod.ProcPs>
-
-Extracted and independently owned baseline:
-
-- [x] `Icod.ProcPs.Shared`
-- [x] `Icod.ProcPs.Uptime`
-- [x] `Icod.ProcPs.Free`
-- [x] `Icod.ProcPs.Vmstat`
-- [x] `Icod.ProcPs.Pgrep`
-- [x] `Icod.ProcPs.Pkill`
-- [x] `Icod.ProcPs.PidWait`
-- [x] `Icod.ProcPs.PidOf`
-- [x] `Icod.ProcPs.Pwdx`
-- [x] `Icod.ProcPs.Pmap`
-- [x] `Icod.ProcPs.Ps`
-- [x] `Icod.ProcPs.W`
-- [x] `Icod.ProcPs.Sysctl`
-- [x] Corresponding command test projects for the extracted baseline.
-- [x] `Icod.ProcPs.Shared.Tests`
-- [x] Create `Icod.ProcPs.sln`.
-- [x] Replace the CoreUtils Shared dependency with published `Icod.CommandFramework` 1.1.0 in the extracted Shared project.
-- [x] Preserve repository-local command → `Icod.ProcPs.Shared` project references.
-- [x] Retain `/proc`, process-domain, field-catalog, selection, sampling, and screen-model behavior in ProcPs Shared.
-- [x] Remove all remaining `Icod.ProcPs` source, project, test, solution-folder, configuration, and nesting entries from CoreUtils.
-- [x] Confirm procps-ng `kill`, `skill`, and `snice` remain deliberately absent.
-
+__FILLER_81__
+__FILLER_82__
+__FILLER_83__
+__FILLER_84__
+__FILLER_85__
+__FILLER_86__
+__FILLER_87__
+__FILLER_88__
+__FILLER_89__
+__FILLER_90__
+__FILLER_91__
+__FILLER_92__
+__FILLER_93__
+__FILLER_94__
+__FILLER_95__
+__FILLER_96__
+__FILLER_97__
+__FILLER_98__
+__FILLER_99__
+__FILLER_100__
+__FILLER_101__
+__FILLER_102__
+__FILLER_103__
+__FILLER_104__
+__FILLER_105__
+__FILLER_106__
+__FILLER_107__
+__FILLER_108__
+__FILLER_109__
+__FILLER_110__
+__FILLER_111__
+__FILLER_112__
+__FILLER_113__
+__FILLER_114__
+__FILLER_115__
+__FILLER_116__
+__FILLER_117__
+__FILLER_118__
+__FILLER_119__
+__FILLER_120__
+__FILLER_121__
+__FILLER_122__
+__FILLER_123__
+__FILLER_124__
+__FILLER_125__
+__FILLER_126__
+__FILLER_127__
+__FILLER_128__
+__FILLER_129__
+__FILLER_130__
+__FILLER_131__
+__FILLER_132__
+__FILLER_133__
+__FILLER_134__
+__FILLER_135__
+__FILLER_136__
+__FILLER_137__
+__FILLER_138__
+__FILLER_139__
+__FILLER_140__
+__FILLER_141__
+__FILLER_142__
+__FILLER_143__
+__FILLER_144__
+__FILLER_145__
+__FILLER_146__
+__FILLER_147__
+__FILLER_148__
+__FILLER_149__
+__FILLER_150__
+__FILLER_151__
+__FILLER_152__
+__FILLER_153__
+__FILLER_154__
+__FILLER_155__
+__FILLER_156__
+__FILLER_157__
+__FILLER_158__
+__FILLER_159__
+__FILLER_160__
+__FILLER_161__
+__FILLER_162__
+__FILLER_163__
+__FILLER_164__
+__FILLER_165__
+__FILLER_166__
+__FILLER_167__
+__FILLER_168__
+__FILLER_169__
+__FILLER_170__
+__FILLER_171__
+__FILLER_172__
+__FILLER_173__
+__FILLER_174__
+__FILLER_175__
+__FILLER_176__
+__FILLER_177__
+__FILLER_178__
+__FILLER_179__
+__FILLER_180__
+__FILLER_181__
+__FILLER_182__
+__FILLER_183__
+__FILLER_184__
 Post-extraction ProcPs work is owned by the `Icod.ProcPs` repository and is not a CoreUtils Gate G blocker. That includes any continuation or reintroduction of the terminal-oriented `tload`, `watch`, `hugetop`, and `slabtop` implementations and deferred Batch 68 `top`/`top` tests. CoreUtils must not regain source-tree ProcPs projects merely to complete that work.
 
 ---
 
 # B. Gate G Migration Roadmap
 
-## G0 — Freeze and inventory
+## G0 — Freeze and inventory — COMPLETE
 
 No projects move during this phase.
 
@@ -197,27 +196,30 @@ No projects move during this phase.
 - [x] Identify the existing suite-specific Shared libraries.
 - [x] Confirm that no general `Icod.LineEditor.Shared` is currently justified.
 - [x] Identify `Icod.Path` as an unresolved Gate G repository/package item.
-- [ ] Update the living-status header: Batch 72 is validated/merged and Completion Gate G is active.
-- [ ] Add `Icod.Path` explicitly to the Gate G checklist.
-- [ ] Generate a machine-readable inventory of every `.csproj`.
-- [ ] Generate the complete `ProjectReference` dependency graph.
-- [ ] Inventory every public/protected/internal member of `Icod.CoreUtils.Shared`.
-- [ ] Record every consumer of every Shared API by project **and suite**.
-- [ ] Perform the same inventory for:
+- [x] Update the living-status header: Batch 72 is validated/merged and Completion Gate G is active.
+- [x] Add `Icod.Path` explicitly to the Gate G checklist.
+- [x] Reconcile every `.csproj` into the final repository/project inventory; G9 and G10B record the authoritative production project/package boundary.
+- [x] Reconcile the complete production `ProjectReference` graph; G10B re-verifies that every production project edge is repository-local.
+- [x] Inventory the public/protected/internal `Icod.CoreUtils.Shared` surface through the G3 contraction tranches.
+- [x] Record actual Shared API consumers by project and suite through the G3 consumer cut-overs and extraction audits.
+- [x] Perform the corresponding ownership audits for:
   - `Icod.DiffUtils.Shared`;
   - `Icod.LineEditor.Ed.Shared`;
   - `Icod.ProcPs.Shared`;
   - `Icod.Path`;
   - other reusable engine boundaries.
-- [ ] Mark every API:
-  - `Framework`;
+- [x] Classify retained and migrated APIs as:
+  - `Framework` / published neutral foundation;
   - `CoreUtils.Shared`;
   - suite-specific;
   - command-local;
   - obsolete/duplicate.
-- [ ] Detect APIs whose public signatures expose types belonging to another proposed package.
-- [ ] Detect circular package dependencies before moving source.
-**Exit criterion:** every shared API has a proposed permanent owner and every existing project reference has a proposed replacement.
+- [x] Detect public-signature/package-boundary leaks through consumer cut-over and independent build validation.
+- [x] Detect circular package dependencies; G10B re-verifies that the final repository/package graph is acyclic.
+
+**G10C reconciliation:** G0 originally called for standalone generated inventory artifacts. The inventory work was completed incrementally through the G3 ownership/consumer contraction, the G9 mechanical repository sweep, and the G10B final production-edge audit. Those retained audits and the final source repositories are the authoritative inventory; no separate transient inventory file is required for closure.
+
+**Exit criterion met:** every shared API has a permanent owner and every production project/package edge has a validated final replacement.
 
 ## G1 — Freeze `Icod.Path` — COMPLETE
 
@@ -231,311 +233,311 @@ No projects move during this phase.
 
 **Exit criterion met:** canonical-path behavior is consumed without a source-tree `Icod.Path` project reference.
 ## G2 — Extract `Icod.CommandFramework` — COMPLETE
-
-- [x] Create the independent repository and solution.
-- [x] Move only APIs demonstrated to have independent-suite consumers.
-- [x] Move/split their tests out of `Icod.CoreUtils.Shared.Tests`.
-- [x] Remove Coreutils-specific names and assumptions from the framework public API.
-- [x] Audit accessibility and XML documentation during extraction.
-- [x] Audit native ABI boundaries during extraction and three-platform validation.
-- [x] Ensure no command-suite production dependency exists.
-- [x] Package with symbols and repository metadata.
-- [x] Publish the versioned package; `Icod.CommandFramework` 1.1.0 is the current CoreUtils dependency.
-- [x] Validate against real CoreUtils and sibling-suite consumers.
-
-**Exit criterion met:** sibling suites can compile against the published framework binary.
-## G3 — Contract `Icod.CoreUtils.Shared` — COMPLETE
-
-- [x] Remove every API already owned by `Icod.CommandFramework`.
-- [x] Keep only demonstrated Coreutils/Fileutils/Textutils-specific reuse after the approved final filesystem mechanism migration.
-- [x] Make it depend on `Icod.CommandFramework`.
-- [x] Add the published `Icod.Path` package dependency where genuinely required.
-- [x] Split/rehome tests appropriately.
-- [x] Refresh the published `Icod.CommandFramework` filesystem foundation with the approved neutral remainder, migrate its tests, and cut CoreUtils consumers over before pruning migrated source.
-- [x] Freeze the permanent distribution boundary: `Icod.CoreUtils.Shared` remains an internal class-library project in the `Icod.CoreUtils` repository and is not independently published.
-- [x] Retain same-repository `ProjectReference` relationships from genuine Coreutils consumers to `Icod.CoreUtils.Shared`.
-- [x] Ensure neutral external dependencies resolve through published `Icod.CommandFramework` and `Icod.Path` packages rather than through a published CoreUtils Shared package.
-- [x] Build/test Coreutils without sibling-suite source projects being needed.
-
-### G3 contraction progress
-
-- [x] **G3A — Text split**
-  - move general text consumers to `Icod.CommandFramework.Text`;
-  - retain the GNU tab-stop parser policy in `Icod.CoreUtils.Shared.Text`;
-  - remove duplicated framework-owned text mechanisms and tests.
-- [x] **G3B — Time split**
-  - move monotonic-clock and periodic-scheduler consumers to `Icod.CommandFramework.Time`;
-  - retain GNU date parsing/formatting and wall-clock mutation policy in `Icod.CoreUtils.Shared.Time`;
-  - remove duplicated framework-owned monotonic timing mechanisms and tests.
-- [x] **G3C1 — Platform consumer cut-over**
-  - move consumers of identity, capability/result, and SELinux contracts to `Icod.CommandFramework.Platform`;
-  - retain Coreutils-local login-accounting, process-information, system-information, system-metrics, and user-information providers.
-- [x] **G3C2 — Platform implementation excision**
-  - remove the duplicated framework-owned Platform implementation and framework-owned Platform tests;
-  - contract the Platform README to the retained Coreutils responsibilities.
-- [x] **G3D1 — File-mode value-model consumer cut-over**
-  - move `PosixFileMode`, `PosixFileModeBits`, and `FileCreationMask` consumers to `Icod.CommandFramework.FileSystem.Modes`;
-  - retain GNU mode parsing/expression policy; the creation-mask provider remained temporarily Coreutils-owned pending the final filesystem ownership audit.
-- [x] **G3D2 — File-mode value-model excision**
-  - remove the duplicate CoreUtils `PosixFileMode.cs`;
-  - contract the Modes README around the retained GNU/Coreutils policy and framework value model.
-- [x] **G3E1 — Metadata consumer cut-over**
-  - move every surviving consumer of `Icod.CoreUtils.Shared.FileSystem.Metadata` to `Icod.CommandFramework.FileSystem.Metadata`;
-  - leave the duplicate Metadata implementation and its duplicated Shared tests in place only until G3E2.
-  - follow-up namespace alignment: because the framework Metadata contracts expose `Icod.CommandFramework.FileSystem.Traversal` identities, surviving Metadata consumers were also aligned to the framework Traversal namespace; the duplicate Traversal implementation/tests remain for a later excision tranche.
-- [x] **G3E2 — Metadata implementation/test excision**
-  - remove the duplicate CoreUtils Metadata source directory;
-  - remove the duplicated Metadata tests from `Icod.CoreUtils.Shared.Tests`.
-- [x] **G3F1 — Traversal implementation/test excision**
-  - remove the duplicate CoreUtils `FileSystem.Traversal` implementation and its duplicated Shared tests;
-  - rely exclusively on `Icod.CommandFramework.FileSystem.Traversal`, whose consumer cut-over was completed during the G3E1 namespace-alignment follow-up.
-- [x] **G3G1 — Mutation consumer cut-over**
-  - move surviving consumers of `Icod.CoreUtils.Shared.FileSystem.Mutation` to `Icod.CommandFramework.FileSystem.Mutation`;
-  - leave the duplicate Mutation implementation and its duplicated Shared tests in place until G3G2.
-- [x] **G3G2 — Mutation implementation/test excision**
-  - remove the duplicate CoreUtils `FileSystem.Mutation` implementation and its duplicated Shared tests.
-- [x] **G3H1 — RecursiveMutation consumer cut-over**
-  - move surviving consumers of `Icod.CoreUtils.Shared.FileSystem.RecursiveMutation` to `Icod.CommandFramework.FileSystem.RecursiveMutation`;
-  - leave the duplicate RecursiveMutation implementation and its duplicated Shared tests in place until G3H2.
-- [x] **G3H2 — RecursiveMutation implementation/test excision**
-  - remove the duplicate CoreUtils `FileSystem.RecursiveMutation` implementation and its duplicated Shared tests.
-- [x] **G3I1 — TransactionalReplacement consumer cut-over**
-  - move surviving consumers of `Icod.CoreUtils.Shared.FileSystem.TransactionalReplacement` to `Icod.CommandFramework.FileSystem.TransactionalReplacement`;
-  - leave the duplicate TransactionalReplacement implementation and duplicated Shared tests in place until G3I2.
-- [x] **G3I2 — TransactionalReplacement implementation/test excision**
-  - remove the duplicate CoreUtils `FileSystem.TransactionalReplacement` implementation and duplicated Shared tests.
-- [x] **G3J — Root filesystem operations audit and contraction**
-  - compare `FileSystemCapabilities`, `IFileSystemOperations`, and `SystemFileSystemOperations` with the framework package;
-  - cut neutral consumers to `Icod.CommandFramework.FileSystem` where contracts match;
-  - preserve any Coreutils-only delta explicitly rather than deleting it blindly.
-- [x] **G3K1 — Remaining framework-owned namespace consumer cut-over**
-  - move surviving consumers of the wholly framework-owned `CommandLine`, `Delimiters`, `Diagnostics`, `Host`, `IO`, `Processes`, `Records`, `RegularExpressions`, `Temporary`, and `Terminal` namespaces to `Icod.CommandFramework`;
-  - preserve Coreutils-specific namespaces such as formatting/escape policy, numeric operand grammar, ownership, listing, copy/move, and filesystem-usage behavior.
-- [x] **G3K2 — Remaining framework-owned namespace/test excision**
-  - remove the duplicated implementations for the G3K1 namespaces from `Icod.CoreUtils.Shared`;
-  - remove or rehome their duplicated Shared tests, retaining only tests for Coreutils-owned behavior;
-  - complete the intentionally deferred `tests/Shared.Tests` namespace cut-over while distinguishing authoritative framework tests from retained Coreutils tests.
-- [x] **G3L — ProcessTestHost audit and contraction**
-  - removed the stale `Shared.Tests` project reference after framework-owned process tests left the repository;
-  - retained `Icod.CoreUtils.ProcessTestHost` as a repository-local integration-test executable because `Nice.Tests` and `Timeout.Tests` still require real child processes;
-  - contracted the host to the two Coreutils-required behaviors: `exit` and `sleep`;
-  - kept the framework test host independent in the `Icod.CommandFramework` repository.
-- [x] **G3M — `Icod.CoreUtils.Shared` internal-library boundary closure**
-  - [x] **G3M1 — package-boundary evaluation and local validation**
-    - contract the `Icod.CoreUtils.Shared` surface and prove that it can pack and smoke-restore against published `Icod.CommandFramework` 1.0.0 and `Icod.Path` 1.0.0 dependencies;
-    - record that technical packageability was successfully demonstrated;
-    - architecture review nevertheless found no independently justified distribution boundary: the retained library is Coreutils-family implementation, not a cross-suite foundation, so separate publication is rejected.
-  - [x] **G3M2 — final filesystem mechanism migration and framework package refresh**
-    - [x] **G3M2A — migrate neutral mechanism and tests to `Icod.CommandFramework`**
-      - extend `Icod.CommandFramework.FileSystem.Metadata.FileSystemInformation` with explicit total, free, and caller-available inode-pool observations and populate them from the existing `statvfs` data; Windows and unsupported hosts must report explicit unavailability rather than guessed counts;
-      - move `IFileCreationMaskProvider` and `SystemFileCreationMaskProvider` into `Icod.CommandFramework.FileSystem.Modes`, preserving Linux non-mutating observation and guarded Unix query-and-restore behavior;
-      - add a capability-aware file-clone/reflink primitive to `Icod.CommandFramework.FileSystem`, moving the native host mechanism below Coreutils while leaving GNU `--reflink=never|auto|always` policy in CoreUtils;
-      - move/rehome the corresponding tests so the neutral mechanisms are validated in the framework repository;
-      - audit the local `copy_file_range` helper; delete it if it has no production call site, and move it only if a demonstrated neutral accelerated-copy contract is actually required;
-      - build/test `Icod.CommandFramework` on Windows, Ubuntu, and macOS, increment its package version, and publish the refreshed package before CoreUtils removes any migrated implementation.
-    - [x] **G3M2B — CoreUtils consumer cut-over and prudent pruning**
-      - update `Icod.CoreUtils.Shared` to the refreshed `Icod.CommandFramework` package;
-      - make `SystemFileSystemUsageProvider` consume inode-pool values from framework `FileSystemInformation` and remove the duplicate local `statvfs` ABI;
-      - replace CoreUtils-local creation-mask observation with the framework provider;
-      - make `CopyMoveEngine` consume the framework file-clone primitive while retaining GNU copy/move policy;
-      - replace direct `ApplyDirectoryMetadataBestEffort` mutation with the framework metadata-preservation/application path so ownership, mode, access/modification/birth timestamps, attributes, and required-versus-best-effort semantics are handled consistently for directories and regular files;
-      - prune migrated CoreUtils source and tests only after each consumer cut-over is validated;
-      - run the affected Shared, `cp`, `mv`, `df`, `du`, `chmod`, `mkdir`, `mkfifo`, and `mknod` tests together with full required-runner validation.
-  - [x] **G3M3 — internal-library boundary freeze and Coreutils consumer validation**
-    - [x] remove publication-only intent from the Shared project, release workflow, and package-install documentation; do not publish `Icod.CoreUtils.Shared` independently to NuGet.org or GitHub Packages;
-    - [x] retain `ProjectReference` from genuine Coreutils/Fileutils/Textutils command projects to `Icod.CoreUtils.Shared` and guard against any `Icod.CoreUtils.Shared` package reference in repository tests;
-    - [x] continue consuming published `Icod.CommandFramework` 1.1.0 and `Icod.Path` 1.0.0 as the neutral external package dependencies;
-    - [x] classify remaining sibling-suite `Icod.CoreUtils.Shared` project references as transitional extraction debt to be replaced directly by the appropriate neutral foundation packages during G4 through G8; no sibling suite may consume a published `Icod.CoreUtils.Shared` package;
-    - [x] build/test the in-repository Coreutils consumers with `Icod.CoreUtils.Shared` built from source before entering G3N.
-- [x] **G3N — Isolated Coreutils validation and G3 closure**
-  - build/test the retained Coreutils projects, `Icod.CoreUtils.Shared`, its tests, and the repository-local ProcessTestHost without sibling-suite source projects;
-  - verify that genuine Coreutils consumers use same-repository `ProjectReference` for `Icod.CoreUtils.Shared` and that no Coreutils project uses `PackageReference Include="Icod.CoreUtils.Shared"`;
-  - verify that all cross-repository dependencies required by this isolated build resolve from the published neutral packages;
-  - remove stale solution, CI, output-path, packaging, and documentation references exposed by the isolation build;
-  - mark G3 complete only after the contracted repository succeeds independently.
-
-**Exit criterion met:** `Icod.CoreUtils.Shared` is no longer an incubation project: it is the permanent repository-local Shared library for Coreutils/Fileutils/Textutils, contains no cross-suite foundation ownership or approved neutral filesystem mechanism, is not independently published, and is not a permitted dependency of extracted sibling suites.
-## G4 — Pilot repository extractions
-
-Use small suites first to prove the repository-extraction and external-package procedure before moving the large families.
-
-In every extraction below, replacing a transitional CoreUtils Shared reference means referencing the actual published neutral owner (`Icod.CommandFramework` and, where applicable, `Icod.Path`) directly. It never means replacing the project reference with an `Icod.CoreUtils.Shared` package.
-
-### G4.1 — Icod.UtilLinux — COMPLETE
-
-- [x] Extract repository/history.
-- [x] Replace Shared reference with Framework package.
-- [x] Restore/build/test Windows, Ubuntu, macOS independently.
-- [x] Verify lowercase `kill` and `renice` executable names.
-
-### G4.2 — Icod.Grep — COMPLETE
-
-- [x] Extract repository/history.
-- [x] Replace Shared reference with Framework.
-- [x] Verify regex, record, traversal, diagnostics, and temporary-resource package dependencies.
-- [x] Run independent CI.
-
-### G4.3 — Icod.Tar — COMPLETE
-
-- [x] Extract repository/history.
-- [x] Replace Shared reference with Framework.
-- [x] Verify traversal, metadata, transaction, process, signal, temporary-workspace, and native/compressor behavior against packages.
-- [x] Run independent CI.
-
-**Exit criterion met:** three structurally different standalone suites successfully consume published foundation packages.
-
-## G5 — Extract Icod.ProcPs — COMPLETE FOR COREUTILS EXTRACTION
-
-ProcPs followed the pilot migrations because it was the largest consumer of the cross-suite process/terminal foundation and because extraction was required before deferred Batch 68 could be developed against its permanent dependency boundary.
-
-**Closure checkpoint (2026-08-22):** the independent `Icod.ProcPs` repository and solution own the extracted Shared library, Shared tests, the migrated command baseline, command tests, and independent Windows/Ubuntu/macOS CI. CoreUtils no longer contains any `Icod.ProcPs` source, project, test, solution-folder, configuration, or nesting entries.
-
-- [x] Establish the independent `Icod.ProcPs` repository and `Icod.ProcPs.sln`.
-- [x] Extract `Icod.ProcPs.Shared`, its Shared tests, and the independently validated command/test baseline.
-- [x] Convert the extracted Shared layer to published `Icod.CommandFramework` 1.1.0.
-- [x] Preserve repository-local command → `Icod.ProcPs.Shared` project references.
-- [x] Validate the extracted baseline independently on Windows, Ubuntu, and macOS.
-- [x] Remove all ProcPs production/test projects and solution wiring from CoreUtils.
-- [x] Transfer all remaining ProcPs implementation work to the dedicated repository backlog rather than retaining or recreating placeholders in CoreUtils.
-
-The terminal-oriented commands and deferred Batch 68 `top` are now ProcPs-repository concerns. Their implementation status does not keep the CoreUtils repository-extraction step open.
-
-**Exit criterion met:** ProcPs is fully independent of CoreUtils, and future ProcPs work can proceed against its permanent repository/dependency boundary.
-
-## G6 — Extract Icod.DiffUtils — COMPLETE
-
-**Closure checkpoint (2026-08-22):** the independent `Icod.DiffUtils` repository contains `Icod.DiffUtils.Shared`, `cmp`, `diff`, `diff3`, `sdiff`, all five dedicated test projects, its own solution, documentation, and CI. CoreUtils removal was deliberately staged: DiffUtils tests first, then the four executable projects, then `Icod.DiffUtils.Shared`.
-
-- [x] Extract Shared, four commands, five test projects, fixtures, and history.
-- [x] Convert cross-suite dependencies to published neutral foundation packages.
-- [x] Preserve internal repository-local project references to `Icod.DiffUtils.Shared`.
-- [x] Provide independent repository CI for Windows, Ubuntu, and macOS.
-- [x] Preserve Patch and Ed interoperability as a textual-format boundary rather than a runtime DiffUtils dependency.
-- [x] Remove the five DiffUtils test projects from CoreUtils and clean their solution wiring.
-- [x] Remove `cmp`, `diff`, `diff3`, and `sdiff` from CoreUtils and clean their solution wiring.
-- [x] Remove `Icod.DiffUtils.Shared` from CoreUtils last, after no in-tree consumers remain.
-- [x] Validate the CoreUtils working branch after each removal stage.
-
-**Exit criterion met:** no DiffUtils-specific source, test project, or solution entry remains in CoreUtils; the authoritative implementation lives at <https://github.com/uniblab/Icod.DiffUtils>.
-
-## G7 — Extract Icod.LineEditor — COMPLETE
-
-**Closure checkpoint (2026-08-23):** `Icod.LineEditor` is an independent repository containing `Icod.LineEditor.Ed.Shared`, `ed`, `red`, `sed`, their four dedicated test projects, its own solution, documentation, licensing, and published-neutral dependencies. PR #2 passed the independent Staging clean/restore/build/test matrix on Windows, Ubuntu, and macOS. CoreUtils removal was staged as tests first, then the four production projects, then the migrated root-level LineEditor documents.
-
-- [x] Extract Ed.Shared, Ed, Red, Sed, all tests, fixtures, and history.
-- [x] Convert cross-suite dependencies to published Framework packages.
-- [x] Preserve Ed/Red → Ed.Shared repository-local project references.
-- [x] Keep Sed separate.
-- [x] Confirm no general LineEditor Shared project is introduced.
-- [x] Run independent Windows/Ubuntu/macOS CI.
-- [x] Remove all LineEditor production/test projects and solution wiring from CoreUtils.
-- [x] Remove migrated LineEditor-specific root documentation from CoreUtils.
-
-**Exit criterion met:** LineEditor is fully independent of CoreUtils, and future LineEditor work belongs exclusively in <https://github.com/uniblab/Icod.LineEditor>.
-
-## G8 — Extract Icod.Patch — COMPLETE
-
-**Closure checkpoint (2026-08-23):** `Icod.Patch` is an independent repository containing the production implementation, complete dedicated test/fixture corpus, standalone solution, documentation, published `Icod.CommandFramework` 1.1.0 and `Icod.Path` 1.0.0 dependencies, no runtime Diffutils dependency, and independent Windows/Ubuntu/macOS CI configuration. CoreUtils removal was deliberately staged: Patch tests first, then the 31-file production tree together with the Patch solution folder/project wiring, configuration mappings, and nesting entry.
-- [x] Extract Patch and its complete fixture/test corpus.
-- [x] Use published `Icod.Path`.
-- [x] Use published `Icod.CommandFramework`.
-- [x] Verify no runtime Diffutils dependency.
-- [x] Re-run all security, canonical-path, race, metadata, transaction, fuzz, offset, reversal, backup, reject, and compatibility tests.
-- [x] Run independent CI.
-- [x] Remove Patch tests, production source, and solution wiring from CoreUtils after validating the standalone repository.
-
-**Exit criterion met:** Patch is fully independent of CoreUtils, and future Patch work belongs exclusively in <https://github.com/uniblab/Icod.Patch>.
-
-## G9 — Final CoreUtils cleanup — COMPLETE
-
-### G9A — Repository hygiene and documentation truth
-
-- [x] Treat the repository `.editorconfig` as the authoritative text-format and C# formatting policy.
-- [x] Align contributor guidance and active Gate G documentation with the authoritative `.editorconfig`.
-- [x] Update the upstream-version ledger so completed/extracted batches are no longer described as merely planned.
-- [x] Retain extracted-suite batch documents as historical implementation records without treating them as live source ownership.
-- [x] Continue with G9B mechanical architecture/dependency audit and reconcile any remaining superseded inventory text against its final evidence.
-
-### G9B — Mechanical architecture and dependency audit
-
-**Audit checkpoint (2026-08-27, `Gate_G9` commit `ee02c2ad858a1048908c82a09f3e980dd227f877`):**
-
-- [x] The live solution contains no extracted sibling-suite project entries.
-- [x] The recursive repository tree contains no extracted sibling-suite source, project, or test paths.
-- [x] No production CoreUtils project references an extracted sibling suite.
-- [x] `Icod.CoreUtils.Shared` is non-packable and remains a same-repository `ProjectReference` dependency.
-- [x] No CoreUtils project uses `PackageReference Include="Icod.CoreUtils.Shared"`.
-- [x] Published external Icod dependencies are neutral packages: `Icod.CommandFramework` 1.1.0, `Icod.Path` 1.0.0, and direct `Icod.Timing` 1.0.0 where required.
-- [x] PR and `main` workflows target only `Icod.CoreUtils.sln` and retain the required Windows/Ubuntu/macOS matrix.
-- [x] Perform the final all-project output-path/collision-rule sweep locally during G9C.
-- [x] Reconcile any remaining stale roadmap inventory text exposed by the G9C validation sweep.
-
-- [x] Remove all successfully extracted suite projects from `Icod.CoreUtils.sln`.
-- [x] Remove corresponding source/test directories from the CoreUtils repository.
-- [x] Remove temporary output-path collision rules.
-  - The historical collision rule used suite-specific output directories only while sibling suites with colliding executable names were co-resident.
-  - The surviving common CoreUtils `..\bin\$(Configuration)\` output root is the suite's aggregate command-output layout and is retained.
-- [x] Remove obsolete solution folders.
-- [x] Remove stale CI references.
-- [x] Remove stale sibling-suite packaging references.
-- [x] Remove stale roadmap inventory text.
-- [x] Confirm no production CoreUtils project references a sibling suite.
-- [x] Confirm every CoreUtils **external** dependency is a published neutral package and that `Icod.CoreUtils.Shared` remains a same-repository project dependency.
-- [x] Confirm no CoreUtils project uses a package reference to `Icod.CoreUtils.Shared`.
-- [x] Run complete Debug/Staging/Release build.
-- [x] Run Windows/Ubuntu/macOS CI.
-- [x] Verify clean checkout package restore.
-- [x] Verify repository text-format policy against the authoritative `.editorconfig`.
-- [x] Freeze final Gate G dependency graph.
-
-**G9B exit state:** the repository/project/package boundary is mechanically consistent with the completed extractions.
-
-### G9C — Closure validation
-
-**Mechanical-preparation checkpoint (2026-08-27, `Gate_G9` commit `246b10281a2a374f94e0b01440296eec090f330a`):**
-
-- [x] Complete the all-project output-path sweep and distinguish the retained common CoreUtils aggregate output root from obsolete sibling-suite collision directories.
-- [x] Correct the stale G2 current-dependency ledger from `Icod.CommandFramework` 1.0.0 to 1.1.0.
-- [x] Allow the local build entry points to select `Debug`, `Staging`, or `Release`, while preserving `Debug` as the default.
-- [x] Execute clean restore plus build/test validation for Debug, Staging, and Release.
-- [x] Run required Windows/Ubuntu/macOS CI validation.
-- [x] Verify repository text-format policy against `.editorconfig`.
-- [x] Freeze the final Gate G dependency graph after execution validation is green.
-
-**Execution-validation checkpoint (2026-08-27):** PR #169 temporarily expanded `pr-build-and-test` to a 3×3 configuration/platform matrix. GitHub Actions run `33041738820` completed successfully for Debug, Staging, and Release on `windows-latest`, `ubuntu-latest`, and `macos-latest`; every job performed checkout, clean, restore, build, and test successfully. After recording this Gate G evidence, the steady-state CI policy returns to Staging-only PR validation and Release-only `main` push validation. Neither workflow publishes packages at this stage.
-
-**Steady-state CI checkpoint (2026-08-27):** after restoring the normal Staging-only pull-request workflow, GitHub Actions run `33042244708` completed successfully on `windows-latest`, `ubuntu-latest`, and `macos-latest`.
-
-**Text-format checkpoint (2026-08-27):** the repository `.editorconfig` is the single authoritative text-format policy. Active guidance now consistently records UTF-8, CRLF line endings, and no required final newline, while preserved historical validation notes no longer assert the retired LF repository policy. Command/runtime newline semantics such as `Environment.NewLine`, preserved input separators, and protocol-specific LF remain behavioral concerns and are not changed by this repository-format decision.
-
-### Frozen Gate G dependency graph
-
-```text
-Icod.CoreUtils.<command>
-    └── ProjectReference → Icod.CoreUtils.Shared
-        where repository-local shared behavior is required
-
-Icod.CoreUtils.Timeout
-    ├── ProjectReference → Icod.CoreUtils.Shared
-    └── PackageReference → Icod.Timing 1.0.0
-
-Icod.CoreUtils.Shared
-    ├── PackageReference → Icod.CommandFramework 1.1.0
-    └── PackageReference → Icod.Path 1.0.0
-
-CoreUtils test projects
-    └── ProjectReference → repository-local production/test-host projects
-        with ordinary test-framework packages;
-        Timeout.Tests also references Icod.Timing 1.0.0
-```
-
-The graph has no production reference to an extracted sibling suite, no `PackageReference` to `Icod.CoreUtils.Shared`, and no circular cross-repository dependency. `Icod.CoreUtils.Shared` remains non-packable and repository-local; `Icod.CoreUtils.ProcessTestHost` remains test-only.
-
+__FILLER_233__
+__FILLER_234__
+__FILLER_235__
+__FILLER_236__
+__FILLER_237__
+__FILLER_238__
+__FILLER_239__
+__FILLER_240__
+__FILLER_241__
+__FILLER_242__
+__FILLER_243__
+__FILLER_244__
+__FILLER_245__
+__FILLER_246__
+__FILLER_247__
+__FILLER_248__
+__FILLER_249__
+__FILLER_250__
+__FILLER_251__
+__FILLER_252__
+__FILLER_253__
+__FILLER_254__
+__FILLER_255__
+__FILLER_256__
+__FILLER_257__
+__FILLER_258__
+__FILLER_259__
+__FILLER_260__
+__FILLER_261__
+__FILLER_262__
+__FILLER_263__
+__FILLER_264__
+__FILLER_265__
+__FILLER_266__
+__FILLER_267__
+__FILLER_268__
+__FILLER_269__
+__FILLER_270__
+__FILLER_271__
+__FILLER_272__
+__FILLER_273__
+__FILLER_274__
+__FILLER_275__
+__FILLER_276__
+__FILLER_277__
+__FILLER_278__
+__FILLER_279__
+__FILLER_280__
+__FILLER_281__
+__FILLER_282__
+__FILLER_283__
+__FILLER_284__
+__FILLER_285__
+__FILLER_286__
+__FILLER_287__
+__FILLER_288__
+__FILLER_289__
+__FILLER_290__
+__FILLER_291__
+__FILLER_292__
+__FILLER_293__
+__FILLER_294__
+__FILLER_295__
+__FILLER_296__
+__FILLER_297__
+__FILLER_298__
+__FILLER_299__
+__FILLER_300__
+__FILLER_301__
+__FILLER_302__
+__FILLER_303__
+__FILLER_304__
+__FILLER_305__
+__FILLER_306__
+__FILLER_307__
+__FILLER_308__
+__FILLER_309__
+__FILLER_310__
+__FILLER_311__
+__FILLER_312__
+__FILLER_313__
+__FILLER_314__
+__FILLER_315__
+__FILLER_316__
+__FILLER_317__
+__FILLER_318__
+__FILLER_319__
+__FILLER_320__
+__FILLER_321__
+__FILLER_322__
+__FILLER_323__
+__FILLER_324__
+__FILLER_325__
+__FILLER_326__
+__FILLER_327__
+__FILLER_328__
+__FILLER_329__
+__FILLER_330__
+__FILLER_331__
+__FILLER_332__
+__FILLER_333__
+__FILLER_334__
+__FILLER_335__
+__FILLER_336__
+__FILLER_337__
+__FILLER_338__
+__FILLER_339__
+__FILLER_340__
+__FILLER_341__
+__FILLER_342__
+__FILLER_343__
+__FILLER_344__
+__FILLER_345__
+__FILLER_346__
+__FILLER_347__
+__FILLER_348__
+__FILLER_349__
+__FILLER_350__
+__FILLER_351__
+__FILLER_352__
+__FILLER_353__
+__FILLER_354__
+__FILLER_355__
+__FILLER_356__
+__FILLER_357__
+__FILLER_358__
+__FILLER_359__
+__FILLER_360__
+__FILLER_361__
+__FILLER_362__
+__FILLER_363__
+__FILLER_364__
+__FILLER_365__
+__FILLER_366__
+__FILLER_367__
+__FILLER_368__
+__FILLER_369__
+__FILLER_370__
+__FILLER_371__
+__FILLER_372__
+__FILLER_373__
+__FILLER_374__
+__FILLER_375__
+__FILLER_376__
+__FILLER_377__
+__FILLER_378__
+__FILLER_379__
+__FILLER_380__
+__FILLER_381__
+__FILLER_382__
+__FILLER_383__
+__FILLER_384__
+__FILLER_385__
+__FILLER_386__
+__FILLER_387__
+__FILLER_388__
+__FILLER_389__
+__FILLER_390__
+__FILLER_391__
+__FILLER_392__
+__FILLER_393__
+__FILLER_394__
+__FILLER_395__
+__FILLER_396__
+__FILLER_397__
+__FILLER_398__
+__FILLER_399__
+__FILLER_400__
+__FILLER_401__
+__FILLER_402__
+__FILLER_403__
+__FILLER_404__
+__FILLER_405__
+__FILLER_406__
+__FILLER_407__
+__FILLER_408__
+__FILLER_409__
+__FILLER_410__
+__FILLER_411__
+__FILLER_412__
+__FILLER_413__
+__FILLER_414__
+__FILLER_415__
+__FILLER_416__
+__FILLER_417__
+__FILLER_418__
+__FILLER_419__
+__FILLER_420__
+__FILLER_421__
+__FILLER_422__
+__FILLER_423__
+__FILLER_424__
+__FILLER_425__
+__FILLER_426__
+__FILLER_427__
+__FILLER_428__
+__FILLER_429__
+__FILLER_430__
+__FILLER_431__
+__FILLER_432__
+__FILLER_433__
+__FILLER_434__
+__FILLER_435__
+__FILLER_436__
+__FILLER_437__
+__FILLER_438__
+__FILLER_439__
+__FILLER_440__
+__FILLER_441__
+__FILLER_442__
+__FILLER_443__
+__FILLER_444__
+__FILLER_445__
+__FILLER_446__
+__FILLER_447__
+__FILLER_448__
+__FILLER_449__
+__FILLER_450__
+__FILLER_451__
+__FILLER_452__
+__FILLER_453__
+__FILLER_454__
+__FILLER_455__
+__FILLER_456__
+__FILLER_457__
+__FILLER_458__
+__FILLER_459__
+__FILLER_460__
+__FILLER_461__
+__FILLER_462__
+__FILLER_463__
+__FILLER_464__
+__FILLER_465__
+__FILLER_466__
+__FILLER_467__
+__FILLER_468__
+__FILLER_469__
+__FILLER_470__
+__FILLER_471__
+__FILLER_472__
+__FILLER_473__
+__FILLER_474__
+__FILLER_475__
+__FILLER_476__
+__FILLER_477__
+__FILLER_478__
+__FILLER_479__
+__FILLER_480__
+__FILLER_481__
+__FILLER_482__
+__FILLER_483__
+__FILLER_484__
+__FILLER_485__
+__FILLER_486__
+__FILLER_487__
+__FILLER_488__
+__FILLER_489__
+__FILLER_490__
+__FILLER_491__
+__FILLER_492__
+__FILLER_493__
+__FILLER_494__
+__FILLER_495__
+__FILLER_496__
+__FILLER_497__
+__FILLER_498__
+__FILLER_499__
+__FILLER_500__
+__FILLER_501__
+__FILLER_502__
+__FILLER_503__
+__FILLER_504__
+__FILLER_505__
+__FILLER_506__
+__FILLER_507__
+__FILLER_508__
+__FILLER_509__
+__FILLER_510__
+__FILLER_511__
+__FILLER_512__
+__FILLER_513__
+__FILLER_514__
+__FILLER_515__
+__FILLER_516__
+__FILLER_517__
+__FILLER_518__
+__FILLER_519__
+__FILLER_520__
+__FILLER_521__
+__FILLER_522__
+__FILLER_523__
+__FILLER_524__
+__FILLER_525__
+__FILLER_526__
+__FILLER_527__
+__FILLER_528__
+__FILLER_529__
+__FILLER_530__
+__FILLER_531__
+__FILLER_532__
 **G9C exit criterion met:** execution validation, steady-state CI, repository-policy reconciliation, and dependency-graph freeze are complete.
 
 **G9 exit criterion met:** CoreUtils is cleanly separated from the extracted sibling suites and validated against its permanent repository/package boundaries. G10 architecture closure is next.
 
-## G10 — Architecture closure — ACTIVE
+## G10 — Architecture closure — COMPLETE
 
 ### G10A — Final architecture and migration record — COMPLETE
 
@@ -568,34 +570,38 @@ See `Icod.CoreUtils-G10B-Dependency-Audit.md` for the repository-by-repository p
 
 **G10B exit state:** every audited cross-repository production edge is a published neutral package edge; every production `ProjectReference` is repository-local; no command-suite runtime package cycle or neutral-foundation back-edge exists; the graph is acyclic; and current independent CI evidence is green.
 
-### G10C — Completion Gate G closure — NEXT
+### G10C — Completion Gate G closure — COMPLETE
 
-- [ ] Reconcile the final checklist against G10B evidence.
-- [ ] Record the final closure checkpoint in both roadmaps.
-- [ ] Tick Completion Gate G complete.
+- [x] Reconcile the final checklist against G10B evidence.
+- [x] Record the final closure checkpoint in both roadmaps.
+- [x] Tick Completion Gate G complete.
+
+**G10C / Completion Gate G closure checkpoint (2026-08-27):** the historical G0 inventory language and the final extraction checklist have been reconciled against the completed G3 through G9 work, the G10A architecture record, and the G10B repository-by-repository dependency/isolation evidence. Stale wording that assumed every extracted suite would consume the same neutral package has been replaced by the proven rule: cross-repository reuse flows through the published neutral owner, while suite engines remain repository-local. No unresolved source-tree, package-direction, cycle, CI-isolation, or CoreUtils cleanup blocker remains. Completion Gate G is complete.
 
 ---
 
 # C. Rule for Every Repository Extraction
 
+**G10C reconciliation:** the G4 through G9 extraction records establish the retained source, history, project identity, tests, documentation, configuration, release metadata, and repository-local engine boundaries; G10B supplies current independent CI and dependency-isolation evidence. Checklist items apply where the extracted repository actually has a suite-local Shared/engine project.
+
 Every extracted repository must retain:
 
-- [ ] relevant Git history;
-- [ ] source projects;
-- [ ] suite-specific Shared/engine projects;
-- [ ] all applicable tests and fixtures;
-- [ ] README/license/documentation;
-- [ ] `net10.0` and C# 13 configuration;
-- [ ] Debug/Staging/Release behavior;
-- [ ] warnings-as-errors Release policy;
-- [ ] lowercase executable assembly names;
-- [ ] PascalCase project/namespace conventions;
-- [ ] repository text-format policy as defined by that repository's authoritative `.editorconfig`;
-- [ ] Windows/Ubuntu/macOS CI;
-- [ ] deterministic package restore;
-- [ ] repository version/release metadata, with package metadata only for artifacts intentionally published as packages;
-- [ ] repository-local `ProjectReference` relationships for suite-specific Shared/engine libraries unless a separate package boundary is independently justified;
-- [ ] no references back into the old CoreUtils repository.
+- [x] relevant Git history;
+- [x] source projects;
+- [x] suite-specific Shared/engine projects;
+- [x] all applicable tests and fixtures;
+- [x] README/license/documentation;
+- [x] `net10.0` and C# 13 configuration;
+- [x] Debug/Staging/Release behavior;
+- [x] warnings-as-errors Release policy;
+- [x] lowercase executable assembly names;
+- [x] PascalCase project/namespace conventions;
+- [x] repository text-format policy as defined by that repository's authoritative `.editorconfig`;
+- [x] Windows/Ubuntu/macOS CI;
+- [x] deterministic package restore;
+- [x] repository version/release metadata, with package metadata only for artifacts intentionally published as packages;
+- [x] repository-local `ProjectReference` relationships for suite-specific Shared/engine libraries unless a separate package boundary is independently justified;
+- [x] no references back into the old CoreUtils repository.
 
 A migration is **not complete merely because the files have moved**. It is complete only when the extracted repository builds and tests independently from a clean checkout using published external dependency packages together with its own repository-local project references.
 
@@ -603,9 +609,9 @@ A suite-specific Shared/engine assembly does not become a separately published p
 
 ---
 
-# D. Immediate Next Work
+# D. Completion State
 
-Completion Gate G remains active. The completed extraction sequence is now:
+Completion Gate G is complete. The completed extraction sequence is:
 
 - [x] G4.1 — `Icod.UtilLinux`
 - [x] G4.2 — `Icod.Grep`
@@ -617,4 +623,4 @@ Completion Gate G remains active. The completed extraction sequence is now:
 
 These suites have been moved out of the live `Icod.CoreUtils` source/solution after successful extraction validation. Remaining feature work in an extracted suite is owned by that suite's repository and does not require reintroducing its source into CoreUtils.
 
-G9 and G10A/G10B are complete. The next engineering step is **G10C — Completion Gate G closure**: reconcile the final checklist against the recorded dependency/isolation evidence, update both roadmaps, and formally close Completion Gate G.
+G9 and G10A/G10B/G10C are complete. No Completion Gate G work remains. Subsequent CoreUtils work should be scoped as a new milestone, while extracted-suite feature work remains in each suite's dedicated repository.
