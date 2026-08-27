@@ -445,7 +445,7 @@ The terminal-oriented commands and deferred Batch 68 `top` are now ProcPs-reposi
 
 **Exit criterion met:** Patch is fully independent of CoreUtils, and future Patch work belongs exclusively in <https://github.com/uniblab/Icod.Patch>.
 
-## G9 — Final CoreUtils cleanup
+## G9 — Final CoreUtils cleanup — COMPLETE
 
 ### G9A — Repository hygiene and documentation truth
 
@@ -484,8 +484,8 @@ The terminal-oriented commands and deferred Batch 68 `top` are now ProcPs-reposi
 - [x] Run complete Debug/Staging/Release build.
 - [x] Run Windows/Ubuntu/macOS CI.
 - [x] Verify clean checkout package restore.
-- [ ] Verify repository text-format policy against the authoritative `.editorconfig`.
-- [ ] Freeze final Gate G dependency graph.
+- [x] Verify repository text-format policy against the authoritative `.editorconfig`.
+- [x] Freeze final Gate G dependency graph.
 
 **G9B exit state:** the repository/project/package boundary is mechanically consistent with the completed extractions.
 
@@ -498,12 +498,41 @@ The terminal-oriented commands and deferred Batch 68 `top` are now ProcPs-reposi
 - [x] Allow the local build entry points to select `Debug`, `Staging`, or `Release`, while preserving `Debug` as the default.
 - [x] Execute clean restore plus build/test validation for Debug, Staging, and Release.
 - [x] Run required Windows/Ubuntu/macOS CI validation.
-- [ ] Verify repository text-format policy against `.editorconfig`.
-- [ ] Freeze the final Gate G dependency graph after execution validation is green.
+- [x] Verify repository text-format policy against `.editorconfig`.
+- [x] Freeze the final Gate G dependency graph after execution validation is green.
 
 **Execution-validation checkpoint (2026-08-27):** PR #169 temporarily expanded `pr-build-and-test` to a 3×3 configuration/platform matrix. GitHub Actions run `33041738820` completed successfully for Debug, Staging, and Release on `windows-latest`, `ubuntu-latest`, and `macos-latest`; every job performed checkout, clean, restore, build, and test successfully. After recording this Gate G evidence, the steady-state CI policy returns to Staging-only PR validation and Release-only `main` push validation. Neither workflow publishes packages at this stage.
 
-G9C remains open only for repository text-format verification and the final Gate G dependency-graph freeze.
+**Steady-state CI checkpoint (2026-08-27):** after restoring the normal Staging-only pull-request workflow, GitHub Actions run `33042244708` completed successfully on `windows-latest`, `ubuntu-latest`, and `macos-latest`.
+
+**Text-format checkpoint (2026-08-27):** the repository `.editorconfig` is the single authoritative text-format policy. Active guidance now consistently records UTF-8, CRLF line endings, and no required final newline, while preserved historical validation notes no longer assert the retired LF repository policy. Command/runtime newline semantics such as `Environment.NewLine`, preserved input separators, and protocol-specific LF remain behavioral concerns and are not changed by this repository-format decision.
+
+### Frozen Gate G dependency graph
+
+```text
+Icod.CoreUtils.<command>
+    └── ProjectReference → Icod.CoreUtils.Shared
+        where repository-local shared behavior is required
+
+Icod.CoreUtils.Timeout
+    ├── ProjectReference → Icod.CoreUtils.Shared
+    └── PackageReference → Icod.Timing 1.0.0
+
+Icod.CoreUtils.Shared
+    ├── PackageReference → Icod.CommandFramework 1.1.0
+    └── PackageReference → Icod.Path 1.0.0
+
+CoreUtils test projects
+    └── ProjectReference → repository-local production/test-host projects
+        with ordinary test-framework packages;
+        Timeout.Tests also references Icod.Timing 1.0.0
+```
+
+The graph has no production reference to an extracted sibling suite, no `PackageReference` to `Icod.CoreUtils.Shared`, and no circular cross-repository dependency. `Icod.CoreUtils.Shared` remains non-packable and repository-local; `Icod.CoreUtils.ProcessTestHost` remains test-only.
+
+**G9C exit criterion met:** execution validation, steady-state CI, repository-policy reconciliation, and dependency-graph freeze are complete.
+
+**G9 exit criterion met:** CoreUtils is cleanly separated from the extracted sibling suites and validated against its permanent repository/package boundaries. G10 architecture closure is next.
 
 ## G10 — Architecture closure
 

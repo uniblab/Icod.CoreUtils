@@ -140,7 +140,7 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 | F3 | Completed | Terminal identification and terminal modes | `COREUTILS-9.11`; `PROCPS-4.0.6`; `POSIX-2024` |
 | F4 | Completed | Process execution, waiting, signals, priorities, clocks, and termination | `COREUTILS-9.11`; `UTIL-LINUX-2.42.2`; `PROCPS-4.0.6`; `POSIX-2024` |
 | P1 | Completed | ProcPs classification and provider foundation | `PROCPS-4.0.6`; `UTIL-LINUX-2.42.2` for excluded/owned process-control profiles |
-| G | Planned | Final API classification, package extraction, and repository split | All pinned suite authorities plus repository architecture policy |
+| G | In progress | Final API classification, package extraction, and repository split | All pinned suite authorities plus repository architecture policy |
 
 
 ## Batch 11 implementation record
@@ -293,7 +293,7 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 - **Intentional boundary:** C3 does not implement `cut`, `paste`, field splitting, the complete `tr` set-expression grammar, sorting, Grep, or Sed policy. It shares byte framing and syntax mechanics while leaving command semantics and final diagnostic wording to consumers.
 - **TAP/TPL and ownership:** naturally asynchronous stream reads, writes, and flushes accept cancellation tokens and use awaited BCL operations. Shared record helpers never dispose caller-owned streams and do not wrap CPU parsing in `Task.Run`.
 - **Documentation and tests:** every public, protected, or internal declaration has XML documentation; each multi-file source and test directory has a README; Shared tests characterize the old materializing record API and cover bounded segmentation, NUL records, final unterminated records, range normalization and errors, complements, delimiter cycles, multibyte matching, all escape profiles, malformed input, cancellation, and stream ownership.
-- **Validation status:** source structure, XML documentation presence, repository-relative placement, UTF-8/LF policy, project wildcard inclusion, and conformance-oriented cases were checked. A .NET SDK was unavailable in the implementation container, so `Shared.Tests` and the complete solution still require build/test validation on `windows-latest`, `ubuntu-latest`, and `macos-latest` before this record is changed to fully validated.
+- **Validation status:** source structure, XML documentation presence, repository-relative placement, the repository `.editorconfig` text-format policy, project wildcard inclusion, and conformance-oriented cases were checked. A .NET SDK was unavailable in the implementation container, so `Shared.Tests` and the complete solution still require build/test validation on `windows-latest`, `ubuntu-latest`, and `macos-latest` before this record is changed to fully validated.
 
 ## Batch 17 implementation record
 
@@ -311,7 +311,7 @@ The `hostname` command in this repository follows the traditional Linux net-tool
 - **TAP/TPL policy:** asynchronous stream opening, reading, output, help, version, usage, and diagnostics are awaited and cancellation-aware. Synchronous compatibility wrappers block only at the public boundary. Operand processing remains ordered and is not wrapped in `Task.Run` or parallelized.
 - **Intentional line-ending interpretation:** untouched input line endings are reproduced exactly. New fold boundaries use `Environment.NewLine`, following the repository's generated-output convention rather than forcing GNU's LF byte on Windows.
 - **Documentation and tests:** each command has command-level and source-directory documentation, class-level XML usage text, dedicated usage/help/version writers, XML documentation on every public, protected, or internal declaration, and a dedicated xUnit test project covering options, binary fidelity, Unicode widths, invalid input, operand boundaries, cancellation, ownership, and read/write failures.
-- **Validation status:** source structure, project and solution wiring, XML documentation presence, UTF-8/LF policy, and conformance-oriented state-machine cases were checked. A .NET SDK was unavailable in the implementation container, so the three dedicated test projects and complete solution still require build/test validation on `windows-latest`, `ubuntu-latest`, and `macos-latest` before the implementation record can be changed to fully validated.
+- **Validation status:** source structure, project and solution wiring, XML documentation presence, the repository `.editorconfig` text-format policy, and conformance-oriented state-machine cases were checked. A .NET SDK was unavailable in the implementation container, so the three dedicated test projects and complete solution still require build/test validation on `windows-latest`, `ubuntu-latest`, and `macos-latest` before the implementation record can be changed to fully validated.
 
 ## Batch 18 implementation record
 
