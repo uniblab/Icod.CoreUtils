@@ -90,40 +90,39 @@ During the co-resident phase:
 - tests and packaging identify the owning suite explicitly;
 - the final repository and packaging split resolves which commands may be installed together and how any aliases or umbrella distributions are composed.
 
-### Ultimate architecture
+### Frozen post-Gate-G architecture
 
-At the end of the implementation roadmap, Completion Gate G performs the final evidence-based classification and extraction. The deliberate pre-Batch-68 `Icod.ProcPs` migration is the sole early repository-extraction exception; Gate G later verifies that extracted suite against the final package boundaries.
+Completion Gate G performed the final evidence-based classification, extraction, and cross-repository verification. The resulting repository/package architecture is now frozen by `Icod.CoreUtils-Architecture-and-Migration.md` and the G10B dependency audit.
 
-The intended final architecture has three layers:
+The frozen architecture has three layers:
 
-1. **`Icod.CommandFramework`** — contracts demonstrated to be common across independent command suites;
-2. **suite-specific Shared libraries** — functionality shared only inside one upstream family, such as `Icod.CoreUtils.Shared`, `Icod.DiffUtils.Shared`, `Icod.LineEditor.Ed.Shared`, or `Icod.ProcPs.Shared`; a general `Icod.LineEditor.Shared` exists only if completed Ed and Sed implementations prove a cohesive residual family layer;
-3. **individual command projects** — thin command front ends over the applicable framework and suite engine.
+1. **published neutral foundations** — `Icod.CommandFramework`, `Icod.Path`, `Icod.Timing`, `Icod.Host`, `Icod.Processes`, `Icod.TermInfo`, `Icod.Terminal`, and `Icod.DCurses`;
+2. **repository-local suite Shared/engine libraries** — functionality shared only inside one upstream family, such as `Icod.CoreUtils.Shared`, `Icod.DiffUtils.Shared`, `Icod.LineEditor.Ed.Shared`, or `Icod.ProcPs.Shared`;
+3. **individual command projects** — command front ends over the applicable neutral foundations and repository-local suite engine.
 
-The final dependency direction is:
+The frozen dependency direction is:
 
 ```text
-Icod.CommandFramework
-        ↓
-Suite-specific Shared project, when required
-        ↓
-Command projects
+Published neutral package
+        ↓ PackageReference
+Repository-local Shared / engine, when required
+        ↓ ProjectReference
+Command project / repository-local router
 ```
 
-At Gate G closure:
+Gate G closed with:
 
-- `Icod.CommandFramework` is an independent solution, repository, and versioned NuGet package; Gate G may publish refreshed versions when newly approved command-neutral mechanisms are migrated into it;
-- `Icod.Path` remains an independent neutral package for canonical-path and pathname-indirection contracts;
-- `Icod.CoreUtils.Shared` remains permanently in the `Icod.CoreUtils` repository as the Coreutils/Fileutils/Textutils suite-local class library and is not independently published;
-- the sibling suite projects are separated into their own solutions and repositories;
-- cross-repository dependencies become versioned NuGet `PackageReference` entries to neutral published foundations;
-- project references remain appropriate within each extracted suite unless an additional package boundary is independently justified.
+- independently versioned neutral packages and command-suite repositories;
+- `Icod.CoreUtils.Shared` permanently retained in `Icod.CoreUtils` as a non-packable Coreutils/Fileutils/Textutils suite-local library;
+- sibling suite projects separated into their own solutions and repositories;
+- cross-repository production dependencies expressed only through published neutral `PackageReference` edges;
+- production `ProjectReference` edges remaining inside their owning repositories unless a repository independently establishes a package boundary.
 
 `Icod.CoreUtils` must not acquire permanent production dependencies on sibling command suites. Interoperability should normally occur through documented command-line behavior and textual formats. Unified diffs flow from `Icod.DiffUtils` to `Icod.Patch`, and ed scripts flow from `Icod.DiffUtils` to `Icod.LineEditor.Ed`, without requiring runtime references between their suite-specific Shared libraries.
 
 ### Icod.CommandFramework
 
-`Icod.CommandFramework` is the command-neutral host and command infrastructure foundation. Its responsibilities include:
+`Icod.CommandFramework` is the general command-neutral command infrastructure foundation. Its responsibilities include:
 
 - command contexts and injected standard streams;
 - common argument-processing foundations;
@@ -132,19 +131,17 @@ At Gate G closure:
 - high-performance cross-platform file I/O;
 - byte, text, record, delimiter, locale, and display-width abstractions;
 - secure temporary-object and workspace infrastructure;
-- general filesystem capability, traversal, metadata, current-process creation-mask observation, filesystem inode-pool observation, and host file-clone/reflink mechanisms;
-- host identity, processor-resource availability, affinity, quota, and provenance abstractions;
-- process identity, PID-reuse-aware targeting, process groups, sessions, lifetime, liveness, and waiting abstractions;
-- argument-safe process launch, environment construction, standard-stream forwarding, signal, priority, exit-status, and termination-reason abstractions;
-- monotonic clocks, cancellation-aware delay, periodic scheduling, terminal control, and platform-capability abstractions.
+- general filesystem capability, traversal, metadata, current-process creation-mask observation, filesystem inode-pool observation, and host file-clone/reflink mechanisms.
 
-An API belongs in `Icod.CommandFramework` when independent-suite consumption demonstrates a common contract **or** when it is intrinsically command-neutral host mechanism required by an already framework-owned abstraction. Suite-visible GNU policy remains above that boundary.
+Narrower command-neutral concerns are owned by the separately versioned `Icod.Path`, `Icod.Timing`, `Icod.Host`, `Icod.Processes`, `Icod.TermInfo`, `Icod.Terminal`, and `Icod.DCurses` repositories rather than being folded back into `Icod.CommandFramework`.
+
+An API belongs in a neutral foundation when independent-suite consumption demonstrates a command-neutral contract or mechanism. Suite-visible GNU policy remains above that boundary.
 
 ### Icod.CoreUtils.Shared
 
 `Icod.CoreUtils.Shared` remains after framework extraction as the permanent repository-local Coreutils/Fileutils/Textutils Shared library. Its purpose is narrower: behavior shared among those commands that is not a suitable command-neutral framework contract.
 
-The final G3 filesystem audit preserves GNU mode grammar, GNU copy/move reflink selection and overwrite behavior, GNU ownership handling, block-size conventions, `df`/`du` accounting and presentation, listing models, copy/move/install policy, and similar Coreutils-family engines here. Current-process creation-mask observation, inode-pool observation, and host file-clone execution move below this layer into `Icod.CommandFramework`. No additional `Icod.Path` migration is required.
+The final G3 filesystem audit preserves GNU mode grammar, GNU copy/move reflink selection and overwrite behavior, GNU ownership handling, block-size conventions, `df`/`du` accounting and presentation, listing models, copy/move/install policy, and similar Coreutils-family engines here. Current-process creation-mask observation, inode-pool observation, and host file-clone execution were moved below this layer into `Icod.CommandFramework`. No additional `Icod.Path` migration is required.
 
 The final dependency is:
 
@@ -163,29 +160,20 @@ Icod.CommandFramework
 - `Icod.Patch` owns patch parsing, hunk application, fuzz and offset matching, reversal detection, rejects, backups, and transactional application.
 - `Icod.LineEditor.Ed.Shared` owns Ed/Red address parsing, command parsing, mutable line buffers, marks, substitutions, global commands, undo, file operations, shell integration, and restricted-mode enforcement. `Icod.LineEditor.Ed` and `Icod.LineEditor.Red` are thin executable profiles over that one engine.
 - `Icod.LineEditor.Sed` owns Sed-specific script parsing, address and range state, pattern and hold spaces, branching, command-cycle behavior, substitutions, sandbox policy, and in-place-editing semantics.
-- A general `Icod.LineEditor.Shared` project is created only if completed Ed and Sed implementations demonstrate cohesive editor-family reuse that is neither cross-suite `Icod.CommandFramework` material nor specific to one engine. It must not be created merely to wrap the regular-expression, record, diagnostic, process, temporary, filesystem, or text APIs already incubating in the current Shared project.
+- The LE9 sharing audit rejected a general `Icod.LineEditor.Shared` layer. `Icod.LineEditor.Ed.Shared` remains the repository-local engine shared by Ed and Red, while Sed remains a separate execution engine.
 - `Icod.Tar` owns archive formats, entry models, sparse-file archive behavior, selection and exclusion rules, compression integration, and extraction security.
-- `Icod.UtilLinux.Kill` and `Icod.UtilLinux.Renice` own the pinned util-linux command profiles for signal delivery and reprioritizing existing processes. They consume the general process identity, target, signal, priority, clock, and status contracts from the current Shared incubation project. No `Icod.UtilLinux.Shared` project is planned unless later util-linux consumers demonstrate genuine suite-local reuse that does not belong in `Icod.CommandFramework`.
-- `Icod.ProcPs.Shared` owns procps-ng-specific process enumeration, Linux `/proc` parsing and equivalent observation providers, selection grammar, detailed snapshots, field definitions, sorting, personalities, terminal association, CPU and memory metric interpretation, kernel-data models, and full-screen process-tool support. It consumes rather than duplicates the general processor-resource, process-identity, target, launch, wait, signal, priority, clock, and terminal contracts incubated in the current Shared project.
+- `Icod.UtilLinux.Kill` and `Icod.UtilLinux.Renice` own the pinned util-linux command profiles for signal delivery and reprioritizing existing processes. Cross-repository mechanism is consumed only from published neutral foundations; no CoreUtils source-tree dependency remains.
+- `Icod.ProcPs.Shared` owns procps-ng-specific process enumeration, Linux `/proc` parsing and equivalent observation providers, selection grammar, detailed snapshots, field definitions, sorting, personalities, terminal association, CPU and memory metric interpretation, kernel-data models, and full-screen process-tool support. General process, timing, host, terminfo, terminal, and screen mechanism is supplied by published neutral foundations rather than by `Icod.CoreUtils.Shared`.
 
-### Co-resident suite incubation policy
+### Historical co-resident suite incubation policy
 
-Each non-Coreutils suite developed in this repository must:
+The co-resident incubation policy governed development before Completion Gate G and is no longer an active repository-layout rule. G10 supersedes it with the frozen architecture record:
 
-- use its final suite-correct project filename and namespace immediately;
-- preserve the lowercase executable assembly name;
-- live in a clearly identified suite directory and solution folder;
-- have command-specific and suite-Shared test projects;
-- reproduce the established `net10.0`, C# 13, Debug/Staging/Release, repository `.editorconfig` text-format, XML documentation, and three-runner CI policies;
-- use project references during co-resident development;
-- keep suite-specific state out of the general Shared incubation project;
-- do not create `Icod.LineEditor.Shared` as a prerequisite or use it to wrap APIs already supplied by the current Shared incubation project; create it only after the completed Sed and Ed engines leave a cohesive, evidence-based family-specific remainder;
-- consume existing cross-suite abstractions rather than recreating parallel regular-expression, record, diagnostic, process, temporary, filesystem, processor, signal, priority, waiting, timing, or terminal contracts inside a suite-specific Shared project;
-- classify every new shared API provisionally as cross-suite, Coreutils-specific, suite-specific, or command-local;
-- establish textual compatibility fixtures where public formats cross suite boundaries;
-- document output-path handling for duplicate executable names;
-- defer solution and repository extraction until Completion Gate G, except for the explicit early `Icod.ProcPs` extraction required before deferred Batch 68 (`Icod.ProcPs.Top`);
-- distinguish completion of an implementation batch from completion of the final repository/package split.
+- each extracted suite owns its source, tests, fixtures, solution, CI, release metadata, and repository-local engines;
+- cross-repository implementation reuse flows through published neutral packages;
+- production `ProjectReference` edges remain inside a repository;
+- suite-to-suite interoperability uses public command behavior and textual/file formats where possible;
+- extracted suite source must not be reintroduced into CoreUtils merely to continue that suite's feature work.
 
 ## Authoritative Source
 
@@ -214,8 +202,8 @@ Man7 pages are useful synopses and secondary references, but they must not repla
 - The completed batches established shared command-line, diagnostics, streaming, numeric, platform, identity, process, date/time, and block-I/O abstractions.
 - Batches 1 through 29 have dedicated command-specific tests, together with focused Shared tests for the infrastructure introduced by their completion gates.
 - The complete applicable solution remains subject to the required `windows-latest`, `ubuntu-latest`, and `macos-latest` build-and-test contract; completed batches must remain green on all three runners.
-- Source projects consistently reference `Shared` where common behavior is appropriate; that project currently incubates both future `Icod.CommandFramework` APIs and Coreutils-specific `Icod.CoreUtils.Shared` APIs while co-resident sibling suites supply additional real consumers.
-- `Icod.LineEditor.Sed` has already completed its project and namespace migration: it uses assembly name `sed`, root namespace and public command class `Icod.LineEditor.Sed.Command`, an asynchronous entry point, a dedicated test identity, and a project reference to the current Shared incubation project.
+- CoreUtils source projects reference `Icod.CoreUtils.Shared` only for repository-local Coreutils/Fileutils/Textutils behavior; cross-repository mechanism is consumed from published neutral packages.
+- Extracted sibling suites build and test in their own repositories, with repository-local suite engines and no production source-tree dependency back into CoreUtils.
 - Recent projects use asynchronous entry points, injected streams, cancellation, and provider abstractions more consistently than the original implementations.
 - Cross-platform test failures have exposed and corrected line-ending assumptions, test-vector defects, and native ABI assumptions that Windows- or Linux-only validation would have missed.
 
