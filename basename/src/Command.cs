@@ -75,45 +75,126 @@ public static class Command {
 		);
 		try {
 			var result = parser.Parse( args );
-			if ( await WriteParseErrorsAsync( result, context ).ConfigureAwait( false ) ) return CommandExitCodes.Failure;
-			if ( result.HasOption( "help" ) ) { await WriteHelpAsync( context ).ConfigureAwait( false ); return 0; }
-			if ( result.HasOption( "version" ) ) { await context.StandardOutput.WriteLineAsync( VERSION.AsMemory(), context.CancellationToken ).ConfigureAwait( false ); return 0; }
+			if ( await WriteParseErrorsAsync( result, context ).ConfigureAwait( false ) ) {
+				return CommandExitCodes.Failure;
+			}
+			if ( result.HasOption( "help" ) ) {
+				await WriteHelpAsync(
+					context
+				).ConfigureAwait( false );
+				return 0;
+			}
+			if ( result.HasOption( "version" ) ) {
+				await context.StandardOutput.WriteLineAsync(
+					VERSION.AsMemory(),
+					context.CancellationToken
+				).ConfigureAwait( false );
+				return 0;
+			}
+
 			var multiple = result.HasOption( "multiple" ) || result.HasOption( "suffix" );
 			var suffix = result.GetLastValue( "suffix" );
-			if ( result.Operands.Count == 0 ) return await UsageErrorAsync( context, "missing operand" ).ConfigureAwait( false );
-			if ( !multiple && result.Operands.Count > 2 ) return await UsageErrorAsync( context, $"extra operand '{result.Operands[2]}'" ).ConfigureAwait( false );
-			var names = multiple ? result.Operands : result.Operands.Take( 1 ).ToArray();
-			if ( !multiple && result.Operands.Count == 2 ) suffix = result.Operands[1];
+			if ( 0 == result.Operands.Count ) {
+				return await UsageErrorAsync(
+					context,
+					"missing operand"
+				).ConfigureAwait( false );
+			}
+			if ( !multiple && 2 < result.Operands.Count ) {
+				return await UsageErrorAsync(
+					context,
+					$"extra operand '{result.Operands[ 2 ]}'"
+				).ConfigureAwait( false );
+			}
+
+			var names = ( multiple )
+				? result.Operands
+				: result.Operands.Take( 1 ).ToArray()
+			;
+			if ( !multiple && 2 == result.Operands.Count ) {
+				suffix = result.Operands[ 1 ];
+			}
+
 			var zero = result.HasOption( "zero" );
 			foreach ( var name in names ) {
 				context.CancellationToken.ThrowIfCancellationRequested();
 				var value = GetBaseName( name );
-				if ( !string.IsNullOrEmpty( suffix ) && suffix.Length < value.Length && value.EndsWith( suffix, StringComparison.Ordinal ) ) value = value[..^suffix.Length];
+				if (
+					!string.IsNullOrEmpty( suffix )
+					&& suffix.Length < value.Length
+					&& value.EndsWith(
+						suffix,
+						StringComparison.Ordinal
+					)
+				) {
+					value = value[ ..^suffix.Length ];
+				}
 				if ( zero ) {
-					await context.StandardOutput.WriteAsync( value.AsMemory(), context.CancellationToken ).ConfigureAwait( false );
-					await context.StandardOutput.WriteAsync( "\0".AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+					await context.StandardOutput.WriteAsync(
+						value.AsMemory(),
+						context.CancellationToken
+					).ConfigureAwait( false );
+					await context.StandardOutput.WriteAsync(
+						"\0".AsMemory(),
+						context.CancellationToken
+					).ConfigureAwait( false );
 				} else {
-					await context.StandardOutput.WriteLineAsync( value.AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+					await context.StandardOutput.WriteLineAsync(
+						value.AsMemory(),
+						context.CancellationToken
+					).ConfigureAwait( false );
 				}
 			}
 			return 0;
-		} catch ( OperationCanceledException ) { return CommandExitCodes.Canceled; }
-		catch ( Exception ex ) when ( ex is IOException or UnauthorizedAccessException ) { await context.Diagnostics.ErrorAsync( ex.Message ).ConfigureAwait( false ); return 1; }
+		} catch ( OperationCanceledException ) {
+			return CommandExitCodes.Canceled;
+		} catch ( Exception ex ) when ( ex is IOException or UnauthorizedAccessException ) {
+			await context.Diagnostics.ErrorAsync(
+				ex.Message
+			).ConfigureAwait( false );
+			return 1;
+		}
 	}
+
 	/// <summary>
 	/// Removes trailing separators and directory components from one pathname operand.
 	/// </summary>
 	/// <param name="name">The pathname operand to reduce.</param>
 	/// <returns>The final pathname component, with root operands preserved according to GNU behavior.</returns>
 	internal static string GetBaseName( string name ) {
-		if ( name.Length == 0 ) return string.Empty;
+		if ( 0 == name.Length ) {
+			return string.Empty;
+		}
+
 		var end = name.Length - 1;
-		while ( end >= 0 && name[end] == '/' ) end--;
-		if ( end < 0 ) return "/";
-		var start = name.LastIndexOf( '/', end );
-		return name.Substring( start + 1, end - start );
+		while ( 0 <= end && '/' == name[ end ] ) {
+			end--;
+		}
+		if ( 0 > end ) {
+			return "/";
+		}
+
+		var start = name.LastIndexOf(
+			'/',
+			end
+		);
+		return name.Substring(
+			start + 1,
+			end - start
+		);
 	}
-	private static async Task<int> UsageErrorAsync( CommandContext c, string message ) { await c.Diagnostics.ErrorAsync( message, c.CancellationToken ).ConfigureAwait( false ); return 1; }
+
+	private static async Task<int> UsageErrorAsync(
+		CommandContext context,
+		string message
+	) {
+		await context.Diagnostics.ErrorAsync(
+			message,
+			context.CancellationToken
+		).ConfigureAwait( false );
+		return 1;
+	}
+
 	private static async Task WriteHelpAsync( CommandContext context ) {
 		const string text = """
 Usage: basename NAME [SUFFIX]
@@ -131,6 +212,7 @@ Print NAME with any leading directory components removed.
 			context.CancellationToken
 		).ConfigureAwait( false );
 	}
+
 	private static OptionParser CreateParser( params OptionDefinition[] options ) => new(
 		options,
 		new OptionParserSettings {
@@ -138,8 +220,11 @@ Print NAME with any leading directory components removed.
 			Ordering = OptionOrdering.Permute
 		}
 	);
+
 	private static async Task<bool> WriteParseErrorsAsync( OptionParseResult result, CommandContext context ) {
-		if ( result.IsSuccess ) return false;
+		if ( result.IsSuccess ) {
+			return false;
+		}
 		foreach ( var error in result.Errors ) {
 			await context.StandardError.WriteLineAsync(
 				OptionDiagnosticFormatter.Format( context.ProgramName, error ).AsMemory(),

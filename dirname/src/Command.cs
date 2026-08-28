@@ -73,40 +73,95 @@ public static class Command {
 		);
 		try {
 			var result = parser.Parse( args );
-			if ( await WriteParseErrorsAsync( result, context ).ConfigureAwait( false ) ) return 1;
-			if ( result.HasOption( "help" ) ) { await WriteHelpAsync( context ).ConfigureAwait( false ); return 0; }
-			if ( result.HasOption( "version" ) ) { await context.StandardOutput.WriteLineAsync( VERSION.AsMemory(), context.CancellationToken ).ConfigureAwait( false ); return 0; }
-			if ( result.Operands.Count == 0 ) { await context.Diagnostics.ErrorAsync( "missing operand", context.CancellationToken ).ConfigureAwait( false ); return 1; }
+			if ( await WriteParseErrorsAsync( result, context ).ConfigureAwait( false ) ) {
+				return 1;
+			}
+			if ( result.HasOption( "help" ) ) {
+				await WriteHelpAsync(
+					context
+				).ConfigureAwait( false );
+				return 0;
+			}
+			if ( result.HasOption( "version" ) ) {
+				await context.StandardOutput.WriteLineAsync(
+					VERSION.AsMemory(),
+					context.CancellationToken
+				).ConfigureAwait( false );
+				return 0;
+			}
+			if ( 0 == result.Operands.Count ) {
+				await context.Diagnostics.ErrorAsync(
+					"missing operand",
+					context.CancellationToken
+				).ConfigureAwait( false );
+				return 1;
+			}
+
 			var zero = result.HasOption( "zero" );
 			foreach ( var operand in result.Operands ) {
 				context.CancellationToken.ThrowIfCancellationRequested();
 				var value = GetDirName( operand );
 				if ( zero ) {
-					await context.StandardOutput.WriteAsync( value.AsMemory(), context.CancellationToken ).ConfigureAwait( false );
-					await context.StandardOutput.WriteAsync( "\0".AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+					await context.StandardOutput.WriteAsync(
+						value.AsMemory(),
+						context.CancellationToken
+					).ConfigureAwait( false );
+					await context.StandardOutput.WriteAsync(
+						"\0".AsMemory(),
+						context.CancellationToken
+					).ConfigureAwait( false );
 				} else {
-					await context.StandardOutput.WriteLineAsync( value.AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+					await context.StandardOutput.WriteLineAsync(
+						value.AsMemory(),
+						context.CancellationToken
+					).ConfigureAwait( false );
 				}
 			}
 			return 0;
-		} catch ( OperationCanceledException ) { return CommandExitCodes.Canceled; }
+		} catch ( OperationCanceledException ) {
+			return CommandExitCodes.Canceled;
+		}
 	}
+
 	/// <summary>
 	/// Removes the final component from one pathname operand without accessing the filesystem.
 	/// </summary>
 	/// <param name="name">The pathname operand to reduce.</param>
 	/// <returns>The directory portion, or <c>.</c> when the operand contains no directory component.</returns>
 	internal static string GetDirName( string name ) {
-		if ( name.Length == 0 ) return ".";
+		if ( 0 == name.Length ) {
+			return ".";
+		}
+
 		var end = name.Length - 1;
-		while ( end >= 0 && name[end] == '/' ) end--;
-		if ( end < 0 ) return "/";
-		var slash = name.LastIndexOf( '/', end );
-		if ( slash < 0 ) return ".";
+		while ( 0 <= end && '/' == name[ end ] ) {
+			end--;
+		}
+		if ( 0 > end ) {
+			return "/";
+		}
+
+		var slash = name.LastIndexOf(
+			'/',
+			end
+		);
+		if ( 0 > slash ) {
+			return ".";
+		}
+
 		var directoryEnd = slash;
-		while ( directoryEnd > 0 && name[directoryEnd - 1] == '/' ) directoryEnd--;
-		return directoryEnd == 0 ? "/" : name[..directoryEnd];
+		while (
+			0 < directoryEnd
+			&& '/' == name[ directoryEnd - 1 ]
+		) {
+			directoryEnd--;
+		}
+		return ( 0 == directoryEnd )
+			? "/"
+			: name[ ..directoryEnd ]
+		;
 	}
+
 	private static async Task WriteHelpAsync( CommandContext context ) {
 		const string text = """
 Usage: dirname [OPTION] NAME...
@@ -121,6 +176,7 @@ Output each NAME with its last non-slash component and trailing slashes removed.
 			context.CancellationToken
 		).ConfigureAwait( false );
 	}
+
 	private static OptionParser CreateParser( params OptionDefinition[] options ) => new(
 		options,
 		new OptionParserSettings {
@@ -128,8 +184,11 @@ Output each NAME with its last non-slash component and trailing slashes removed.
 			Ordering = OptionOrdering.Permute
 		}
 	);
+
 	private static async Task<bool> WriteParseErrorsAsync( OptionParseResult result, CommandContext context ) {
-		if ( result.IsSuccess ) return false;
+		if ( result.IsSuccess ) {
+			return false;
+		}
 		foreach ( var error in result.Errors ) {
 			await context.StandardError.WriteLineAsync(
 				OptionDiagnosticFormatter.Format( context.ProgramName, error ).AsMemory(),
