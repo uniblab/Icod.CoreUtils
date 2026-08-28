@@ -26,5 +26,32 @@ public static class Program {
 	/// <summary>Runs the command asynchronously.</summary>
 	/// <param name="args">The command-line arguments.</param>
 	/// <returns>The process exit code.</returns>
-	public static Task<int> Main( string[] args ) => Command.RunAsync( args );
+	public static async Task<int> Main(
+		string[] args
+	) {
+		ArgumentNullException.ThrowIfNull( args );
+
+		using var cancellation = new CancellationTokenSource();
+		ConsoleCancelEventHandler handler = (
+			object? sender,
+			ConsoleCancelEventArgs eventArgs
+		) => {
+			eventArgs.Cancel = true;
+			cancellation.Cancel();
+		};
+		Console.CancelKeyPress += handler;
+		try {
+			var binaryStdout = Console.OpenStandardOutput();
+			return await Command.RunAsync(
+				args,
+				stdin: Console.In,
+				stdout: Console.Out,
+				stderr: Console.Error,
+				cancellationToken: cancellation.Token,
+				binaryStdout: binaryStdout
+			).ConfigureAwait( false );
+		} finally {
+			Console.CancelKeyPress -= handler;
+		}
+	}
 }

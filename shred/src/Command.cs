@@ -9,13 +9,21 @@ public static class Command {
 	/// <param name="stdin">The standard-input reader. Binary standard input is not used by this command.</param>
 	/// <param name="stdout">The standard-output writer.</param>
 	/// <param name="stderr">The standard-error writer.</param>
+	/// <param name="binaryStdout">The binary standard-output stream used when <c>-</c> is an operand, or <see langword="null"/> to derive it from <paramref name="stdout"/> or the process standard output.</param>
 	/// <returns>The process exit code.</returns>
 	public static int Run(
 		string[] args,
 		TextReader? stdin = null,
 		TextWriter? stdout = null,
-		TextWriter? stderr = null
-	) => RunAsync( args, stdin, stdout, stderr ).GetAwaiter().GetResult();
+		TextWriter? stderr = null,
+		Stream? binaryStdout = null
+	) => RunAsync(
+		args,
+		stdin,
+		stdout,
+		stderr,
+		binaryStdout: binaryStdout
+	).GetAwaiter().GetResult();
 
 	/// <summary>Runs <c>shred</c> asynchronously.</summary>
 	/// <param name="args">The command-line arguments.</param>
@@ -23,13 +31,15 @@ public static class Command {
 	/// <param name="stdout">The standard-output writer.</param>
 	/// <param name="stderr">The standard-error writer.</param>
 	/// <param name="cancellationToken">A cancellation token.</param>
+	/// <param name="binaryStdout">The binary standard-output stream used when <c>-</c> is an operand, or <see langword="null"/> to derive it from <paramref name="stdout"/> or the process standard output.</param>
 	/// <returns>The process exit code.</returns>
 	public static async Task<int> RunAsync(
 		string[] args,
 		TextReader? stdin = null,
 		TextWriter? stdout = null,
 		TextWriter? stderr = null,
-		CancellationToken cancellationToken = default
+		CancellationToken cancellationToken = default,
+		Stream? binaryStdout = null
 	) {
 		ArgumentNullException.ThrowIfNull( args );
 		_ = stdin;
@@ -57,7 +67,7 @@ public static class Command {
 		Stream? binaryOutput = null;
 		if ( options.Targets.Contains( "-", StringComparer.Ordinal ) ) {
 			try {
-				binaryOutput = ResolveBinaryOutput( stdout );
+				binaryOutput = binaryStdout ?? ResolveBinaryOutput( stdout );
 			} catch ( Exception exception ) when ( exception is ShredUsageException
 				or IOException
 				or UnauthorizedAccessException
