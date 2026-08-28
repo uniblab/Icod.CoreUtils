@@ -30,10 +30,16 @@ public static class Program {
 	/// <summary>Runs the <c>mkdir</c> command.</summary>
 	/// <param name="args">The command-line arguments.</param>
 	/// <returns>The command exit status.</returns>
-	public static async Task<int> Main( string[] args ) {
+	public static async Task<int> Main(
+		string[] args
+	) {
 		ArgumentNullException.ThrowIfNull( args );
+
 		using var cancellation = new CancellationTokenSource();
-		ConsoleCancelEventHandler handler = ( _, eventArgs ) => {
+		ConsoleCancelEventHandler handler = (
+			object? sender,
+			ConsoleCancelEventArgs eventArgs
+		) => {
 			eventArgs.Cancel = true;
 			cancellation.Cancel();
 		};
@@ -41,9 +47,12 @@ public static class Program {
 		try {
 			return await Command.RunAsync(
 				args,
-				CommandContext.CreateConsole(
+				new CommandContext(
 					"mkdir",
-					cancellation.Token
+					TextReader.Null,
+					Console.Out,
+					Console.Error,
+					cancellationToken: cancellation.Token
 				)
 			).ConfigureAwait( false );
 		} finally {
