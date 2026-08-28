@@ -131,7 +131,9 @@ public static class Command {
 					FileSystemMutationPrecondition.DestinationMustNotExist(),
 					context.CancellationToken
 				).ConfigureAwait( false );
-				if ( result.Succeeded ) continue;
+				if ( result.Succeeded ) {
+					continue;
+				}
 
 				exitStatus = CommandExitCodes.Failure;
 				await context.StandardError.WriteLineAsync(
@@ -176,13 +178,16 @@ public static class Command {
 		}
 		var parsed = FileModeParser.Parse( modeText );
 		if ( !parsed.Succeeded || parsed.Expression is null ) {
-			var detail = string.IsNullOrEmpty( parsed.Message ) ? "invalid mode" : parsed.Message;
+			var detail = ( string.IsNullOrEmpty( parsed.Message ) )
+				? "invalid mode"
+				: parsed.Message
+			;
 			return ModeSelection.Failure(
 				string.Concat( "mkfifo: invalid mode ", Quote( modeText ), ": ", detail )
 			);
 		}
 		var mode = parsed.Expression.Apply( requestedMode, false, creationMask );
-		if ( (mode.Value & SpecialModeBits) != 0 ) {
+		if ( ( mode.Value & SpecialModeBits ) != 0 ) {
 			return ModeSelection.Failure( "mkfifo: mode must specify only file permission bits" );
 		}
 		return ModeSelection.Success( mode, FileCreationMask.None );
