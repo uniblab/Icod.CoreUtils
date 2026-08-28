@@ -22,7 +22,12 @@ public static class Command {
 		TextWriter? stdout = null,
 		TextWriter? stderr = null,
 		ITerminalControlProvider? provider = null
-	) => RunAsync( args, stdout, stderr, provider ).GetAwaiter().GetResult();
+	) => RunAsync(
+		args,
+		stdout,
+		stderr,
+		provider
+	).GetAwaiter().GetResult();
 
 	/// <summary>Runs <c>tty</c> asynchronously.</summary>
 	/// <param name="args">The command-line arguments.</param>
@@ -68,9 +73,17 @@ public static class Command {
 			cancellationToken.ThrowIfCancellationRequested();
 			result = provider.Observe( TerminalEndpoint.StandardInput );
 		} catch ( OperationCanceledException ) when ( cancellationToken.IsCancellationRequested ) {
-			return await WriteIndeterminateAsync( stderr, options.Silent, "operation canceled" ).ConfigureAwait( false );
+			return await WriteIndeterminateAsync(
+				stderr,
+				options.Silent,
+				"operation canceled"
+			).ConfigureAwait( false );
 		} catch ( Exception exception ) {
-			return await WriteIndeterminateAsync( stderr, options.Silent, exception.Message ).ConfigureAwait( false );
+			return await WriteIndeterminateAsync(
+				stderr,
+				options.Silent,
+				exception.Message
+			).ConfigureAwait( false );
 		}
 
 		if ( !result.IsAvailable ) {
@@ -117,8 +130,12 @@ public static class Command {
 
 	private static async Task<int> WriteUsageErrorAsync( TextWriter stderr, string message ) {
 		try {
-			await stderr.WriteLineAsync( string.Concat( "tty: ", message ) ).ConfigureAwait( false );
-			await stderr.WriteLineAsync( "Try 'tty --help' for more information." ).ConfigureAwait( false );
+			await stderr.WriteLineAsync(
+				string.Concat( "tty: ", message )
+			).ConfigureAwait( false );
+			await stderr.WriteLineAsync(
+				"Try 'tty --help' for more information."
+			).ConfigureAwait( false );
 		} catch ( Exception exception ) when ( IsWriteFailure( exception ) ) {
 			return WriteFailureExitCode;
 		}
@@ -134,7 +151,9 @@ public static class Command {
 			return IndeterminateExitCode;
 		}
 		try {
-			await stderr.WriteLineAsync( string.Concat( "tty: ", message ) ).ConfigureAwait( false );
+			await stderr.WriteLineAsync(
+				string.Concat( "tty: ", message )
+			).ConfigureAwait( false );
 		} catch ( Exception exception ) when ( IsWriteFailure( exception ) ) {
 			return WriteFailureExitCode;
 		}
@@ -190,9 +209,13 @@ public sealed record TtyOptions {
 				continue;
 			}
 			if ( parsingOptions && argument.StartsWith( '-' ) ) {
-				throw new TtyUsageException( string.Concat( "unrecognized option '", argument, "'" ) );
+				throw new TtyUsageException(
+					string.Concat( "unrecognized option '", argument, "'" )
+				);
 			}
-			throw new TtyUsageException( string.Concat( "extra operand '", argument, "'" ) );
+			throw new TtyUsageException(
+				string.Concat( "extra operand '", argument, "'" )
+			);
 		}
 		return new TtyOptions { Silent = silent, Help = help, Version = version };
 	}
