@@ -21,15 +21,20 @@
 
 namespace Icod.CoreUtils.MkTemp;
 
-using Icod.CommandFramework.Diagnostics;
 
 /// <summary>Provides the <c>mktemp</c> process entry point.</summary>
 public static class Program {
 	/// <summary>Runs <c>mktemp</c> against the process console streams.</summary>
-	public static async Task<int> Main( string[] args ) {
+	public static async Task<int> Main(
+		string[] args
+	) {
 		ArgumentNullException.ThrowIfNull( args );
+
 		using var cancellation = new CancellationTokenSource();
-		ConsoleCancelEventHandler handler = ( _, eventArgs ) => {
+		ConsoleCancelEventHandler handler = (
+			object? sender,
+			ConsoleCancelEventArgs eventArgs
+		) => {
 			eventArgs.Cancel = true;
 			cancellation.Cancel();
 		};
@@ -37,10 +42,9 @@ public static class Program {
 		try {
 			return await Command.RunAsync(
 				args,
-				CommandContext.CreateConsole(
-					"mktemp",
-					cancellation.Token
-				)
+				standardOutput: Console.Out,
+				standardError: Console.Error,
+				cancellationToken: cancellation.Token
 			).ConfigureAwait( false );
 		} finally {
 			Console.CancelKeyPress -= handler;

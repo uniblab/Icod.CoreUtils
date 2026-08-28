@@ -181,6 +181,22 @@ public sealed class CommandTests {
 		Assert.Equal( new byte[ 5 ], storage.ToArray() );
 	}
 
+	/// <summary>Verifies an explicit binary standard-output stream is independent of the text writer.</summary>
+	[Fact]
+	public async Task WritesToExplicitBinaryStandardOutput() {
+		using var output = new MemoryStream();
+
+		var exitCode = await Command.RunAsync(
+			[ "-x", "-n0", "-z", "-s5", "-" ],
+			stdout: new StringWriter(),
+			stderr: new StringWriter(),
+			binaryStdout: output
+		);
+
+		Assert.Equal( 0, exitCode );
+		Assert.Equal( new byte[ 5 ], output.ToArray() );
+	}
+
 	/// <summary>Verifies progress and removal reporting.</summary>
 	[Fact]
 	public async Task ReportsVerboseProgress() {

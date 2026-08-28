@@ -48,13 +48,17 @@ public static class Command {
 	/// <param name="stdout">The text writer to use as standard output, or <see langword="null"/> to use <see cref="Console.Out"/>.</param>
 	/// <param name="stderr">The text writer to use as standard error, or <see langword="null"/> to use <see cref="Console.Error"/>.</param>
 	/// <param name="cancellationToken">The token used to cancel parsing, platform queries, and asynchronous I/O.</param>
+	/// <param name="stdinStream">The binary standard-input stream, or <see langword="null"/> to derive input from <paramref name="stdin"/>.</param>
+	/// <param name="stdoutStream">The binary standard-output stream, or <see langword="null"/> to derive output from <paramref name="stdout"/>.</param>
 	/// <returns>The GNU-compatible process exit status: zero for successful command execution and nonzero for a usage or operational failure.</returns>
 	public static Task<int> RunAsync(
 		string[] args,
 		TextReader? stdin = null,
 		TextWriter? stdout = null,
 		TextWriter? stderr = null,
-		CancellationToken cancellationToken = default
+		CancellationToken cancellationToken = default,
+		Stream? stdinStream = null,
+		Stream? stdoutStream = null
 	) => RunAsync(
 		args ?? [],
 		new CommandContext(
@@ -62,6 +66,8 @@ public static class Command {
 			stdin ?? Console.In,
 			stdout ?? Console.Out,
 			stderr ?? Console.Error,
+			stdinStream,
+			stdoutStream,
 			cancellationToken: cancellationToken
 		)
 	);

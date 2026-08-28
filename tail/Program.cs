@@ -39,23 +39,27 @@ public static class Program {
 		string[] args
 	) {
 		ArgumentNullException.ThrowIfNull( args );
+
 		using var cancellation = new CancellationTokenSource();
 		ConsoleCancelEventHandler handler = (
-			sender,
-			eventArgs
+			object? sender,
+			ConsoleCancelEventArgs eventArgs
 		) => {
 			eventArgs.Cancel = true;
 			cancellation.Cancel();
 		};
 		Console.CancelKeyPress += handler;
+
 		try {
+			var binaryStdin = Console.OpenStandardInput();
+			var binaryStdout = Console.OpenStandardOutput();
 			return await Command.RunAsync(
 				args,
 				stdin: Console.In,
 				stdout: Console.Out,
 				stderr: Console.Error,
-				stdinStream: Console.OpenStandardInput(),
-				stdoutStream: Console.OpenStandardOutput(),
+				stdinStream: binaryStdin,
+				stdoutStream: binaryStdout,
 				cancellationToken: cancellation.Token
 			).ConfigureAwait( false );
 		} finally {

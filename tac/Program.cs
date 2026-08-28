@@ -21,28 +21,36 @@
 
 namespace Icod.CoreUtils.Tac;
 
-using Icod.CommandFramework.Diagnostics;
-
 /// <summary>Provides the <c>tac [OPTION]... [FILE]...</c> process entry point.</summary>
 public static class Program {
 	/// <summary>Runs the GNU-compatible reverse-record command.</summary>
 	/// <param name="args">The command-line arguments.</param>
 	/// <returns>A task whose result is the process exit status.</returns>
-	public static async Task<int> Main( string[] args ) {
+	public static async Task<int> Main(
+		string[] args
+	) {
 		ArgumentNullException.ThrowIfNull( args );
+
 		using var cancellation = new CancellationTokenSource();
-		ConsoleCancelEventHandler handler = ( _, eventArgs ) => {
+		ConsoleCancelEventHandler handler = (
+			object? sender,
+			ConsoleCancelEventArgs eventArgs
+		) => {
 			eventArgs.Cancel = true;
 			cancellation.Cancel();
 		};
 		Console.CancelKeyPress += handler;
 		try {
+			var binaryStdin = Console.OpenStandardInput();
+			var binaryStdout = Console.OpenStandardOutput();
 			return await Command.RunAsync(
 				args,
-				CommandContext.CreateConsole(
-					"tac",
-					cancellation.Token
-				)
+				standardInput: Console.In,
+				standardOutput: Console.Out,
+				standardError: Console.Error,
+				cancellationToken: cancellation.Token,
+				standardInputStream: binaryStdin,
+				standardOutputStream: binaryStdout
 			).ConfigureAwait( false );
 		} finally {
 			Console.CancelKeyPress -= handler;

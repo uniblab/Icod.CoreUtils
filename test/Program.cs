@@ -31,11 +31,34 @@ public static class Program {
 	/// <summary>Runs the <c>test</c> command.</summary>
 	/// <param name="args">The expression operands and operators.</param>
 	/// <returns>The command exit status.</returns>
-	public static async Task<int> Main( string[] args ) {
-		return await Command.RunAsync(
-			args,
-			CommandContext.CreateConsole( "test" )
-		).ConfigureAwait( false );
+	public static async Task<int> Main(
+		string[] args
+	) {
+		ArgumentNullException.ThrowIfNull( args );
+
+		using var cancellation = new CancellationTokenSource();
+		ConsoleCancelEventHandler handler = (
+			object? sender,
+			ConsoleCancelEventArgs eventArgs
+		) => {
+			eventArgs.Cancel = true;
+			cancellation.Cancel();
+		};
+		Console.CancelKeyPress += handler;
+		try {
+			return await Command.RunAsync(
+				args,
+				new CommandContext(
+					"test",
+					Console.In,
+					Console.Out,
+					Console.Error,
+					cancellationToken: cancellation.Token
+				)
+			).ConfigureAwait( false );
+		} finally {
+			Console.CancelKeyPress -= handler;
+		}
 	}
 
 	/// <summary>Writes the command usage text.</summary>

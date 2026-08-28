@@ -19,15 +19,19 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-using Icod.CommandFramework.Diagnostics;
-
 namespace Icod.CoreUtils.Truncate;
 
 internal static class Program {
-	public static async Task<int> Main( string[] args ) {
+	public static async Task<int> Main(
+		string[] args
+	) {
 		ArgumentNullException.ThrowIfNull( args );
+
 		using var cancellation = new CancellationTokenSource();
-		ConsoleCancelEventHandler handler = ( _, eventArgs ) => {
+		ConsoleCancelEventHandler handler = (
+			object? sender,
+			ConsoleCancelEventArgs eventArgs
+		) => {
 			eventArgs.Cancel = true;
 			cancellation.Cancel();
 		};
@@ -35,10 +39,10 @@ internal static class Program {
 		try {
 			return await Command.RunAsync(
 				args,
-				CommandContext.CreateConsole(
-					"truncate",
-					cancellation.Token
-				)
+				stdin: TextReader.Null,
+				stdout: Console.Out,
+				stderr: Console.Error,
+				cancellationToken: cancellation.Token
 			).ConfigureAwait( false );
 		} finally {
 			Console.CancelKeyPress -= handler;

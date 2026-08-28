@@ -1,8 +1,9 @@
 # Icod.CoreUtils Architecture and Migration Record
 
-**Status:** Completion Gate G — COMPLETE
-**Architecture checkpoint:** 2026-08-27
-**CoreUtils baseline:** `main` commit `26d3f4bd9f587eb7d7c32bff03f37fd69138779d`
+**Status:** Completion Gate G — COMPLETE; executable composition-root boundary — COMPLETE
+**Architecture checkpoint:** 2026-08-28
+**CoreUtils Gate G baseline:** `main` commit `26d3f4bd9f587eb7d7c32bff03f37fd69138779d`
+**Program-host refactor baseline:** `refactor` commit `9e7356535e9d366cced10d0f29543fc729ca5a87`
 
 ## Purpose
 
@@ -20,6 +21,25 @@ G10A records the intended final architecture. G10B supplied the repository-by-re
 6. A neutral foundation must not depend on a command suite.
 7. Repository and package versions are independent; the Icod ecosystem is not lockstep-versioned.
 8. A cross-repository `ProjectReference` or dependency on a neighboring checkout fails G10B.
+9. `Program.cs` owns the executable's operating-process boundary; `Command` owns command semantics and remains independently callable and testable.
+
+## Executable composition-root boundary
+
+The post-Gate-G executable-host refactor establishes a boundary orthogonal to repository and package ownership: `Program.cs` is the composition root where a command is attached to the current operating-system process, while `Command` owns the command itself.
+
+For executable hosts whose command contract depends on process resources, `Program.cs` is responsible for:
+
+- validating the process argument array before other work;
+- acquiring current-process standard resources in the representation required by the command;
+- translating Ctrl+C or other process-wide host events into the command's cancellation or signal contract;
+- installing and removing process-wide handlers with deterministic cleanup; and
+- delegating to `Command.RunAsync` with explicit resources and cancellation.
+
+`Command` is responsible for option and operand parsing, diagnostics, command execution policy, and exit-status semantics. It consumes caller-provided resources rather than reacquiring process-global resources when those resources are part of the invocation contract, remains reusable outside an executable process, and never disposes caller-owned standard streams or other borrowed resources.
+
+Standard-resource injection follows command semantics rather than a one-size-fits-all wrapper. Character-oriented commands receive text readers and writers; byte-preserving commands receive raw standard streams; mixed commands may receive both; and terminal or descriptor-control commands use the applicable provider when ordinary stream wrappers would lose required host identity.
+
+This rule does not require every `Program.cs` to have identical syntax. Commands with defining process-level behavior—such as signal forwarding, ignore-interrupt policy, terminal-descriptor identity, or native child standard-handle inheritance—retain explicit composition-root handling rather than being forced through generic Ctrl+C cancellation. Direct `CommandContext` construction in `Program.cs` is valid when it is the clearest way to inject the required process resources.
 
 ## Repository ownership
 

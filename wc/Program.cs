@@ -21,7 +21,6 @@
 
 namespace Icod.CoreUtils.WC;
 
-using Icod.CommandFramework.Diagnostics;
 
 /// <summary>
 /// Provides the executable entry point for the GNU-compatible <c>wc</c> command for counting lines, words, characters, and bytes.
@@ -37,10 +36,11 @@ public static class Program {
 		string[] args
 	) {
 		ArgumentNullException.ThrowIfNull( args );
+
 		using var cancellation = new CancellationTokenSource();
 		ConsoleCancelEventHandler handler = (
-			sender,
-			eventArgs
+			object? sender,
+			ConsoleCancelEventArgs eventArgs
 		) => {
 			eventArgs.Cancel = true;
 			cancellation.Cancel();
@@ -48,12 +48,14 @@ public static class Program {
 		Console.CancelKeyPress += handler;
 
 		try {
+			var binaryStdin = Console.OpenStandardInput();
 			return await Command.RunAsync(
 				args,
-				CommandContext.CreateConsole(
-					"wc",
-					cancellation.Token
-				)
+				stdin: Console.In,
+				stdout: Console.Out,
+				stderr: Console.Error,
+				stdinStream: binaryStdin,
+				cancellationToken: cancellation.Token
 			).ConfigureAwait( false );
 		} finally {
 			Console.CancelKeyPress -= handler;

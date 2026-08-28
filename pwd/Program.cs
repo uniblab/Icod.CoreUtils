@@ -29,10 +29,16 @@ public static class Program {
 	/// </summary>
 	/// <param name="args">The command-line arguments supplied to <c>pwd</c>.</param>
 	/// <returns>A task whose result is the command exit status.</returns>
-	public static async Task<int> Main( string[] args ) {
+	public static async Task<int> Main(
+		string[] args
+	) {
 		ArgumentNullException.ThrowIfNull( args );
+
 		using var cancellation = new CancellationTokenSource();
-		ConsoleCancelEventHandler handler = ( _, eventArgs ) => {
+		ConsoleCancelEventHandler handler = (
+			object? sender,
+			ConsoleCancelEventArgs eventArgs
+		) => {
 			eventArgs.Cancel = true;
 			cancellation.Cancel();
 		};
@@ -40,10 +46,10 @@ public static class Program {
 		try {
 			return await Command.RunAsync(
 				args,
-				Console.In,
-				Console.Out,
-				Console.Error,
-				cancellation.Token
+				stdin: Console.In,
+				stdout: Console.Out,
+				stderr: Console.Error,
+				cancellationToken: cancellation.Token
 			).ConfigureAwait( false );
 		} finally {
 			Console.CancelKeyPress -= handler;

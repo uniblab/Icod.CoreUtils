@@ -19,26 +19,34 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-using Icod.CommandFramework.Diagnostics;
-
 namespace Icod.CoreUtils.DD;
 
 internal static class Program {
-	public static async Task<int> Main( string[] args ) {
+	public static async Task<int> Main(
+		string[] args
+	) {
 		ArgumentNullException.ThrowIfNull( args );
+
 		using var cancellation = new CancellationTokenSource();
-		ConsoleCancelEventHandler handler = ( _, eventArgs ) => {
+		ConsoleCancelEventHandler handler = (
+			object? sender,
+			ConsoleCancelEventArgs eventArgs
+		) => {
 			eventArgs.Cancel = true;
 			cancellation.Cancel();
 		};
 		Console.CancelKeyPress += handler;
 		try {
+			var binaryStdin = Console.OpenStandardInput();
+			var binaryStdout = Console.OpenStandardOutput();
 			return await Command.RunAsync(
 				args,
-				CommandContext.CreateConsole(
-					"dd",
-					cancellation.Token
-				)
+				stdin: Console.In,
+				stdout: Console.Out,
+				stderr: Console.Error,
+				cancellationToken: cancellation.Token,
+				stdinStream: binaryStdin,
+				stdoutStream: binaryStdout
 			).ConfigureAwait( false );
 		} finally {
 			Console.CancelKeyPress -= handler;
