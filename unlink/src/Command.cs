@@ -138,7 +138,9 @@ public static class Command {
 				FileSystemMutationExistence.MustExist,
 				PathDereferenceMode.NoFollow,
 				metadata.Kind,
-				metadata.EntryIdentity.IsAvailable ? metadata.EntryIdentity : null,
+				( metadata.EntryIdentity.IsAvailable )
+					? metadata.EntryIdentity
+					: null,
 				rejectUncharacterizedIndirection: false
 			);
 			var result = await mutationProvider.RemoveFileAsync(
@@ -150,9 +152,10 @@ public static class Command {
 				return CommandExitCodes.Success;
 			}
 			await WriteFailureAsync( context, path, DescribeFailure( result ) ).ConfigureAwait( false );
-			return result.ErrorCode == FileSystemMutationErrorCode.Cancelled
+			return ( result.ErrorCode == FileSystemMutationErrorCode.Cancelled )
 				? CommandExitCodes.Canceled
-				: CommandExitCodes.Failure;
+				: CommandExitCodes.Failure
+			;
 		} catch ( OperationCanceledException ) when ( context.CancellationToken.IsCancellationRequested ) {
 			return CommandExitCodes.Canceled;
 		}
