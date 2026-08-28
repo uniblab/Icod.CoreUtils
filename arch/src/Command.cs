@@ -26,6 +26,7 @@ public static class Command {
 	/// <returns>The GNU-compatible process exit status: zero for successful command execution and nonzero for a usage or operational failure.</returns>
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) =>
 		RunAsync( args, stdin, stdout, stderr ).GetAwaiter().GetResult();
+
 	/// <summary>
 	/// Executes <c>arch</c> asynchronously with optional injected standard streams.
 	/// </summary>
@@ -67,11 +68,21 @@ public static class Command {
 	/// <exception cref="ArgumentNullException"><paramref name="context"/> is <see langword="null"/>.</exception>
 	public static async Task<int> RunAsync( string[] args, CommandContext context ) {
 		ArgumentNullException.ThrowIfNull( context );
-		var parser = CreateParser( new OptionDefinition( "help", longNames: new[] { "help" } ), new OptionDefinition( "version", longNames: new[] { "version" } ) );
+		var parser = CreateParser(
+			new OptionDefinition(
+				"help",
+				longNames: new[] { "help" }
+			),
+			new OptionDefinition(
+				"version",
+				longNames: new[] { "version" }
+			)
+		);
 		try {
 			var result = parser.Parse( args );
-			if ( await WriteParseErrorsAsync( result, context ).ConfigureAwait( false ) )
+			if ( await WriteParseErrorsAsync( result, context ).ConfigureAwait( false ) ) {
 				return 1;
+			}
 			if ( result.HasOption( "help" ) ) {
 				const string help = """
 Usage: arch [OPTION]...
@@ -87,18 +98,30 @@ Print machine architecture.
 				return 0;
 			}
 			if ( result.HasOption( "version" ) ) {
-				await context.StandardOutput.WriteLineAsync( VERSION.AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+				await context.StandardOutput.WriteLineAsync(
+					VERSION.AsMemory(),
+					context.CancellationToken
+				).ConfigureAwait( false );
 				return 0;
 			}
 			if ( result.Operands.Count > 0 ) {
-				await context.Diagnostics.ErrorAsync( $"extra operand '{result.Operands[ 0 ]}'", context.CancellationToken ).ConfigureAwait( false );
+				await context.Diagnostics.ErrorAsync(
+					$"extra operand '{result.Operands[ 0 ]}'",
+					context.CancellationToken
+				).ConfigureAwait( false );
 				return 1;
 			}
 			context.CancellationToken.ThrowIfCancellationRequested();
-			await context.StandardOutput.WriteLineAsync( GetArchitecture().AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+			await context.StandardOutput.WriteLineAsync(
+				GetArchitecture().AsMemory(),
+				context.CancellationToken
+			).ConfigureAwait( false );
 			return 0;
-		} catch ( OperationCanceledException ) { return CommandExitCodes.Canceled; }
+		} catch ( OperationCanceledException ) {
+			return CommandExitCodes.Canceled;
+		}
 	}
+
 	/// <summary>
 	/// Gets the GNU spelling for the current process architecture.
 	/// </summary>
@@ -125,8 +148,9 @@ Print machine architecture.
 		}
 	);
 	private static async Task<bool> WriteParseErrorsAsync( OptionParseResult result, CommandContext context ) {
-		if ( result.IsSuccess )
+		if ( result.IsSuccess ) {
 			return false;
+		}
 		foreach ( var error in result.Errors ) {
 			await context.StandardError.WriteLineAsync(
 				OptionDiagnosticFormatter.Format( context.ProgramName, error ).AsMemory(),
