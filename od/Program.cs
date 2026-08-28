@@ -30,12 +30,24 @@ public static class Program {
 	/// <summary>
 	/// Runs <c>od</c> against the process console streams.
 	/// </summary>
-	public static Task<int> Main(
-		string[] args
-	) {
-		return Command.RunAsync(
-			args,
-			CommandContext.CreateConsole( "od" )
-		);
+	public static async Task<int> Main( string[] args ) {
+		ArgumentNullException.ThrowIfNull( args );
+		using var cancellation = new CancellationTokenSource();
+		ConsoleCancelEventHandler handler = ( _, eventArgs ) => {
+			eventArgs.Cancel = true;
+			cancellation.Cancel();
+		};
+		Console.CancelKeyPress += handler;
+		try {
+			return await Command.RunAsync(
+				args,
+				CommandContext.CreateConsole(
+					"od",
+					cancellation.Token
+				)
+			).ConfigureAwait( false );
+		} finally {
+			Console.CancelKeyPress -= handler;
+		}
 	}
 }

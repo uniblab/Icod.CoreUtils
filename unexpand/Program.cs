@@ -28,7 +28,24 @@ public static class Program {
 	/// <summary>Runs <c>unexpand</c> against the process console streams.</summary>
 	/// <param name="args">The command-line arguments.</param>
 	/// <returns>A task whose result is the process exit status.</returns>
-	public static Task<int> Main( string[] args ) {
-		return Command.RunAsync( args, CommandContext.CreateConsole( "unexpand" ) );
+	public static async Task<int> Main( string[] args ) {
+		ArgumentNullException.ThrowIfNull( args );
+		using var cancellation = new CancellationTokenSource();
+		ConsoleCancelEventHandler handler = ( _, eventArgs ) => {
+			eventArgs.Cancel = true;
+			cancellation.Cancel();
+		};
+		Console.CancelKeyPress += handler;
+		try {
+			return await Command.RunAsync(
+				args,
+				CommandContext.CreateConsole(
+					"unexpand",
+					cancellation.Token
+				)
+			).ConfigureAwait( false );
+		} finally {
+			Console.CancelKeyPress -= handler;
+		}
 	}
 }

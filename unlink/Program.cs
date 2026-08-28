@@ -31,10 +31,24 @@ public static class Program {
 	/// <param name="args">The command-line arguments.</param>
 	/// <returns>The command exit status.</returns>
 	public static async Task<int> Main( string[] args ) {
-		return await Command.RunAsync(
-			args,
-			CommandContext.CreateConsole( "unlink" )
-		).ConfigureAwait( false );
+		ArgumentNullException.ThrowIfNull( args );
+		using var cancellation = new CancellationTokenSource();
+		ConsoleCancelEventHandler handler = ( _, eventArgs ) => {
+			eventArgs.Cancel = true;
+			cancellation.Cancel();
+		};
+		Console.CancelKeyPress += handler;
+		try {
+			return await Command.RunAsync(
+				args,
+				CommandContext.CreateConsole(
+					"unlink",
+					cancellation.Token
+				)
+			).ConfigureAwait( false );
+		} finally {
+			Console.CancelKeyPress -= handler;
+		}
 	}
 
 	/// <summary>Writes the command usage text.</summary>

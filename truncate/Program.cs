@@ -24,12 +24,24 @@ using Icod.CommandFramework.Diagnostics;
 namespace Icod.CoreUtils.Truncate;
 
 internal static class Program {
-	public static Task<int> Main(
-		string[] args
-	) => Command.RunAsync(
-		args,
-		CommandContext.CreateConsole(
-			"truncate"
-		)
-	);
+	public static async Task<int> Main( string[] args ) {
+		ArgumentNullException.ThrowIfNull( args );
+		using var cancellation = new CancellationTokenSource();
+		ConsoleCancelEventHandler handler = ( _, eventArgs ) => {
+			eventArgs.Cancel = true;
+			cancellation.Cancel();
+		};
+		Console.CancelKeyPress += handler;
+		try {
+			return await Command.RunAsync(
+				args,
+				CommandContext.CreateConsole(
+					"truncate",
+					cancellation.Token
+				)
+			).ConfigureAwait( false );
+		} finally {
+			Console.CancelKeyPress -= handler;
+		}
+	}
 }

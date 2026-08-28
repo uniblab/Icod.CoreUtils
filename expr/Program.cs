@@ -28,10 +28,24 @@ public static class Program {
 	/// <summary>Runs <c>expr</c> with the process console streams.</summary>
 	/// <param name="args">The expression tokens.</param>
 	/// <returns>The command exit status.</returns>
-	public static Task<int> Main( string[] args ) {
-		return Command.RunAsync(
-			args,
-			CommandContext.CreateConsole( "expr" )
-		);
+	public static async Task<int> Main( string[] args ) {
+		ArgumentNullException.ThrowIfNull( args );
+		using var cancellation = new CancellationTokenSource();
+		ConsoleCancelEventHandler handler = ( _, eventArgs ) => {
+			eventArgs.Cancel = true;
+			cancellation.Cancel();
+		};
+		Console.CancelKeyPress += handler;
+		try {
+			return await Command.RunAsync(
+				args,
+				CommandContext.CreateConsole(
+					"expr",
+					cancellation.Token
+				)
+			).ConfigureAwait( false );
+		} finally {
+			Console.CancelKeyPress -= handler;
+		}
 	}
 }
