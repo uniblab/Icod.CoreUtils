@@ -36,22 +36,28 @@ public static class Program {
 	public static async Task<int> Main(
 		string[] args
 	) {
+		ArgumentNullException.ThrowIfNull( args );
 		using var cancellation = new CancellationTokenSource();
-		Console.CancelKeyPress += (
+		ConsoleCancelEventHandler handler = (
 			sender,
 			eventArgs
 		) => {
 			eventArgs.Cancel = true;
 			cancellation.Cancel();
 		};
+		Console.CancelKeyPress += handler;
 
-		return await Command.RunAsync(
-			args,
-			CommandContext.CreateConsole(
-				"sha224sum",
-				cancellation.Token
-			)
-		).ConfigureAwait( false );
+		try {
+			return await Command.RunAsync(
+				args,
+				CommandContext.CreateConsole(
+					"sha224sum",
+					cancellation.Token
+				)
+			).ConfigureAwait( false );
+		} finally {
+			Console.CancelKeyPress -= handler;
+		}
 	}
 
 }
