@@ -27,6 +27,7 @@ public static class Program {
 	/// <param name="args">The command-line arguments supplied to <c>realpath</c>.</param>
 	/// <returns>A task whose result is the command exit status.</returns>
 	public static async Task<int> Main( string[] args ) {
+		ArgumentNullException.ThrowIfNull( args );
 		using var cancellation = new CancellationTokenSource();
 		ConsoleCancelEventHandler handler = ( _, eventArgs ) => {
 			eventArgs.Cancel = true;

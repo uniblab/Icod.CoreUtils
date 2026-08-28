@@ -21,10 +21,37 @@
 
 namespace Icod.CoreUtils.Chmod;
 
+using Icod.CommandFramework.Diagnostics;
+
 /// <summary>Provides the managed executable entry point for <c>chmod</c>.</summary>
 public static class Program {
 	/// <summary>Runs <c>chmod</c> with the process command-line arguments.</summary>
 	/// <param name="args">The command-line arguments.</param>
 	/// <returns>A task whose result is the command exit status.</returns>
-	public static Task<int> Main( string[] args ) => Command.RunAsync( args ).AsTask();
+	public static async Task<int> Main(
+		string[] args
+	) {
+		ArgumentNullException.ThrowIfNull( args );
+
+		using var cancellation = new CancellationTokenSource();
+		ConsoleCancelEventHandler handler = (
+			object? sender,
+			ConsoleCancelEventArgs eventArgs
+		) => {
+			eventArgs.Cancel = true;
+			cancellation.Cancel();
+		};
+		Console.CancelKeyPress += handler;
+		try {
+			return await Command.RunAsync(
+				args,
+				CommandContext.CreateConsole(
+					"chmod",
+					cancellation.Token
+				)
+			).ConfigureAwait( false );
+		} finally {
+			Console.CancelKeyPress -= handler;
+		}
+	}
 }

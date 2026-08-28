@@ -28,10 +28,24 @@ public static class Program {
 	/// <summary>Runs the command against the process standard streams.</summary>
 	/// <param name="args">The command-line arguments.</param>
 	/// <returns>A task whose result is the process status.</returns>
-	public static Task<int> Main( string[] args ) {
-		return Command.RunAsync(
-			args,
-			CommandContext.CreateConsole( "sort" )
-		);
+	public static async Task<int> Main( string[] args ) {
+		ArgumentNullException.ThrowIfNull( args );
+		using var cancellation = new CancellationTokenSource();
+		ConsoleCancelEventHandler handler = ( _, eventArgs ) => {
+			eventArgs.Cancel = true;
+			cancellation.Cancel();
+		};
+		Console.CancelKeyPress += handler;
+		try {
+			return await Command.RunAsync(
+				args,
+				CommandContext.CreateConsole(
+					"sort",
+					cancellation.Token
+				)
+			).ConfigureAwait( false );
+		} finally {
+			Console.CancelKeyPress -= handler;
+		}
 	}
 }

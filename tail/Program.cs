@@ -38,14 +38,17 @@ public static class Program {
 	public static async Task<int> Main(
 		string[] args
 	) {
-		using ( var cancellation = new CancellationTokenSource() ) {
-			Console.CancelKeyPress += (
-				sender,
-				eventArgs
-			) => {
-				eventArgs.Cancel = true;
-				cancellation.Cancel();
-			};
+		ArgumentNullException.ThrowIfNull( args );
+		using var cancellation = new CancellationTokenSource();
+		ConsoleCancelEventHandler handler = (
+			sender,
+			eventArgs
+		) => {
+			eventArgs.Cancel = true;
+			cancellation.Cancel();
+		};
+		Console.CancelKeyPress += handler;
+		try {
 			return await Command.RunAsync(
 				args,
 				stdin: Console.In,
@@ -55,6 +58,8 @@ public static class Program {
 				stdoutStream: Console.OpenStandardOutput(),
 				cancellationToken: cancellation.Token
 			).ConfigureAwait( false );
+		} finally {
+			Console.CancelKeyPress -= handler;
 		}
 	}
 

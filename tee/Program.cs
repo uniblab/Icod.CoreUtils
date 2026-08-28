@@ -36,11 +36,12 @@ public static class Program {
 	public static async Task<int> Main(
 		string[] args
 	) {
+		ArgumentNullException.ThrowIfNull( args );
 		using var cancellation = new CancellationTokenSource();
 		var ignoreInterrupts = Command.RequestsIgnoredInterrupts(
 			args
 		);
-		Console.CancelKeyPress += (
+		ConsoleCancelEventHandler handler = (
 			sender,
 			eventArgs
 		) => {
@@ -49,13 +50,18 @@ public static class Program {
 				cancellation.Cancel();
 			}
 		};
-		return await Command.RunAsync(
-			args,
-			CommandContext.CreateConsole(
-				"tee",
-				cancellation.Token
-			)
-		).ConfigureAwait( false );
+		Console.CancelKeyPress += handler;
+		try {
+			return await Command.RunAsync(
+				args,
+				CommandContext.CreateConsole(
+					"tee",
+					cancellation.Token
+				)
+			).ConfigureAwait( false );
+		} finally {
+			Console.CancelKeyPress -= handler;
+		}
 	}
 
 }

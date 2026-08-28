@@ -25,6 +25,7 @@ internal static class Program {
 	public static async Task<int> Main(
 		string[] args
 	) {
+		ArgumentNullException.ThrowIfNull( args );
 		using var cancellation = new CancellationTokenSource();
 		ConsoleCancelEventHandler handler = (
 			object? sender,
