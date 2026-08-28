@@ -1,4 +1,16 @@
-# mktemp
+# MKTEMP(1)
+
+## NAME
+
+**mktemp** — create a temporary file or directory
+
+## SYNOPSIS
+
+```text
+mktemp [OPTION]... [TEMPLATE]
+```
+
+## DESCRIPTION
 
 `mktemp` securely creates a unique temporary file or directory and writes its pathname to standard output.
 
@@ -14,7 +26,7 @@ The implementation follows GNU Coreutils 9.11 `mktemp` and supports:
 - deprecated `-t` semantics;
 - `--help`, `--version`, and the GNU-compatible `-V` version alias.
 
-## Security
+## SECURITY
 
 Names use the operating system cryptographic random generator and GNU's 62-character replacement alphabet. Regular files are created with exclusive create-new semantics; directories use native exclusive `mkdir` operations. Existing files, directories, and symbolic links are treated as collisions and are never replaced.
 
@@ -26,6 +38,22 @@ If standard output fails after an object is created, the command attempts to del
 
 Exit status is `0` for success, `1` for invalid invocation or operational failure, and `130` when canceled through the injected command context.
 
-## Platforms
+## PLATFORM NOTES
 
 The required CI platforms are Windows, Ubuntu, and macOS. FreeBSD uses its POSIX `mkdir` and `lstat` interfaces as **best effort** support and is not part of the required test matrix.
+
+## AUTHORS
+
+GNU `mktemp` was written by Jim Meyering and Eric Blake.
+
+Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+
+## COPYRIGHT
+
+Copyright (c) 2026 Timothy J. Bruce
+
+See the repository `LICENSE` file for licensing terms and notices applicable to this project.
+
+## SEE ALSO
+
+`mktemp(1)`, `mkdir(1)`, `touch(1)`
