@@ -44,7 +44,13 @@ public static class Command {
 		CancellationToken cancellationToken = default
 	) => RunAsync(
 		args ?? Array.Empty<string>(),
-		new CommandContext( ProgramName, stdin ?? Console.In, stdout ?? Console.Out, stderr ?? Console.Error, cancellationToken: cancellationToken )
+		new CommandContext(
+			ProgramName,
+			stdin ?? Console.In,
+			stdout ?? Console.Out,
+			stderr ?? Console.Error,
+			cancellationToken: cancellationToken
+		)
 	);
 
 	/// <summary>
@@ -75,9 +81,20 @@ public static class Command {
 		);
 		try {
 			var result = parser.Parse( args );
-			if ( await WriteParseErrorsAsync( result, context ).ConfigureAwait( false ) ) return CommandExitCodes.Failure;
-			if ( result.HasOption( "help" ) ) { await WriteHelpAsync( context ).ConfigureAwait( false ); return CommandExitCodes.Success; }
-			if ( result.HasOption( "version" ) ) { await context.StandardOutput.WriteLineAsync( Version.AsMemory(), context.CancellationToken ).ConfigureAwait( false ); return CommandExitCodes.Success; }
+			if ( await WriteParseErrorsAsync( result, context ).ConfigureAwait( false ) ) {
+				return CommandExitCodes.Failure;
+			}
+			if ( result.HasOption( "help" ) ) {
+				await WriteHelpAsync( context ).ConfigureAwait( false );
+				return CommandExitCodes.Success;
+			}
+			if ( result.HasOption( "version" ) ) {
+				await context.StandardOutput.WriteLineAsync(
+					Version.AsMemory(),
+					context.CancellationToken
+				).ConfigureAwait( false );
+				return CommandExitCodes.Success;
+			}
 
 			var choices = new[] { "context", "group", "groups", "user" }.Count( result.HasOption );
 			if ( 1 < choices ) {
@@ -85,7 +102,7 @@ public static class Command {
 				return CommandExitCodes.Failure;
 			}
 			var selectedIdentity = result.HasOption( "group" ) || result.HasOption( "groups" ) || result.HasOption( "user" );
-			if ( (result.HasOption( "name" ) || result.HasOption( "real" )) && !selectedIdentity ) {
+			if ( ( result.HasOption( "name" ) || result.HasOption( "real" ) ) && !selectedIdentity ) {
 				await context.Diagnostics.ErrorAsync( "printing only names or real IDs requires -u, -g, or -G", context.CancellationToken ).ConfigureAwait( false );
 				return CommandExitCodes.Failure;
 			}
@@ -118,7 +135,12 @@ public static class Command {
 			foreach ( var userName in result.Operands ) {
 				context.CancellationToken.ThrowIfCancellationRequested();
 				var user = await provider.FindUserAsync( userName, context.CancellationToken ).ConfigureAwait( false );
-				if ( null == user ) user = await provider.FindUserByIdAsync( userName, context.CancellationToken ).ConfigureAwait( false );
+				if ( null == user ) {
+					user = await provider.FindUserByIdAsync(
+						userName,
+						context.CancellationToken
+					).ConfigureAwait( false );
+				}
 				if ( null == user ) {
 					await context.Diagnostics.ErrorAsync( $"'{userName}': no such user", context.CancellationToken ).ConfigureAwait( false );
 					exitCode = CommandExitCodes.Failure;
@@ -146,29 +168,69 @@ public static class Command {
 		var useReal = result.HasOption( "real" );
 		var zero = result.HasOption( "zero" );
 		if ( result.HasOption( "user" ) ) {
-			var user = namedUser ?? (useReal ? current.RealUser : current.EffectiveUser);
-			await WriteScalarAsync( useNames ? user.Name : user.Id, zero, context ).ConfigureAwait( false );
+			var user = namedUser ?? (
+				( useReal )
+					? current.RealUser
+					: current.EffectiveUser
+			);
+			await WriteScalarAsync(
+				( useNames )
+					? user.Name
+					: user.Id,
+				zero,
+				context
+			).ConfigureAwait( false );
 			return;
 		}
 		if ( result.HasOption( "group" ) ) {
-			var group = null != namedUser ? namedUser.PrimaryGroup : useReal ? current.RealGroup : current.EffectiveGroup;
-			await WriteScalarAsync( useNames ? group.Name : group.Id, zero, context ).ConfigureAwait( false );
+			var group = ( null != namedUser )
+				? namedUser.PrimaryGroup
+				: ( useReal )
+					? current.RealGroup
+					: current.EffectiveGroup
+			;
+			await WriteScalarAsync(
+				( useNames )
+					? group.Name
+					: group.Id,
+				zero,
+				context
+			).ConfigureAwait( false );
 			return;
 		}
 		if ( result.HasOption( "groups" ) ) {
-			var source = null != namedUser
+			var source = ( null != namedUser )
 				? namedUser.Groups.Prepend( namedUser.PrimaryGroup )
-				: current.Groups.Prepend( current.EffectiveGroup ).Prepend( current.RealGroup );
+				: current.Groups.Prepend( current.EffectiveGroup ).Prepend( current.RealGroup )
+			;
 			var values = source
 				.DistinctBy( group => group.Id )
-				.Select( group => useNames ? group.Name : group.Id )
+				.Select(
+					group => ( useNames )
+						? group.Name
+						: group.Id
+				)
 				.ToArray();
 			if ( zero ) {
-				await context.StandardOutput.WriteAsync( string.Join( '\0', values ).AsMemory(), context.CancellationToken ).ConfigureAwait( false );
-				await context.StandardOutput.WriteAsync( "\0".AsMemory(), context.CancellationToken ).ConfigureAwait( false );
-				if ( multipleUsers ) await context.StandardOutput.WriteAsync( "\0".AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+				await context.StandardOutput.WriteAsync(
+					string.Join( '\0', values ).AsMemory(),
+					context.CancellationToken
+				).ConfigureAwait( false );
+				await context.StandardOutput.WriteAsync(
+					"\0".AsMemory(),
+					context.CancellationToken
+				).ConfigureAwait( false );
+				if ( multipleUsers ) {
+					await context.StandardOutput.WriteAsync(
+						"\0".AsMemory(),
+						context.CancellationToken
+					).ConfigureAwait( false );
+				}
 			} else {
-				await context.StandardOutput.WriteLineAsync( string.Join( ' ', values ).AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+				await context.StandardOutput.WriteLineAsync(
+					string.Join( ' ', values ).AsMemory(),
+					context.CancellationToken
+				).ConfigureAwait( false );
 			}
 			return;
 		}
@@ -179,23 +241,56 @@ public static class Command {
 
 	private static string FormatDefault( UserIdentity? namedUser, ProcessIdentity current ) {
 		if ( null != namedUser ) {
-			var groups = namedUser.Groups.Prepend( namedUser.PrimaryGroup ).DistinctBy( group => group.Id );
+			var groups = namedUser.Groups
+				.Prepend( namedUser.PrimaryGroup )
+				.DistinctBy( group => group.Id );
 			return $"uid={Format( namedUser.Id, namedUser.Name )} gid={Format( namedUser.PrimaryGroup.Id, namedUser.PrimaryGroup.Name )} groups={string.Join( ',', groups.Select( group => Format( group.Id, group.Name ) ) )}";
 		}
 		var builder = new StringBuilder();
 		builder.Append( "uid=" ).Append( Format( current.RealUser.Id, current.RealUser.Name ) );
 		builder.Append( " gid=" ).Append( Format( current.RealGroup.Id, current.RealGroup.Name ) );
-		if ( current.RealUser.Id != current.EffectiveUser.Id ) builder.Append( " euid=" ).Append( Format( current.EffectiveUser.Id, current.EffectiveUser.Name ) );
-		if ( current.RealGroup.Id != current.EffectiveGroup.Id ) builder.Append( " egid=" ).Append( Format( current.EffectiveGroup.Id, current.EffectiveGroup.Name ) );
-		builder.Append( " groups=" ).Append( string.Join( ',', current.Groups.Prepend( current.EffectiveGroup ).DistinctBy( group => group.Id ).Select( group => Format( group.Id, group.Name ) ) ) );
-		if ( !string.IsNullOrEmpty( current.SecurityContext ) ) builder.Append( " context=" ).Append( current.SecurityContext );
+		if ( current.RealUser.Id != current.EffectiveUser.Id ) {
+			builder.Append( " euid=" ).Append(
+				Format( current.EffectiveUser.Id, current.EffectiveUser.Name )
+			);
+		}
+		if ( current.RealGroup.Id != current.EffectiveGroup.Id ) {
+			builder.Append( " egid=" ).Append(
+				Format( current.EffectiveGroup.Id, current.EffectiveGroup.Name )
+			);
+		}
+		builder.Append( " groups=" ).Append(
+			string.Join(
+				',',
+				current.Groups
+					.Prepend( current.EffectiveGroup )
+					.DistinctBy( group => group.Id )
+					.Select( group => Format( group.Id, group.Name ) )
+			)
+		);
+		if ( !string.IsNullOrEmpty( current.SecurityContext ) ) {
+			builder.Append( " context=" ).Append( current.SecurityContext );
+		}
 		return builder.ToString();
 	}
 
-	private static string Format( string id, string name ) => string.IsNullOrEmpty( name ) ? id : $"{id}({name})";
+	private static string Format( string id, string name ) => ( string.IsNullOrEmpty( name ) )
+		? id
+		: $"{id}({name})"
+	;
+
 	private static async Task WriteScalarAsync( string value, bool zero, CommandContext context ) {
-		if ( zero ) await context.StandardOutput.WriteAsync( System.String.Concat( value, '\0' ).AsMemory(), context.CancellationToken ).ConfigureAwait( false );
-		else await context.StandardOutput.WriteLineAsync( value.AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+		if ( zero ) {
+			await context.StandardOutput.WriteAsync(
+				System.String.Concat( value, '\0' ).AsMemory(),
+				context.CancellationToken
+			).ConfigureAwait( false );
+		} else {
+			await context.StandardOutput.WriteLineAsync(
+				value.AsMemory(),
+				context.CancellationToken
+			).ConfigureAwait( false );
+		}
 	}
 
 	private static async Task WriteHelpAsync( CommandContext context ) {
@@ -219,10 +314,24 @@ Print user and group information for each specified USER, or for the current pro
 			context.CancellationToken
 		).ConfigureAwait( false );
 	}
-	private static OptionParser CreateParser( params OptionDefinition[] options ) => new( options, new OptionParserSettings { AllowLongOptionAbbreviations = true, Ordering = OptionOrdering.Permute } );
+	private static OptionParser CreateParser( params OptionDefinition[] options ) => new(
+		options,
+		new OptionParserSettings {
+			AllowLongOptionAbbreviations = true,
+			Ordering = OptionOrdering.Permute
+		}
+	);
+
 	private static async Task<bool> WriteParseErrorsAsync( OptionParseResult result, CommandContext context ) {
-		if ( result.IsSuccess ) return false;
-		foreach ( var error in result.Errors ) await context.StandardError.WriteLineAsync( OptionDiagnosticFormatter.Format( context.ProgramName, error ).AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+		if ( result.IsSuccess ) {
+			return false;
+		}
+		foreach ( var error in result.Errors ) {
+			await context.StandardError.WriteLineAsync(
+				OptionDiagnosticFormatter.Format( context.ProgramName, error ).AsMemory(),
+				context.CancellationToken
+			).ConfigureAwait( false );
+		}
 		return true;
 	}
 }
