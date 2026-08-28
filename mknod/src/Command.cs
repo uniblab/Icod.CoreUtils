@@ -120,7 +120,10 @@ public static class Command {
 				return CommandExitCodes.Failure;
 			}
 
-			var modeResult = ParseMode( parsed.GetLastValue( "mode" ), creationMaskProvider.GetCurrentMask() );
+			var modeResult = ParseMode(
+				parsed.GetLastValue( "mode" ),
+				creationMaskProvider.GetCurrentMask()
+			);
 			if ( !modeResult.Succeeded ) {
 				await context.StandardError.WriteLineAsync( modeResult.Message ).ConfigureAwait( false );
 				return CommandExitCodes.Failure;
@@ -142,11 +145,19 @@ public static class Command {
 				).ConfigureAwait( false );
 			} else {
 				if ( !TryParseDeviceNumber( parsed.Operands[ 2 ], out var major ) ) {
-					await WriteInvalidDeviceNumberAsync( context, "major", parsed.Operands[ 2 ] ).ConfigureAwait( false );
+					await WriteInvalidDeviceNumberAsync(
+						context,
+						"major",
+						parsed.Operands[ 2 ]
+					).ConfigureAwait( false );
 					return CommandExitCodes.Failure;
 				}
 				if ( !TryParseDeviceNumber( parsed.Operands[ 3 ], out var minor ) ) {
-					await WriteInvalidDeviceNumberAsync( context, "minor", parsed.Operands[ 3 ] ).ConfigureAwait( false );
+					await WriteInvalidDeviceNumberAsync(
+						context,
+						"minor",
+						parsed.Operands[ 3 ]
+					).ConfigureAwait( false );
 					return CommandExitCodes.Failure;
 				}
 				result = await mutationProvider.CreateDeviceNodeAsync(
@@ -160,7 +171,9 @@ public static class Command {
 				).ConfigureAwait( false );
 			}
 
-			if ( result.Succeeded ) return CommandExitCodes.Success;
+			if ( result.Succeeded ) {
+				return CommandExitCodes.Success;
+			}
 			await context.StandardError.WriteLineAsync(
 				string.Concat( "mknod: ", Quote( path ), ": ", DescribeFailure( result ) )
 			).ConfigureAwait( false );
@@ -221,7 +234,10 @@ public static class Command {
 		}
 
 		var isFifo = string.Equals( operands[ 1 ], "p", StringComparison.Ordinal );
-		var expectedCount = isFifo ? 2 : 4;
+		var expectedCount = ( isFifo )
+			? 2
+			: 4
+		;
 		if ( operands.Count < expectedCount ) {
 			await context.StandardError.WriteLineAsync(
 				string.Concat( "mknod: missing operand after ", Quote( operands[ ^1 ] ) )
@@ -260,34 +276,57 @@ public static class Command {
 
 	private static bool TryParseDeviceNumber( string text, out uint value ) {
 		value = 0;
-		if ( string.IsNullOrEmpty( text ) ) return false;
+		if ( string.IsNullOrEmpty( text ) ) {
+			return false;
+		}
 
-		var index = text[ 0 ] == '+' ? 1 : 0;
-		if ( index == text.Length || text[ index ] == '-' ) return false;
+		var index = ( text[ 0 ] == '+' )
+			? 1
+			: 0
+		;
+		if ( index == text.Length || text[ index ] == '-' ) {
+			return false;
+		}
 		var numberBase = 10u;
-		if ( text.Length - index >= 2 && text[ index ] == '0' && (text[ index + 1 ] is 'x' or 'X') ) {
+		if (
+			text.Length - index >= 2
+			&& text[ index ] == '0'
+			&& ( text[ index + 1 ] is 'x' or 'X' )
+		) {
 			numberBase = 16;
 			index += 2;
 		} else if ( text.Length - index > 1 && text[ index ] == '0' ) {
 			numberBase = 8;
 		}
-		if ( index == text.Length ) return false;
+		if ( index == text.Length ) {
+			return false;
+		}
 
 		uint result = 0;
 		for ( ; index < text.Length; index++ ) {
 			var digit = GetDigit( text[ index ] );
-			if ( digit < 0 || (uint)digit >= numberBase ) return false;
-			if ( result > (uint.MaxValue - (uint)digit) / numberBase ) return false;
-			result = (result * numberBase) + (uint)digit;
+			if ( digit < 0 || ( uint )digit >= numberBase ) {
+				return false;
+			}
+			if ( result > ( uint.MaxValue - ( uint )digit ) / numberBase ) {
+				return false;
+			}
+			result = ( result * numberBase ) + ( uint )digit;
 		}
 		value = result;
 		return true;
 	}
 
 	private static int GetDigit( char value ) {
-		if ( value is >= '0' and <= '9' ) return value - '0';
-		if ( value is >= 'a' and <= 'f' ) return value - 'a' + 10;
-		if ( value is >= 'A' and <= 'F' ) return value - 'A' + 10;
+		if ( value is >= '0' and <= '9' ) {
+			return value - '0';
+		}
+		if ( value is >= 'a' and <= 'f' ) {
+			return value - 'a' + 10;
+		}
+		if ( value is >= 'A' and <= 'F' ) {
+			return value - 'A' + 10;
+		}
 		return -1;
 	}
 
@@ -298,7 +337,10 @@ public static class Command {
 		}
 		var parsed = FileModeParser.Parse( modeText );
 		if ( !parsed.Succeeded || parsed.Expression is null ) {
-			var detail = string.IsNullOrEmpty( parsed.Message ) ? "invalid mode" : parsed.Message;
+			var detail = ( string.IsNullOrEmpty( parsed.Message ) )
+				? "invalid mode"
+				: parsed.Message
+			;
 			return ModeSelection.Failure(
 				string.Concat( "mknod: invalid mode ", Quote( modeText ), ": ", detail )
 			);

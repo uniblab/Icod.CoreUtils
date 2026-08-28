@@ -74,31 +74,78 @@ public static class Command {
 		);
 		try {
 			var result = parser.Parse( args );
-			if ( await WriteParseErrorsAsync( result, context ).ConfigureAwait( false ) ) return 1;
-			if ( result.HasOption( "help" ) ) { await WriteHelpAsync( context ).ConfigureAwait( false ); return 0; }
-			if ( result.HasOption( "version" ) ) { await context.StandardOutput.WriteLineAsync( VERSION.AsMemory(), context.CancellationToken ).ConfigureAwait( false ); return 0; }
+			if ( await WriteParseErrorsAsync( result, context ).ConfigureAwait( false ) ) {
+				return 1;
+			}
+			if ( result.HasOption( "help" ) ) {
+				await WriteHelpAsync(
+					context
+				).ConfigureAwait( false );
+				return 0;
+			}
+			if ( result.HasOption( "version" ) ) {
+				await context.StandardOutput.WriteLineAsync(
+					VERSION.AsMemory(),
+					context.CancellationToken
+				).ConfigureAwait( false );
+				return 0;
+			}
 			var nullTerminated = result.HasOption( "null" );
 			var failed = false;
 			if ( result.Operands.Count == 0 ) {
-				foreach ( DictionaryEntry entry in Environment.GetEnvironmentVariables() ) await WriteAsync( System.String.Concat( entry.Key, "=", entry.Value ), nullTerminated, context ).ConfigureAwait( false );
+				foreach ( DictionaryEntry entry in Environment.GetEnvironmentVariables() ) {
+					await WriteAsync(
+						System.String.Concat( entry.Key, "=", entry.Value ),
+						nullTerminated,
+						context
+					).ConfigureAwait( false );
+				}
 			} else {
 				foreach ( var name in result.Operands ) {
 					context.CancellationToken.ThrowIfCancellationRequested();
 					var value = Environment.GetEnvironmentVariable( name );
-					if ( value is null ) failed = true; else await WriteAsync( value, nullTerminated, context ).ConfigureAwait( false );
+					if ( value is null ) {
+						failed = true;
+					} else {
+						await WriteAsync(
+							value,
+							nullTerminated,
+							context
+						).ConfigureAwait( false );
+					}
 				}
 			}
-			return failed ? 1 : 0;
-		} catch ( OperationCanceledException ) { return CommandExitCodes.Canceled; }
-	}
-	private static async Task WriteAsync( string value, bool nullTerminated, CommandContext context ) {
-		if ( nullTerminated ) {
-			await context.StandardOutput.WriteAsync( value.AsMemory(), context.CancellationToken ).ConfigureAwait( false );
-			await context.StandardOutput.WriteAsync( "\0".AsMemory(), context.CancellationToken ).ConfigureAwait( false );
-		} else {
-			await context.StandardOutput.WriteLineAsync( value.AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+			return ( failed )
+				? 1
+				: 0
+			;
+		} catch ( OperationCanceledException ) {
+			return CommandExitCodes.Canceled;
 		}
 	}
+
+	private static async Task WriteAsync(
+		string value,
+		bool nullTerminated,
+		CommandContext context
+	) {
+		if ( nullTerminated ) {
+			await context.StandardOutput.WriteAsync(
+				value.AsMemory(),
+				context.CancellationToken
+			).ConfigureAwait( false );
+			await context.StandardOutput.WriteAsync(
+				"\0".AsMemory(),
+				context.CancellationToken
+			).ConfigureAwait( false );
+		} else {
+			await context.StandardOutput.WriteLineAsync(
+				value.AsMemory(),
+				context.CancellationToken
+			).ConfigureAwait( false );
+		}
+	}
+
 	private static async Task WriteHelpAsync( CommandContext context ) {
 		const string text = """
 Usage: printenv [OPTION]... [VARIABLE]...
@@ -113,6 +160,7 @@ Print values of the specified environment VARIABLE(s).
 			context.CancellationToken
 		).ConfigureAwait( false );
 	}
+
 	private static OptionParser CreateParser( params OptionDefinition[] options ) => new(
 		options,
 		new OptionParserSettings {
@@ -120,11 +168,20 @@ Print values of the specified environment VARIABLE(s).
 			Ordering = OptionOrdering.Permute
 		}
 	);
-	private static async Task<bool> WriteParseErrorsAsync( OptionParseResult result, CommandContext context ) {
-		if ( result.IsSuccess ) return false;
+
+	private static async Task<bool> WriteParseErrorsAsync(
+		OptionParseResult result,
+		CommandContext context
+	) {
+		if ( result.IsSuccess ) {
+			return false;
+		}
 		foreach ( var error in result.Errors ) {
 			await context.StandardError.WriteLineAsync(
-				OptionDiagnosticFormatter.Format( context.ProgramName, error ).AsMemory(),
+				OptionDiagnosticFormatter.Format(
+					context.ProgramName,
+					error
+				).AsMemory(),
 				context.CancellationToken
 			).ConfigureAwait( false );
 		}

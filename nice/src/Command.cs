@@ -19,7 +19,13 @@ public static class Command {
 		TextWriter? stderr = null
 	) {
 		ArgumentNullException.ThrowIfNull( args );
-		using var input = null == stdin ? null : new MemoryStream( Utf8.GetBytes( stdin.ReadToEnd() ), writable: false );
+		using var input = ( null == stdin )
+			? null
+			: new MemoryStream(
+				Utf8.GetBytes( stdin.ReadToEnd() ),
+				writable: false
+			)
+		;
 		using var output = new MemoryStream();
 		using var error = new MemoryStream();
 		var status = RunAsync( args, input, output, error ).GetAwaiter().GetResult();
@@ -81,15 +87,17 @@ public static class Command {
 			await WritePriorityFailureAsync( stderr, "cannot get niceness", currentForAdjustment.Message, cancellationToken ).ConfigureAwait( false );
 			return InternalFailure;
 		}
-		var targetNiceValue = checked( (int)Math.Clamp(
-			(long)currentForAdjustment.Value!.NiceValue + parsed.Adjustment,
+		var targetNiceValue = checked( ( int )Math.Clamp(
+			( long )currentForAdjustment.Value!.NiceValue + parsed.Adjustment,
 			-20L,
 			19L
 		) );
 		var changed = priorities.SetPriority( self, targetNiceValue );
 		if ( !changed.Succeeded ) {
 			await WritePriorityFailureAsync( stderr, "cannot set niceness", changed.Message, cancellationToken ).ConfigureAwait( false );
-			if ( ProcessOperationStatus.AccessDenied != changed.Status ) return InternalFailure;
+			if ( ProcessOperationStatus.AccessDenied != changed.Status ) {
+				return InternalFailure;
+			}
 		}
 
 		ProcessOperationResult? childPriorityFailure = null;
@@ -105,7 +113,9 @@ public static class Command {
 				childPriorityFailure = priorities.SetPriority( ProcessTarget.ForProcess( identity ), targetNiceValue );
 			};
 		}
-		foreach ( var argument in parsed.CommandArguments ) runOptions.Arguments.Add( argument );
+		foreach ( var argument in parsed.CommandArguments ) {
+			runOptions.Arguments.Add( argument );
+		}
 
 		ProcessResult result;
 		try {
@@ -139,14 +149,22 @@ public static class Command {
 				index++;
 				continue;
 			}
-			if ( "--help" == token ) return NiceArguments.Help;
-			if ( "--version" == token ) return NiceArguments.Version;
+			if ( "--help" == token ) {
+				return NiceArguments.Help;
+			}
+			if ( "--version" == token ) {
+				return NiceArguments.Version;
+			}
 			if ( "--" == token ) {
 				index++;
 				break;
 			}
 			if ( "-n" == token || "--adjustment" == token ) {
-				if ( index + 1 >= args.Length ) return NiceArguments.Failure( $"option '{token}' requires an argument" );
+				if ( index + 1 >= args.Length ) {
+					return NiceArguments.Failure(
+						$"option '{token}' requires an argument"
+					);
+				}
 				adjustmentText = args[ index + 1 ];
 				index += 2;
 				continue;
@@ -172,16 +190,28 @@ public static class Command {
 			if ( !long.TryParse( adjustmentText, NumberStyles.AllowLeadingWhite | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var parsed ) ) {
 				return NiceArguments.Failure( $"invalid adjustment '{adjustmentText}'" );
 			}
-			adjustment = checked( (int)Math.Clamp( parsed, -39L, 39L ) );
+			adjustment = checked( ( int )Math.Clamp( parsed, -39L, 39L ) );
 		}
-		var command = index < args.Length ? args[ index ] : null;
-		var commandArguments = null == command ? Array.Empty<string>() : args.Skip( index + 1 ).ToArray();
+		var command = ( index < args.Length )
+			? args[ index ]
+			: null
+		;
+		var commandArguments = ( null == command )
+			? Array.Empty<string>()
+			: args.Skip( index + 1 ).ToArray()
+		;
 		return new NiceArguments( adjustment, null != adjustmentText, command, commandArguments, false, false, null );
 	}
 
 	private static bool IsHistoricalAdjustment( string token ) {
-		if ( 2 > token.Length || '-' != token[ 0 ] ) return false;
-		var digitIndex = 1 + ( token[ 1 ] is '-' or '+' ? 1 : 0 );
+		if ( 2 > token.Length || '-' != token[ 0 ] ) {
+			return false;
+		}
+		var digitIndex = 1 + (
+			( token[ 1 ] is '-' or '+' )
+				? 1
+				: 0
+		);
 		return digitIndex < token.Length && char.IsAsciiDigit( token[ digitIndex ] );
 	}
 
@@ -192,7 +222,9 @@ public static class Command {
 		CancellationToken cancellationToken
 	) => await WriteDiagnosticAsync(
 		stderr,
-		null == detail ? $"nice: {operation}" : $"nice: {operation}: {detail}",
+		( null == detail )
+			? $"nice: {operation}"
+			: $"nice: {operation}: {detail}",
 		cancellationToken
 	).ConfigureAwait( false );
 
@@ -216,9 +248,10 @@ public static class Command {
 		await stream.FlushAsync( cancellationToken ).ConfigureAwait( false );
 	}
 
-	private static string NormalizeLineEndings( string value ) => "\n" == Environment.NewLine
+	private static string NormalizeLineEndings( string value ) => ( "\n" == Environment.NewLine )
 		? value
-		: value.Replace( "\n", Environment.NewLine, StringComparison.Ordinal );
+		: value.Replace( "\n", Environment.NewLine, StringComparison.Ordinal )
+	;
 
 	private sealed record NiceArguments(
 		int Adjustment,

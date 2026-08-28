@@ -29,20 +29,43 @@ public static class Command {
 	}
 
 	/// <summary>Runs <c>runcon</c> synchronously.</summary>
-	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null, ISelinuxPlatform? platform = null, CancellationToken cancellationToken = default ) {
-		return RunAsync( args, stdin, stdout, stderr, platform, cancellationToken ).GetAwaiter().GetResult();
+	public static int Run(
+		string[] args,
+		TextReader? stdin = null,
+		TextWriter? stdout = null,
+		TextWriter? stderr = null,
+		ISelinuxPlatform? platform = null,
+		CancellationToken cancellationToken = default
+	) {
+		return RunAsync(
+			args,
+			stdin,
+			stdout,
+			stderr,
+			platform,
+			cancellationToken
+		).GetAwaiter().GetResult();
 	}
 
 	/// <summary>Runs <c>runcon</c> through an injectable SELinux/process provider.</summary>
-	public static ValueTask<int> RunAsync( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null, ISelinuxPlatform? platform = null, CancellationToken cancellationToken = default ) {
+	public static ValueTask<int> RunAsync(
+		string[] args,
+		TextReader? stdin = null,
+		TextWriter? stdout = null,
+		TextWriter? stderr = null,
+		ISelinuxPlatform? platform = null,
+		CancellationToken cancellationToken = default
+	) {
 		_ = stdin;
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;
 
-		if ( TryHandleInformationalOption( args, stdout, out var informationalStatus ) )
+		if ( TryHandleInformationalOption( args, stdout, out var informationalStatus ) ) {
 			return ValueTask.FromResult( informationalStatus );
-		if ( !TryParse( args, stderr, out var options ) )
+		}
+		if ( !TryParse( args, stderr, out var options ) ) {
 			return ValueTask.FromResult( InternalFailure );
+		}
 		if ( cancellationToken.IsCancellationRequested ) {
 			stderr.WriteLine( "runcon: operation canceled" );
 			return ValueTask.FromResult( InternalFailure );
@@ -50,12 +73,16 @@ public static class Command {
 
 		// GNU runcon diagnoses a bare CONTEXT operand as a missing command before
 		// consulting SELinux.  Preserve that CLI error ordering on unsupported hosts.
-		if ( options.Operands.Count == 1 && !options.Compute && !options.HasComponents )
-			return ValueTask.FromResult( ReportError( stderr, "missing command operand after context" ) );
+		if ( options.Operands.Count == 1 && !options.Compute && !options.HasComponents ) {
+			return ValueTask.FromResult(
+				ReportError( stderr, "missing command operand after context" )
+			);
+		}
 
 		platform ??= new NativeSelinuxPlatform();
-		if ( !EnsureSelinux( platform, stderr ) )
+		if ( !EnsureSelinux( platform, stderr ) ) {
 			return ValueTask.FromResult( InternalFailure );
+		}
 
 		if ( options.Operands.Count == 0 ) {
 			if ( !platform.TryGetCurrentContext( out var current, out var currentError ) ) {
@@ -69,18 +96,25 @@ public static class Command {
 		return ValueTask.FromResult( Execute( options, platform, stderr, cancellationToken ) );
 	}
 
-	private static int Execute( Options options, ISelinuxPlatform platform, TextWriter stderr, CancellationToken cancellationToken ) {
+	private static int Execute(
+		Options options,
+		ISelinuxPlatform platform,
+		TextWriter stderr,
+		CancellationToken cancellationToken
+	) {
 		string context;
 		IReadOnlyList<string> command;
 
 		if ( !options.Compute && !options.HasComponents ) {
-			if ( options.Operands.Count < 2 )
+			if ( options.Operands.Count < 2 ) {
 				return ReportError( stderr, "missing command operand after context" );
-			context = options.Operands[0];
+			}
+			context = options.Operands[ 0 ];
 			command = options.Operands.GetRange( 1, options.Operands.Count - 1 );
 		} else {
-			if ( options.Operands.Count < 1 )
+			if ( options.Operands.Count < 1 ) {
 				return ReportError( stderr, "missing command operand" );
+			}
 			command = options.Operands;
 			if ( !platform.TryGetCurrentContext( out context, out var currentError ) ) {
 				stderr.WriteLine( $"runcon: failed to get current context: {platform.DescribeError( currentError )}" );
@@ -88,8 +122,8 @@ public static class Command {
 			}
 
 			if ( options.Compute ) {
-				if ( !platform.TryGetFileContext( command[0], true, out var executableContext, out var fileError ) ) {
-					stderr.WriteLine( $"runcon: failed to get security context of '{command[0]}': {platform.DescribeError( fileError )}" );
+				if ( !platform.TryGetFileContext( command[ 0 ], true, out var executableContext, out var fileError ) ) {
+					stderr.WriteLine( $"runcon: failed to get security context of '{command[ 0 ]}': {platform.DescribeError( fileError )}" );
 					return InternalFailure;
 				}
 				if ( !platform.TryComputeProcessContext( context, executableContext, out var computed, out var computeError ) ) {
@@ -105,10 +139,19 @@ public static class Command {
 					return InternalFailure;
 				}
 				context = new SelinuxContext(
-					options.UserSpecified ? options.User! : parsed.User,
-					options.RoleSpecified ? options.Role! : parsed.Role,
-					options.TypeSpecified ? options.Type! : parsed.Type,
-					options.RangeSpecified ? options.Range : parsed.Range ).ToString();
+					( options.UserSpecified )
+						? options.User!
+						: parsed.User,
+					( options.RoleSpecified )
+						? options.Role!
+						: parsed.Role,
+					( options.TypeSpecified )
+						? options.Type!
+						: parsed.Type,
+					( options.RangeSpecified )
+						? options.Range
+						: parsed.Range
+				).ToString();
 			}
 		}
 
@@ -122,18 +165,27 @@ public static class Command {
 			return InternalFailure;
 		}
 
-		var execution = platform.ExecuteWithContext( context, command, searchPath: !options.Compute );
-		if ( execution.Diagnostic is not null )
+		var execution = platform.ExecuteWithContext(
+			context,
+			command,
+			searchPath: !options.Compute
+		);
+		if ( execution.Diagnostic is not null ) {
 			stderr.WriteLine( $"runcon: {execution.Diagnostic}" );
+		}
 		return execution.ExitCode;
 	}
 
-	private static bool TryParse( string[] args, TextWriter stderr, out Options options ) {
+	private static bool TryParse(
+		string[] args,
+		TextWriter stderr,
+		out Options options
+	) {
 		options = new Options();
 		var endOptions = false;
 		for ( var i = 0; i < args.Length; i++ ) {
-			var arg = args[i];
-			if ( endOptions || arg.Length == 0 || arg[0] != '-' || arg == "-" ) {
+			var arg = args[ i ];
+			if ( endOptions || arg.Length == 0 || arg[ 0 ] != '-' || arg == "-" ) {
 				options.Operands.Add( arg );
 				endOptions = true;
 				continue;
@@ -144,81 +196,183 @@ public static class Command {
 			}
 
 			if ( arg.StartsWith( "--", StringComparison.Ordinal ) ) {
-				if ( !ParseLongOption( args, ref i, arg, options, stderr ) )
+				if ( !ParseLongOption( args, ref i, arg, options, stderr ) ) {
 					return false;
+				}
 				continue;
 			}
-			if ( !ParseShortOptions( args, ref i, arg, options, stderr ) )
+			if ( !ParseShortOptions( args, ref i, arg, options, stderr ) ) {
 				return false;
+			}
 		}
 
 		return true;
 	}
 
-	private static bool ParseLongOption( string[] args, ref int index, string arg, Options options, TextWriter stderr ) {
+	private static bool ParseLongOption(
+		string[] args,
+		ref int index,
+		string arg,
+		Options options,
+		TextWriter stderr
+	) {
 		var equals = arg.IndexOf( '=' );
-		var name = equals < 0 ? arg : arg[..equals];
-		var inlineValue = equals < 0 ? null : arg[( equals + 1 )..];
+		var name = ( equals < 0 )
+			? arg
+			: arg[ ..equals ]
+		;
+		var inlineValue = ( equals < 0 )
+			? null
+			: arg[ ( equals + 1 ).. ]
+		;
 		switch ( name ) {
 			case "--compute":
-				if ( inlineValue is not null ) return Error( stderr, "option '--compute' doesn't allow an argument" );
-				options.Compute = true; return true;
-			case "--user": return TakeComponent( args, ref index, inlineValue, name, options.UserSpecified, stderr, value => { options.User = value; options.UserSpecified = true; } );
-			case "--role": return TakeComponent( args, ref index, inlineValue, name, options.RoleSpecified, stderr, value => { options.Role = value; options.RoleSpecified = true; } );
-			case "--type": return TakeComponent( args, ref index, inlineValue, name, options.TypeSpecified, stderr, value => { options.Type = value; options.TypeSpecified = true; } );
-			case "--range": return TakeComponent( args, ref index, inlineValue, name, options.RangeSpecified, stderr, value => { options.Range = value; options.RangeSpecified = true; } );
-			default: return Error( stderr, $"unrecognized option '{arg}'" );
+				if ( inlineValue is not null ) {
+					return Error(
+						stderr,
+						"option '--compute' doesn't allow an argument"
+					);
+				}
+				options.Compute = true;
+				return true;
+			case "--user":
+				return TakeComponent(
+					args,
+					ref index,
+					inlineValue,
+					name,
+					options.UserSpecified,
+					stderr,
+					value => {
+						options.User = value;
+						options.UserSpecified = true;
+					}
+				);
+			case "--role":
+				return TakeComponent(
+					args,
+					ref index,
+					inlineValue,
+					name,
+					options.RoleSpecified,
+					stderr,
+					value => {
+						options.Role = value;
+						options.RoleSpecified = true;
+					}
+				);
+			case "--type":
+				return TakeComponent(
+					args,
+					ref index,
+					inlineValue,
+					name,
+					options.TypeSpecified,
+					stderr,
+					value => {
+						options.Type = value;
+						options.TypeSpecified = true;
+					}
+				);
+			case "--range":
+				return TakeComponent(
+					args,
+					ref index,
+					inlineValue,
+					name,
+					options.RangeSpecified,
+					stderr,
+					value => {
+						options.Range = value;
+						options.RangeSpecified = true;
+					}
+				);
+			default:
+				return Error( stderr, $"unrecognized option '{arg}'" );
 		}
 	}
 
-	private static bool ParseShortOptions( string[] args, ref int index, string arg, Options options, TextWriter stderr ) {
+	private static bool ParseShortOptions(
+		string[] args,
+		ref int index,
+		string arg,
+		Options options,
+		TextWriter stderr
+	) {
 		for ( var p = 1; p < arg.Length; p++ ) {
-			var option = arg[p];
+			var option = arg[ p ];
 			if ( option == 'c' ) {
 				options.Compute = true;
 				continue;
 			}
-			if ( option is not ( 'u' or 'r' or 't' or 'l' ) )
+			if ( option is not ( 'u' or 'r' or 't' or 'l' ) ) {
 				return Error( stderr, $"invalid option -- '{option}'" );
+			}
 
 			string value;
 			if ( p + 1 < arg.Length ) {
-				value = arg[( p + 1 )..];
+				value = arg[ ( p + 1 ).. ];
 				p = arg.Length;
 			} else if ( index + 1 < args.Length ) {
-				value = args[++index];
+				value = args[ ++index ];
 			} else {
 				return Error( stderr, $"option requires an argument -- '{option}'" );
 			}
 
 			if ( option == 'u' ) {
-				if ( options.UserSpecified ) return Error( stderr, "multiple users specified" );
-				options.User = value; options.UserSpecified = true;
+				if ( options.UserSpecified ) {
+					return Error( stderr, "multiple users specified" );
+				}
+				options.User = value;
+				options.UserSpecified = true;
 			} else if ( option == 'r' ) {
-				if ( options.RoleSpecified ) return Error( stderr, "multiple roles specified" );
-				options.Role = value; options.RoleSpecified = true;
+				if ( options.RoleSpecified ) {
+					return Error( stderr, "multiple roles specified" );
+				}
+				options.Role = value;
+				options.RoleSpecified = true;
 			} else if ( option == 't' ) {
-				if ( options.TypeSpecified ) return Error( stderr, "multiple types specified" );
-				options.Type = value; options.TypeSpecified = true;
+				if ( options.TypeSpecified ) {
+					return Error( stderr, "multiple types specified" );
+				}
+				options.Type = value;
+				options.TypeSpecified = true;
 			} else {
-				if ( options.RangeSpecified ) return Error( stderr, "multiple ranges specified" );
-				options.Range = value; options.RangeSpecified = true;
+				if ( options.RangeSpecified ) {
+					return Error( stderr, "multiple ranges specified" );
+				}
+				options.Range = value;
+				options.RangeSpecified = true;
 			}
 		}
 		return true;
 	}
 
-	private static bool TakeComponent( string[] args, ref int index, string? inlineValue, string name, bool alreadySpecified, TextWriter stderr, Action<string> setter ) {
-		if ( alreadySpecified )
+	private static bool TakeComponent(
+		string[] args,
+		ref int index,
+		string? inlineValue,
+		string name,
+		bool alreadySpecified,
+		TextWriter stderr,
+		Action<string> setter
+	) {
+		if ( alreadySpecified ) {
 			return Error( stderr, $"option '{name}' specified more than once" );
+		}
 		var value = inlineValue;
 		if ( value is null ) {
-			if ( index + 1 >= args.Length )
+			if ( index + 1 >= args.Length ) {
 				return Error( stderr, $"option '{name}' requires an argument" );
-			value = args[++index];
+			}
+			value = args[ ++index ];
 		}
-		if ( value.Length == 0 )
-			return Error( stderr, $"option '{name}' requires a non-empty argument" );
+		if ( value.Length == 0 ) {
+			return Error(
+				stderr,
+				$"option '{name}' requires a non-empty argument"
+			);
+		}
 		setter( value );
 		return true;
 	}
@@ -228,20 +382,28 @@ public static class Command {
 			stderr.WriteLine( $"runcon: {platform.UnsupportedReason}" );
 			return false;
 		}
-		if ( platform.IsEnabled( out var error ) )
+		if ( platform.IsEnabled( out var error ) ) {
 			return true;
+		}
 		stderr.WriteLine( $"runcon: SELinux is disabled or unavailable: {platform.DescribeError( error )}" );
 		return false;
 	}
 
-	private static bool TryHandleInformationalOption( string[] args, TextWriter stdout, out int status ) {
+	private static bool TryHandleInformationalOption(
+		string[] args,
+		TextWriter stdout,
+		out int status
+	) {
 		status = 0;
 		for ( var i = 0; i < args.Length; i++ ) {
-			var arg = args[i];
-			if ( arg == "--" )
+			var arg = args[ i ];
+			if ( arg == "--" ) {
 				break;
-			if ( arg.Length == 0 || arg[0] != '-' || arg == "-" )
-				break; // GNU runcon uses '+' getopt semantics: the first operand ends option parsing.
+			}
+			if ( arg.Length == 0 || arg[ 0 ] != '-' || arg == "-" ) {
+				// GNU runcon uses '+' getopt semantics: the first operand ends option parsing.
+				break;
+			}
 			if ( arg == "--help" || arg == "-?" ) {
 				PrintHelp( stdout );
 				return true;
@@ -252,28 +414,36 @@ public static class Command {
 			}
 
 			if ( arg is "--user" or "--role" or "--type" or "--range" ) {
-				if ( i + 1 < args.Length )
+				if ( i + 1 < args.Length ) {
 					i++;
+				}
 				continue;
 			}
-			if ( arg.StartsWith( "--user=", StringComparison.Ordinal )
-				|| arg.StartsWith( "--role=", StringComparison.Ordinal )
-				|| arg.StartsWith( "--type=", StringComparison.Ordinal )
-				|| arg.StartsWith( "--range=", StringComparison.Ordinal )
-				|| arg == "--compute" )
+			if (
+				arg.StartsWith( "--user=", StringComparison.Ordinal )
+					|| arg.StartsWith( "--role=", StringComparison.Ordinal )
+					|| arg.StartsWith( "--type=", StringComparison.Ordinal )
+					|| arg.StartsWith( "--range=", StringComparison.Ordinal )
+					|| arg == "--compute"
+			) {
 				continue;
-			if ( arg.StartsWith( "--", StringComparison.Ordinal ) )
+			}
+			if ( arg.StartsWith( "--", StringComparison.Ordinal ) ) {
 				return false;
+			}
 
-			if ( arg.Length > 1 && arg[0] == '-' ) {
+			if ( arg.Length > 1 && arg[ 0 ] == '-' ) {
 				for ( var p = 1; p < arg.Length; p++ ) {
-					var option = arg[p];
-					if ( option == 'c' )
+					var option = arg[ p ];
+					if ( option == 'c' ) {
 						continue;
-					if ( option is not ( 'u' or 'r' or 't' or 'l' ) )
+					}
+					if ( option is not ( 'u' or 'r' or 't' or 'l' ) ) {
 						return false;
-					if ( p + 1 == arg.Length && i + 1 < args.Length )
+					}
+					if ( p + 1 == arg.Length && i + 1 < args.Length ) {
 						i++;
+					}
 					break;
 				}
 			}

@@ -85,55 +85,99 @@ public static class Command {
 		);
 		try {
 			var result = parser.Parse( args );
-			if ( await WriteParseErrorsAsync( result, context ).ConfigureAwait( false ) )
+			if ( await WriteParseErrorsAsync( result, context ).ConfigureAwait( false ) ) {
 				return CommandExitCodes.Failure;
+			}
 			if ( result.HasOption( "help" ) ) {
-				await WriteHelpAsync( context ).ConfigureAwait( false );
+				await WriteHelpAsync(
+					context
+				).ConfigureAwait( false );
 				return CommandExitCodes.Success;
 			}
 			if ( result.HasOption( "version" ) ) {
-				await context.StandardOutput.WriteLineAsync( Version.AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+				await context.StandardOutput.WriteLineAsync(
+					Version.AsMemory(),
+					context.CancellationToken
+				).ConfigureAwait( false );
 				return CommandExitCodes.Success;
 			}
 			if ( 0 < result.Operands.Count ) {
-				await context.Diagnostics.ErrorAsync( $"extra operand '{result.Operands[ 0 ]}'", context.CancellationToken ).ConfigureAwait( false );
+				await context.Diagnostics.ErrorAsync(
+					$"extra operand '{result.Operands[ 0 ]}'",
+					context.CancellationToken
+				).ConfigureAwait( false );
 				return CommandExitCodes.Failure;
 			}
 
-			var information = await provider.GetAsync( context.CancellationToken ).ConfigureAwait( false );
+			var information = await provider.GetAsync(
+				context.CancellationToken
+			).ConfigureAwait( false );
 			var all = result.HasOption( "all" );
-			var noSelection = !all && !result.Options.Any( option => IsInformationOption( option.Definition.Key ) );
+			var noSelection = !all && !result.Options.Any(
+				option => IsInformationOption( option.Definition.Key )
+			);
 			var fields = new List<string>();
-			if ( all || noSelection || result.HasOption( "kernel-name" ) )
+			if ( all || noSelection || result.HasOption( "kernel-name" ) ) {
 				fields.Add( information.KernelName );
-			if ( all || result.HasOption( "nodename" ) )
+			}
+			if ( all || result.HasOption( "nodename" ) ) {
 				fields.Add( information.NodeName );
-			if ( all || result.HasOption( "kernel-release" ) )
+			}
+			if ( all || result.HasOption( "kernel-release" ) ) {
 				fields.Add( information.KernelRelease );
-			if ( all || result.HasOption( "kernel-version" ) )
+			}
+			if ( all || result.HasOption( "kernel-version" ) ) {
 				fields.Add( information.KernelVersion );
-			if ( all || result.HasOption( "machine" ) )
+			}
+			if ( all || result.HasOption( "machine" ) ) {
 				fields.Add( information.Machine );
-			if ( ( !all && result.HasOption( "processor" ) ) || ( all && !IsUnknown( information.Processor ) ) )
+			}
+			if (
+				( !all && result.HasOption( "processor" ) )
+				|| ( all && !IsUnknown( information.Processor ) )
+			) {
 				fields.Add( information.Processor );
-			if ( ( !all && result.HasOption( "hardware-platform" ) ) || ( all && !IsUnknown( information.HardwarePlatform ) ) )
+			}
+			if (
+				( !all && result.HasOption( "hardware-platform" ) )
+				|| ( all && !IsUnknown( information.HardwarePlatform ) )
+			) {
 				fields.Add( information.HardwarePlatform );
-			if ( all || result.HasOption( "operating-system" ) )
+			}
+			if ( all || result.HasOption( "operating-system" ) ) {
 				fields.Add( information.OperatingSystem );
-			await context.StandardOutput.WriteLineAsync( string.Join( ' ', fields ).AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+			}
+			await context.StandardOutput.WriteLineAsync(
+				string.Join( ' ', fields ).AsMemory(),
+				context.CancellationToken
+			).ConfigureAwait( false );
 			return CommandExitCodes.Success;
 		} catch ( OperationCanceledException ) {
 			return CommandExitCodes.Canceled;
 		} catch ( Exception ex ) when ( ex is IOException or UnauthorizedAccessException ) {
-			await context.Diagnostics.ErrorAsync( ex.Message, context.CancellationToken ).ConfigureAwait( false );
+			await context.Diagnostics.ErrorAsync(
+				ex.Message,
+				context.CancellationToken
+			).ConfigureAwait( false );
 			return CommandExitCodes.Failure;
 		}
 	}
 
 	private static bool IsInformationOption( string key ) => key is
-		"kernel-name" or "nodename" or "kernel-release" or "kernel-version" or
-		"machine" or "processor" or "hardware-platform" or "operating-system";
-	private static bool IsUnknown( string value ) => string.Equals( value, "unknown", StringComparison.OrdinalIgnoreCase );
+		"kernel-name"
+		or "nodename"
+		or "kernel-release"
+		or "kernel-version"
+		or "machine"
+		or "processor"
+		or "hardware-platform"
+		or "operating-system";
+
+	private static bool IsUnknown( string value ) => string.Equals(
+		value,
+		"unknown",
+		StringComparison.OrdinalIgnoreCase
+	);
 
 	private static async Task WriteHelpAsync( CommandContext context ) {
 		const string text = """
@@ -160,15 +204,25 @@ Print certain system information.  With no OPTION, same as -s.
 
 	private static OptionParser CreateParser( params OptionDefinition[] options ) => new(
 		options,
-		new OptionParserSettings { AllowLongOptionAbbreviations = true, Ordering = OptionOrdering.Permute }
+		new OptionParserSettings {
+			AllowLongOptionAbbreviations = true,
+			Ordering = OptionOrdering.Permute
+		}
 	);
 
-	private static async Task<bool> WriteParseErrorsAsync( OptionParseResult result, CommandContext context ) {
-		if ( result.IsSuccess )
+	private static async Task<bool> WriteParseErrorsAsync(
+		OptionParseResult result,
+		CommandContext context
+	) {
+		if ( result.IsSuccess ) {
 			return false;
+		}
 		foreach ( var error in result.Errors ) {
 			await context.StandardError.WriteLineAsync(
-				OptionDiagnosticFormatter.Format( context.ProgramName, error ).AsMemory(),
+				OptionDiagnosticFormatter.Format(
+					context.ProgramName,
+					error
+				).AsMemory(),
 				context.CancellationToken
 			).ConfigureAwait( false );
 		}

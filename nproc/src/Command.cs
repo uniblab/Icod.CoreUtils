@@ -22,7 +22,14 @@ public static class Command {
 		TextWriter? stderr = null,
 		IProcessorResourceProvider? provider = null,
 		INProcEnvironment? environment = null
-	) => RunAsync( args, stdin, stdout, stderr, provider, environment ).GetAwaiter().GetResult();
+	) => RunAsync(
+		args,
+		stdin,
+		stdout,
+		stderr,
+		provider,
+		environment
+	).GetAwaiter().GetResult();
 
 	/// <summary>Runs <c>nproc</c> asynchronously.</summary>
 	/// <param name="args">The command-line arguments.</param>
@@ -51,8 +58,12 @@ public static class Command {
 		try {
 			options = NProcOptions.Parse( args );
 		} catch ( NProcUsageException exception ) {
-			await stderr.WriteLineAsync( string.Concat( "nproc: ", exception.Message ) ).ConfigureAwait( false );
-			await stderr.WriteLineAsync( "Try 'nproc --help' for more information." ).ConfigureAwait( false );
+			await stderr.WriteLineAsync(
+				string.Concat( "nproc: ", exception.Message )
+			).ConfigureAwait( false );
+			await stderr.WriteLineAsync(
+				"Try 'nproc --help' for more information."
+			).ConfigureAwait( false );
 			return 1;
 		}
 

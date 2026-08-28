@@ -19,7 +19,13 @@ public static class Command {
 		TextWriter? stdout = null,
 		TextWriter? stderr = null,
 		IHostIdentifierProvider? provider = null
-	) => RunAsync( args, stdin, stdout, stderr, provider ).GetAwaiter().GetResult();
+	) => RunAsync(
+		args,
+		stdin,
+		stdout,
+		stderr,
+		provider
+	).GetAwaiter().GetResult();
 
 	/// <summary>Runs <c>hostid</c> asynchronously.</summary>
 	/// <param name="args">The command-line arguments.</param>
@@ -85,8 +91,12 @@ public static class Command {
 	}
 
 	private static async Task WriteUsageErrorAsync( TextWriter stderr, string message ) {
-		await stderr.WriteLineAsync( string.Concat( "hostid: ", message ) ).ConfigureAwait( false );
-		await stderr.WriteLineAsync( "Try 'hostid --help' for more information." ).ConfigureAwait( false );
+		await stderr.WriteLineAsync(
+			string.Concat( "hostid: ", message )
+		).ConfigureAwait( false );
+		await stderr.WriteLineAsync(
+			"Try 'hostid --help' for more information."
+		).ConfigureAwait( false );
 	}
 
 	private static readonly string HelpText = """
@@ -129,9 +139,13 @@ public sealed record HostIdOptions {
 				continue;
 			}
 			if ( optionParsing && argument.StartsWith( '-' ) ) {
-				throw new HostIdUsageException( string.Concat( "unrecognized option '", argument, "'" ) );
+				throw new HostIdUsageException(
+					string.Concat( "unrecognized option '", argument, "'" )
+				);
 			}
-			throw new HostIdUsageException( string.Concat( "extra operand '", argument, "'" ) );
+			throw new HostIdUsageException(
+				string.Concat( "extra operand '", argument, "'" )
+			);
 		}
 		return new HostIdOptions { Help = help, Version = version };
 	}

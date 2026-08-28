@@ -231,7 +231,9 @@ public static class Command {
 			if ( root is not null && string.Equals(
 				System.IO.Path.TrimEndingDirectorySeparator( System.IO.Path.GetFullPath( parent ) ),
 				System.IO.Path.TrimEndingDirectorySeparator( root ),
-				OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal
+				( OperatingSystem.IsWindows() )
+					? StringComparison.OrdinalIgnoreCase
+					: StringComparison.Ordinal
 			) ) {
 				return null;
 			}
