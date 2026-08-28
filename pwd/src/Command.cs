@@ -31,6 +31,7 @@ public static class Command {
 	/// <returns>The GNU-compatible process exit status: zero for successful command execution and nonzero for a usage or operational failure.</returns>
 	public static int Run( string[] args, TextReader? stdin = null, TextWriter? stdout = null, TextWriter? stderr = null ) =>
 		RunAsync( args, stdin, stdout, stderr ).GetAwaiter().GetResult();
+
 	/// <summary>
 	/// Executes <c>pwd</c> asynchronously with optional injected standard streams.
 	/// </summary>
@@ -80,27 +81,88 @@ public static class Command {
 		);
 		try {
 			var result = parser.Parse( args );
-			if ( await WriteParseErrorsAsync( result, context ).ConfigureAwait( false ) ) return 1;
-			if ( result.HasOption( "help" ) ) { await WriteHelpAsync( context ).ConfigureAwait( false ); return 0; }
-			if ( result.HasOption( "version" ) ) { await context.StandardOutput.WriteLineAsync( VERSION.AsMemory(), context.CancellationToken ).ConfigureAwait( false ); return 0; }
+			if ( await WriteParseErrorsAsync( result, context ).ConfigureAwait( false ) ) {
+				return 1;
+			}
+			if ( result.HasOption( "help" ) ) {
+				await WriteHelpAsync( context ).ConfigureAwait( false );
+				return 0;
+			}
+			if ( result.HasOption( "version" ) ) {
+				await context.StandardOutput.WriteLineAsync(
+					VERSION.AsMemory(),
+					context.CancellationToken
+				).ConfigureAwait( false );
+				return 0;
+			}
+
 			var logical = Environment.GetEnvironmentVariable( "POSIXLY_CORRECT" ) is not null;
-			foreach ( var option in result.Options ) { if ( option.Definition.Key == "logical" ) logical = true; else if ( option.Definition.Key == "physical" ) logical = false; }
-			var physical = ResolvePhysicalPath( Directory.GetCurrentDirectory() );
+			foreach ( var option in result.Options ) {
+				if ( option.Definition.Key == "logical" ) {
+					logical = true;
+				} else if ( option.Definition.Key == "physical" ) {
+					logical = false;
+				}
+			}
+
+			var physical = ResolvePhysicalPath(
+				Directory.GetCurrentDirectory()
+			);
 			var output = physical;
 			if ( logical ) {
 				var pwd = Environment.GetEnvironmentVariable( "PWD" );
-				if ( IsValidLogicalPath( pwd, physical ) ) output = pwd!;
+				if ( IsValidLogicalPath( pwd, physical ) ) {
+					output = pwd!;
+				}
 			}
-			await context.StandardOutput.WriteLineAsync( output.AsMemory(), context.CancellationToken ).ConfigureAwait( false );
+
+			await context.StandardOutput.WriteLineAsync(
+				output.AsMemory(),
+				context.CancellationToken
+			).ConfigureAwait( false );
 			return 0;
-		} catch ( OperationCanceledException ) { return CommandExitCodes.Canceled; }
-		catch ( Exception ex ) when ( ex is IOException or UnauthorizedAccessException ) { await context.Diagnostics.ErrorAsync( ex.Message, context.CancellationToken ).ConfigureAwait( false ); return 1; }
+		} catch ( OperationCanceledException ) {
+			return CommandExitCodes.Canceled;
+		} catch ( Exception ex ) when ( ex is IOException or UnauthorizedAccessException ) {
+			await context.Diagnostics.ErrorAsync(
+				ex.Message,
+				context.CancellationToken
+			).ConfigureAwait( false );
+			return 1;
+		}
 	}
+
 	private static bool IsValidLogicalPath( string? path, string physical ) {
-		if ( string.IsNullOrEmpty( path ) || !System.IO.Path.IsPathRooted( path ) ) return false;
-		if ( path.Split( theSlashes, StringSplitOptions.RemoveEmptyEntries ).Any( x => x is "." or ".." ) ) return false;
-		try { return string.Equals( ResolvePhysicalPath( path ), physical, OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal ); } catch { return false; }
+		if (
+			string.IsNullOrEmpty( path )
+			|| !System.IO.Path.IsPathRooted( path )
+		) {
+			return false;
+		}
+		if (
+			path.Split(
+				theSlashes,
+				StringSplitOptions.RemoveEmptyEntries
+			).Any( x => x is "." or ".." )
+		) {
+			return false;
+		}
+
+		try {
+			var comparison = ( OperatingSystem.IsWindows() )
+				? StringComparison.OrdinalIgnoreCase
+				: StringComparison.Ordinal
+			;
+			return string.Equals(
+				ResolvePhysicalPath( path ),
+				physical,
+				comparison
+			);
+		} catch {
+			return false;
+		}
 	}
+
 	/// <summary>
 	/// Resolves symbolic links component by component to produce a physical absolute path.
 	/// </summary>
@@ -110,13 +172,26 @@ public static class Command {
 		var full = System.IO.Path.GetFullPath( path );
 		var root = System.IO.Path.GetPathRoot( full ) ?? string.Empty;
 		var current = root;
-		foreach ( var component in full[root.Length..].Split( new[] { System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries ) ) {
+		var separators = new[] {
+			System.IO.Path.DirectorySeparatorChar,
+			System.IO.Path.AltDirectorySeparatorChar
+		};
+		foreach (
+			var component in full[ root.Length.. ].Split(
+				separators,
+				StringSplitOptions.RemoveEmptyEntries
+			)
+		) {
 			var candidate = System.IO.Path.Combine( current, component );
 			var target = Directory.ResolveLinkTarget( candidate, true );
 			current = target?.FullName ?? candidate;
 		}
-		return System.IO.Path.TrimEndingDirectorySeparator( System.IO.Path.GetFullPath( current ) );
+
+		return System.IO.Path.TrimEndingDirectorySeparator(
+			System.IO.Path.GetFullPath( current )
+		);
 	}
+
 	private static async Task WriteHelpAsync( CommandContext context ) {
 		const string text = """
 Usage: pwd [OPTION]...
@@ -132,6 +207,7 @@ Print the full filename of the current working directory.
 			context.CancellationToken
 		).ConfigureAwait( false );
 	}
+
 	private static OptionParser CreateParser( params OptionDefinition[] options ) => new(
 		options,
 		new OptionParserSettings {
@@ -139,8 +215,14 @@ Print the full filename of the current working directory.
 			Ordering = OptionOrdering.Permute
 		}
 	);
-	private static async Task<bool> WriteParseErrorsAsync( OptionParseResult result, CommandContext context ) {
-		if ( result.IsSuccess ) return false;
+
+	private static async Task<bool> WriteParseErrorsAsync(
+		OptionParseResult result,
+		CommandContext context
+	) {
+		if ( result.IsSuccess ) {
+			return false;
+		}
 		foreach ( var error in result.Errors ) {
 			await context.StandardError.WriteLineAsync(
 				OptionDiagnosticFormatter.Format( context.ProgramName, error ).AsMemory(),
