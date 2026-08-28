@@ -24,7 +24,11 @@ namespace Icod.CoreUtils.StdBuf;
 using System;
 
 internal static class Program {
-	public static async Task<int> Main( string[] args ) {
+	public static async Task<int> Main(
+		string[] args
+	) {
+		ArgumentNullException.ThrowIfNull( args );
+
 		return await Command.RunAsync(
 			args,
 			Console.In,

@@ -26,8 +26,12 @@ public static class Program {
 	/// <summary>Runs <c>timeout</c>.</summary>
 	public static Task<int> Main(
 		string[] args
-	) => Command.RunAsync(
-		args,
-		forwardHostSignals: true
-	);
+	) {
+		ArgumentNullException.ThrowIfNull( args );
+
+		return Command.RunAsync(
+			args,
+			forwardHostSignals: true
+		);
+	}
 }
