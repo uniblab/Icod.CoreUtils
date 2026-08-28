@@ -21,7 +21,6 @@
 
 namespace Icod.CoreUtils.Sha384Sum;
 
-using Icod.CommandFramework.Diagnostics;
 
 /// <summary>
 /// Provides the executable entry point for the GNU-compatible <c>sha384sum</c> command for computing and verifying SHA-384 message digests.
@@ -37,10 +36,11 @@ public static class Program {
 		string[] args
 	) {
 		ArgumentNullException.ThrowIfNull( args );
+
 		using var cancellation = new CancellationTokenSource();
 		ConsoleCancelEventHandler handler = (
-			sender,
-			eventArgs
+			object? sender,
+			ConsoleCancelEventArgs eventArgs
 		) => {
 			eventArgs.Cancel = true;
 			cancellation.Cancel();
@@ -48,12 +48,16 @@ public static class Program {
 		Console.CancelKeyPress += handler;
 
 		try {
+			var binaryStdin = Console.OpenStandardInput();
+			var binaryStdout = Console.OpenStandardOutput();
 			return await Command.RunAsync(
 				args,
-				CommandContext.CreateConsole(
-					"sha384sum",
-					cancellation.Token
-				)
+				stdin: Console.In,
+				stdout: Console.Out,
+				stderr: Console.Error,
+				stdinStream: binaryStdin,
+				stdoutStream: binaryStdout,
+				cancellationToken: cancellation.Token
 			).ConfigureAwait( false );
 		} finally {
 			Console.CancelKeyPress -= handler;

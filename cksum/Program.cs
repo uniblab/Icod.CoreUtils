@@ -21,7 +21,6 @@
 
 namespace Icod.CoreUtils.Cksum;
 
-using Icod.CommandFramework.Diagnostics;
 
 /// <summary>
 /// Provides the executable entry point for the GNU-compatible <c>cksum</c> command for computing and verifying checksums and byte counts.
@@ -37,22 +36,27 @@ public static class Program {
 		string[] args
 	) {
 		ArgumentNullException.ThrowIfNull( args );
+
 		using var cancellation = new CancellationTokenSource();
 		ConsoleCancelEventHandler handler = (
-			sender,
-			eventArgs
+			object? sender,
+			ConsoleCancelEventArgs eventArgs
 		) => {
 			eventArgs.Cancel = true;
 			cancellation.Cancel();
 		};
 		Console.CancelKeyPress += handler;
 		try {
+			var binaryStdin = Console.OpenStandardInput();
+			var binaryStdout = Console.OpenStandardOutput();
 			return await Command.RunAsync(
 				args,
-				CommandContext.CreateConsole(
-					"cksum",
-					cancellation.Token
-				)
+				stdin: Console.In,
+				stdout: Console.Out,
+				stderr: Console.Error,
+				stdinStream: binaryStdin,
+				stdoutStream: binaryStdout,
+				cancellationToken: cancellation.Token
 			).ConfigureAwait( false );
 		} finally {
 			Console.CancelKeyPress -= handler;
