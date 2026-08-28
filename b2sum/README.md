@@ -41,7 +41,6 @@ With `--check`, operands are interpreted as checksum-list files. Each listed dig
 --strict
     In --check mode, fail if a checksum list contains improperly formatted lines.
 
-
 -l, --length=BITS
     Use a BLAKE2b digest of BITS bits. BITS must be in the range 1 through 512.
     The default is 512.
@@ -99,4 +98,4 @@ See the repository `LICENSE` file for licensing terms and notices applicable to 
 
 ## SEE ALSO
 
-`b2sum(1)`, `cksum(1)`, `b2sum(1)`, `md5sum(1)`, `sha1sum(1)`, `sha256sum(1)`, `sha512sum(1)`
+`b2sum(1)`, `cksum(1)`, `md5sum(1)`, `sha1sum(1)`, `sha256sum(1)`, `sha512sum(1)`

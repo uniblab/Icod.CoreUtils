@@ -39,6 +39,7 @@ No non-option operands are accepted.
 ## PLATFORM NOTES
 
 The implementation deliberately uses the cross-platform host identifier provider rather than assuming a Unix `/etc/hostid` storage mechanism. The meaning and availability of the returned identifier therefore follow the provider for the current operating system.
+
 ## AUTHORS
 
 GNU `hostid` was written by Jim Meyering.

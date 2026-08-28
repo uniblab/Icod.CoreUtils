@@ -39,6 +39,7 @@ When `--help` or `--version` is the sole argument, the corresponding text is wri
 ## PLATFORM NOTES
 
 The command has no filesystem, identity, terminal, or other platform dependency.
+
 ## AUTHORS
 
 GNU `false` was written by Jim Meyering.

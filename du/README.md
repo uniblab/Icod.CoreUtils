@@ -119,6 +119,7 @@ Hard-link accounting, symbolic-link traversal, one-filesystem traversal, directo
 Traversal is performed through the repository's filesystem abstractions rather than an external `du` executable. Allocated-size availability therefore follows the metadata capabilities of the active platform provider.
 
 Unless inode mode is selected, output scaling follows the shared `DU_BLOCK_SIZE` policy when no explicit size option is supplied.
+
 ## AUTHORS
 
 GNU `du` was written by Torbjörn Granlund, David MacKenzie, Paul Eggert, and Jim Meyering.

@@ -67,6 +67,7 @@ System information comes from the shared platform-information provider rather th
 ## PLATFORM NOTES
 
 The platform provider normalizes native Windows, Linux, and macOS information into the fields expected by `uname`. Some non-portable fields can legitimately be `unknown`; explicit `-p` or `-i` requests print that value, while `--all` omits unknown values for those two fields.
+
 ## AUTHORS
 
 GNU `uname` was written by David MacKenzie.

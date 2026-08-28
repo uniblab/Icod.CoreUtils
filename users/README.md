@@ -39,6 +39,7 @@ If `FILE` is omitted, the system login database exposed by the login-record prov
 ## PLATFORM NOTES
 
 Login-record enumeration depends on the shared login-record provider. Platforms without a supported login-record facility return a diagnostic and failure rather than synthesizing a user list from unrelated process identity information.
+
 ## AUTHORS
 
 GNU `users` was written by Joseph Arceneaux and David MacKenzie.

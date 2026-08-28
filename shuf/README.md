@@ -45,6 +45,7 @@ Input can come from one file or standard input, command-line records with `--ech
 ## PLATFORM NOTES
 
 Randomness and record handling are managed and platform-neutral. `--random-source` can provide deterministic or externally supplied random bytes.
+
 ## AUTHORS
 
 GNU `shuf` was written by Paul Eggert.

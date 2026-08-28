@@ -49,6 +49,7 @@ Output formats accept `0` for the join field and `1.N` / `2.N` for fields from e
 ## PLATFORM NOTES
 
 Records remain byte preserving and ordering uses the shared managed collation infrastructure rather than an external `join` implementation.
+
 ## AUTHORS
 
 GNU `join` was written by Mike Haertel.

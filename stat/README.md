@@ -60,6 +60,7 @@ The current system metadata provider accepts `--cached=default`. Explicit `alway
 ## PLATFORM NOTES
 
 File and filesystem data come from `IFileSystemMetadataProvider`, allowing the same command and formatting engine to operate over the platform-specific metadata implementations used on Windows, Linux, and macOS. Unsupported metadata fields are represented through the provider's availability contracts rather than fabricated.
+
 ## AUTHORS
 
 GNU `stat` was written by Michael Meskes.

@@ -42,6 +42,7 @@ An unset requested variable produces no placeholder output and makes the final s
 ## PLATFORM NOTES
 
 Values come from the current .NET process environment. Environment-variable naming, case sensitivity, and inherited content therefore follow the host operating system and process-launch environment.
+
 ## AUTHORS
 
 GNU `printenv` was written by David MacKenzie and Richard Mlynarik.

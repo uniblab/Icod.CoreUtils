@@ -49,6 +49,7 @@ d    days
 ## PLATFORM NOTES
 
 Waiting is implemented asynchronously with .NET timers and cancellation support. Very long finite waits are divided into bounded delay chunks rather than relying on a single platform timer interval.
+
 ## AUTHORS
 
 GNU `sleep` was written by Jim Meyering and Paul Eggert.

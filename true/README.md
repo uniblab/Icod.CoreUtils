@@ -38,6 +38,7 @@ The command performs no requested operation and normally returns success. Comman
 ## PLATFORM NOTES
 
 The command has no filesystem, identity, terminal, or other platform dependency.
+
 ## AUTHORS
 
 GNU `true` was written by Jim Meyering.

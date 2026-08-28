@@ -111,6 +111,7 @@ Additional shared options cover ignore/hide patterns, explicit output width and 
 Terminal attachment, terminal width, color capability, environment capture, filename quoting, and control-character presentation are supplied by shared abstractions. `TIME_STYLE`, `QUOTING_STYLE`, and `LS_COLORS` are honored by the shared engine where applicable.
 
 Recursive traversal uses stable filesystem identities to diagnose directory loops instead of depending only on textual path comparison.
+
 ## AUTHORS
 
 GNU `dir` was written by Richard M. Stallman and David MacKenzie.

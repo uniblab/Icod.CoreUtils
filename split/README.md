@@ -49,6 +49,7 @@ The implementation protects against an output piece overwriting the input, inclu
 ## PLATFORM NOTES
 
 `--filter` uses `/bin/sh -c` on Unix-like systems and the configured command processor on Windows, with the output piece name supplied in the `FILE` environment variable. Ordinary split data remains byte preserving.
+
 ## AUTHORS
 
 GNU `split` was written by Torbjörn Granlund and Richard M. Stallman.

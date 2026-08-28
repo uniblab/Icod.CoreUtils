@@ -87,6 +87,7 @@ The default report shows filesystem source, total size, used space, available sp
 Filesystem observations are obtained through the shared filesystem-usage and metadata abstractions. Size policy honors the command's explicit options and shared `DF_BLOCK_SIZE` environment policy.
 
 `--sync` uses the native Unix `sync` entry point and is intentionally reported as unsupported on Windows. All ordinary reporting functionality remains provider-driven and cross-platform.
+
 ## AUTHORS
 
 GNU `df` was written by Torbjörn Granlund, David MacKenzie, and Paul Eggert.

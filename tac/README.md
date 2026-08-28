@@ -40,6 +40,7 @@ An empty fixed separator selects NUL. An empty regular-expression separator is r
 ## PLATFORM NOTES
 
 Seekable files are scanned directly; forward-only inputs are copied to a temporary spool to permit reverse access. Output bytes are not newline-normalized.
+
 ## AUTHORS
 
 GNU `tac` was written by Jay Lepreau and David MacKenzie.

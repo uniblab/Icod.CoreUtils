@@ -44,6 +44,7 @@ In normal data-producing operation the command does not terminate successfully o
 ## PLATFORM NOTES
 
 The repeated line uses the host environment's newline sequence and is written through the supplied .NET text stream.
+
 ## AUTHORS
 
 GNU `yes` was written by David MacKenzie.

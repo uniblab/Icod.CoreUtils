@@ -48,6 +48,7 @@ If input and output identify the same path, output is first written to a secure 
 ## PLATFORM NOTES
 
 Records remain byte preserving. Character-sensitive skip/width and case behavior use the active managed locale profile.
+
 ## AUTHORS
 
 GNU `uniq` was written by Richard M. Stallman and David MacKenzie.

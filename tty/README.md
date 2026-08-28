@@ -45,6 +45,7 @@ This implementation deliberately distinguishes several failure classes:
 ## PLATFORM NOTES
 
 Terminal discovery is provider-backed through `Icod.CommandFramework.Terminal`. It does not assume a Unix `/dev/tty` namespace and can therefore represent terminal identity on Windows as well as Unix-like systems. A platform may still be unable to provide a pathname even when an interactive terminal is present.
+
 ## AUTHORS
 
 GNU `tty` was written by David MacKenzie.

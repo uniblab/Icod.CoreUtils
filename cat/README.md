@@ -46,6 +46,7 @@ A failure opening one operand does not prevent later operands from being attempt
 ## PLATFORM NOTES
 
 Production execution uses binary standard streams. Unmodified input bytes, embedded NULs, original line endings, and an unterminated final record are preserved exactly.
+
 ## AUTHORS
 
 GNU `cat` was written by Torbjörn Granlund and Richard M. Stallman.

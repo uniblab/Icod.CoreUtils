@@ -20,6 +20,7 @@ The command changes the group ownership of each selected filesystem entry. Group
 With `--reference`, the group is taken from `RFILE`. The implementation also supports the shared `--from=CURRENT` ownership filter, allowing a requested change to be conditional on the currently observed owner/group.
 
 ## OPTIONS
+
 ```text
 -c, --changes
     Report only files whose ownership actually changes.
@@ -66,6 +67,7 @@ With `--reference`, the group is taken from `RFILE`. The implementation also sup
 --version
     Display version information and exit.
 ```
+
 ## EXIT STATUS
 
 ```text

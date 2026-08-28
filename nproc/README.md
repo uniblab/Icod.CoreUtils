@@ -46,6 +46,7 @@ The result remains at least one processing unit when a usable processor count ca
 ## PLATFORM NOTES
 
 Processor discovery is provider-backed rather than tied to `/proc` or another single operating-system interface. The reported available count can reflect process affinity, runtime restrictions, container limits, or supported OpenMP-style environment policy.
+
 ## AUTHORS
 
 GNU `nproc` was written by Giuseppe Scrivano.

@@ -46,6 +46,7 @@ Invalid UTF-8 bytes contribute to byte counts and word-state handling but are no
 ## PLATFORM NOTES
 
 Byte input is never newline-normalized before counting. Display-width calculation handles tabs at eight-column stops, carriage returns, and Unicode scalar widths in managed code.
+
 ## AUTHORS
 
 GNU `wc` was written by Paul Rubin and David MacKenzie.

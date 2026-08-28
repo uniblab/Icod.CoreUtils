@@ -51,6 +51,7 @@ Supplying `--suffix` also enables multiple-name mode.
 ## PLATFORM NOTES
 
 The pathname algorithm uses `/` as the GNU pathname separator and does not access the filesystem. It therefore gives deterministic GNU-style lexical results even when the host platform uses different native pathname conventions.
+
 ## AUTHORS
 
 GNU `basename` was written by David MacKenzie.

@@ -69,6 +69,7 @@ Only compatible ordering modes may be combined within one global or key-local sc
 ## PLATFORM NOTES
 
 External runs use the shared temporary-workspace infrastructure. Collation and specialized ordering modes are implemented through managed/shared repository services rather than shelling out to a platform `sort`.
+
 ## AUTHORS
 
 GNU `sort` was written by Mike Haertel and Paul Eggert.

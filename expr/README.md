@@ -50,6 +50,7 @@ A leading `--` ends option interpretation. `--help` and `--version` are recogniz
 ## PLATFORM NOTES
 
 Basic regular expressions use the shared fully managed GNU-compatible engine. Lexical comparison and logical-character behavior are supplied through the expression locale provider.
+
 ## AUTHORS
 
 GNU `expr` was written by Mike Parker, James Youngman, and Paul Eggert.

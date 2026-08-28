@@ -94,4 +94,4 @@ See the repository `LICENSE` file for licensing terms and notices applicable to 
 
 ## SEE ALSO
 
-`sha1sum(1)`, `cksum(1)`, `b2sum(1)`, `md5sum(1)`, `sha1sum(1)`, `sha256sum(1)`, `sha512sum(1)`
+`sha1sum(1)`, `cksum(1)`, `b2sum(1)`, `md5sum(1)`, `sha256sum(1)`, `sha512sum(1)`

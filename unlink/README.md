@@ -43,6 +43,7 @@ Mounted-volume pathnames are explicitly rejected rather than being treated as or
 ## PLATFORM NOTES
 
 Removal is performed through the shared metadata and mutation providers with no-follow semantics. This lets the command distinguish ordinary directories, path indirections, reparse points, and volume mount points on platforms where those concepts differ.
+
 ## AUTHORS
 
 GNU `unlink` was written by Michael Stone.

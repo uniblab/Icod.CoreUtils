@@ -42,6 +42,7 @@ Typical failures include an existing destination, a missing source or parent, a 
 ## PLATFORM NOTES
 
 Hard-link creation is routed through the shared filesystem mutation abstraction so Windows, Linux, and macOS can use their native facilities. Filesystem type, privilege policy, and volume boundaries can still limit whether a requested hard link is possible.
+
 ## AUTHORS
 
 GNU `link` was written by Michael Stone.

@@ -46,6 +46,7 @@ By default the last ten newline-delimited records of each input are written. The
 ## PLATFORM NOTES
 
 Normal output is byte preserving. Seekable files are scanned backward; forward-only sources use bounded buffering or temporary spooling. Follow mode uses cancellation-aware managed polling with descriptor and name semantics.
+
 ## AUTHORS
 
 GNU `tail` was written by Paul Rubin, David MacKenzie, Ian Lance Taylor, and Jim Meyering.

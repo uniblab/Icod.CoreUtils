@@ -57,6 +57,7 @@ The command formats text into pages and columns, optionally merges files in para
 ## PLATFORM NOTES
 
 Pagination is managed. Header dates use the repository's shared time abstraction and generated line endings follow the repository's cross-platform text conventions.
+
 ## AUTHORS
 
 GNU `pr` was written by Pete TerMaat and Roland Huebner.

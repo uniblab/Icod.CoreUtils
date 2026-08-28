@@ -57,6 +57,7 @@ When `POSIXLY_CORRECT` is present, backslash escapes are enabled by default and 
 ## PLATFORM NOTES
 
 Text is written through the supplied .NET `TextWriter`. Escape `\n` and the final line terminator use the host environment's newline sequence.
+
 ## AUTHORS
 
 GNU `echo` was written by Brian Fox and Chet Ramey.

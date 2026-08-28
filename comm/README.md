@@ -42,6 +42,7 @@ The command compares two sorted byte-record streams and normally writes three co
 ## PLATFORM NOTES
 
 Records are preserved as bytes. Comparison uses the shared managed collation environment, giving the command one ordering architecture across Windows, Linux, and macOS.
+
 ## AUTHORS
 
 GNU `comm` was written by Richard M. Stallman and David MacKenzie.

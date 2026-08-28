@@ -40,6 +40,7 @@ Supported output-error modes include `warn`, `warn-nopipe`, `exit`, and `exit-no
 ## PLATFORM NOTES
 
 Command data is copied through binary streams with no decoding or newline conversion. File outputs use asynchronous host filesystem streams.
+
 ## AUTHORS
 
 GNU `tee` was written by Mike Parker, Richard M. Stallman, and David MacKenzie.

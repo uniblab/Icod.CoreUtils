@@ -42,6 +42,7 @@ The operation is purely lexical and does not require the named path to exist.
 ## PLATFORM NOTES
 
 The pathname reduction follows GNU `/` separator semantics without consulting the filesystem. This is intentionally independent of the host's native separator rules.
+
 ## AUTHORS
 
 GNU `dirname` was written by David MacKenzie and Jim Meyering.

@@ -47,6 +47,7 @@ Without `--keep-files`, files created by the current invocation are removed when
 ## PLATFORM NOTES
 
 The implementation uses temporary spools and the shared managed GNU basic-regular-expression engine, so seekable source input and a native regex library are not required.
+
 ## AUTHORS
 
 GNU `csplit` was written by Stuart Kemp and David MacKenzie.

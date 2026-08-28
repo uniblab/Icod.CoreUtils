@@ -47,6 +47,7 @@ If both `-L` and `-P` occur, the last one controls the selected mode. The implem
 ## PLATFORM NOTES
 
 Physical resolution uses .NET filesystem APIs and recognizes the host's directory separators. On Windows this includes Windows pathname and link-resolution behavior; comparisons used to validate logical `PWD` are case-insensitive there and ordinal on other platforms.
+
 ## AUTHORS
 
 GNU `pwd` was written by Jim Meyering.

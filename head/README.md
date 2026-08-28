@@ -41,6 +41,7 @@ The historical `-NUM` spelling is accepted as a line count.
 ## PLATFORM NOTES
 
 Output is byte preserving. Seekable files use direct positioning; forward-only sources use bounded buffering and, when an end-relative operation requires it, a temporary spool.
+
 ## AUTHORS
 
 GNU `head` was written by David MacKenzie and Jim Meyering.

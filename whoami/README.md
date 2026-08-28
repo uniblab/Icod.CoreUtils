@@ -39,6 +39,7 @@ No operands are accepted.
 ## PLATFORM NOTES
 
 Effective-user lookup is provided by the cross-platform identity abstraction. On Unix-like systems this corresponds to the effective user identity; on Windows it follows the effective identity model exposed by the provider.
+
 ## AUTHORS
 
 GNU `whoami` was written by Richard Mlynarik.

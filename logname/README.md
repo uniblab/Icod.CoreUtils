@@ -39,6 +39,7 @@ Unlike `whoami`, `logname` describes the login identity rather than the effectiv
 ## PLATFORM NOTES
 
 Login-name discovery is supplied by the cross-platform identity provider. Some execution environments, service accounts, containers, or detached sessions may not have a meaningful login name even though an effective process identity exists.
+
 ## AUTHORS
 
 GNU `logname` was written by David MacKenzie.

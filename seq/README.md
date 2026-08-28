@@ -52,6 +52,7 @@ The implementation uses invariant numeric parsing, preserves decimal arithmetic 
 ## PLATFORM NOTES
 
 Numeric parsing and formatting use invariant culture, so decimal points and command syntax do not vary with the host locale. The default separator is the host environment's newline sequence.
+
 ## AUTHORS
 
 GNU `seq` was written by Ulrich Drepper.

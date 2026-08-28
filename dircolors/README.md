@@ -53,6 +53,7 @@ When neither `-b` nor `-c` is supplied, shell syntax is inferred from `SHELL`: `
 ## PLATFORM NOTES
 
 The database parser, selector matching, `LS_COLORS` serializer, and shell quoting are fully managed. The built-in database includes common terminal selectors and file-type/extension rules, so normal use does not depend on a host-installed GNU `dircolors` database.
+
 ## AUTHORS
 
 GNU `dircolors` was written by H. Peter Anvin.
