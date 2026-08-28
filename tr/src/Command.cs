@@ -31,31 +31,43 @@ public static class Command {
 	/// <param name="standardOutput">The standard-output writer.</param>
 	/// <param name="standardError">The standard-error writer.</param>
 	/// <param name="cancellationToken">The cancellation token.</param>
+	/// <param name="standardInputStream">The binary standard-input stream, or <see langword="null"/> to derive one from <paramref name="standardInput"/>.</param>
+	/// <param name="standardOutputStream">The binary standard-output stream, or <see langword="null"/> to use <paramref name="standardOutput"/> through the byte-output adapter.</param>
 	/// <returns>A task whose result is the command exit status.</returns>
 	public static async Task<int> RunAsync(
 		string[] args,
 		TextReader? standardInput = null,
 		TextWriter? standardOutput = null,
 		TextWriter? standardError = null,
-		CancellationToken cancellationToken = default
+		CancellationToken cancellationToken = default,
+		Stream? standardInputStream = null,
+		Stream? standardOutputStream = null
 	) {
 		standardInput ??= Console.In;
 		standardOutput ??= Console.Out;
 		standardError ??= Console.Error;
-		using var inputAdapter = new TextReaderStream( standardInput, leaveOpen: true );
-		return await RunAsync(
-			args,
-			new CommandContext(
-				"tr",
-				standardInput,
-				standardOutput,
-				standardError,
-				inputAdapter,
-				null,
-				null,
-				cancellationToken
-			)
-		).ConfigureAwait( false );
+		TextReaderStream? inputAdapter = null;
+		if ( null == standardInputStream ) {
+			inputAdapter = new TextReaderStream( standardInput, leaveOpen: true );
+			standardInputStream = inputAdapter;
+		}
+		try {
+			return await RunAsync(
+				args,
+				new CommandContext(
+					"tr",
+					standardInput,
+					standardOutput,
+					standardError,
+					standardInputStream,
+					standardOutputStream,
+					null,
+					cancellationToken
+				)
+			).ConfigureAwait( false );
+		} finally {
+			inputAdapter?.Dispose();
+		}
 	}
 
 	/// <summary>Runs <c>tr</c> asynchronously against a byte-capable command context.</summary>
