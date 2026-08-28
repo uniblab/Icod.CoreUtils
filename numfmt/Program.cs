@@ -21,15 +21,20 @@
 
 namespace Icod.CoreUtils.NumFmt;
 
-using Icod.CommandFramework.Diagnostics;
 
 /// <summary>Provides the <c>numfmt</c> process entry point.</summary>
 public static class Program {
 	/// <summary>Runs <c>numfmt</c> against the process console streams.</summary>
-	public static async Task<int> Main( string[] args ) {
+	public static async Task<int> Main(
+		string[] args
+	) {
 		ArgumentNullException.ThrowIfNull( args );
+
 		using var cancellation = new CancellationTokenSource();
-		ConsoleCancelEventHandler handler = ( _, eventArgs ) => {
+		ConsoleCancelEventHandler handler = (
+			object? sender,
+			ConsoleCancelEventArgs eventArgs
+		) => {
 			eventArgs.Cancel = true;
 			cancellation.Cancel();
 		};
@@ -37,10 +42,10 @@ public static class Program {
 		try {
 			return await Command.RunAsync(
 				args,
-				CommandContext.CreateConsole(
-					"numfmt",
-					cancellation.Token
-				)
+				standardInput: Console.In,
+				standardOutput: Console.Out,
+				standardError: Console.Error,
+				cancellationToken: cancellation.Token
 			).ConfigureAwait( false );
 		} finally {
 			Console.CancelKeyPress -= handler;

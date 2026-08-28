@@ -21,16 +21,21 @@
 
 namespace Icod.CoreUtils.Pr;
 
-using Icod.CommandFramework.Diagnostics;
 /// <summary>Provides the <c>pr [OPTION]... [FILE]...</c> process entry point.</summary>
 public static class Program {
 	/// <summary>Runs the GNU-compatible page-presentation command.</summary>
 	/// <param name="args">The command-line arguments.</param>
 	/// <returns>A task whose result is the process exit status.</returns>
-	public static async Task<int> Main( string[] args ) {
+	public static async Task<int> Main(
+		string[] args
+	) {
 		ArgumentNullException.ThrowIfNull( args );
+
 		using var cancellation = new CancellationTokenSource();
-		ConsoleCancelEventHandler handler = ( _, eventArgs ) => {
+		ConsoleCancelEventHandler handler = (
+			object? sender,
+			ConsoleCancelEventArgs eventArgs
+		) => {
 			eventArgs.Cancel = true;
 			cancellation.Cancel();
 		};
@@ -38,10 +43,10 @@ public static class Program {
 		try {
 			return await Command.RunAsync(
 				args,
-				CommandContext.CreateConsole(
-					"pr",
-					cancellation.Token
-				)
+				standardInput: Console.In,
+				standardOutput: Console.Out,
+				standardError: Console.Error,
+				cancellationToken: cancellation.Token
 			).ConfigureAwait( false );
 		} finally {
 			Console.CancelKeyPress -= handler;
