@@ -21,8 +21,35 @@
 
 namespace Icod.CoreUtils.Ln;
 
+using Icod.CommandFramework.Diagnostics;
+
 /// <summary>Provides the asynchronous entry point for <c>ln</c>.</summary>
 internal static class Program {
 	/// <summary>Runs the command.</summary>
-	public static async Task<int> Main( string[] args ) => await Command.RunAsync( args ).ConfigureAwait( false );
+	public static async Task<int> Main(
+		string[] args
+	) {
+		ArgumentNullException.ThrowIfNull( args );
+
+		using var cancellation = new CancellationTokenSource();
+		ConsoleCancelEventHandler handler = (
+			object? sender,
+			ConsoleCancelEventArgs eventArgs
+		) => {
+			eventArgs.Cancel = true;
+			cancellation.Cancel();
+		};
+		Console.CancelKeyPress += handler;
+		try {
+			return await Command.RunAsync(
+				args,
+				CommandContext.CreateConsole(
+					"ln",
+					cancellation.Token
+				)
+			).ConfigureAwait( false );
+		} finally {
+			Console.CancelKeyPress -= handler;
+		}
+	}
 }
