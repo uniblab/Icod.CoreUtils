@@ -1,14 +1,22 @@
-# `sync`
+# SYNC(1)
+
+## NAME
+
+**sync** — synchronize cached writes to persistent storage
+
+## SYNOPSIS
+
+```text
+sync [OPTION] [FILE]...
+```
+
+## DESCRIPTION
 
 This project implements GNU Coreutils `sync` against the GNU Coreutils 9.11
 manual and the pinned `v9.11` source revision recorded in
 `Icod.CoreUtils-Upstream-Version-Ledger.md`.
 
-## Supported interface
-
-```text
-sync [OPTION] [FILE]...
-```
+## OPTIONS AND OPERANDS
 
 - With no operands, request a flush of all mounted filesystems.
 - With operands, flush each named file using data-and-metadata semantics.
@@ -19,7 +27,7 @@ sync [OPTION] [FILE]...
 - Pathname operands use the Shared `*`, `?`, and `**` expansion policy.
 - Failures are reported per operand and later operands are still attempted.
 
-## Platform behavior
+## PLATFORM NOTES
 
 | Platform | Default file flush | `--data` | `--file-system` | No operands |
 |---|---|---|---|---|
@@ -43,3 +51,19 @@ and special files where the host filesystem and permissions allow them.
 
 Cancellation is cooperative. It is checked before and between native calls,
 but an individual kernel flush cannot necessarily be interrupted after entry.
+
+## AUTHORS
+
+GNU `sync` was written by Jim Meyering and Giuseppe Scrivano.
+
+Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+
+## COPYRIGHT
+
+Copyright (c) 2026 Timothy J. Bruce
+
+See the repository `LICENSE` file for licensing terms and notices applicable to this project.
+
+## SEE ALSO
+
+`sync(1)`

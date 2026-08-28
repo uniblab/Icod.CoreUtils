@@ -1,4 +1,16 @@
-# `ptx`
+# PTX(1)
+
+## NAME
+
+**ptx** — produce a permuted index of file contents
+
+## SYNOPSIS
+
+```text
+ptx [OPTION]... [INPUT [OUTPUT]]
+```
+
+## DESCRIPTION
 
 This project implements GNU Coreutils `ptx` for .NET 10. It generates a sorted permuted index from one or more byte-oriented input sources.
 
@@ -6,7 +18,7 @@ The authoritative compatibility baseline for Batch 25 is GNU Coreutils 9.11. The
 
 Input and output use `CommandContext` and cancellation-aware TAP APIs. Contexts are written once to a secure Shared temporary workspace. Lightweight occurrence records are sorted stably with `Icod.CoreUtils.Shared.Ordering.ExternalOrderingEngine<T>`, permitting run spilling and bounded merge fan-in without depending on another command project.
 
-## Source layout
+## PROJECT STRUCTURE
 
 - `Program.cs` provides the asynchronous process entry point.
 - `src/Command.cs` parses GNU-style options and owns command-level diagnostics and streams.
@@ -19,6 +31,22 @@ Input and output use `CommandContext` and cancellation-aware TAP APIs. Contexts 
 
 No command project references this project, and this project references no other command project.
 
-## Memory boundary
+## MEMORY BOUNDARY
 
 Default GNU sentence recognition and traditional line recognition stream their source contexts. Custom sentence regular expressions require whole-source matching because the Shared managed GNU engine operates on a complete searchable string; occurrence ordering and context storage remain externally spooled and bounded.
+
+## AUTHORS
+
+GNU `ptx` was written by François Pinard.
+
+Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+
+## COPYRIGHT
+
+Copyright (c) 2026 Timothy J. Bruce
+
+See the repository `LICENSE` file for licensing terms and notices applicable to this project.
+
+## SEE ALSO
+
+`ptx(1)`, `sort(1)`

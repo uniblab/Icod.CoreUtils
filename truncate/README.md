@@ -1,15 +1,27 @@
-# `truncate`
+# TRUNCATE(1)
+
+## NAME
+
+**truncate** — shrink or extend files to a specified size
+
+## SYNOPSIS
+
+```text
+truncate [OPTION]... FILE...
+```
+
+## DESCRIPTION
 
 This directory implements GNU `truncate` behavior for Icod.CoreUtils.
 
-## Authoritative baseline
+## AUTHORITATIVE BASELINE
 
 The command is based on GNU Coreutils 9.11, pinned at tag `v9.11`, commit
 `c01fd163a47468a8296fb369f5233853bb551bb6`.  The primary behavioral sources
 are the GNU Coreutils 9.11 manual and `src/truncate.c` from that release.  The
 Linux man-pages rendering of `truncate(1)` is used as a secondary synopsis.
 
-## Implemented interface
+## IMPLEMENTED INTERFACE
 
 - `-c`, `--no-create`
 - `-o`, `--io-blocks`
@@ -28,7 +40,7 @@ Linux man-pages rendering of `truncate(1)` is used as a secondary synopsis.
 - checked arithmetic, zero-divisor rejection, and negative-result clamping
 - sparse-aware extension through the Gate B filesystem capability layer
 
-## Platform notes
+## PLATFORM NOTES
 
 The ordinary byte-size modes use .NET file lengths on every supported runtime.
 Sparse extension is delegated to `SystemFileSystemOperations`; unsupported
@@ -56,9 +68,25 @@ open mode with identical FIFO and device semantics.  Such operands therefore
 use runtime-native `FileStream` behavior and produce controlled diagnostics
 when their length cannot be queried or changed.
 
-## Tests
+## TESTS
 
 `tests/Truncate.Tests` contains command-level grammar, arithmetic, creation,
 reference, error-continuation, cancellation, output-failure,
 platform-injection, and native I/O-block-size tests.  CI coverage is expected on `windows-latest`,
 `ubuntu-latest`, and `macos-latest`.
+
+## AUTHORS
+
+GNU `truncate` was written by Pádraig Brady.
+
+Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+
+## COPYRIGHT
+
+Copyright (c) 2026 Timothy J. Bruce
+
+See the repository `LICENSE` file for licensing terms and notices applicable to this project.
+
+## SEE ALSO
+
+`truncate(1)`, `stat(1)`
