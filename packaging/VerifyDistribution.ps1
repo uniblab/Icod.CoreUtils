@@ -67,6 +67,19 @@ function Get-ExecutablePath {
     return $path
 }
 
+function Get-CoreUtilsVersionExitCode {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$CommandName
+    )
+
+    if ('false' -eq $CommandName) {
+        return 1
+    }
+
+    return 0
+}
+
 function Invoke-Tool {
     param(
         [Parameter(Mandatory = $true)]
@@ -74,14 +87,32 @@ function Invoke-Tool {
 
         [string[]]$Arguments = @(),
 
-        [int]$ExpectedExitCode = 0
+        [int]$ExpectedExitCode = 0,
+
+        [switch]$RequireOutput
     )
 
     Write-Host "> $Path $($Arguments -join ' ')"
-    & $Path @Arguments
-    $exitCode = $LASTEXITCODE
+    $hasOutput = $false
+    if ($RequireOutput) {
+        $output = @(& $Path @Arguments)
+        $exitCode = $LASTEXITCODE
+        foreach ($line in $output) {
+            Write-Host $line
+            if (-not [string]::IsNullOrWhiteSpace("$line")) {
+                $hasOutput = $true
+            }
+        }
+    } else {
+        & $Path @Arguments
+        $exitCode = $LASTEXITCODE
+    }
+
     if ($ExpectedExitCode -ne $exitCode) {
         throw "Tool '$Path' exited with status $exitCode; expected $ExpectedExitCode."
+    }
+    if ($RequireOutput -and -not $hasOutput) {
+        throw "Tool '$Path' produced no output."
     }
 }
 
@@ -241,9 +272,12 @@ try {
         $standaloneExecutable = Get-ExecutablePath `
             -Directory $standaloneOutputPath `
             -CommandName $commandName
+        $expectedVersionExitCode = Get-CoreUtilsVersionExitCode -CommandName $commandName
         Invoke-Tool `
             -Path $standaloneExecutable `
-            -Arguments @('--version')
+            -Arguments @('--version') `
+            -ExpectedExitCode $expectedVersionExitCode `
+            -RequireOutput
     }
 
     Invoke-DotNet -Arguments @(
@@ -282,12 +316,16 @@ try {
     $routerShim = Get-ExecutablePath -Directory $routerToolPath -CommandName 'coreutils'
     Invoke-Tool `
         -Path $routerShim `
-        -Arguments @('--version')
+        -Arguments @('--version') `
+        -RequireOutput
 
     foreach ($commandName in $commandNames) {
+        $expectedVersionExitCode = Get-CoreUtilsVersionExitCode -CommandName $commandName
         Invoke-Tool `
             -Path $routerShim `
-            -Arguments @($commandName, '--version')
+            -Arguments @($commandName, '--version') `
+            -ExpectedExitCode $expectedVersionExitCode `
+            -RequireOutput
     }
 
     Write-Host ''
