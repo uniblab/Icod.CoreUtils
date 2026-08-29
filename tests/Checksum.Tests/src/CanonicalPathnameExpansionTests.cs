@@ -46,13 +46,13 @@ public sealed class CanonicalPathnameExpansionTests {
 				alpha,
 				beta
 			},
-			star.Paths
+			star.Operands
 		);
 		Assert.Equal(
 			new string[] {
 				beta
 			},
-			question.Paths
+			question.Operands
 		);
 	}
 
@@ -99,19 +99,19 @@ public sealed class CanonicalPathnameExpansionTests {
 
 		Assert.Equal(
 			3,
-			expansion.Paths.Count
+			expansion.Operands.Count
 		);
 		Assert.Contains(
 			root,
-			expansion.Paths
+			expansion.Operands
 		);
 		Assert.Contains(
 			first,
-			expansion.Paths
+			expansion.Operands
 		);
 		Assert.Contains(
 			deep,
-			expansion.Paths
+			expansion.Operands
 		);
 	}
 
@@ -140,11 +140,11 @@ public sealed class CanonicalPathnameExpansionTests {
 
 		Assert.Contains(
 			visible,
-			expansion.Paths
+			expansion.Operands
 		);
 		Assert.DoesNotContain(
 			hidden,
-			expansion.Paths
+			expansion.Operands
 		);
 	}
 
@@ -168,7 +168,7 @@ public sealed class CanonicalPathnameExpansionTests {
 			new string[] {
 				pattern
 			},
-			expansion.Paths
+			expansion.Operands
 		);
 	}
 

@@ -347,7 +347,7 @@ public static class DigestCommand {
 				: operands,
 			cancellationToken: context.CancellationToken
 		).ConfigureAwait( false );
-		var expanded = expansion.Paths;
+		var expanded = expansion.Operands;
 		var exitCode = CommandExitCodes.Success;
 		using var output = new ByteOutputStream(
 			context.StandardOutput,
@@ -446,7 +446,7 @@ public static class DigestCommand {
 				: operands,
 			cancellationToken: context.CancellationToken
 		).ConfigureAwait( false );
-		var manifests = expansion.Paths;
+		var manifests = expansion.Operands;
 		var failed = false;
 		var verifiedCount = 0;
 		var formattedCount = 0;

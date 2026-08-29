@@ -114,7 +114,7 @@ public static class SumCommand {
 					: new string[] { "-" },
 				cancellationToken: context.CancellationToken
 			).ConfigureAwait( false );
-			var names = expansion.Paths;
+			var names = expansion.Operands;
 			var exitCode = CommandExitCodes.Success;
 			foreach ( var name in names ) {
 				context.CancellationToken.ThrowIfCancellationRequested();

@@ -477,7 +477,7 @@ public static class CkSumCommand {
 				: new string[] { "-" },
 			cancellationToken: context.CancellationToken
 		).ConfigureAwait( false );
-		var names = expansion.Paths;
+		var names = expansion.Operands;
 		using var output = new ByteOutputStream(
 			context.StandardOutput,
 			context.StandardOutputStream
@@ -608,7 +608,7 @@ public static class CkSumCommand {
 				: operands,
 			cancellationToken: context.CancellationToken
 		).ConfigureAwait( false );
-		var manifests = expansion.Paths;
+		var manifests = expansion.Operands;
 		var failed = false;
 		var validCount = 0;
 		var verifiedCount = 0;

@@ -50,11 +50,14 @@ public static class PathnameOperandExpander {
 			?? operands.ToArray()
 		;
 		var expander = new PathnameExpander(
-			new SystemReadOnlyFileSystemProvider()
+			SystemReadOnlyFileSystemProvider.Instance
 		);
+		var operandOptions = new PathnameOperandExpansionOptions {
+			ExpansionOptions = options ?? PathnameExpansionOptions.Default
+		};
 		return await expander.ExpandOperandsAsync(
 			operandList,
-			options,
+			operandOptions,
 			cancellationToken
 		).ConfigureAwait( false );
 	}
