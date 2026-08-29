@@ -22,7 +22,7 @@
 namespace Icod.CoreUtils.Shared.DirectoryListing;
 
 using System.Globalization;
-using Icod.CommandFramework.Terminal;
+using Icod.CoreUtils.Shared.Presentation;
 
 /// <summary>Identifies one executable profile hosted by the shared directory-listing engine.</summary>
 public enum DirectoryListingProfile {
@@ -185,7 +185,7 @@ public sealed class DirectoryListingOptions {
 	/// <returns>New mutable invocation options.</returns>
 	public static DirectoryListingOptions CreateDefaults(
 		DirectoryListingProfile profile,
-		TerminalPresentationSnapshot presentation
+		OutputPresentationSnapshot presentation
 	) {
 		ArgumentNullException.ThrowIfNull( presentation );
 		var options = new DirectoryListingOptions( profile );
@@ -222,7 +222,7 @@ public static class DirectoryListingOptionParser {
 	public static DirectoryListingOptions Parse(
 		DirectoryListingProfile profile,
 		IReadOnlyList<string> arguments,
-		TerminalPresentationSnapshot presentation
+		OutputPresentationSnapshot presentation
 	) {
 		ArgumentNullException.ThrowIfNull( arguments );
 		var options = DirectoryListingOptions.CreateDefaults( profile, presentation );

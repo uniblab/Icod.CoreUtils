@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.NProc.Tests;
 
 using Icod.CoreUtils.NProc;
-using Icod.CommandFramework.Host;
+using Icod.Host;
 
 /// <summary>Supplies deterministic processor snapshots to tests.</summary>
 public sealed class TestProcessorResourceProvider : IProcessorResourceProvider {

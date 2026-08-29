@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.HostId;
 
-using Icod.CommandFramework.Host;
+using Icod.Host;
 
 /// <summary>Provides the command boundary for GNU-compatible host identification.</summary>
 public static class Command {

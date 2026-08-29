@@ -88,7 +88,7 @@ public sealed class CommandTests {
 	}
 
 	private static TestProcessorResourceProvider Provider(
-		Icod.CommandFramework.Host.ProcessorResourceSnapshot snapshot
+		Icod.Host.ProcessorResourceSnapshot snapshot
 	) {
 		return new TestProcessorResourceProvider( _ => ValueTask.FromResult( snapshot ) );
 	}

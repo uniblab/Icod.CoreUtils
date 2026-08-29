@@ -22,7 +22,7 @@
 namespace Icod.CoreUtils.Shared.DirectoryListing;
 
 using System.Text;
-using Icod.CommandFramework.Terminal;
+using Icod.CoreUtils.Shared.Presentation;
 
 /// <summary>Identifies the shell syntax emitted by <c>dircolors</c>.</summary>
 public enum DirColorsShell {

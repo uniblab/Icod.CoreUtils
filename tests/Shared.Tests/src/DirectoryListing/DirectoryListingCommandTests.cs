@@ -1,7 +1,8 @@
 namespace Icod.CoreUtils.Shared.Tests.DirectoryListing;
 
 using Icod.CoreUtils.Shared.DirectoryListing;
-using Icod.CommandFramework.Terminal;
+using Icod.CoreUtils.Shared.Presentation;
+using Icod.Terminal;
 using Xunit;
 
 /// <summary>Verifies the shared listing engine through its injectable command boundary.</summary>
@@ -174,18 +175,59 @@ public sealed class DirectoryListingCommandTests {
 			.Split( new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries );
 	}
 
-	private static TerminalPresentationProvider CreatePresentationProvider( int width = 80 ) {
-		return new TerminalPresentationProvider(
-			new FakeTerminalDeviceProvider(),
+	private static OutputPresentationProvider CreatePresentationProvider(
+		int width = 80
+	) {
+		return new OutputPresentationProvider(
+			new FakeTerminalControlProvider(),
 			new FakeEnvironmentVariableProvider(),
-			new TerminalPresentationOptions { FallbackWidth = width }
+			new OutputPresentationOptions {
+				FallbackWidth = width
+			}
 		);
 	}
 
-	private sealed class FakeTerminalDeviceProvider : ITerminalDeviceProvider {
+	private sealed class FakeTerminalControlProvider : ITerminalControlProvider {
 		/// <inheritdoc/>
-		public TerminalDeviceObservation Observe( TerminalStreamKind stream ) {
-			return TerminalDeviceObservation.Redirected();
+		public TerminalControlResult<TerminalEndpointObservation> Observe(
+			TerminalEndpoint endpoint
+		) {
+			ArgumentNullException.ThrowIfNull( endpoint );
+			return TerminalControlResult<TerminalEndpointObservation>.Available(
+				new TerminalEndpointObservation(
+					false,
+					null,
+					null,
+					TerminalControlCapabilities.None
+				)
+			);
+		}
+
+		/// <inheritdoc/>
+		public TerminalControlResult<Icod.TermInfo.TerminalSize> GetSize(
+			TerminalEndpoint endpoint
+		) {
+			ArgumentNullException.ThrowIfNull( endpoint );
+			return TerminalControlResult<Icod.TermInfo.TerminalSize>.Unsupported( "not used" );
+		}
+
+		/// <inheritdoc/>
+		public TerminalControlResult<TerminalModeSnapshot> GetMode(
+			TerminalEndpoint endpoint
+		) {
+			ArgumentNullException.ThrowIfNull( endpoint );
+			return TerminalControlResult<TerminalModeSnapshot>.Unsupported( "not used" );
+		}
+
+		/// <inheritdoc/>
+		public TerminalControlMutationResult SetMode(
+			TerminalEndpoint endpoint,
+			TerminalModeSnapshot mode,
+			TerminalModeApplyTiming timing
+		) {
+			ArgumentNullException.ThrowIfNull( endpoint );
+			ArgumentNullException.ThrowIfNull( mode );
+			return TerminalControlMutationResult.Unsupported( "not used" );
 		}
 	}
 

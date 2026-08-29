@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Tty;
 
-using Icod.CommandFramework.Terminal;
+using Icod.Terminal;
 
 /// <summary>Implements GNU-compatible terminal-name reporting for standard input.</summary>
 public static class Command {

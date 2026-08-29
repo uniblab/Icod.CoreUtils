@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.NProc;
 
-using Icod.CommandFramework.Host;
+using Icod.Host;
 using System.Globalization;
 
 /// <summary>Provides the command boundary for GNU-compatible processor counting.</summary>
