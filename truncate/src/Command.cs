@@ -536,6 +536,12 @@ or Q mean powers of 1024; KB, MB, ... mean powers of 1000; and KiB, MiB, ...
 mean powers of 1024.  A leading '+' or '-' makes SIZE relative.  Prefix SIZE
 with '<' or '>' to limit the size to at most or at least SIZE, or with '/' or
 '%' to round down or up to a multiple of SIZE.
+
+FILE operands support internal wildcard expansion.  '*' and '?' match within
+one path segment, while '**' matches recursively across directory levels.
+Unmatched patterns are preserved as literal operands.  This is an Icod
+extension and can apply even when the invoking shell passes a quoted pattern
+literally.
 """;
 		await context.StandardOutput.WriteAsync(
 			help.ReplaceLineEndings( Environment.NewLine ).AsMemory(),

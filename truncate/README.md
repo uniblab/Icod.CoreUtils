@@ -39,6 +39,30 @@ Linux man-pages rendering of `truncate(1)` is used as a secondary synopsis.
 - reference-based sizing and per-target I/O-block multiplication
 - checked arithmetic, zero-divisor rejection, and negative-result clamping
 - sparse-aware extension through the Gate B filesystem capability layer
+- internal wildcard expansion for target operands using `*`, `?`, and `**`
+
+## WILDCARD OPERAND EXPANSION
+
+Icod.CoreUtils extends GNU `truncate` with internal pathname expansion for
+target operands.  This behavior is implemented by the command rather than
+being delegated exclusively to the invoking shell.
+
+Supported wildcard forms are:
+
+- `*` matches zero or more characters within one path segment.
+- `?` matches one character within one path segment.
+- `**` matches zero or more directory levels recursively.
+
+A single `*` or `?` never crosses a directory separator.  `**` is the form
+used when recursive directory traversal is intended.  Matches are processed
+in deterministic ordinal order, and an unmatched pattern is preserved and
+processed as a literal operand.
+
+Because expansion is performed internally, shell quoting does not necessarily
+suppress wildcard expansion.  For example, an operand such as `'*.dat'` that
+reaches `truncate` as the literal text `*.dat` is still eligible for Icod
+wildcard expansion.  This is an intentional cross-platform Icod extension and
+is not strict GNU `truncate` behavior.
 
 ## PLATFORM NOTES
 
