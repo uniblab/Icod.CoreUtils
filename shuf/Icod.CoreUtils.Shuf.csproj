@@ -28,7 +28,9 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<OutputPath>..\bin\$(Configuration)\</OutputPath>
+		<OutputPath>..\bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\</OutputPath>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 		<AssemblyName>shuf</AssemblyName>
 		<RootNamespace>Icod.CoreUtils.Shuf</RootNamespace>
 	</PropertyGroup>

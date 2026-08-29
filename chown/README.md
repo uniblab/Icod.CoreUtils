@@ -13,7 +13,7 @@ chown [OPTION]... --reference=RFILE FILE...
 
 ## DESCRIPTION
 
-`Icod.CoreUtils.Chown` is a managed .NET implementation of GNU Coreutils `chown(1)`, modeled on GNU Coreutils 9.11.
+`Icod.CoreUtils.ChOwn` is a managed .NET implementation of GNU Coreutils `chown(1)`, modeled on GNU Coreutils 9.11.
 
 The command changes owner, group, or both for each selected filesystem entry. User/group names and numeric identities are resolved through the shared identity provider. A missing owner or group component retains the corresponding current value according to GNU-style owner specification rules.
 

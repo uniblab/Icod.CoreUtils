@@ -12,7 +12,7 @@ mkdir [OPTION]... DIRECTORY...
 
 ## DESCRIPTION
 
-`Icod.CoreUtils.Mkdir` is a managed .NET implementation of GNU Coreutils `mkdir(1)`, modeled on GNU Coreutils 9.11.
+`Icod.CoreUtils.MkDir` is a managed .NET implementation of GNU Coreutils `mkdir(1)`, modeled on GNU Coreutils 9.11.
 
 The command creates each requested directory through the shared filesystem mutation provider. `--parents` creates missing ancestor directories and treats already existing directory components as successful.
 

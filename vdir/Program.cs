@@ -19,7 +19,7 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-namespace Icod.CoreUtils.Vdir;
+namespace Icod.CoreUtils.VDir;
 
 /// <summary>Hosts the <c>vdir</c> executable. Usage: <c>vdir [OPTION]... [FILE]...</c>.</summary>
 public static class Program {

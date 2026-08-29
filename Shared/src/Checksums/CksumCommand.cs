@@ -31,7 +31,7 @@ using Icod.CommandFramework.IO;
 /// <summary>
 /// Provides the cksum options implementation.
 /// </summary>
-internal sealed class CksumOptions {
+internal sealed class CkSumOptions {
 
 	/// <summary>
 	/// Stores the algorithm name value.
@@ -156,7 +156,7 @@ internal sealed record NumericChecksumManifestRecord(
 /// <summary>
 /// Implements the modern multi-algorithm <c>cksum</c> command.
 /// </summary>
-public static class CksumCommand {
+public static class CkSumCommand {
 
 	/// <summary>
 	/// Runs the command.
@@ -174,7 +174,7 @@ public static class CksumCommand {
 			context
 		);
 		try {
-			var options = new CksumOptions();
+			var options = new CkSumOptions();
 			var operands = new List<string>();
 			var parseResult = await ParseAsync(
 				args,
@@ -266,7 +266,7 @@ public static class CksumCommand {
 	private static async Task<int?> ParseAsync(
 		string[] args,
 		CommandContext context,
-		CksumOptions options,
+		CkSumOptions options,
 		ICollection<string> operands,
 		Action<TextWriter> printUsage,
 		string versionText
@@ -465,7 +465,7 @@ public static class CksumCommand {
 	private static async Task<int> ComputeAsync(
 		IReadOnlyCollection<string> operands,
 		CommandContext context,
-		CksumOptions options,
+		CkSumOptions options,
 		ChecksumAlgorithmKind algorithm,
 		int? lengthBits
 	) {
@@ -554,7 +554,7 @@ public static class CksumCommand {
 		ChecksumComputation result,
 		string name,
 		bool explicitOperands,
-		CksumOptions options
+		CkSumOptions options
 	) {
 		if (
 			ChecksumAlgorithmKind.Crc == result.Algorithm
@@ -595,7 +595,7 @@ public static class CksumCommand {
 	private static async Task<int> VerifyAsync(
 		IReadOnlyCollection<string> operands,
 		CommandContext context,
-		CksumOptions options,
+		CkSumOptions options,
 		ChecksumAlgorithmKind selectedAlgorithm,
 		int? selectedLength
 	) {
@@ -819,7 +819,7 @@ public static class CksumCommand {
 	private static async Task<bool?> VerifyNumericRecordAsync(
 		NumericChecksumManifestRecord record,
 		CommandContext context,
-		CksumOptions options
+		CkSumOptions options
 	) {
 		try {
 			await using var source = InputSource.OpenBinary(
@@ -891,7 +891,7 @@ public static class CksumCommand {
 	private static async Task<bool?> VerifyDigestRecordAsync(
 		ChecksumManifestRecord record,
 		CommandContext context,
-		CksumOptions options
+		CkSumOptions options
 	) {
 		var algorithm = record.Algorithm ?? throw new ChecksumException(
 			"checksum algorithm was not identified"

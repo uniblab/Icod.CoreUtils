@@ -12,7 +12,7 @@ rmdir [OPTION]... DIRECTORY...
 
 ## DESCRIPTION
 
-`Icod.CoreUtils.Rmdir` is a managed .NET implementation of GNU Coreutils `rmdir(1)`, modeled on GNU Coreutils 9.11.
+`Icod.CoreUtils.RmDir` is a managed .NET implementation of GNU Coreutils `rmdir(1)`, modeled on GNU Coreutils 9.11.
 
 Each operand must identify an actual directory rather than a symbolic link or other pathname indirection. Removal is performed with a metadata-derived mutation precondition so the entry observed is the entry removed.
 

@@ -19,7 +19,7 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-namespace Icod.CoreUtils.Mkdir;
+namespace Icod.CoreUtils.MkDir;
 
 using Icod.CommandFramework.Diagnostics;
 

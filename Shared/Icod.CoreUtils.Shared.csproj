@@ -30,7 +30,9 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<IsPackable>false</IsPackable>
-		<OutputPath>..\bin\$(Configuration)\</OutputPath>
+		<OutputPath>..\bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\</OutputPath>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 		<AssemblyName>Icod.CoreUtils.Shared</AssemblyName>
 		<RootNamespace>Icod.CoreUtils.Shared</RootNamespace>
 		<Configurations>Debug;Release;Staging</Configurations>

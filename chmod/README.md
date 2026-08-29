@@ -14,7 +14,7 @@ chmod [OPTION]... --reference=RFILE FILE...
 
 ## DESCRIPTION
 
-`Icod.CoreUtils.Chmod` is a managed .NET implementation of GNU Coreutils `chmod(1)`, modeled on GNU Coreutils 9.11.
+`Icod.CoreUtils.ChMod` is a managed .NET implementation of GNU Coreutils `chmod(1)`, modeled on GNU Coreutils 9.11.
 
 The command applies symbolic or octal mode expressions through the shared mode parser and filesystem mutation provider. Symbolic expressions honor the current creation mask where GNU semantics require it; `--reference` copies the permission mode from another file.
 

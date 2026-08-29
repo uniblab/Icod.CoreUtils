@@ -263,10 +263,20 @@ public sealed class SystemTruncatePlatform : ITruncatePlatform {
 		return WithFileDescriptor(
 			file,
 			descriptor => {
-				if ( 0 != NativeMethods.MacOsFStat(
-					descriptor,
-					out var status
-				) ) {
+				MacOsStat status;
+				int result;
+				if ( Architecture.Arm64 == RuntimeInformation.ProcessArchitecture ) {
+					result = NativeMethods.MacOsFStat(
+						descriptor,
+						out status
+					);
+				} else {
+					result = NativeMethods.MacOsFStatInode64(
+						descriptor,
+						out status
+					);
+				}
+				if ( 0 != result ) {
 					return NativeFailure(
 						"fstat"
 					);
@@ -506,6 +516,16 @@ public sealed class SystemTruncatePlatform : ITruncatePlatform {
 			SetLastError = true
 		)]
 		public static extern int MacOsFStat(
+			int fileDescriptor,
+			out MacOsStat status
+		);
+
+		[DllImport(
+			"libc",
+			EntryPoint = "fstat$INODE64",
+			SetLastError = true
+		)]
+		public static extern int MacOsFStatInode64(
 			int fileDescriptor,
 			out MacOsStat status
 		);

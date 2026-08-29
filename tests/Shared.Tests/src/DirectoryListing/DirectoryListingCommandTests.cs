@@ -41,7 +41,7 @@ public sealed class DirectoryListingCommandTests {
 
 	/// <summary>Verifies the vdir profile delegates to metadata-backed long output.</summary>
 	[Fact]
-	public async Task VdirProfileProducesLongMetadataRows() {
+	public async Task VDirProfileProducesLongMetadataRows() {
 		var root = CreateTemporaryDirectory();
 		try {
 			File.WriteAllText( System.IO.Path.Combine( root, "item.txt" ), "content" );
