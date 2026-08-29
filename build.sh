@@ -1,23 +1,10 @@
 #!/usr/bin/env sh
 set -eu
 
-CONFIGURATION="${2:-Debug}"
-
-case "$CONFIGURATION" in
-    Debug|Staging|Release)
-        ;;
-
-    *)
-        printf 'Invalid configuration: %s\n' "$CONFIGURATION" >&2
-        printf 'Usage: %s [clean|restore|build|test] [Debug|Staging|Release]\n' "$0" >&2
-        exit 1
-        ;;
-esac
-
 clean()
 {
-    printf '\n=== Clean (%s) ===\n' "$CONFIGURATION"
-    dotnet clean Icod.CoreUtils.sln -c "$CONFIGURATION"
+    printf '\n=== Clean ===\n'
+    dotnet clean Icod.CoreUtils.sln -c Debug
 }
 
 restore()
@@ -28,16 +15,31 @@ restore()
 
 build()
 {
-    printf '\n=== Build (%s) ===\n' "$CONFIGURATION"
-    dotnet build Icod.CoreUtils.sln -c "$CONFIGURATION" --no-restore
+    printf '\n=== Build ===\n'
+    dotnet build Icod.CoreUtils.sln -c Debug --no-restore
 }
 
 test()
 {
-    printf '\n=== Test (%s) ===\n' "$CONFIGURATION"
+    printf '\n=== Test ===\n'
     dotnet test Icod.CoreUtils.sln  \
-        -c "$CONFIGURATION" \
+        -c Debug \
         --no-build
+}
+
+pack()
+{
+    printf '\n=== Pack ===\n'
+    dotnet pack Icod.CoreUtils.sln \
+        -c Debug \
+        --no-build \
+	--output artifacts 
+}
+
+validate()
+{
+    printf '\n=== Validate ===\n'
+    ./.github/scripts/verify-release-package.sh artifacts Debug
 }
 
 case "${1-}" in
@@ -46,6 +48,8 @@ case "${1-}" in
         restore
         build
         test
+        pack
+	validate
         ;;
 
     clean)
@@ -64,9 +68,17 @@ case "${1-}" in
         test
         ;;
 
+    pack)
+        pack
+        ;;
+
+    validate)
+        validate
+        ;;
+
     *)
         printf 'Invalid section: %s\n' "$1" >&2
-        printf 'Usage: %s [clean|restore|build|test] [Debug|Staging|Release]\n' "$0" >&2
+        printf 'Usage: %s [clean|restore|build|test|pack|validate]\n' "$0" >&2
         exit 1
         ;;
 esac
