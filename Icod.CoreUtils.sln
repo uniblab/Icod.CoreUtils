@@ -64,7 +64,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Comm", "comm
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "cp", "cp", "{D5EE41C4-B9A9-406B-5A41-5D1D23FD7B0A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.CP", "cp\Icod.CoreUtils.CP.csproj", "{646C6FF9-6825-4223-8183-827D15F00E05}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icod.CoreUtils.Cp", "cp\Icod.CoreUtils.Cp.csproj", "{646C6FF9-6825-4223-8183-827D15F00E05}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "csplit", "csplit", "{DC450C6B-C9E4-39D9-4DE1-951BA6732D75}"
 EndProject
