@@ -1,5 +1,7 @@
 # Icod.CoreUtils
 
+![Icod TUI Toolchain](https://raw.githubusercontent.com/uniblab/Icod.CoreUtils/v1.0.0/Icod.CoreUtils.banner.png)
+
 Standard BSD and Linux coreutils ported to .NET.
 
 ## Pathname globbing policy
