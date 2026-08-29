@@ -1,6 +1,6 @@
-namespace Icod.CoreUtils.Rmdir.Tests;
+namespace Icod.CoreUtils.RmDir.Tests;
 
-using RmDirCommand = Icod.CoreUtils.Rmdir.Command;
+using RmDirCommand = Icod.CoreUtils.RmDir.Command;
 using Xunit;
 using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.FileSystem.Metadata;

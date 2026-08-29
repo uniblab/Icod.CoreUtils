@@ -111,7 +111,7 @@
 		<ProjectReference Include="..\nohup\Icod.CoreUtils.Nohup.csproj" />
 		<ProjectReference Include="..\nproc\Icod.CoreUtils.NProc.csproj" />
 		<ProjectReference Include="..\numfmt\Icod.CoreUtils.NumFmt.csproj" />
-		<ProjectReference Include="..\od\Icod.CoreUtils.OD.csproj" />
+		<ProjectReference Include="..\od\Icod.CoreUtils.Od.csproj" />
 		<ProjectReference Include="..\paste\Icod.CoreUtils.Paste.csproj" />
 		<ProjectReference Include="..\pathchk\Icod.CoreUtils.PathChk.csproj" />
 		<ProjectReference Include="..\pinky\Icod.CoreUtils.Pinky.csproj" />

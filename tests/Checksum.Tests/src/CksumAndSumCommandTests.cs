@@ -1,16 +1,16 @@
 namespace Icod.CoreUtils.Checksum.Tests;
 
 using System.Text;
-using CksumCommandWrapper = Icod.CoreUtils.Cksum.Command;
+using CkSumCommandWrapper = Icod.CoreUtils.CkSum.Command;
 using SumCommandWrapper = Icod.CoreUtils.Sum.Command;
 using Xunit;
 
-public sealed class CksumAndSumCommandTests {
+public sealed class CkSumAndSumCommandTests {
 
 	[Fact]
-	public async Task CksumDefaultMatchesPosixVector() {
+	public async Task CkSumDefaultMatchesPosixVector() {
 		var result = await CommandTestHelper.RunAsync(
-			CksumCommandWrapper.RunAsync,
+			CkSumCommandWrapper.RunAsync,
 			Array.Empty<string>(),
 			Encoding.ASCII.GetBytes(
 				"abc"
@@ -33,12 +33,12 @@ public sealed class CksumAndSumCommandTests {
 	[InlineData( "md5", "MD5 (-) = 900150983cd24fb0d6963f7d28e17f72\n" )]
 	[InlineData( "sha1", "SHA1 (-) = a9993e364706816aba3e25717850c26c9cd0d89d\n" )]
 	[InlineData( "sm3", "SM3 (-) = 66c7f0f462eeedd9d1f2d46bdc10e4e24167c4875cf2f7a2297da02b8f4ba8e0\n" )]
-	public async Task CksumSelectsNamedDigestAlgorithms(
+	public async Task CkSumSelectsNamedDigestAlgorithms(
 		string algorithm,
 		string expected
 	) {
 		var result = await CommandTestHelper.RunAsync(
-			CksumCommandWrapper.RunAsync,
+			CkSumCommandWrapper.RunAsync,
 			new string[] {
 				"-a",
 				algorithm
@@ -60,9 +60,9 @@ public sealed class CksumAndSumCommandTests {
 	}
 
 	[Fact]
-	public async Task CksumSupportsSha2Sha3AndBlake2Lengths() {
+	public async Task CkSumSupportsSha2Sha3AndBlake2Lengths() {
 		var sha2 = await CommandTestHelper.RunAsync(
-			CksumCommandWrapper.RunAsync,
+			CkSumCommandWrapper.RunAsync,
 			new string[] {
 				"-a",
 				"sha2",
@@ -74,7 +74,7 @@ public sealed class CksumAndSumCommandTests {
 			)
 		);
 		var sha3 = await CommandTestHelper.RunAsync(
-			CksumCommandWrapper.RunAsync,
+			CkSumCommandWrapper.RunAsync,
 			new string[] {
 				"-a",
 				"sha3",
@@ -86,7 +86,7 @@ public sealed class CksumAndSumCommandTests {
 			)
 		);
 		var blake = await CommandTestHelper.RunAsync(
-			CksumCommandWrapper.RunAsync,
+			CkSumCommandWrapper.RunAsync,
 			new string[] {
 				"-a",
 				"blake2b",
@@ -119,9 +119,9 @@ public sealed class CksumAndSumCommandTests {
 	}
 
 	[Fact]
-	public async Task CksumSupportsBase64UntaggedRawAndZeroOutput() {
+	public async Task CkSumSupportsBase64UntaggedRawAndZeroOutput() {
 		var base64 = await CommandTestHelper.RunAsync(
-			CksumCommandWrapper.RunAsync,
+			CkSumCommandWrapper.RunAsync,
 			new string[] {
 				"-a",
 				"md5",
@@ -132,7 +132,7 @@ public sealed class CksumAndSumCommandTests {
 			)
 		);
 		var untagged = await CommandTestHelper.RunAsync(
-			CksumCommandWrapper.RunAsync,
+			CkSumCommandWrapper.RunAsync,
 			new string[] {
 				"-a",
 				"md5",
@@ -143,7 +143,7 @@ public sealed class CksumAndSumCommandTests {
 			)
 		);
 		var raw = await CommandTestHelper.RunAsync(
-			CksumCommandWrapper.RunAsync,
+			CkSumCommandWrapper.RunAsync,
 			new string[] {
 				"-a",
 				"md5",
@@ -154,7 +154,7 @@ public sealed class CksumAndSumCommandTests {
 			)
 		);
 		var zero = await CommandTestHelper.RunAsync(
-			CksumCommandWrapper.RunAsync,
+			CkSumCommandWrapper.RunAsync,
 			new string[] {
 				"-a",
 				"md5",
@@ -190,7 +190,7 @@ public sealed class CksumAndSumCommandTests {
 	}
 
 	[Fact]
-	public async Task CksumVerifiesTraditionalCrcRecords() {
+	public async Task CkSumVerifiesTraditionalCrcRecords() {
 		var data = CreatePath(
 			"crc-data.txt"
 		);
@@ -207,7 +207,7 @@ public sealed class CksumAndSumCommandTests {
 		);
 		try {
 			var result = await CommandTestHelper.RunAsync(
-				CksumCommandWrapper.RunAsync,
+				CkSumCommandWrapper.RunAsync,
 				new string[] {
 					"-c",
 					manifest
@@ -231,7 +231,7 @@ public sealed class CksumAndSumCommandTests {
 	}
 
 	[Fact]
-	public async Task CksumVerifiesTaggedRecords() {
+	public async Task CkSumVerifiesTaggedRecords() {
 		var data = CreatePath(
 			"data.txt"
 		);
@@ -248,7 +248,7 @@ public sealed class CksumAndSumCommandTests {
 		);
 		try {
 			var result = await CommandTestHelper.RunAsync(
-				CksumCommandWrapper.RunAsync,
+				CkSumCommandWrapper.RunAsync,
 				new string[] {
 					"-c",
 					manifest
@@ -272,9 +272,9 @@ public sealed class CksumAndSumCommandTests {
 	}
 
 	[Fact]
-	public async Task CksumDebugAndInvalidCombinationsAreDiagnosed() {
+	public async Task CkSumDebugAndInvalidCombinationsAreDiagnosed() {
 		var debug = await CommandTestHelper.RunAsync(
-			CksumCommandWrapper.RunAsync,
+			CkSumCommandWrapper.RunAsync,
 			new string[] {
 				"--debug",
 				"-a",
@@ -285,7 +285,7 @@ public sealed class CksumAndSumCommandTests {
 			)
 		);
 		var incompatible = await CommandTestHelper.RunAsync(
-			CksumCommandWrapper.RunAsync,
+			CkSumCommandWrapper.RunAsync,
 			new string[] {
 				"--raw",
 				"--base64"

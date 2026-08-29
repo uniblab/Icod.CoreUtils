@@ -33,7 +33,7 @@ using Icod.CommandFramework.Platform;
 /// <summary>Identifies the ownership-changing command whose policy is being executed.</summary>
 public enum OwnershipCommandKind {
 	/// <summary>Change a user and/or group with <c>chown</c> syntax.</summary>
-	Chown = 0,
+	ChOwn = 0,
 	/// <summary>Change a group with <c>chgrp</c> syntax.</summary>
 	Chgrp = 1
 }
@@ -138,7 +138,7 @@ public static class OwnershipCommandRunner {
 					await WriteUnsupportedOwnershipAsync( kind, context ).ConfigureAwait( false );
 					return CommandExitCodes.Failure;
 				}
-				var targetResult = kind == OwnershipCommandKind.Chown
+				var targetResult = kind == OwnershipCommandKind.ChOwn
 					? await OwnershipIdentityResolver.ResolveOwnerSpecAsync(
 						parsed.Operands[0],
 						identityProvider,
@@ -269,7 +269,7 @@ public static class OwnershipCommandRunner {
 		CancellationToken cancellationToken = default
 	) {
 		ArgumentNullException.ThrowIfNull( output );
-		var lines = kind == OwnershipCommandKind.Chown
+		var lines = kind == OwnershipCommandKind.ChOwn
 			? new[] {
 				"Usage: chown [OPTION]... [OWNER][:[GROUP]] FILE...",
 				"  or:  chown [OPTION]... --reference=RFILE FILE...",
@@ -472,7 +472,7 @@ public static class OwnershipCommandRunner {
 					string.Concat(
 						ProgramName( kind ),
 						": changing ",
-						kind == OwnershipCommandKind.Chown ? "ownership" : "group",
+						kind == OwnershipCommandKind.ChOwn ? "ownership" : "group",
 						" of ",
 						Quote( displayPath ),
 						": POSIX ownership information is not available on this platform"
@@ -564,7 +564,7 @@ public static class OwnershipCommandRunner {
 					string.Concat(
 						ProgramName( kind ),
 						": changing ",
-						kind == OwnershipCommandKind.Chown ? "ownership" : "group",
+						kind == OwnershipCommandKind.ChOwn ? "ownership" : "group",
 						" of ",
 						Quote( displayPath ),
 						": ",
@@ -631,7 +631,7 @@ public static class OwnershipCommandRunner {
 			var groupName = metadata.GroupName.IsAvailable
 				? metadata.GroupName.GetRequiredValue()
 				: groupId.ToString( CultureInfo.InvariantCulture );
-			return kind == OwnershipCommandKind.Chown
+			return kind == OwnershipCommandKind.ChOwn
 				? new OwnershipSelection( userId, groupId, userName, groupName )
 				: new OwnershipSelection( null, groupId, null, groupName );
 		} catch ( Exception exception ) when ( IsFileSystemException( exception ) ) {
@@ -751,7 +751,7 @@ public static class OwnershipCommandRunner {
 		string requestedUser,
 		string requestedGroup
 	) {
-		var text = kind == OwnershipCommandKind.Chown
+		var text = kind == OwnershipCommandKind.ChOwn
 			? string.Concat(
 				"failed to change ownership of ",
 				Quote( path ),
@@ -786,7 +786,7 @@ public static class OwnershipCommandRunner {
 		bool changed
 	) {
 		string text;
-		if ( kind == OwnershipCommandKind.Chown ) {
+		if ( kind == OwnershipCommandKind.ChOwn ) {
 			var previous = string.Concat( previousUser, ":", previousGroup );
 			var current = string.Concat( currentUser, ":", currentGroup );
 			text = changed
@@ -832,7 +832,7 @@ public static class OwnershipCommandRunner {
 	}
 
 	private static string ProgramName( OwnershipCommandKind kind ) {
-		return kind == OwnershipCommandKind.Chown ? "chown" : "chgrp";
+		return kind == OwnershipCommandKind.ChOwn ? "chown" : "chgrp";
 	}
 
 	private static string Quote( string value ) {

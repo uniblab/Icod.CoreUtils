@@ -19,7 +19,7 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-namespace Icod.CoreUtils.Chgrp;
+namespace Icod.CoreUtils.ChGrp;
 
 using Icod.CommandFramework.Diagnostics;
 

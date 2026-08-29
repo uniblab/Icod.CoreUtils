@@ -32,7 +32,7 @@
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 		<AssemblyName>chown</AssemblyName>
-		<RootNamespace>Icod.CoreUtils.Chown</RootNamespace>
+		<RootNamespace>Icod.CoreUtils.ChOwn</RootNamespace>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
 		<PlatformTarget>AnyCPU</PlatformTarget>

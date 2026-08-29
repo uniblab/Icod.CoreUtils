@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.ChMod.Tests;
 
-using ChModCommand = Icod.CoreUtils.Chmod.Command;
+using ChModCommand = Icod.CoreUtils.ChMod.Command;
 using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CoreUtils.Shared.FileSystem.Modes;

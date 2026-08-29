@@ -19,7 +19,7 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-namespace Icod.CoreUtils.Chmod;
+namespace Icod.CoreUtils.ChMod;
 
 using Icod.CommandFramework.Diagnostics;
 

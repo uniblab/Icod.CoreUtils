@@ -1,7 +1,7 @@
 // Original behavior/reference: GNU Coreutils 9.11 chown.c
 // Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
 
-namespace Icod.CoreUtils.Chown;
+namespace Icod.CoreUtils.ChOwn;
 
 using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.FileSystem.Metadata;
@@ -64,7 +64,7 @@ public static class Command {
 		IFileSystemMutationProvider mutationProvider,
 		IIdentityProvider identityProvider
 	) => OwnershipCommandRunner.RunAsync(
-		OwnershipCommandKind.Chown,
+		OwnershipCommandKind.ChOwn,
 		args,
 		context,
 		readOnlyProvider,
@@ -81,7 +81,7 @@ public static class Command {
 		TextWriter output,
 		CancellationToken cancellationToken = default
 	) => OwnershipCommandRunner.WriteUsageAsync(
-		OwnershipCommandKind.Chown,
+		OwnershipCommandKind.ChOwn,
 		output,
 		cancellationToken
 	);

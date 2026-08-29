@@ -1,7 +1,7 @@
 // Original behavior/reference: GNU Coreutils 9.11 mkdir.c
 // Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
 
-namespace Icod.CoreUtils.Mkdir;
+namespace Icod.CoreUtils.MkDir;
 
 using Icod.CommandFramework.CommandLine;
 using Icod.CommandFramework.Diagnostics;

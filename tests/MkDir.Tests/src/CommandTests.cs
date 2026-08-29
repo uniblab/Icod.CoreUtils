@@ -1,6 +1,6 @@
-namespace Icod.CoreUtils.Mkdir.Tests;
+namespace Icod.CoreUtils.MkDir.Tests;
 
-using MkDirCommand = Icod.CoreUtils.Mkdir.Command;
+using MkDirCommand = Icod.CoreUtils.MkDir.Command;
 using Xunit;
 using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.FileSystem.Metadata;

@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.ChOwn.Tests;
 
-using ChOwnCommand = Icod.CoreUtils.Chown.Command;
+using ChOwnCommand = Icod.CoreUtils.ChOwn.Command;
 using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CommandFramework.FileSystem.Modes;

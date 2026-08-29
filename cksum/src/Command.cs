@@ -1,4 +1,4 @@
-namespace Icod.CoreUtils.Cksum;
+namespace Icod.CoreUtils.CkSum;
 
 using System.Text;
 using Icod.CoreUtils.Shared.Checksums;
@@ -113,11 +113,11 @@ public static class Command {
 		string[] args,
 		CommandContext context
 	) {
-		return CksumCommand.RunAsync(
+		return CkSumCommand.RunAsync(
 			args,
 			context,
 			PrintUsage,
-			"Icod.CoreUtils.Cksum 1.0"
+			"Icod.CoreUtils.CkSum 1.0"
 		);
 	}
 

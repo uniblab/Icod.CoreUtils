@@ -32,7 +32,7 @@
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 		<AssemblyName>chmod</AssemblyName>
-		<RootNamespace>Icod.CoreUtils.Chmod</RootNamespace>
+		<RootNamespace>Icod.CoreUtils.ChMod</RootNamespace>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
 		<PlatformTarget>AnyCPU</PlatformTarget>

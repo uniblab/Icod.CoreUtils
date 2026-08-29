@@ -13,7 +13,7 @@ chgrp [OPTION]... --reference=RFILE FILE...
 
 ## DESCRIPTION
 
-`Icod.CoreUtils.Chgrp` is a managed .NET implementation of GNU Coreutils `chgrp(1)`, modeled on GNU Coreutils 9.11.
+`Icod.CoreUtils.ChGrp` is a managed .NET implementation of GNU Coreutils `chgrp(1)`, modeled on GNU Coreutils 9.11.
 
 The command changes the group ownership of each selected filesystem entry. Group names and numeric identities are resolved through the shared identity provider, while metadata observation, recursive traversal, and mutation use the shared filesystem contracts.
 

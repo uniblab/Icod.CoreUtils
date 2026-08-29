@@ -1,4 +1,4 @@
-namespace Icod.CoreUtils.Vdir.Tests;
+namespace Icod.CoreUtils.VDir.Tests;
 
 using Xunit;
 
@@ -14,7 +14,7 @@ public sealed class CommandTests {
 			var output = new StringWriter();
 			var error = new StringWriter();
 
-			var exitCode = await Icod.CoreUtils.Vdir.Command.RunAsync(
+			var exitCode = await Icod.CoreUtils.VDir.Command.RunAsync(
 				new[] { "--color=never", "--quoting-style=literal", root },
 				stdout: output,
 				stderr: error
@@ -33,7 +33,7 @@ public sealed class CommandTests {
 	[Fact]
 	public async Task ReportsVersion() {
 		var output = new StringWriter();
-		var exitCode = await Icod.CoreUtils.Vdir.Command.RunAsync( new[] { "--version" }, stdout: output );
+		var exitCode = await Icod.CoreUtils.VDir.Command.RunAsync( new[] { "--version" }, stdout: output );
 
 		Assert.Equal( 0, exitCode );
 		Assert.StartsWith( "vdir (Icod.CoreUtils)", output.ToString() );

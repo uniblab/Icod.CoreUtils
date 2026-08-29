@@ -32,7 +32,7 @@
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 		<AssemblyName>chgrp</AssemblyName>
-		<RootNamespace>Icod.CoreUtils.Chgrp</RootNamespace>
+		<RootNamespace>Icod.CoreUtils.ChGrp</RootNamespace>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
 		<PlatformTarget>AnyCPU</PlatformTarget>

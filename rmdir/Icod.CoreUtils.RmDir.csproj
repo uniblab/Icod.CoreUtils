@@ -32,7 +32,7 @@
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 		<AssemblyName>rmdir</AssemblyName>
-		<RootNamespace>Icod.CoreUtils.Rmdir</RootNamespace>
+		<RootNamespace>Icod.CoreUtils.RmDir</RootNamespace>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
 		<PlatformTarget>AnyCPU</PlatformTarget>

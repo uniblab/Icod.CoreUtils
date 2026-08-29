@@ -9,7 +9,7 @@
 		<IsPackable>false</IsPackable>
 		<IsTestProject>true</IsTestProject>
 		<AssemblyName>Icod.CoreUtils.MkDir.Tests</AssemblyName>
-		<RootNamespace>Icod.CoreUtils.Mkdir.Tests</RootNamespace>
+		<RootNamespace>Icod.CoreUtils.MkDir.Tests</RootNamespace>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />

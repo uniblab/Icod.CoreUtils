@@ -1,7 +1,7 @@
 // Original behavior/reference: GNU Coreutils 9.11 rmdir.c
 // Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
 
-namespace Icod.CoreUtils.Rmdir;
+namespace Icod.CoreUtils.RmDir;
 
 using Icod.CommandFramework.CommandLine;
 using Icod.CommandFramework.Diagnostics;

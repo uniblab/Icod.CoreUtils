@@ -165,7 +165,7 @@ internal static class NohupNative {
 	) {
 		ArgumentNullException.ThrowIfNull( stream );
 		var descriptor = stream.SafeFileHandle.DangerousGetHandle().ToInt32();
-		if ( 0 != FChmod( descriptor, UserReadWriteMode ) ) {
+		if ( 0 != FChMod( descriptor, UserReadWriteMode ) ) {
 			var error = System.Runtime.InteropServices.Marshal.GetLastPInvokeError();
 			throw new IOException( $"Unable to set nohup output permissions (errno {error})." );
 		}
@@ -228,7 +228,7 @@ internal static class NohupNative {
 		EntryPoint = "fchmod",
 		SetLastError = true
 	)]
-	private static extern int FChmod(
+	private static extern int FChMod(
 		int descriptor,
 		int mode
 	);

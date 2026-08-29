@@ -1,7 +1,7 @@
 // Original behavior/reference: GNU Coreutils 9.11 chmod.c
 // Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
 
-namespace Icod.CoreUtils.Chmod;
+namespace Icod.CoreUtils.ChMod;
 
 using Icod.CommandFramework.CommandLine;
 using Icod.CommandFramework.Diagnostics;

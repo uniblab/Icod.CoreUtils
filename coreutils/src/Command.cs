@@ -233,7 +233,7 @@ public static class Command {
 			"comm" => await Icod.CoreUtils.Comm.Command.RunAsync(
 				commandArguments
 			).ConfigureAwait( false ),
-			"cp" => await Icod.CoreUtils.CP.Command.RunAsync(
+			"cp" => await Icod.CoreUtils.Cp.Command.RunAsync(
 				commandArguments
 			).ConfigureAwait( false ),
 			"csplit" => await Icod.CoreUtils.CSplit.Command.RunAsync(
@@ -353,7 +353,7 @@ public static class Command {
 			"numfmt" => await Icod.CoreUtils.NumFmt.Command.RunAsync(
 				commandArguments
 			).ConfigureAwait( false ),
-			"od" => await Icod.CoreUtils.OD.Command.RunAsync(
+			"od" => await Icod.CoreUtils.Od.Command.RunAsync(
 				commandArguments
 			).ConfigureAwait( false ),
 			"paste" => await Icod.CoreUtils.Paste.Command.RunAsync(

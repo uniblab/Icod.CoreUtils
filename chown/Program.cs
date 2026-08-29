@@ -19,7 +19,7 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-namespace Icod.CoreUtils.Chown;
+namespace Icod.CoreUtils.ChOwn;
 
 using Icod.CommandFramework.Diagnostics;
 

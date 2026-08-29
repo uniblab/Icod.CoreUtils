@@ -1,7 +1,7 @@
 // Original behavior/reference: GNU Coreutils 9.11 chgrp.c
 // Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
 
-namespace Icod.CoreUtils.Chgrp;
+namespace Icod.CoreUtils.ChGrp;
 
 using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.FileSystem.Metadata;

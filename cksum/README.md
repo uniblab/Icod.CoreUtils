@@ -12,7 +12,7 @@ cksum [OPTION]... [FILE]...
 
 ## DESCRIPTION
 
-`Icod.CoreUtils.Cksum` is a managed .NET implementation of GNU Coreutils `cksum(1)`, modeled on GNU Coreutils 9.11.
+`Icod.CoreUtils.CkSum` is a managed .NET implementation of GNU Coreutils `cksum(1)`, modeled on GNU Coreutils 9.11.
 
 The command computes a checksum or message digest for each `FILE`. If no file is specified, or if a file operand is `-`, input is read from standard input. Without `--algorithm`, the traditional CRC checksum is used.
 
