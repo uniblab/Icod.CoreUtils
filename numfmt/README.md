@@ -17,6 +17,10 @@ numfmt [OPTION]... < INPUT
 
 The implementation is managed and platform-neutral. Windows, Linux, and macOS are the required validation platforms; BSD-family behavior is best effort and should be identical except where host locale data differs.
 
+## PATHNAME GLOBBING
+
+`numfmt` does not perform `Icod.CommandFramework` pathname glob expansion. Its operands are numeric data and formatting controls rather than pathname selectors, so `*`, `?`, and `**` are not interpreted as pathname patterns by `numfmt`. An invoking shell or other caller may still expand arguments before the program receives them.
+
 ## AUTHORS
 
 GNU `numfmt` was written by Assaf Gordon.

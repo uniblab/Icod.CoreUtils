@@ -45,6 +45,10 @@ In normal data-producing operation the command does not terminate successfully o
 
 The repeated line uses the host environment's newline sequence and is written through the supplied .NET text stream.
 
+## PATHNAME GLOBBING
+
+`yes` does not perform `Icod.CommandFramework` pathname glob expansion. Its operands are output text rather than pathname selectors, so `*`, `?`, and `**` remain literal data when they reach `yes`. An invoking shell or other caller may still expand arguments before the program receives them.
+
 ## AUTHORS
 
 GNU `yes` was written by David MacKenzie.

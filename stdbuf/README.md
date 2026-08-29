@@ -62,6 +62,10 @@ Active buffering control is available only on supported Linux ELF targets in the
 
 The child retains native standard-handle inheritance; `stdbuf` does not interpose managed pipes that would defeat the buffering behavior it is trying to control.
 
+## PATHNAME GLOBBING
+
+`stdbuf` does not perform `Icod.CommandFramework` pathname glob expansion. Buffering controls and the command argument vector have their own meanings and are not reinterpreted as pathname patterns by `stdbuf`; child-command arguments are preserved for the invoked program. Any expansion performed by an invoking shell or other caller occurs before `stdbuf` receives the arguments.
+
 ## AUTHORS
 
 GNU `stdbuf` was written by Pádraig Brady.

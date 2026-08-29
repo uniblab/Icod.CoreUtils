@@ -49,6 +49,10 @@ Terminal detection uses the shared terminal-device provider. The child process i
 
 Windows has no POSIX `SIGHUP` disposition to install. Its terminal-input handling therefore uses the platform substitution described above while preserving the same user-visible intent.
 
+## PATHNAME GLOBBING
+
+`nohup` does not perform `Icod.CommandFramework` pathname glob expansion. The command and argument vector supplied for execution are not reinterpreted as pathname patterns by `nohup`; child-command arguments are preserved for the invoked program. Any expansion performed by an invoking shell or other caller occurs before `nohup` receives the arguments.
+
 ## AUTHORS
 
 GNU `nohup` was written by Jim Meyering.

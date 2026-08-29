@@ -51,6 +51,10 @@ A leading `--` ends option interpretation. `--help` and `--version` are recogniz
 
 Basic regular expressions use the shared fully managed GNU-compatible engine. Lexical comparison and logical-character behavior are supplied through the expression locale provider.
 
+## PATHNAME GLOBBING
+
+`expr` does not perform `Icod.CommandFramework` pathname glob expansion. Its operands form an expression grammar in which tokens such as `*` can be operators or data; expanding pathname patterns internally would change the expression being evaluated. An invoking shell or other caller may still expand arguments before the program receives them.
+
 ## AUTHORS
 
 GNU `expr` was written by Mike Parker, James Youngman, and Paul Eggert.

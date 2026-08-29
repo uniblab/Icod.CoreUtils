@@ -43,6 +43,10 @@ An unset requested variable produces no placeholder output and makes the final s
 
 Values come from the current .NET process environment. Environment-variable naming, case sensitivity, and inherited content therefore follow the host operating system and process-launch environment.
 
+## PATHNAME GLOBBING
+
+`printenv` does not perform `Icod.CommandFramework` pathname glob expansion. Its operands are environment-variable names rather than filesystem pathnames, so `*`, `?`, and `**` are not interpreted as pathname patterns by `printenv`. An invoking shell or other caller may still expand arguments before the program receives them.
+
 ## AUTHORS
 
 GNU `printenv` was written by David MacKenzie and Richard Mlynarik.

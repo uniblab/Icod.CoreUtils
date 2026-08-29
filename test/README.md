@@ -112,6 +112,10 @@ Filesystem predicates are evaluated through injected metadata, identity, access,
 
 String ordering uses the active locale collation rules supplied by the evaluation host.
 
+## PATHNAME GLOBBING
+
+`test` does not perform `Icod.CommandFramework` pathname glob expansion. Its arguments form an expression whose meaning depends on argument count and position; expanding pathname patterns internally would change that expression grammar. An invoking shell or other caller may still expand arguments before `test` receives them.
+
 ## AUTHORS
 
 GNU `test` was written by Kevin Braunsdorf and Matthew Bradburn.

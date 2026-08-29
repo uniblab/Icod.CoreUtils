@@ -40,6 +40,10 @@ When `--help` or `--version` is the sole argument, the corresponding text is wri
 
 The command has no filesystem, identity, terminal, or other platform dependency.
 
+## PATHNAME GLOBBING
+
+`false` does not perform `Icod.CommandFramework` pathname glob expansion. It has no pathname operands eligible for expansion; its purpose is solely to return an unsuccessful status. An invoking shell or other caller may still expand arguments before the program receives them.
+
 ## AUTHORS
 
 GNU `false` was written by Jim Meyering.

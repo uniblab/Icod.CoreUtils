@@ -48,6 +48,10 @@ Run `coreutils COMMAND --help` for the selected command's detailed help.
     Display the router package version.
 ```
 
+## PATHNAME GLOBBING
+
+`coreutils` does not perform `Icod.CommandFramework` pathname glob expansion at the dispatcher level. It preserves the selected applet's argument vector and delegates operand interpretation to that applet, which is responsible for deciding whether any of its own operands are eligible for expansion. Any expansion performed by an invoking shell or other caller occurs before `coreutils` receives the arguments.
+
 ## DISTRIBUTION
 
 Tagged releases also provide ZIP archives for Windows, Linux, and macOS on x64 and ARM64. Each archive contains the standalone command executables, the `coreutils` router, each executable's README and GPL license copy, and the repository-level README and LICENSE.

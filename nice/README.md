@@ -48,6 +48,10 @@ Priority observation and mutation use the shared process-priority provider. Rais
 
 On Windows, after applying the wrapper's priority mapping, the implementation also applies the selected priority to the started child through the process-start callback because native niceness inheritance does not match POSIX behavior exactly.
 
+## PATHNAME GLOBBING
+
+`nice` does not perform `Icod.CommandFramework` pathname glob expansion. The command and argument vector supplied for execution are not reinterpreted as pathname patterns by `nice`; child-command arguments are preserved for the invoked program. Any expansion performed by an invoking shell or other caller occurs before `nice` receives the arguments.
+
 ## AUTHORS
 
 GNU `nice` was written by David MacKenzie.

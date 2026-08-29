@@ -53,6 +53,10 @@ The implementation uses invariant numeric parsing, preserves decimal arithmetic 
 
 Numeric parsing and formatting use invariant culture, so decimal points and command syntax do not vary with the host locale. The default separator is the host environment's newline sequence.
 
+## PATHNAME GLOBBING
+
+`seq` does not perform `Icod.CommandFramework` pathname glob expansion. Its operands are numeric sequence parameters rather than filesystem pathnames, so `*`, `?`, and `**` are not interpreted as pathname patterns by `seq`. An invoking shell or other caller may still expand arguments before the program receives them.
+
 ## AUTHORS
 
 GNU `seq` was written by Ulrich Drepper.

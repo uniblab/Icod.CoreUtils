@@ -18,6 +18,10 @@ The command keeps policy in the command project while consuming Completion Gate 
 
 Windows uses the platform substitutions declared by F4.  A non-foreground TERM or KILL timeout uses process-tree cancellation because POSIX group-signal semantics are not available; unsupported signal operations are reported rather than silently pretending to have POSIX behavior.
 
+## PATHNAME GLOBBING
+
+`timeout` does not perform `Icod.CommandFramework` pathname glob expansion. Duration and timeout controls and the command argument vector have their own meanings and are not reinterpreted as pathname patterns by `timeout`; child-command arguments are preserved for the invoked program. Any expansion performed by an invoking shell or other caller occurs before `timeout` receives the arguments.
+
 ## AUTHORS
 
 GNU `timeout` was written by Pádraig Brady.

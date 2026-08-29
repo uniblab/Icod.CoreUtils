@@ -44,6 +44,10 @@ Host-name queries use `Dns.GetHostName()` and are available wherever that runtim
 
 Host-name mutation is implemented with the native `sethostname` ABI on Linux, macOS, and FreeBSD. It normally requires operating-system privileges. Mutation is deliberately reported as unsupported on other hosts, including Windows, rather than silently changing a different machine-name setting.
 
+## PATHNAME GLOBBING
+
+`hostname` does not perform `Icod.CommandFramework` pathname glob expansion. Host-name operands are host-name text rather than filesystem pathnames, so `*`, `?`, and `**` are not interpreted as pathname patterns by `hostname`. An invoking shell or other caller may still expand arguments before the program receives them.
+
 ## AUTHORS
 
 GNU `hostname` was written by Jim Meyering.

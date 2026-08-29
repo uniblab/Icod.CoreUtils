@@ -40,6 +40,10 @@ Duplicate group identities are removed before output. A nonexistent requested us
 
 Identity and group discovery is supplied by `Icod.CommandFramework`'s system identity provider rather than by direct parsing of Unix account files. Results therefore follow the capabilities and identity model exposed for the current platform.
 
+## PATHNAME GLOBBING
+
+`groups` does not perform `Icod.CommandFramework` pathname glob expansion. Its `USER` operands identify accounts rather than filesystem pathnames, so `*`, `?`, and `**` are not interpreted as pathname patterns by `groups`. An invoking shell or other caller may still expand arguments before the program receives them.
+
 ## AUTHORS
 
 GNU `groups` was written by David MacKenzie and James Youngman.

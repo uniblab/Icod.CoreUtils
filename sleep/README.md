@@ -50,6 +50,10 @@ d    days
 
 Waiting is implemented asynchronously with .NET timers and cancellation support. Very long finite waits are divided into bounded delay chunks rather than relying on a single platform timer interval.
 
+## PATHNAME GLOBBING
+
+`sleep` does not perform `Icod.CommandFramework` pathname glob expansion. Its operands are durations rather than filesystem pathnames, so `*`, `?`, and `**` are not interpreted as pathname patterns by `sleep`. An invoking shell or other caller may still expand arguments before the program receives them.
+
 ## AUTHORS
 
 GNU `sleep` was written by Jim Meyering and Paul Eggert.

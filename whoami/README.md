@@ -40,6 +40,10 @@ No operands are accepted.
 
 Effective-user lookup is provided by the cross-platform identity abstraction. On Unix-like systems this corresponds to the effective user identity; on Windows it follows the effective identity model exposed by the provider.
 
+## PATHNAME GLOBBING
+
+`whoami` does not perform `Icod.CommandFramework` pathname glob expansion. It has no pathname operands eligible for expansion; it reports the effective user identity instead. An invoking shell or other caller may still expand arguments before the program receives them.
+
 ## AUTHORS
 
 GNU `whoami` was written by Richard Mlynarik.

@@ -42,6 +42,10 @@ Exit status is `0` for success, `1` for invalid invocation or operational failur
 
 The required CI platforms are Windows, Ubuntu, and macOS. FreeBSD uses its POSIX `mkdir` and `lstat` interfaces as **best effort** support and is not part of the required test matrix.
 
+## PATHNAME GLOBBING
+
+`mktemp` does not perform `Icod.CommandFramework` pathname glob expansion. Its optional pathname-like operand is a creation template governed by `mktemp` template rules, not a selector for existing filesystem entries; wildcard characters are therefore not interpreted as CommandFramework glob patterns. An invoking shell or other caller may still expand arguments before the program receives them.
+
 ## AUTHORS
 
 GNU `mktemp` was written by Jim Meyering and Eric Blake.

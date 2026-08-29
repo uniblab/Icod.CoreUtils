@@ -16,6 +16,10 @@ printf FORMAT [ARGUMENT]...
 
 The implementation is managed and platform-neutral. Windows, Linux, and macOS are the required validation platforms; BSD-family behavior is best effort and should be identical except where host locale data differs.
 
+## PATHNAME GLOBBING
+
+`printf` does not perform `Icod.CommandFramework` pathname glob expansion. Its operands are a format string and data arguments rather than pathname selectors, so `*`, `?`, and `**` remain command data when they reach `printf`. An invoking shell or other caller may still expand arguments before the program receives them.
+
 ## AUTHORS
 
 GNU `printf` was written by David MacKenzie.

@@ -47,6 +47,10 @@ The result remains at least one processing unit when a usable processor count ca
 
 Processor discovery is provider-backed rather than tied to `/proc` or another single operating-system interface. The reported available count can reflect process affinity, runtime restrictions, container limits, or supported OpenMP-style environment policy.
 
+## PATHNAME GLOBBING
+
+`nproc` does not perform `Icod.CommandFramework` pathname glob expansion. Its arguments control processor-count reporting rather than identify filesystem pathnames, so `*`, `?`, and `**` are not interpreted as pathname patterns by `nproc`. An invoking shell or other caller may still expand arguments before the program receives them.
+
 ## AUTHORS
 
 GNU `nproc` was written by Giuseppe Scrivano.

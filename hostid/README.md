@@ -40,6 +40,10 @@ No non-option operands are accepted.
 
 The implementation deliberately uses the cross-platform host identifier provider rather than assuming a Unix `/etc/hostid` storage mechanism. The meaning and availability of the returned identifier therefore follow the provider for the current operating system.
 
+## PATHNAME GLOBBING
+
+`hostid` does not perform `Icod.CommandFramework` pathname glob expansion. It has no pathname operands eligible for command-owned expansion, so `*`, `?`, and `**` are not interpreted as pathname patterns by `hostid`. An invoking shell or other caller may still expand arguments before the program receives them.
+
 ## AUTHORS
 
 GNU `hostid` was written by Jim Meyering.
