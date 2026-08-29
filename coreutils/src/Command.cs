@@ -23,6 +23,7 @@ namespace Icod.CoreUtils.Router;
 
 using System.Reflection;
 using System.Text;
+using Icod.CommandFramework.Diagnostics;
 
 /// <summary>Routes <c>coreutils COMMAND [args...]</c> to the managed CoreUtils commands.</summary>
 public static class Command {
@@ -333,7 +334,10 @@ public static class Command {
 				commandArguments
 			).ConfigureAwait( false ),
 			"mktemp" => await Icod.CoreUtils.MkTemp.Command.RunAsync(
-				commandArguments
+				commandArguments,
+				CommandContext.CreateConsole(
+					"mktemp"
+				)
 			).ConfigureAwait( false ),
 			"mv" => await Icod.CoreUtils.Mv.Command.RunAsync(
 				commandArguments
@@ -351,10 +355,16 @@ public static class Command {
 				commandArguments
 			).ConfigureAwait( false ),
 			"numfmt" => await Icod.CoreUtils.NumFmt.Command.RunAsync(
-				commandArguments
+				commandArguments,
+				CommandContext.CreateConsole(
+					"numfmt"
+				)
 			).ConfigureAwait( false ),
 			"od" => await Icod.CoreUtils.Od.Command.RunAsync(
-				commandArguments
+				commandArguments,
+				CommandContext.CreateConsole(
+					"od"
+				)
 			).ConfigureAwait( false ),
 			"paste" => await Icod.CoreUtils.Paste.Command.RunAsync(
 				commandArguments
@@ -372,7 +382,10 @@ public static class Command {
 				commandArguments
 			).ConfigureAwait( false ),
 			"printf" => await Icod.CoreUtils.Printf.Command.RunAsync(
-				commandArguments
+				commandArguments,
+				CommandContext.CreateConsole(
+					"printf"
+				)
 			).ConfigureAwait( false ),
 			"ptx" => await Icod.CoreUtils.Ptx.Command.RunAsync(
 				commandArguments
@@ -423,7 +436,10 @@ public static class Command {
 				commandArguments
 			).ConfigureAwait( false ),
 			"sort" => await Icod.CoreUtils.Sort.Command.RunAsync(
-				commandArguments
+				commandArguments,
+				CommandContext.CreateConsole(
+					"sort"
+				)
 			).ConfigureAwait( false ),
 			"split" => await Icod.CoreUtils.Split.Command.RunAsync(
 				commandArguments
