@@ -27,6 +27,7 @@ using System.Text;
 using Icod.CommandFramework.CommandLine;
 using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.IO;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 
 /// <summary>
 /// Provides the cksum options implementation.
@@ -470,11 +471,13 @@ public static class CkSumCommand {
 		int? lengthBits
 	) {
 		var explicitOperands = 0 < operands.Count;
-		var names = PathnameExpander.Expand(
+		var expansion = await PathnameOperandExpander.ExpandAsync(
 			explicitOperands
 				? operands
-				: new string[] { "-" }
-		);
+				: new string[] { "-" },
+			cancellationToken: context.CancellationToken
+		).ConfigureAwait( false );
+		var names = expansion.Paths;
 		using var output = new ByteOutputStream(
 			context.StandardOutput,
 			context.StandardOutputStream
@@ -599,11 +602,13 @@ public static class CkSumCommand {
 		ChecksumAlgorithmKind selectedAlgorithm,
 		int? selectedLength
 	) {
-		var manifests = PathnameExpander.Expand(
+		var expansion = await PathnameOperandExpander.ExpandAsync(
 			0 == operands.Count
 				? new string[] { "-" }
-				: operands
-		);
+				: operands,
+			cancellationToken: context.CancellationToken
+		).ConfigureAwait( false );
+		var manifests = expansion.Paths;
 		var failed = false;
 		var validCount = 0;
 		var verifiedCount = 0;

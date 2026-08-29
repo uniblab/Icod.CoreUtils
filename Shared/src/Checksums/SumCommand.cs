@@ -25,6 +25,7 @@ using System.Globalization;
 using Icod.CommandFramework.CommandLine;
 using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.IO;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 
 /// <summary>
 /// Implements BSD and System V checksum output for the <c>sum</c> command.
@@ -107,11 +108,13 @@ public static class SumCommand {
 			}
 
 			var explicitOperands = 0 < operands.Count;
-			var names = PathnameExpander.Expand(
+			var expansion = await PathnameOperandExpander.ExpandAsync(
 				explicitOperands
 					? operands
-					: new string[] { "-" }
-			);
+					: new string[] { "-" },
+				cancellationToken: context.CancellationToken
+			).ConfigureAwait( false );
+			var names = expansion.Paths;
 			var exitCode = CommandExitCodes.Success;
 			foreach ( var name in names ) {
 				context.CancellationToken.ThrowIfCancellationRequested();
