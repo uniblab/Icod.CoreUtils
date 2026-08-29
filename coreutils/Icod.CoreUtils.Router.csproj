@@ -71,7 +71,7 @@
 		<ProjectReference Include="..\chroot\Icod.CoreUtils.ChRoot.csproj" />
 		<ProjectReference Include="..\cksum\Icod.CoreUtils.CkSum.csproj" />
 		<ProjectReference Include="..\comm\Icod.CoreUtils.Comm.csproj" />
-		<ProjectReference Include="..\cp\Icod.CoreUtils.CP.csproj" />
+		<ProjectReference Include="..\cp\Icod.CoreUtils.Cp.csproj" />
 		<ProjectReference Include="..\csplit\Icod.CoreUtils.CSplit.csproj" />
 		<ProjectReference Include="..\cut\Icod.CoreUtils.Cut.csproj" />
 		<ProjectReference Include="..\date\Icod.CoreUtils.Date.csproj" />
