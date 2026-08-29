@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+	coreutils
+	Dispatch CoreUtils commands through a single executable.
+	Copyright (C) 2026  Timothy J. Bruce <uniblab@hotmail.com>
+-->
+
+<!--
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<LangVersion>13.0</LangVersion>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<OutputPath>..\bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\</OutputPath>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+		<AssemblyName>coreutils</AssemblyName>
+		<RootNamespace>Icod.CoreUtils.Router</RootNamespace>
+		<Version>1.0.0</Version>
+		<PackageVersion>1.0.0</PackageVersion>
+		<AssemblyVersion>1.0.0.0</AssemblyVersion>
+	</PropertyGroup>
+	<PropertyGroup>
+		<PackAsTool>true</PackAsTool>
+		<ToolCommandName>coreutils</ToolCommandName>
+		<PackageId>Icod.CoreUtils</PackageId>
+		<Authors>Timothy J. Bruce</Authors>
+		<Description>Managed GNU Coreutils command router for the Icod.CoreUtils suite.</Description>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageProjectUrl>https://github.com/uniblab/Icod.CoreUtils</PackageProjectUrl>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/uniblab/Icod.CoreUtils</RepositoryUrl>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+		<PackageReleaseNotes>Initial cross-platform CoreUtils router and distribution archives.</PackageReleaseNotes>
+		<PackageTags>coreutils;gnu;unix;linux;windows;macos;command-line;cli;utilities;tool;icod;dotnet</PackageTags>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
+		<PlatformTarget>AnyCPU</PlatformTarget>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\arch\Icod.CoreUtils.Arch.csproj" />
+		<ProjectReference Include="..\b2sum\Icod.CoreUtils.B2Sum.csproj" />
+		<ProjectReference Include="..\base32\Icod.CoreUtils.Base32.csproj" />
+		<ProjectReference Include="..\base64\Icod.CoreUtils.Base64.csproj" />
+		<ProjectReference Include="..\basename\Icod.CoreUtils.BaseName.csproj" />
+		<ProjectReference Include="..\basenc\Icod.CoreUtils.BasEnc.csproj" />
+		<ProjectReference Include="..\cat\Icod.CoreUtils.Cat.csproj" />
+		<ProjectReference Include="..\chcon\Icod.CoreUtils.ChCon.csproj" />
+		<ProjectReference Include="..\chgrp\Icod.CoreUtils.ChGrp.csproj" />
+		<ProjectReference Include="..\chmod\Icod.CoreUtils.ChMod.csproj" />
+		<ProjectReference Include="..\chown\Icod.CoreUtils.ChOwn.csproj" />
+		<ProjectReference Include="..\chroot\Icod.CoreUtils.ChRoot.csproj" />
+		<ProjectReference Include="..\cksum\Icod.CoreUtils.CkSum.csproj" />
+		<ProjectReference Include="..\comm\Icod.CoreUtils.Comm.csproj" />
+		<ProjectReference Include="..\cp\Icod.CoreUtils.CP.csproj" />
+		<ProjectReference Include="..\csplit\Icod.CoreUtils.CSplit.csproj" />
+		<ProjectReference Include="..\cut\Icod.CoreUtils.Cut.csproj" />
+		<ProjectReference Include="..\date\Icod.CoreUtils.Date.csproj" />
+		<ProjectReference Include="..\dd\Icod.CoreUtils.DD.csproj" />
+		<ProjectReference Include="..\df\Icod.CoreUtils.Df.csproj" />
+		<ProjectReference Include="..\dir\Icod.CoreUtils.Dir.csproj" />
+		<ProjectReference Include="..\dircolors\Icod.CoreUtils.DirColors.csproj" />
+		<ProjectReference Include="..\dirname\Icod.CoreUtils.DirName.csproj" />
+		<ProjectReference Include="..\du\Icod.CoreUtils.DU.csproj" />
+		<ProjectReference Include="..\echo\Icod.CoreUtils.Echo.csproj" />
+		<ProjectReference Include="..\env\Icod.CoreUtils.Env.csproj" />
+		<ProjectReference Include="..\expand\Icod.CoreUtils.Expand.csproj" />
+		<ProjectReference Include="..\expr\Icod.CoreUtils.Expr.csproj" />
+		<ProjectReference Include="..\factor\Icod.CoreUtils.Factor.csproj" />
+		<ProjectReference Include="..\false\Icod.CoreUtils.False.csproj" />
+		<ProjectReference Include="..\fmt\Icod.CoreUtils.Fmt.csproj" />
+		<ProjectReference Include="..\fold\Icod.CoreUtils.Fold.csproj" />
+		<ProjectReference Include="..\groups\Icod.CoreUtils.Groups.csproj" />
+		<ProjectReference Include="..\head\Icod.CoreUtils.Head.csproj" />
+		<ProjectReference Include="..\hostid\Icod.CoreUtils.HostId.csproj" />
+		<ProjectReference Include="..\hostname\Icod.CoreUtils.HostName.csproj" />
+		<ProjectReference Include="..\id\Icod.CoreUtils.ID.csproj" />
+		<ProjectReference Include="..\install\Icod.CoreUtils.Install.csproj" />
+		<ProjectReference Include="..\join\Icod.CoreUtils.Join.csproj" />
+		<ProjectReference Include="..\link\Icod.CoreUtils.Link.csproj" />
+		<ProjectReference Include="..\ln\Icod.CoreUtils.Ln.csproj" />
+		<ProjectReference Include="..\logname\Icod.CoreUtils.LogName.csproj" />
+		<ProjectReference Include="..\ls\Icod.CoreUtils.Ls.csproj" />
+		<ProjectReference Include="..\md5sum\Icod.CoreUtils.MD5Sum.csproj" />
+		<ProjectReference Include="..\mkdir\Icod.CoreUtils.MkDir.csproj" />
+		<ProjectReference Include="..\mkfifo\Icod.CoreUtils.MkFifo.csproj" />
+		<ProjectReference Include="..\mknod\Icod.CoreUtils.MkNod.csproj" />
+		<ProjectReference Include="..\mktemp\Icod.CoreUtils.MkTemp.csproj" />
+		<ProjectReference Include="..\mv\Icod.CoreUtils.Mv.csproj" />
+		<ProjectReference Include="..\nice\Icod.CoreUtils.Nice.csproj" />
+		<ProjectReference Include="..\nl\Icod.CoreUtils.NL.csproj" />
+		<ProjectReference Include="..\nohup\Icod.CoreUtils.Nohup.csproj" />
+		<ProjectReference Include="..\nproc\Icod.CoreUtils.NProc.csproj" />
+		<ProjectReference Include="..\numfmt\Icod.CoreUtils.NumFmt.csproj" />
+		<ProjectReference Include="..\od\Icod.CoreUtils.OD.csproj" />
+		<ProjectReference Include="..\paste\Icod.CoreUtils.Paste.csproj" />
+		<ProjectReference Include="..\pathchk\Icod.CoreUtils.PathChk.csproj" />
+		<ProjectReference Include="..\pinky\Icod.CoreUtils.Pinky.csproj" />
+		<ProjectReference Include="..\pr\Icod.CoreUtils.Pr.csproj" />
+		<ProjectReference Include="..\printenv\Icod.CoreUtils.PrintEnv.csproj" />
+		<ProjectReference Include="..\printf\Icod.CoreUtils.Printf.csproj" />
+		<ProjectReference Include="..\ptx\Icod.CoreUtils.Ptx.csproj" />
+		<ProjectReference Include="..\pwd\Icod.CoreUtils.Pwd.csproj" />
+		<ProjectReference Include="..\readlink\Icod.CoreUtils.ReadLink.csproj" />
+		<ProjectReference Include="..\realpath\Icod.CoreUtils.RealPath.csproj" />
+		<ProjectReference Include="..\rm\Icod.CoreUtils.Rm.csproj" />
+		<ProjectReference Include="..\rmdir\Icod.CoreUtils.RmDir.csproj" />
+		<ProjectReference Include="..\runcon\Icod.CoreUtils.RunCon.csproj" />
+		<ProjectReference Include="..\seq\Icod.CoreUtils.Seq.csproj" />
+		<ProjectReference Include="..\sha1sum\Icod.CoreUtils.Sha1Sum.csproj" />
+		<ProjectReference Include="..\sha224sum\Icod.CoreUtils.Sha224Sum.csproj" />
+		<ProjectReference Include="..\sha256sum\Icod.CoreUtils.Sha256Sum.csproj" />
+		<ProjectReference Include="..\sha384sum\Icod.CoreUtils.Sha384Sum.csproj" />
+		<ProjectReference Include="..\sha512sum\Icod.CoreUtils.Sha512Sum.csproj" />
+		<ProjectReference Include="..\shred\Icod.CoreUtils.shred.csproj" />
+		<ProjectReference Include="..\shuf\Icod.CoreUtils.Shuf.csproj" />
+		<ProjectReference Include="..\sleep\Icod.CoreUtils.Sleep.csproj" />
+		<ProjectReference Include="..\sort\Icod.CoreUtils.Sort.csproj" />
+		<ProjectReference Include="..\split\Icod.CoreUtils.Split.csproj" />
+		<ProjectReference Include="..\stat\Icod.CoreUtils.Stat.csproj" />
+		<ProjectReference Include="..\stdbuf\Icod.CoreUtils.StdBuf.csproj" />
+		<ProjectReference Include="..\stty\Icod.CoreUtils.Stty.csproj" />
+		<ProjectReference Include="..\sum\Icod.CoreUtils.Sum.csproj" />
+		<ProjectReference Include="..\sync\Icod.CoreUtils.Sync.csproj" />
+		<ProjectReference Include="..\tac\Icod.CoreUtils.Tac.csproj" />
+		<ProjectReference Include="..\tail\Icod.CoreUtils.Tail.csproj" />
+		<ProjectReference Include="..\tee\Icod.CoreUtils.Tee.csproj" />
+		<ProjectReference Include="..\test\Icod.CoreUtils.Test.csproj" />
+		<ProjectReference Include="..\timeout\Icod.CoreUtils.Timeout.csproj" />
+		<ProjectReference Include="..\touch\Icod.CoreUtils.Touch.csproj" />
+		<ProjectReference Include="..\tr\Icod.CoreUtils.Tr.csproj" />
+		<ProjectReference Include="..\true\Icod.CoreUtils.True.csproj" />
+		<ProjectReference Include="..\truncate\Icod.CoreUtils.Truncate.csproj" />
+		<ProjectReference Include="..\tsort\Icod.CoreUtils.TSort.csproj" />
+		<ProjectReference Include="..\tty\Icod.CoreUtils.Tty.csproj" />
+		<ProjectReference Include="..\uname\Icod.CoreUtils.UName.csproj" />
+		<ProjectReference Include="..\unexpand\Icod.CoreUtils.Unexpand.csproj" />
+		<ProjectReference Include="..\uniq\Icod.CoreUtils.Uniq.csproj" />
+		<ProjectReference Include="..\unlink\Icod.CoreUtils.Unlink.csproj" />
+		<ProjectReference Include="..\users\Icod.CoreUtils.Users.csproj" />
+		<ProjectReference Include="..\vdir\Icod.CoreUtils.VDir.csproj" />
+		<ProjectReference Include="..\wc\Icod.CoreUtils.WC.csproj" />
+		<ProjectReference Include="..\who\Icod.CoreUtils.Who.csproj" />
+		<ProjectReference Include="..\whoami\Icod.CoreUtils.WhoAmI.csproj" />
+		<ProjectReference Include="..\yes\Icod.CoreUtils.Yes.csproj" />
+	</ItemGroup>
+	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+		<ErrorReport>prompt</ErrorReport>
+		<WarningLevel>2</WarningLevel>
+		<DebugSymbols>true</DebugSymbols>
+		<DebugType>full</DebugType>
+		<Optimize>false</Optimize>
+		<DefineConstants>DEBUG;TRACE</DefineConstants>
+		<SignAssembly>false</SignAssembly>
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)' == 'Staging' ">
+		<ErrorReport>prompt</ErrorReport>
+		<WarningLevel>3</WarningLevel>
+		<DebugSymbols>true</DebugSymbols>
+		<DebugType>full</DebugType>
+		<Optimize>false</Optimize>
+		<DefineConstants>TRACE</DefineConstants>
+		<SignAssembly>false</SignAssembly>
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+		<ErrorReport>prompt</ErrorReport>
+		<WarningLevel>4</WarningLevel>
+		<DebugType>pdbonly</DebugType>
+		<Optimize>true</Optimize>
+		<SignAssembly>false</SignAssembly>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
+	</PropertyGroup>
+	<ItemGroup>
+		<Content Include="README.md">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<TargetPath>$(AssemblyName).README.md</TargetPath>
+			<Pack>true</Pack>
+			<PackagePath>\</PackagePath>
+		</Content>
+
+		<Content Include="..\LICENSE">
+			<Link>LICENSE</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<TargetPath>$(AssemblyName).LICENSE.txt</TargetPath>
+			<Pack>true</Pack>
+			<PackagePath>\</PackagePath>
+		</Content>
+	</ItemGroup>
+</Project>
