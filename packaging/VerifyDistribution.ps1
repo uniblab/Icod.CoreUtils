@@ -80,6 +80,15 @@ function Get-CoreUtilsVersionExitCode {
     return 0
 }
 
+function Get-CoreUtilsVersionOutputRequired {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$CommandName
+    )
+
+    return 'test' -ne $CommandName
+}
+
 function Invoke-Tool {
     param(
         [Parameter(Mandatory = $true)]
@@ -273,11 +282,12 @@ try {
             -Directory $standaloneOutputPath `
             -CommandName $commandName
         $expectedVersionExitCode = Get-CoreUtilsVersionExitCode -CommandName $commandName
+        $requireVersionOutput = Get-CoreUtilsVersionOutputRequired -CommandName $commandName
         Invoke-Tool `
             -Path $standaloneExecutable `
             -Arguments @('--version') `
             -ExpectedExitCode $expectedVersionExitCode `
-            -RequireOutput
+            -RequireOutput:$requireVersionOutput
     }
 
     Invoke-DotNet -Arguments @(
@@ -321,11 +331,12 @@ try {
 
     foreach ($commandName in $commandNames) {
         $expectedVersionExitCode = Get-CoreUtilsVersionExitCode -CommandName $commandName
+        $requireVersionOutput = Get-CoreUtilsVersionOutputRequired -CommandName $commandName
         Invoke-Tool `
             -Path $routerShim `
             -Arguments @($commandName, '--version') `
             -ExpectedExitCode $expectedVersionExitCode `
-            -RequireOutput
+            -RequireOutput:$requireVersionOutput
     }
 
     Write-Host ''

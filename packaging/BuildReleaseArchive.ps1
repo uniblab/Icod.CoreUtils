@@ -91,12 +91,23 @@ function Get-CoreUtilsVersionExitCode {
     return 0
 }
 
+function Get-CoreUtilsVersionOutputRequired {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$CommandName
+    )
+
+    return 'test' -ne $CommandName
+}
+
 function Invoke-Executable {
     param(
         [Parameter(Mandatory = $true)]
         [string]$Path,
 
-        [int]$ExpectedExitCode = 0
+        [int]$ExpectedExitCode = 0,
+
+        [bool]$RequireOutput = $true
     )
 
     Write-Host "> $Path --version"
@@ -113,7 +124,7 @@ function Invoke-Executable {
     if ($ExpectedExitCode -ne $exitCode) {
         throw "Executable '$Path' exited with status $exitCode; expected $ExpectedExitCode."
     }
-    if (-not $hasOutput) {
+    if ($RequireOutput -and -not $hasOutput) {
         throw "Executable '$Path' produced no version output."
     }
 }
@@ -241,9 +252,11 @@ try {
                 }
             }
             $expectedVersionExitCode = Get-CoreUtilsVersionExitCode -CommandName $commandName
+            $requireVersionOutput = Get-CoreUtilsVersionOutputRequired -CommandName $commandName
             Invoke-Executable `
                 -Path $stagedExecutable `
-                -ExpectedExitCode $expectedVersionExitCode
+                -ExpectedExitCode $expectedVersionExitCode `
+                -RequireOutput $requireVersionOutput
         }
     } else {
         Write-Host "Skipping executable smoke tests because host RID '$currentRid' does not match '$RuntimeIdentifier'."
