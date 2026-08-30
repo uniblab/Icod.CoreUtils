@@ -23,7 +23,8 @@ public static class Command {
 		INohupOutputFileProvider? outputFileProvider = null,
 		INohupStandardStreamStateProvider? standardStreamStateProvider = null,
 		ProcessEnvironment? sourceEnvironment = null,
-		CancellationToken cancellationToken = default
+		CancellationToken cancellationToken = default,
+		Func<Stream>? standardOutputFactory = null
 	) {
 		ArgumentNullException.ThrowIfNull( args );
 		var environment = sourceEnvironment ?? ProcessEnvironment.CreateInheritedBuilder().Build();
@@ -32,6 +33,7 @@ public static class Command {
 		var executor = processExecutor ?? SystemProcessExecutor.Instance;
 		var files = outputFileProvider ?? SystemNohupOutputFileProvider.Instance;
 		var standardStreams = standardStreamStateProvider ?? SystemNohupStandardStreamStateProvider.Instance;
+		var openStandardOutput = standardOutputFactory ?? Console.OpenStandardOutput;
 		var operands = new List<string>();
 		if ( 0 < args.Length ) {
 			var token = args[ 0 ];
@@ -92,7 +94,7 @@ public static class Command {
 				} else if ( null != stdout ) {
 					childError = stdout;
 				} else {
-					sharedOutput = new SynchronizedWriteStream( Console.OpenStandardOutput(), false );
+					sharedOutput = new SynchronizedWriteStream( openStandardOutput(), false );
 					childOutput = sharedOutput;
 					childError = sharedOutput;
 				}

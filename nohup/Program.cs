@@ -21,14 +21,28 @@
 
 namespace Icod.CoreUtils.Nohup;
 
+using Icod.Processes;
+using Icod.Terminal;
+
 /// <summary>Entry point for GNU <c>nohup</c>.</summary>
 internal static class Program {
 	/// <summary>Runs GNU <c>nohup</c>.</summary>
-	public static Task<int> Main(
+	public static async Task<int> Main(
 		string[] args
 	) {
 		ArgumentNullException.ThrowIfNull( args );
 
-		return Command.RunAsync( args );
+		return await Command.RunAsync(
+			args,
+			stdin: null,
+			stdout: null,
+			stderr: null,
+			terminalProvider: SystemTerminalControlProvider.Instance,
+			processExecutor: SystemProcessExecutor.Instance,
+			outputFileProvider: SystemNohupOutputFileProvider.Instance,
+			standardStreamStateProvider: SystemNohupStandardStreamStateProvider.Instance,
+			sourceEnvironment: ProcessEnvironment.CreateInheritedBuilder().Build(),
+			standardOutputFactory: Console.OpenStandardOutput
+		).ConfigureAwait( false );
 	}
 }

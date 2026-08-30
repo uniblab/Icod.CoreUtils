@@ -67,6 +67,31 @@ public sealed class CommandTests {
 		Assert.Same( output, executor.Options!.StandardError );
 	}
 
+	/// <summary>Verifies terminal stderr uses the process-standard-output opener supplied by the composition root.</summary>
+	[Fact]
+	public async Task RedirectsTerminalErrorThroughSuppliedStandardOutputFactory() {
+		var terminal = new FakeTerminalProvider { Error = true };
+		var executor = new FakeExecutor();
+		var output = new MemoryStream();
+		var opens = 0;
+		var exitCode = await Command.RunAsync(
+			[ "tool" ],
+			stderr: new MemoryStream(),
+			terminalProvider: terminal,
+			processExecutor: executor,
+			standardStreamStateProvider: new FakeStandardStreamStateProvider(),
+			standardOutputFactory: () => {
+				opens++;
+				return output;
+			}
+		);
+		Assert.Equal( 0, exitCode );
+		Assert.Equal( 1, opens );
+		Assert.NotNull( executor.Options );
+		Assert.Same( executor.Options!.StandardOutput, executor.Options.StandardError );
+		Assert.True( output.CanWrite );
+	}
+
 	/// <summary>Verifies a closed stdout with terminal stderr appends stderr to nohup.out while preserving closed child stdout.</summary>
 	[Fact]
 	public async Task RedirectsTerminalErrorWhenStandardOutputIsClosed() {

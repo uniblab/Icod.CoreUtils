@@ -55,11 +55,4 @@ public static class Program {
 		}
 	}
 
-	/// <summary>Writes the command usage text.</summary>
-	/// <param name="writer">The destination writer.</param>
-	/// <returns>A task representing the asynchronous write.</returns>
-	public static Task WriteUsageAsync( TextWriter writer ) {
-		ArgumentNullException.ThrowIfNull( writer );
-		return writer.WriteLineAsync( "Usage: touch [OPTION]... FILE..." );
-	}
 }
