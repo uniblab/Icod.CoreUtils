@@ -73,9 +73,9 @@ The following qualifications are part of the Class B contract:
 - `link` singular-expands existing source `FILE1` while creation name `FILE2` remains literal. `unlink` singular-expands its one pathname and rejects multiple matches before attempting removal.
 - `dircolors` and `users` singular-expand their optional input `FILE`. `who` singular-expands only the one-operand accounting-file form; the traditional two-operand form remains literal control syntax.
 
-### Utilities in which CommandFramework globbing will not apply
+### Class C utilities with no internal pathname globbing
 
-The following utilities will **not** perform `Icod.CommandFramework` pathname expansion. This does not prevent an invoking shell from expanding a pattern before launching the utility; it means the utility itself will not reinterpret wildcard-bearing arguments as filesystem glob patterns.
+Class C utilities will **not** perform `Icod.CommandFramework` pathname expansion. This does not prevent an invoking shell from expanding a pattern before launching the utility; it means the utility itself will not reinterpret wildcard-bearing arguments as filesystem glob patterns.
 
 | Area | Utilities |
 | --- | --- |
@@ -91,4 +91,4 @@ The following utilities will **not** perform `Icod.CommandFramework` pathname ex
 
 This exclusion is intentional. Creation-oriented utilities must preserve the names they are asked to create. Data- and expression-oriented utilities may legitimately receive `*`, `?`, or `**` as ordinary text. `basename` and `dirname` operate lexically on supplied pathname-shaped strings, while `pathchk` examines the pathname spelling itself. `tee` operands are output destinations. `chroot` keeps its process-root boundary explicit, and the path-valued arguments accepted by `date` and `stty` are option/control values rather than general input pathname operands. Wrapper utilities must pass the child command and its arguments through without reinterpreting them. `dd` and `test` have command grammars in which automatic argv expansion would alter the meaning of the command. The `coreutils` multicall dispatcher likewise leaves pathname policy to the selected utility rather than applying globbing itself.
 
-The Class A, Class B, and no-internal-globbing tables above define the pathname-expansion policy for the current command suite. New utilities or new operand forms must choose their pathname class explicitly rather than inheriting globbing merely because an argument happens to contain wildcard characters.
+The Class A, Class B, and Class C tables above define the pathname-expansion policy for the current command suite. New utilities or new operand forms must choose their pathname class explicitly rather than inheriting globbing merely because an argument happens to contain wildcard characters.

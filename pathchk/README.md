@@ -10,6 +10,10 @@
 pathchk [OPTION]... NAME...
 ```
 
+## PATHNAME GLOBBING
+
+`pathchk` is a Class C utility and performs no in-process pathname globbing. Each `NAME` is validated exactly as supplied to the command; expanding wildcard-bearing text first could change the pathname spelling that `pathchk` is intended to examine. An invoking shell may still expand an unquoted pattern before `pathchk` starts.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.PathChk` is a managed .NET implementation of GNU Coreutils `pathchk(1)`, modeled on GNU Coreutils 9.11.

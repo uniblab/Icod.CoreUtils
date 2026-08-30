@@ -12,6 +12,10 @@ stty [-F DEVICE | --file=DEVICE] [-a|--all]
 stty [-F DEVICE | --file=DEVICE] [-g|--save]
 ```
 
+## PATHNAME GLOBBING
+
+`stty` is a Class C utility and performs no in-process pathname globbing. `-F DEVICE` and `--file=DEVICE` are singular option values and remain literal, while positional `SETTING` operands are terminal-setting syntax rather than pathnames.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.Stty` is a managed .NET implementation of GNU Coreutils `stty(1)`, modeled on GNU Coreutils 9.11.

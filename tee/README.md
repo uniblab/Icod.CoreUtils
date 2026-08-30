@@ -10,6 +10,10 @@
 tee [OPTION]... [FILE]...
 ```
 
+## PATHNAME GLOBBING
+
+`tee` is a Class C utility and performs no in-process pathname globbing. Every `FILE` operand is an output destination, so wildcard-bearing destination names remain literal when they reach the command unexpanded. This prevents internal globbing from silently turning one output destination into several overwrite or append targets. An invoking shell may still expand an unquoted pattern before `tee` starts.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.Tee` is a managed .NET implementation of GNU Coreutils `tee(1)`, modeled on GNU Coreutils 9.11.
