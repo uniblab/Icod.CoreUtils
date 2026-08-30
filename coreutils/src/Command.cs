@@ -22,6 +22,7 @@
 namespace Icod.CoreUtils.Router;
 
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using Icod.CommandFramework.Diagnostics;
 
@@ -191,6 +192,18 @@ public static class Command {
 			arguments
 		);
 
+		var hostedExitStatus = await TryRunExecutableEntryPointAsync(
+			commandName,
+			commandArguments
+		).ConfigureAwait( false );
+		if ( hostedExitStatus.HasValue ) {
+			return hostedExitStatus.Value;
+		}
+
+		// Keep the direct command path as an in-process fallback for a referenced
+		// command assembly that does not expose an executable entry point. Normal
+		// CoreUtils packaging routes through Program.Main so the standalone process
+		// boundary and the router process boundary remain identical.
 		return commandName switch {
 			"arch" => await Icod.CoreUtils.Arch.Command.RunAsync(
 				commandArguments
@@ -526,6 +539,68 @@ public static class Command {
 				"Known command dispatch was incomplete."
 			)
 		};
+	}
+
+	private static async Task<int?> TryRunExecutableEntryPointAsync(
+		string commandName,
+		string[] commandArguments
+	) {
+		ArgumentException.ThrowIfNullOrWhiteSpace(
+			commandName
+		);
+		ArgumentNullException.ThrowIfNull(
+			commandArguments
+		);
+
+		var commandAssembly = Assembly.Load(
+			new AssemblyName(
+				commandName
+			)
+		);
+		var entryPoint = commandAssembly.EntryPoint;
+		if ( null == entryPoint ) {
+			return null;
+		}
+
+		object?[]? invocationArguments;
+		var parameters = entryPoint.GetParameters();
+		if ( 0 == parameters.Length ) {
+			invocationArguments = null;
+		} else if (
+			1 == parameters.Length
+			&& typeof( string[] ) == parameters[ 0 ].ParameterType
+		) {
+			invocationArguments = [ commandArguments ];
+		} else {
+			throw new InvalidOperationException(
+				$"Command assembly '{commandName}' has an unsupported entry-point signature."
+			);
+		}
+
+		object? invocationResult = null;
+		try {
+			invocationResult = entryPoint.Invoke(
+				null,
+				invocationArguments
+			);
+		} catch ( TargetInvocationException exception ) when (
+			null != exception.InnerException
+		) {
+			ExceptionDispatchInfo.Capture(
+				exception.InnerException
+			).Throw();
+		}
+
+		if ( invocationResult is int exitStatus ) {
+			return exitStatus;
+		}
+		if ( invocationResult is Task<int> asynchronousExitStatus ) {
+			return await asynchronousExitStatus.ConfigureAwait( false );
+		}
+
+		throw new InvalidOperationException(
+			$"Command assembly '{commandName}' returned an unsupported entry-point result."
+		);
 	}
 
 	private static string BuildHelpText() {

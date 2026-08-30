@@ -105,13 +105,15 @@ function Invoke-Executable {
         [Parameter(Mandatory = $true)]
         [string]$Path,
 
+        [string[]]$Arguments = @('--version'),
+
         [int]$ExpectedExitCode = 0,
 
         [bool]$RequireOutput = $true
     )
 
-    Write-Host "> $Path --version"
-    $output = @(& $Path --version)
+    Write-Host "> $Path $($Arguments -join ' ')"
+    $output = @(& $Path @Arguments)
     $exitCode = $LASTEXITCODE
     $hasOutput = $false
     foreach ($line in $output) {
@@ -255,6 +257,22 @@ try {
             $requireVersionOutput = Get-CoreUtilsVersionOutputRequired -CommandName $commandName
             Invoke-Executable `
                 -Path $stagedExecutable `
+                -ExpectedExitCode $expectedVersionExitCode `
+                -RequireOutput $requireVersionOutput
+        }
+
+        $routerExecutableFileName = Get-ExecutableFileName -CommandName 'coreutils' -Rid $RuntimeIdentifier
+        $routerExecutable = Join-Path $stageDirectory $routerExecutableFileName
+        foreach ($commandName in $projects.Keys) {
+            if ('coreutils' -eq $commandName) {
+                continue
+            }
+
+            $expectedVersionExitCode = Get-CoreUtilsVersionExitCode -CommandName $commandName
+            $requireVersionOutput = Get-CoreUtilsVersionOutputRequired -CommandName $commandName
+            Invoke-Executable `
+                -Path $routerExecutable `
+                -Arguments @($commandName, '--version') `
                 -ExpectedExitCode $expectedVersionExitCode `
                 -RequireOutput $requireVersionOutput
         }
