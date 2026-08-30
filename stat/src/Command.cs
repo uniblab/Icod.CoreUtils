@@ -3,6 +3,7 @@ namespace Icod.CoreUtils.Stat;
 using Icod.CommandFramework.CommandLine;
 using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.FileSystem.Metadata;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 
 /// <summary>Implements GNU-compatible <c>stat</c> metadata and filesystem reporting.</summary>
 public static class Command {
@@ -87,6 +88,11 @@ public static class Command {
 				).ConfigureAwait( false );
 				return 1;
 			}
+			var expansion = await PathnameOperandExpander.ExpandAsync(
+				result.Operands,
+				cancellationToken: context.CancellationToken
+			).ConfigureAwait( false );
+			var operands = expansion.Operands;
 
 			var cached = result.GetLastValue( "cached" );
 			if ( null != cached
@@ -131,7 +137,7 @@ public static class Command {
 			}
 
 			var exitCode = 0;
-			foreach ( var operand in result.Operands ) {
+			foreach ( var operand in operands ) {
 				context.CancellationToken.ThrowIfCancellationRequested();
 				try {
 					string text;

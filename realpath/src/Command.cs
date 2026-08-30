@@ -2,6 +2,7 @@ namespace Icod.CoreUtils.RealPath;
 
 using Icod.CommandFramework.CommandLine;
 using Icod.CommandFramework.Diagnostics;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 using Icod.Path;
 
 /// <summary>Implements GNU-compatible <c>realpath</c> canonical pathname output.</summary>
@@ -102,6 +103,11 @@ public static class Command {
 				).ConfigureAwait( false );
 				return 1;
 			}
+			var expansion = await PathnameOperandExpander.ExpandAsync(
+				result.Operands,
+				cancellationToken: context.CancellationToken
+			).ConfigureAwait( false );
+			var operands = expansion.Operands;
 
 			var existence = ExistenceMode.AllowFinal;
 			var resolution = ResolutionMode.Physical;
@@ -183,7 +189,7 @@ public static class Command {
 			}
 
 			var failed = false;
-			foreach ( var operand in result.Operands ) {
+			foreach ( var operand in operands ) {
 				context.CancellationToken.ThrowIfCancellationRequested();
 				var canonical = await ResolveAsync(
 					operand,

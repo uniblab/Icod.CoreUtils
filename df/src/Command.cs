@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Runtime.InteropServices;
 using Icod.CommandFramework.FileSystem.Metadata;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 using Icod.CoreUtils.Shared.FileSystem.Usage;
 using Icod.CoreUtils.Shared.Presentation;
 
@@ -71,7 +72,15 @@ public static class Command {
 		}
 		IReadOnlyList<FileSystemUsageSnapshot> snapshots;
 		try {
-			snapshots = await usageProvider.GetFileSystemsAsync( options.Paths, options.All, cancellationToken ).ConfigureAwait( false );
+			IReadOnlyList<string> paths = options.Paths;
+			if ( 0 < paths.Count ) {
+				var expansion = await PathnameOperandExpander.ExpandAsync(
+					paths,
+					cancellationToken: cancellationToken
+				).ConfigureAwait( false );
+				paths = expansion.Operands;
+			}
+			snapshots = await usageProvider.GetFileSystemsAsync( paths, options.All, cancellationToken ).ConfigureAwait( false );
 		} catch ( Exception exception ) when ( exception is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException ) {
 			await stderr.WriteLineAsync( $"df: {exception.Message}" ).ConfigureAwait( false );
 			return 1;

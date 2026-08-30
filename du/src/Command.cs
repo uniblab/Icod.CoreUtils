@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text;
 using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CommandFramework.FileSystem.Traversal;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 using Icod.CoreUtils.Shared.FileSystem.Usage;
 using Icod.CoreUtils.Shared.Presentation;
 
@@ -66,7 +67,16 @@ public static class Command {
 			await stderr.WriteLineAsync( $"du: {exception.Message}" ).ConfigureAwait( false );
 			return 1;
 		}
-		if ( paths.Count == 0 && options.Files0From is null ) paths.Add( "." );
+		if ( paths.Count == 0 && options.Files0From is null ) {
+			paths.Add( "." );
+		}
+		if ( options.Files0From is null ) {
+			var expansion = await PathnameOperandExpander.ExpandAsync(
+				paths,
+				cancellationToken: cancellationToken
+			).ConfigureAwait( false );
+			paths = expansion.Operands.ToList();
+		}
 		var calculator = new DiskUsageCalculator( metadataProvider, readOnlyProvider );
 		var calculationOptions = new DiskUsageCalculationOptions {
 			ApparentSize = options.ApparentSize,
