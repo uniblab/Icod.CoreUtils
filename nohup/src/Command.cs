@@ -1,8 +1,8 @@
 namespace Icod.CoreUtils.Nohup;
 
 using System.Text;
-using Icod.CommandFramework.Processes;
-using Icod.CommandFramework.Terminal;
+using Icod.Processes;
+using Icod.Terminal;
 
 /// <summary>
 /// Implements GNU <c>nohup</c> 9.11 behavior.
@@ -18,7 +18,7 @@ public static class Command {
 		Stream? stdin = null,
 		Stream? stdout = null,
 		Stream? stderr = null,
-		ITerminalDeviceProvider? terminalProvider = null,
+		ITerminalControlProvider? terminalProvider = null,
 		IProcessExecutor? processExecutor = null,
 		INohupOutputFileProvider? outputFileProvider = null,
 		INohupStandardStreamStateProvider? standardStreamStateProvider = null,
@@ -28,7 +28,7 @@ public static class Command {
 		ArgumentNullException.ThrowIfNull( args );
 		var environment = sourceEnvironment ?? ProcessEnvironment.CreateInheritedBuilder().Build();
 		var internalFailure = environment.Variables.ContainsKey( "POSIXLY_CORRECT" ) ? PosixInternalFailure : DefaultInternalFailure;
-		var terminal = terminalProvider ?? SystemTerminalDeviceProvider.Instance;
+		var terminal = terminalProvider ?? SystemTerminalControlProvider.Instance;
 		var executor = processExecutor ?? SystemProcessExecutor.Instance;
 		var files = outputFileProvider ?? SystemNohupOutputFileProvider.Instance;
 		var standardStreams = standardStreamStateProvider ?? SystemNohupStandardStreamStateProvider.Instance;
@@ -59,9 +59,12 @@ public static class Command {
 			return internalFailure;
 		}
 
-		var inputTerminal = terminal.Observe( TerminalStreamKind.StandardInput ).IsTerminal;
-		var outputTerminal = terminal.Observe( TerminalStreamKind.StandardOutput ).IsTerminal;
-		var errorTerminal = terminal.Observe( TerminalStreamKind.StandardError ).IsTerminal;
+		var inputObservation = terminal.Observe( TerminalEndpoint.StandardInput );
+		var outputObservation = terminal.Observe( TerminalEndpoint.StandardOutput );
+		var errorObservation = terminal.Observe( TerminalEndpoint.StandardError );
+		var inputTerminal = inputObservation.IsAvailable && inputObservation.GetRequiredValue().IsTerminal;
+		var outputTerminal = outputObservation.IsAvailable && outputObservation.GetRequiredValue().IsTerminal;
+		var errorTerminal = errorObservation.IsAvailable && errorObservation.GetRequiredValue().IsTerminal;
 		var outputClosed = !outputTerminal && null == stdout && standardStreams.IsStandardOutputClosed();
 		NohupOutputDestination? destination = null;
 		SynchronizedWriteStream? sharedOutput = null;

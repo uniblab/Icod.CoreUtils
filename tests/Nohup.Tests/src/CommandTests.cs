@@ -1,8 +1,8 @@
 namespace Icod.CoreUtils.Nohup.Tests;
 
 using System.Text;
-using Icod.CommandFramework.Processes;
-using Icod.CommandFramework.Terminal;
+using Icod.Processes;
+using Icod.Terminal;
 using Xunit;
 
 /// <summary>Tests GNU <c>nohup</c> command behavior.</summary>
@@ -184,11 +184,72 @@ public sealed class CommandTests {
 		}
 	}
 
-	private sealed class FakeTerminalProvider : ITerminalDeviceProvider {
+	private sealed class FakeTerminalProvider : ITerminalControlProvider {
 		public bool Input { get; init; }
 		public bool Output { get; init; }
 		public bool Error { get; init; }
-		public TerminalDeviceObservation Observe( TerminalStreamKind stream ) => ( stream switch { TerminalStreamKind.StandardInput => this.Input, TerminalStreamKind.StandardOutput => this.Output, TerminalStreamKind.StandardError => this.Error, _ => false } ) ? TerminalDeviceObservation.Attached() : TerminalDeviceObservation.Redirected();
+
+		/// <inheritdoc />
+		public TerminalControlResult<TerminalEndpointObservation> Observe(
+			TerminalEndpoint endpoint
+		) {
+			ArgumentNullException.ThrowIfNull( endpoint );
+			var isTerminal = endpoint.FileDescriptor switch {
+				0 => this.Input,
+				1 => this.Output,
+				2 => this.Error,
+				_ => false
+			};
+			if ( !isTerminal ) {
+				return TerminalControlResult<TerminalEndpointObservation>.Available(
+					new TerminalEndpointObservation(
+						false,
+						null,
+						null,
+						TerminalControlCapabilities.None
+					)
+				);
+			}
+			var platform = OperatingSystem.IsWindows()
+				? TerminalPlatformKind.WindowsConsole
+				: TerminalPlatformKind.PosixTermios
+			;
+			return TerminalControlResult<TerminalEndpointObservation>.Available(
+				new TerminalEndpointObservation(
+					true,
+					null,
+					platform,
+					TerminalControlCapabilities.Attachment
+				)
+			);
+		}
+
+		/// <inheritdoc />
+		public TerminalControlResult<Icod.TermInfo.TerminalSize> GetSize(
+			TerminalEndpoint endpoint
+		) {
+			ArgumentNullException.ThrowIfNull( endpoint );
+			return TerminalControlResult<Icod.TermInfo.TerminalSize>.Unsupported( "not used" );
+		}
+
+		/// <inheritdoc />
+		public TerminalControlResult<TerminalModeSnapshot> GetMode(
+			TerminalEndpoint endpoint
+		) {
+			ArgumentNullException.ThrowIfNull( endpoint );
+			return TerminalControlResult<TerminalModeSnapshot>.Unsupported( "not used" );
+		}
+
+		/// <inheritdoc />
+		public TerminalControlMutationResult SetMode(
+			TerminalEndpoint endpoint,
+			TerminalModeSnapshot mode,
+			TerminalModeApplyTiming timing
+		) {
+			ArgumentNullException.ThrowIfNull( endpoint );
+			ArgumentNullException.ThrowIfNull( mode );
+			return TerminalControlMutationResult.Unsupported( "not used" );
+		}
 	}
 
 	private sealed class FakeStandardStreamStateProvider : INohupStandardStreamStateProvider {

@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Env.Tests;
 
 using System.Text;
-using Icod.CommandFramework.Processes;
+using Icod.Processes;
 using Xunit;
 
 /// <summary>Tests GNU <c>env</c> command behavior.</summary>
