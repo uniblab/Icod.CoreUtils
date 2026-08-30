@@ -91,6 +91,99 @@ public sealed class CommandTests {
 		}
 	}
 
+	/// <summary>Verifies a detached POSIX child retains native output descriptors after <c>nohup</c> returns.</summary>
+	[Fact]
+	public async Task PosixChildRetainsOutputDescriptorsAfterNohupReturns() {
+		if ( OperatingSystem.IsWindows() ) {
+			return;
+		}
+
+		var directory = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
+			$"icod-nohup-detached-{Guid.NewGuid():N}"
+		);
+		Directory.CreateDirectory( directory );
+		var outputPath = System.IO.Path.Combine( directory, "nohup.out" );
+		var startedPath = System.IO.Path.Combine( directory, "started" );
+		var releasePath = System.IO.Path.Combine( directory, "release" );
+		var finishedPath = System.IO.Path.Combine( directory, "finished" );
+		using var cancellation = new CancellationTokenSource();
+		Task<int>? runTask = null;
+		try {
+			var terminal = new FakeTerminalProvider { Output = true, Error = true };
+			var diagnostics = new StringWriter();
+			runTask = Command.RunAsync(
+				[
+					"/bin/sh",
+					"-c",
+					"printf started > \"$1\"; while [ ! -f \"$2\" ]; do :; done; printf survived-out; printf survived-err >&2; printf finished > \"$3\"",
+					"nohup-test",
+					startedPath,
+					releasePath,
+					finishedPath
+				],
+				terminalProvider: terminal,
+				processExecutor: SystemProcessExecutor.Instance,
+				outputFileProvider: new FileBackedOutputFiles( outputPath ),
+				cancellationToken: cancellation.Token,
+				commandError: diagnostics
+			);
+
+			Assert.True(
+				await WaitForFileAsync( startedPath ).ConfigureAwait( false ),
+				"Child process did not reach the descriptor-retention gate."
+			);
+
+			cancellation.Cancel();
+			var exitCode = await runTask.ConfigureAwait( false );
+			Assert.Equal( 125, exitCode );
+
+			await File.WriteAllTextAsync(
+				releasePath,
+				"release"
+			).ConfigureAwait( false );
+			Assert.True(
+				await WaitForFileAsync( finishedPath ).ConfigureAwait( false ),
+				"Detached child did not finish after nohup returned."
+			);
+			var output = await File.ReadAllTextAsync(
+				outputPath
+			).ConfigureAwait( false );
+			Assert.Contains( "survived-out", output, StringComparison.Ordinal );
+			Assert.Contains( "survived-err", output, StringComparison.Ordinal );
+		} finally {
+			cancellation.Cancel();
+			if ( !File.Exists( releasePath ) ) {
+				await File.WriteAllTextAsync(
+					releasePath,
+					"release"
+				).ConfigureAwait( false );
+			}
+			if ( null != runTask && !runTask.IsCompleted ) {
+				_ = await runTask.ConfigureAwait( false );
+			}
+			if ( File.Exists( startedPath ) && !File.Exists( finishedPath ) ) {
+				_ = await WaitForFileAsync( finishedPath ).ConfigureAwait( false );
+			}
+			Directory.Delete(
+				directory,
+				true
+			);
+		}
+
+		static async Task<bool> WaitForFileAsync(
+			string path
+		) {
+			for ( var attempt = 0; 250 > attempt; attempt++ ) {
+				if ( File.Exists( path ) ) {
+					return true;
+				}
+				await Task.Delay( 20 ).ConfigureAwait( false );
+			}
+			return false;
+		}
+	}
+
 	/// <summary>Verifies POSIX terminal stderr duplicates inherited stdout without opening a managed stream.</summary>
 	[Fact]
 	public async Task UsesNativeDescriptorDuplicationForTerminalError() {
