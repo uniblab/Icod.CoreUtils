@@ -25,7 +25,8 @@ public static class Command {
 		IProcessExecutor? processExecutor = null,
 		IStdBufPlatform? platform = null,
 		Func<string, string?>? environmentVariableProvider = null,
-		CancellationToken cancellationToken = default
+		CancellationToken cancellationToken = default,
+		bool replaceCurrentProcess = false
 	) => RunAsync(
 		args,
 		stdin,
@@ -34,7 +35,8 @@ public static class Command {
 		processExecutor,
 		platform,
 		environmentVariableProvider,
-		cancellationToken
+		cancellationToken,
+		replaceCurrentProcess
 	).GetAwaiter().GetResult();
 
 	/// <summary>
@@ -48,7 +50,8 @@ public static class Command {
 		IProcessExecutor? processExecutor = null,
 		IStdBufPlatform? platform = null,
 		Func<string, string?>? environmentVariableProvider = null,
-		CancellationToken cancellationToken = default
+		CancellationToken cancellationToken = default,
+		bool replaceCurrentProcess = false
 	) {
 		ArgumentNullException.ThrowIfNull( args );
 		_ = stdin;
@@ -116,7 +119,13 @@ public static class Command {
 		}
 
 		var command = args[ index ];
+		var argumentZero = ( replaceCurrentProcess && !OperatingSystem.IsWindows() )
+			? command
+			: null
+		;
 		var options = new ProcessRunOptions( command ) {
+			ArgumentZero = argumentZero,
+			ReplaceCurrentProcess = replaceCurrentProcess,
 			ResolveExecutable = true,
 			ReturnLaunchFailureResult = true
 		};

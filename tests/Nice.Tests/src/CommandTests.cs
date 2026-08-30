@@ -123,6 +123,26 @@ public sealed class CommandTests {
 		Assert.Null( executor.Options.StandardError );
 	}
 
+	/// <summary>Verifies the standalone POSIX host can request current-process replacement.</summary>
+	[Fact]
+	public async Task PosixHostCanRequestCurrentProcessReplacement() {
+		if ( OperatingSystem.IsWindows() ) {
+			return;
+		}
+		var executor = new RecordingExecutor();
+		var status = await Command.RunAsync(
+			new[] { "child" },
+			CreateContext(),
+			processExecutor: executor,
+			priorityProvider: new FakePriorityProvider(),
+			replaceCurrentProcess: true
+		);
+		Assert.Equal( 0, status );
+		Assert.NotNull( executor.Options );
+		Assert.True( executor.Options.ReplaceCurrentProcess );
+		Assert.Equal( "child", executor.Options.ArgumentZero );
+	}
+
 	/// <summary>Verifies explicitly supplied binary standard streams reach the child unchanged.</summary>
 	[Fact]
 	public async Task ChildStandardStreamOverridesArePreserved() {

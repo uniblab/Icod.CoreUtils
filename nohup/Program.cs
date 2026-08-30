@@ -44,7 +44,8 @@ internal static class Program {
 			sourceEnvironment: ProcessEnvironment.CreateInheritedBuilder().Build(),
 			standardOutputFactory: Console.OpenStandardOutput,
 			commandOutput: Console.Out,
-			commandError: Console.Error
+			commandError: Console.Error,
+			replaceCurrentProcess: !OperatingSystem.IsWindows()
 		).ConfigureAwait( false );
 	}
 }

@@ -28,6 +28,16 @@ internal static class Program {
 		string[] args
 	) {
 		ArgumentNullException.ThrowIfNull( args );
+		if ( !OperatingSystem.IsWindows() ) {
+			return await Command.RunAsync(
+				args,
+				Console.In,
+				Console.Out,
+				Console.Error,
+				replaceCurrentProcess: true
+			).ConfigureAwait( false );
+		}
+
 		using var cancellation = new CancellationTokenSource();
 		ConsoleCancelEventHandler handler = ( _, eventArgs ) => {
 			eventArgs.Cancel = true;

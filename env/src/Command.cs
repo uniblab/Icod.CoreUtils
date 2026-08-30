@@ -39,7 +39,8 @@ public static class Command {
 		IProcessExecutor? processExecutor = null,
 		IProcessSignalProvider? signalProvider = null,
 		ProcessEnvironment? sourceEnvironment = null,
-		CancellationToken cancellationToken = default
+		CancellationToken cancellationToken = default,
+		bool replaceCurrentProcess = false
 	) {
 		ArgumentNullException.ThrowIfNull( args );
 		var executor = processExecutor ?? SystemProcessExecutor.Instance;
@@ -137,6 +138,7 @@ public static class Command {
 			ArgumentZero = argumentZero,
 			CancellationPolicy = ProcessCancellationPolicy.KillProcessTree,
 			Environment = environment,
+			ReplaceCurrentProcess = replaceCurrentProcess,
 			ResolveExecutable = true,
 			ReturnLaunchFailureResult = true,
 			SignalPolicy = options.SignalPolicy.IsEmpty ? null : options.SignalPolicy,

@@ -26,7 +26,8 @@ public static class Command {
 		CancellationToken cancellationToken = default,
 		Func<Stream>? standardOutputFactory = null,
 		TextWriter? commandOutput = null,
-		TextWriter? commandError = null
+		TextWriter? commandError = null,
+		bool replaceCurrentProcess = false
 	) {
 		ArgumentNullException.ThrowIfNull( args );
 		var environment = sourceEnvironment ?? ProcessEnvironment.CreateInheritedBuilder().Build();
@@ -141,9 +142,15 @@ public static class Command {
 				await WriteDiagnosticAsync( stderr, commandError, $"nohup: {prefix}{action}", cancellationToken ).ConfigureAwait( false );
 			}
 
+			var argumentZero = ( replaceCurrentProcess && !OperatingSystem.IsWindows() )
+				? operands[ 0 ]
+				: null
+			;
 			var runOptions = new ProcessRunOptions( operands[ 0 ] ) {
+				ArgumentZero = argumentZero,
 				CancellationPolicy = ProcessCancellationPolicy.LeaveRunning,
 				Environment = environment,
+				ReplaceCurrentProcess = replaceCurrentProcess,
 				ResolveExecutable = true,
 				ReturnLaunchFailureResult = true,
 				StandardInput = childInput,

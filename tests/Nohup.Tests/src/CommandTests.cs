@@ -64,12 +64,15 @@ public sealed class CommandTests {
 				terminalProvider: terminal,
 				processExecutor: executor,
 				outputFileProvider: new FileBackedOutputFiles( path ),
-				commandError: diagnostics
+				commandError: diagnostics,
+				replaceCurrentProcess: true
 			);
 
 			Assert.Equal( 0, exitCode );
 			Assert.NotNull( executor.Options );
-			Assert.Null( executor.Options!.StandardOutput );
+			Assert.True( executor.Options!.ReplaceCurrentProcess );
+			Assert.Equal( "tool", executor.Options.ArgumentZero );
+			Assert.Null( executor.Options.StandardOutput );
 			Assert.Null( executor.Options.StandardError );
 			Assert.Collection(
 				executor.Options.PosixFileDescriptorDuplications,

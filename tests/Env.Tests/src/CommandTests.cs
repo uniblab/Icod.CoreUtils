@@ -98,10 +98,12 @@ public sealed class CommandTests {
 		var exitCode = await Command.RunAsync(
 			[ "tool", "arg" ],
 			processExecutor: executor,
-			sourceEnvironment: ProcessEnvironment.CreateEmptyBuilder().Build()
+			sourceEnvironment: ProcessEnvironment.CreateEmptyBuilder().Build(),
+			replaceCurrentProcess: true
 		);
 		Assert.Equal( 0, exitCode );
 		Assert.Equal( "tool", executor.Options!.ArgumentZero );
+		Assert.True( executor.Options.ReplaceCurrentProcess );
 	}
 
 	/// <summary>Verifies launch signal options create one consolidated child policy.</summary>

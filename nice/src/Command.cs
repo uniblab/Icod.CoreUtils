@@ -38,7 +38,8 @@ public static class Command {
 		TextReader? stdin = null,
 		TextWriter? stdout = null,
 		TextWriter? stderr = null,
-		CancellationToken cancellationToken = default
+		CancellationToken cancellationToken = default,
+		bool replaceCurrentProcess = false
 	) {
 		ArgumentNullException.ThrowIfNull( args );
 		return RunAsync(
@@ -49,7 +50,8 @@ public static class Command {
 				stdout ?? Console.Out,
 				stderr ?? Console.Error,
 				cancellationToken: cancellationToken
-			)
+			),
+			replaceCurrentProcess: replaceCurrentProcess
 		);
 	}
 
@@ -62,7 +64,8 @@ public static class Command {
 		string[] args,
 		CommandContext context,
 		IProcessExecutor? processExecutor = null,
-		IProcessPriorityProvider? priorityProvider = null
+		IProcessPriorityProvider? priorityProvider = null,
+		bool replaceCurrentProcess = false
 	) {
 		ArgumentNullException.ThrowIfNull( args );
 		ArgumentNullException.ThrowIfNull( context );
@@ -161,7 +164,13 @@ public static class Command {
 			}
 
 			ProcessOperationResult? childPriorityFailure = null;
+			var argumentZero = ( replaceCurrentProcess && !OperatingSystem.IsWindows() )
+				? parsed.Command
+				: null
+			;
 			var runOptions = new ProcessRunOptions( parsed.Command ) {
+				ArgumentZero = argumentZero,
+				ReplaceCurrentProcess = replaceCurrentProcess,
 				ResolveExecutable = true,
 				ReturnLaunchFailureResult = true,
 				StandardInput = context.StandardInputStream,

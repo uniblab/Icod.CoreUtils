@@ -107,6 +107,25 @@ public sealed class CommandTests {
 	}
 
 	[Fact]
+	public async Task PosixHostCanRequestCurrentProcessReplacement() {
+		if ( OperatingSystem.IsWindows() ) {
+			return;
+		}
+		var executor = new FakeProcessExecutor();
+		var status = await Command.RunAsync(
+			new[] { "-oL", "program" },
+			processExecutor: executor,
+			platform: FakeStdBufPlatform.Supported(),
+			environmentVariableProvider: static _ => null,
+			replaceCurrentProcess: true
+		);
+		Assert.Equal( 0, status );
+		var options = Assert.IsType<ProcessRunOptions>( executor.Options );
+		Assert.True( options.ReplaceCurrentProcess );
+		Assert.Equal( "program", options.ArgumentZero );
+	}
+
+	[Fact]
 	public async Task LaterModeOptionReplacesEarlierMode() {
 		var executor = new FakeProcessExecutor();
 		var status = await Command.RunAsync(
