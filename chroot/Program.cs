@@ -28,8 +28,30 @@ public static class Program {
 	/// <summary>Runs the command.</summary>
 	/// <param name="args">Command-line arguments.</param>
 	/// <returns>A task whose result is the process exit status.</returns>
-	public static Task<int> Main( string[] args ) {
+	public static async Task<int> Main(
+		string[] args
+	) {
 		ArgumentNullException.ThrowIfNull( args );
-		return Command.RunAsync( args );
+
+		using var cancellation = new CancellationTokenSource();
+		ConsoleCancelEventHandler handler = (
+			object? sender,
+			ConsoleCancelEventArgs eventArgs
+		) => {
+			eventArgs.Cancel = true;
+			cancellation.Cancel();
+		};
+		Console.CancelKeyPress += handler;
+		try {
+			return await Command.RunAsync(
+				args,
+				Console.In,
+				Console.Out,
+				Console.Error,
+				cancellationToken: cancellation.Token
+			).ConfigureAwait( false );
+		} finally {
+			Console.CancelKeyPress -= handler;
+		}
 	}
 }

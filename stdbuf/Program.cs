@@ -29,11 +29,25 @@ internal static class Program {
 	) {
 		ArgumentNullException.ThrowIfNull( args );
 
-		return await Command.RunAsync(
-			args,
-			Console.In,
-			Console.Out,
-			Console.Error
-		).ConfigureAwait( false );
+		using var cancellation = new CancellationTokenSource();
+		ConsoleCancelEventHandler handler = (
+			object? sender,
+			ConsoleCancelEventArgs eventArgs
+		) => {
+			eventArgs.Cancel = true;
+			cancellation.Cancel();
+		};
+		Console.CancelKeyPress += handler;
+		try {
+			return await Command.RunAsync(
+				args,
+				Console.In,
+				Console.Out,
+				Console.Error,
+				cancellationToken: cancellation.Token
+			).ConfigureAwait( false );
+		} finally {
+			Console.CancelKeyPress -= handler;
+		}
 	}
 }

@@ -24,11 +24,32 @@ namespace Icod.CoreUtils.Env;
 /// <summary>Entry point for GNU <c>env</c>.</summary>
 internal static class Program {
 	/// <summary>Runs GNU <c>env</c>.</summary>
-	public static Task<int> Main(
+	public static async Task<int> Main(
 		string[] args
 	) {
 		ArgumentNullException.ThrowIfNull( args );
 
-		return Command.RunAsync( args );
+		using var cancellation = new CancellationTokenSource();
+		ConsoleCancelEventHandler handler = (
+			object? sender,
+			ConsoleCancelEventArgs eventArgs
+		) => {
+			eventArgs.Cancel = true;
+			cancellation.Cancel();
+		};
+		Console.CancelKeyPress += handler;
+		try {
+			// Null binary streams deliberately preserve native standard-handle inheritance
+			// for a child command while env itself uses the current process console.
+			return await Command.RunAsync(
+				args,
+				stdin: null,
+				stdout: null,
+				stderr: null,
+				cancellationToken: cancellation.Token
+			).ConfigureAwait( false );
+		} finally {
+			Console.CancelKeyPress -= handler;
+		}
 	}
 }

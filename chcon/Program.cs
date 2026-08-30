@@ -26,7 +26,30 @@ using System;
 /// <summary>Executable entry point for <c>chcon</c>.</summary>
 public static class Program {
 	/// <summary>Runs the command.</summary>
-	public static int Main( string[] args ) {
-		return Command.Run( args, Console.In, Console.Out, Console.Error );
+	public static async Task<int> Main(
+		string[] args
+	) {
+		ArgumentNullException.ThrowIfNull( args );
+
+		using var cancellation = new CancellationTokenSource();
+		ConsoleCancelEventHandler handler = (
+			object? sender,
+			ConsoleCancelEventArgs eventArgs
+		) => {
+			eventArgs.Cancel = true;
+			cancellation.Cancel();
+		};
+		Console.CancelKeyPress += handler;
+		try {
+			return await Command.RunAsync(
+				args,
+				Console.In,
+				Console.Out,
+				Console.Error,
+				cancellationToken: cancellation.Token
+			).ConfigureAwait( false );
+		} finally {
+			Console.CancelKeyPress -= handler;
+		}
 	}
 }
