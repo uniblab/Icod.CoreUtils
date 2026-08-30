@@ -18,6 +18,9 @@ public static class Command {
 		TextWriter? stderr = null
 	) {
 		ArgumentNullException.ThrowIfNull( args );
+		if ( null == stdin && null == stdout && null == stderr ) {
+			return RunAsync( args ).GetAwaiter().GetResult();
+		}
 		using var input = null == stdin ? null : new MemoryStream( Utf8.GetBytes( stdin.ReadToEnd() ), writable: false );
 		using var output = new MemoryStream();
 		using var error = new MemoryStream();

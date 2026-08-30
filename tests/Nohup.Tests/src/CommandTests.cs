@@ -44,6 +44,88 @@ public sealed class CommandTests {
 		Assert.Contains( "appending output", Encoding.UTF8.GetString( diagnostics.ToArray() ), StringComparison.Ordinal );
 	}
 
+	/// <summary>Verifies POSIX terminal stdout/stderr use native child descriptor duplication.</summary>
+	[Fact]
+	public async Task UsesNativeDescriptorDuplicationForTerminalOutputAndError() {
+		if ( OperatingSystem.IsWindows() ) {
+			return;
+		}
+
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
+			$"icod-nohup-native-{Guid.NewGuid():N}"
+		);
+		try {
+			var terminal = new FakeTerminalProvider { Output = true, Error = true };
+			var executor = new FakeExecutor();
+			var diagnostics = new StringWriter();
+			var exitCode = await Command.RunAsync(
+				[ "tool" ],
+				terminalProvider: terminal,
+				processExecutor: executor,
+				outputFileProvider: new FileBackedOutputFiles( path ),
+				commandError: diagnostics
+			);
+
+			Assert.Equal( 0, exitCode );
+			Assert.NotNull( executor.Options );
+			Assert.Null( executor.Options!.StandardOutput );
+			Assert.Null( executor.Options.StandardError );
+			Assert.Collection(
+				executor.Options.PosixFileDescriptorDuplications,
+				duplication => {
+					Assert.Equal( 1, duplication.DestinationDescriptor );
+					Assert.True( duplication.CloseSource );
+				},
+				duplication => {
+					Assert.Equal( 1, duplication.SourceDescriptor );
+					Assert.Equal( 2, duplication.DestinationDescriptor );
+					Assert.False( duplication.CloseSource );
+				}
+			);
+			Assert.Contains( "appending output", diagnostics.ToString(), StringComparison.Ordinal );
+		} finally {
+			if ( File.Exists( path ) ) {
+				File.Delete( path );
+			}
+		}
+	}
+
+	/// <summary>Verifies POSIX terminal stderr duplicates inherited stdout without opening a managed stream.</summary>
+	[Fact]
+	public async Task UsesNativeDescriptorDuplicationForTerminalError() {
+		if ( OperatingSystem.IsWindows() ) {
+			return;
+		}
+
+		var terminal = new FakeTerminalProvider { Error = true };
+		var executor = new FakeExecutor();
+		var diagnostics = new StringWriter();
+		var opens = 0;
+		var exitCode = await Command.RunAsync(
+			[ "tool" ],
+			terminalProvider: terminal,
+			processExecutor: executor,
+			standardStreamStateProvider: new FakeStandardStreamStateProvider(),
+			standardOutputFactory: () => {
+				opens++;
+				return new MemoryStream();
+			},
+			commandError: diagnostics
+		);
+
+		Assert.Equal( 0, exitCode );
+		Assert.Equal( 0, opens );
+		Assert.NotNull( executor.Options );
+		Assert.Null( executor.Options!.StandardOutput );
+		Assert.Null( executor.Options.StandardError );
+		var duplication = Assert.Single( executor.Options.PosixFileDescriptorDuplications );
+		Assert.Equal( 1, duplication.SourceDescriptor );
+		Assert.Equal( 2, duplication.DestinationDescriptor );
+		Assert.False( duplication.CloseSource );
+		Assert.Contains( "redirecting standard error", diagnostics.ToString(), StringComparison.Ordinal );
+	}
+
 	/// <summary>Verifies a failed current-directory output falls back to HOME.</summary>
 	[Fact]
 	public async Task FallsBackToHomeNohupOut() {
@@ -290,6 +372,32 @@ public sealed class CommandTests {
 	private sealed class NoopDisposable : IDisposable {
 		public static NoopDisposable Instance { get; } = new();
 		public void Dispose() { }
+	}
+
+	private sealed class FileBackedOutputFiles : INohupOutputFileProvider {
+		private readonly string _path;
+
+		public FileBackedOutputFiles(
+			string path
+		) {
+			ArgumentException.ThrowIfNullOrWhiteSpace( path );
+			this._path = path;
+		}
+
+		public NohupOutputDestination OpenAppend(
+			string path
+		) {
+			ArgumentException.ThrowIfNullOrWhiteSpace( path );
+			return new NohupOutputDestination(
+				this._path,
+				new FileStream(
+					this._path,
+					FileMode.Append,
+					FileAccess.Write,
+					FileShare.Read | FileShare.Write | FileShare.Delete
+				)
+			);
+		}
 	}
 
 	private sealed class FakeOutputFiles : INohupOutputFileProvider {
