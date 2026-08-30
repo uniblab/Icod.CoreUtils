@@ -1,5 +1,7 @@
 namespace Icod.CoreUtils.Shred;
 
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
+
 /// <summary>Provides the command boundary for GNU-compatible secure overwrite operations.</summary>
 public static class Command {
 	private const string VersionText = "shred (Icod CoreUtils) 0.1.0";
@@ -62,6 +64,25 @@ public static class Command {
 		if ( options.Version ) {
 			await textOutput.WriteLineAsync( VersionText ).ConfigureAwait( false );
 			return 0;
+		}
+
+		try {
+			var expansion = await PathnameOperandExpander.ExpandAsync(
+				options.Targets,
+				cancellationToken: cancellationToken
+			).ConfigureAwait( false );
+			options.Targets.Clear();
+			options.Targets.AddRange( expansion.Operands );
+		} catch ( OperationCanceledException ) when ( cancellationToken.IsCancellationRequested ) {
+			await stderr.WriteLineAsync( "shred: operation canceled" ).ConfigureAwait( false );
+			return 1;
+		} catch ( Exception exception ) when ( exception is IOException
+			or UnauthorizedAccessException
+			or NotSupportedException
+			or InvalidOperationException
+			or ArgumentException ) {
+			await stderr.WriteLineAsync( string.Concat( "shred: ", exception.Message ) ).ConfigureAwait( false );
+			return 1;
 		}
 
 		Stream? binaryOutput = null;

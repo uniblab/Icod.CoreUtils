@@ -8,6 +8,7 @@ using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CommandFramework.FileSystem.Mutation;
 using Icod.CommandFramework.FileSystem.Traversal;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 
 /// <summary>
 /// Implements GNU <c>rmdir</c> empty-directory removal over the shared single-path mutation provider.
@@ -106,11 +107,16 @@ public static class Command {
 				return CommandExitCodes.Failure;
 			}
 
+			var expansion = await PathnameOperandExpander.ExpandAsync(
+				parsed.Operands,
+				cancellationToken: context.CancellationToken
+			).ConfigureAwait( false );
+
 			var removeParents = parsed.HasOption( "parents" );
 			var ignoreNonEmpty = parsed.HasOption( "ignore-non-empty" );
 			var verbose = parsed.HasOption( "verbose" );
 			var exitStatus = CommandExitCodes.Success;
-			foreach ( var operand in parsed.Operands ) {
+			foreach ( var operand in expansion.Operands ) {
 				context.CancellationToken.ThrowIfCancellationRequested();
 				var current = System.IO.Path.TrimEndingDirectorySeparator( operand );
 				if ( current.Length == 0 ) {
