@@ -3,13 +3,13 @@
 namespace Icod.CoreUtils.Nice;
 
 using System.Globalization;
-using System.Text;
+using Icod.CommandFramework.Diagnostics;
 using Icod.Processes;
 
 /// <summary>Implements GNU Coreutils 9.11 <c>nice</c>.</summary>
 public static class Command {
 	private const int InternalFailure = 125;
-	private static readonly Encoding Utf8 = new UTF8Encoding( false );
+	private const string ProgramName = "nice";
 
 	/// <summary>Runs <c>nice</c> synchronously for compatibility with historical callers.</summary>
 	public static int Run(
@@ -19,124 +19,209 @@ public static class Command {
 		TextWriter? stderr = null
 	) {
 		ArgumentNullException.ThrowIfNull( args );
-		using var input = ( null == stdin )
-			? null
-			: new MemoryStream(
-				Utf8.GetBytes( stdin.ReadToEnd() ),
-				writable: false
-			)
-		;
-		using var output = new MemoryStream();
-		using var error = new MemoryStream();
-		var status = RunAsync( args, input, output, error ).GetAwaiter().GetResult();
-		( stdout ?? Console.Out ).Write( Utf8.GetString( output.ToArray() ) );
-		( stderr ?? Console.Error ).Write( Utf8.GetString( error.ToArray() ) );
-		return status;
+		return RunAsync(
+			args,
+			stdin,
+			stdout,
+			stderr
+		).GetAwaiter().GetResult();
 	}
 
-	/// <summary>Runs GNU <c>nice</c> asynchronously over the F4 process providers.</summary>
-	public static async Task<int> RunAsync(
+	/// <summary>Runs GNU <c>nice</c> asynchronously with optional standard-stream substitution.</summary>
+	/// <remarks>
+	/// A <see langword="null"/> text stream selects the corresponding <see cref="Console"/> stream.
+	/// Child standard handles remain inherited at the native process boundary unless a binary stream is
+	/// supplied through the <see cref="CommandContext"/> overload.
+	/// </remarks>
+	public static Task<int> RunAsync(
 		string[] args,
-		Stream? stdin = null,
-		Stream? stdout = null,
-		Stream? stderr = null,
-		IProcessExecutor? processExecutor = null,
-		IProcessPriorityProvider? priorityProvider = null,
+		TextReader? stdin = null,
+		TextWriter? stdout = null,
+		TextWriter? stderr = null,
 		CancellationToken cancellationToken = default
 	) {
 		ArgumentNullException.ThrowIfNull( args );
+		return RunAsync(
+			args,
+			new CommandContext(
+				ProgramName,
+				stdin ?? Console.In,
+				stdout ?? Console.Out,
+				stderr ?? Console.Error,
+				cancellationToken: cancellationToken
+			)
+		);
+	}
+
+	/// <summary>Runs GNU <c>nice</c> asynchronously using a complete shared command context.</summary>
+	/// <remarks>
+	/// Binary standard streams are passed directly to the child-process provider when supplied. When a
+	/// binary stream is absent, the corresponding child standard handle is inherited unchanged.
+	/// </remarks>
+	public static async Task<int> RunAsync(
+		string[] args,
+		CommandContext context,
+		IProcessExecutor? processExecutor = null,
+		IProcessPriorityProvider? priorityProvider = null
+	) {
+		ArgumentNullException.ThrowIfNull( args );
+		ArgumentNullException.ThrowIfNull( context );
 		var executor = processExecutor ?? SystemProcessExecutor.Instance;
 		var priorities = priorityProvider ?? SystemProcessPriorityProvider.Instance;
-		var parsed = ParseArguments( args );
-		if ( null != parsed.Error ) {
-			await WriteDiagnosticAsync( stderr, $"nice: {parsed.Error}", cancellationToken ).ConfigureAwait( false );
-			await WriteDiagnosticAsync( stderr, "Try 'nice --help' for more information.", cancellationToken ).ConfigureAwait( false );
-			return InternalFailure;
-		}
-		if ( parsed.ShowHelp ) {
-			await WriteAsync( stdout, string.Concat( NormalizeLineEndings( HelpText ), Environment.NewLine ), cancellationToken ).ConfigureAwait( false );
-			return 0;
-		}
-		if ( parsed.ShowVersion ) {
-			await WriteAsync( stdout, string.Concat( "nice (Icod.CoreUtils) 9.11", Environment.NewLine ), cancellationToken ).ConfigureAwait( false );
-			return 0;
-		}
 
-		var self = ProcessTarget.ForProcess( Environment.ProcessId );
-		if ( null == parsed.Command ) {
-			if ( parsed.AdjustmentSpecified ) {
-				await WriteDiagnosticAsync( stderr, "nice: a command must be given with an adjustment", cancellationToken ).ConfigureAwait( false );
-				await WriteDiagnosticAsync( stderr, "Try 'nice --help' for more information.", cancellationToken ).ConfigureAwait( false );
-				return InternalFailure;
-			}
-			var current = priorities.GetPriority( self );
-			if ( !current.Succeeded ) {
-				await WritePriorityFailureAsync( stderr, "cannot get niceness", current.Message, cancellationToken ).ConfigureAwait( false );
-				return InternalFailure;
-			}
-			await WriteAsync(
-				stdout,
-				string.Concat( current.Value!.NiceValue.ToString( CultureInfo.InvariantCulture ), Environment.NewLine ),
-				cancellationToken
-			).ConfigureAwait( false );
-			return 0;
-		}
-
-		var currentForAdjustment = priorities.GetPriority( self );
-		if ( !currentForAdjustment.Succeeded ) {
-			await WritePriorityFailureAsync( stderr, "cannot get niceness", currentForAdjustment.Message, cancellationToken ).ConfigureAwait( false );
-			return InternalFailure;
-		}
-		var targetNiceValue = checked( ( int )Math.Clamp(
-			( long )currentForAdjustment.Value!.NiceValue + parsed.Adjustment,
-			-20L,
-			19L
-		) );
-		var changed = priorities.SetPriority( self, targetNiceValue );
-		if ( !changed.Succeeded ) {
-			await WritePriorityFailureAsync( stderr, "cannot set niceness", changed.Message, cancellationToken ).ConfigureAwait( false );
-			if ( ProcessOperationStatus.AccessDenied != changed.Status ) {
-				return InternalFailure;
-			}
-		}
-
-		ProcessOperationResult? childPriorityFailure = null;
-		var runOptions = new ProcessRunOptions( parsed.Command ) {
-			ResolveExecutable = true,
-			ReturnLaunchFailureResult = true,
-			StandardInput = stdin,
-			StandardOutput = stdout,
-			StandardError = stderr
-		};
-		if ( OperatingSystem.IsWindows() && changed.Succeeded ) {
-			runOptions.ProcessStarted = identity => {
-				childPriorityFailure = priorities.SetPriority( ProcessTarget.ForProcess( identity ), targetNiceValue );
-			};
-		}
-		foreach ( var argument in parsed.CommandArguments ) {
-			runOptions.Arguments.Add( argument );
-		}
-
-		ProcessResult result;
 		try {
-			result = await executor.RunAsync( runOptions, cancellationToken ).ConfigureAwait( false );
+			var parsed = ParseArguments( args );
+			if ( null != parsed.Error ) {
+				await context.Diagnostics.ErrorAsync(
+					parsed.Error,
+					context.CancellationToken
+				).ConfigureAwait( false );
+				await context.StandardError.WriteLineAsync(
+					"Try 'nice --help' for more information.".AsMemory(),
+					context.CancellationToken
+				).ConfigureAwait( false );
+				return InternalFailure;
+			}
+			if ( parsed.ShowHelp ) {
+				await context.StandardOutput.WriteAsync(
+					string.Concat(
+						NormalizeLineEndings( HelpText ),
+						Environment.NewLine
+					).AsMemory(),
+					context.CancellationToken
+				).ConfigureAwait( false );
+				return 0;
+			}
+			if ( parsed.ShowVersion ) {
+				await context.StandardOutput.WriteLineAsync(
+					"nice (Icod.CoreUtils) 9.11".AsMemory(),
+					context.CancellationToken
+				).ConfigureAwait( false );
+				return 0;
+			}
+
+			var self = ProcessTarget.ForProcess( Environment.ProcessId );
+			if ( null == parsed.Command ) {
+				if ( parsed.AdjustmentSpecified ) {
+					await context.Diagnostics.ErrorAsync(
+						"a command must be given with an adjustment",
+						context.CancellationToken
+					).ConfigureAwait( false );
+					await context.StandardError.WriteLineAsync(
+						"Try 'nice --help' for more information.".AsMemory(),
+						context.CancellationToken
+					).ConfigureAwait( false );
+					return InternalFailure;
+				}
+				var current = priorities.GetPriority( self );
+				if ( !current.Succeeded ) {
+					await WritePriorityFailureAsync(
+						context,
+						"cannot get niceness",
+						current.Message
+					).ConfigureAwait( false );
+					return InternalFailure;
+				}
+				await context.StandardOutput.WriteLineAsync(
+					current.Value!.NiceValue.ToString(
+						CultureInfo.InvariantCulture
+					).AsMemory(),
+					context.CancellationToken
+				).ConfigureAwait( false );
+				return 0;
+			}
+
+			var currentForAdjustment = priorities.GetPriority( self );
+			if ( !currentForAdjustment.Succeeded ) {
+				await WritePriorityFailureAsync(
+					context,
+					"cannot get niceness",
+					currentForAdjustment.Message
+				).ConfigureAwait( false );
+				return InternalFailure;
+			}
+			var targetNiceValue = checked( ( int )Math.Clamp(
+				( long )currentForAdjustment.Value!.NiceValue + parsed.Adjustment,
+				-20L,
+				19L
+			) );
+			var changed = priorities.SetPriority(
+				self,
+				targetNiceValue
+			);
+			if ( !changed.Succeeded ) {
+				await WritePriorityFailureAsync(
+					context,
+					"cannot set niceness",
+					changed.Message
+				).ConfigureAwait( false );
+				if ( ProcessOperationStatus.AccessDenied != changed.Status ) {
+					return InternalFailure;
+				}
+			}
+
+			ProcessOperationResult? childPriorityFailure = null;
+			var runOptions = new ProcessRunOptions( parsed.Command ) {
+				ResolveExecutable = true,
+				ReturnLaunchFailureResult = true,
+				StandardInput = context.StandardInputStream,
+				StandardOutput = context.StandardOutputStream,
+				StandardError = context.StandardErrorStream
+			};
+			if ( OperatingSystem.IsWindows() && changed.Succeeded ) {
+				runOptions.ProcessStarted = identity => {
+					childPriorityFailure = priorities.SetPriority(
+						ProcessTarget.ForProcess( identity ),
+						targetNiceValue
+					);
+				};
+			}
+			foreach ( var argument in parsed.CommandArguments ) {
+				runOptions.Arguments.Add( argument );
+			}
+
+			ProcessResult result;
+			try {
+				result = await executor.RunAsync(
+					runOptions,
+					context.CancellationToken
+				).ConfigureAwait( false );
+			} catch ( OperationCanceledException ) {
+				throw;
+			} catch ( Exception exception ) {
+				await context.Diagnostics.ErrorAsync(
+					$"'{parsed.Command}': {exception.Message}",
+					CancellationToken.None
+				).ConfigureAwait( false );
+				return InternalFailure;
+			}
+			if ( null != childPriorityFailure && !childPriorityFailure.Succeeded ) {
+				await WritePriorityFailureAsync(
+					context,
+					"cannot set child niceness",
+					childPriorityFailure.Message,
+					CancellationToken.None
+				).ConfigureAwait( false );
+			}
+			if ( ProcessTerminationKind.LaunchFailed == result.Termination.Kind ) {
+				await context.Diagnostics.ErrorAsync(
+					$"'{parsed.Command}': {result.Termination.Message ?? "cannot execute"}",
+					CancellationToken.None
+				).ConfigureAwait( false );
+			}
+			if (
+				ProcessTerminationKind.Canceled == result.Termination.Kind
+				&& context.CancellationToken.IsCancellationRequested
+			) {
+				return CommandExitCodes.Canceled;
+			}
+			return result.Termination.ToPortableExitCode();
 		} catch ( OperationCanceledException ) {
-			return InternalFailure;
-		} catch ( Exception exception ) {
-			await WriteDiagnosticAsync( stderr, $"nice: '{parsed.Command}': {exception.Message}", CancellationToken.None ).ConfigureAwait( false );
-			return InternalFailure;
+			return context.CancellationToken.IsCancellationRequested
+				? CommandExitCodes.Canceled
+				: InternalFailure
+			;
 		}
-		if ( null != childPriorityFailure && !childPriorityFailure.Succeeded ) {
-			await WritePriorityFailureAsync( stderr, "cannot set child niceness", childPriorityFailure.Message, CancellationToken.None ).ConfigureAwait( false );
-		}
-		if ( ProcessTerminationKind.LaunchFailed == result.Termination.Kind ) {
-			await WriteDiagnosticAsync(
-				stderr,
-				$"nice: '{parsed.Command}': {result.Termination.Message ?? "cannot execute"}",
-				CancellationToken.None
-			).ConfigureAwait( false );
-		}
-		return result.Termination.ToPortableExitCode();
 	}
 
 	private static NiceArguments ParseArguments( string[] args ) {
@@ -215,37 +300,19 @@ public static class Command {
 		return digitIndex < token.Length && char.IsAsciiDigit( token[ digitIndex ] );
 	}
 
-	private static async Task WritePriorityFailureAsync(
-		Stream? stderr,
+	private static Task WritePriorityFailureAsync(
+		CommandContext context,
 		string operation,
 		string? detail,
-		CancellationToken cancellationToken
-	) => await WriteDiagnosticAsync(
-		stderr,
-		( null == detail )
-			? $"nice: {operation}"
-			: $"nice: {operation}: {detail}",
-		cancellationToken
-	).ConfigureAwait( false );
-
-	private static async Task WriteAsync( Stream? stream, string text, CancellationToken cancellationToken ) {
-		if ( null == stream ) {
-			await Console.Out.WriteAsync( text.AsMemory(), cancellationToken ).ConfigureAwait( false );
-			return;
-		}
-		var bytes = Utf8.GetBytes( text );
-		await stream.WriteAsync( bytes, cancellationToken ).ConfigureAwait( false );
-		await stream.FlushAsync( cancellationToken ).ConfigureAwait( false );
-	}
-
-	private static async Task WriteDiagnosticAsync( Stream? stream, string text, CancellationToken cancellationToken ) {
-		if ( null == stream ) {
-			await Console.Error.WriteLineAsync( text.AsMemory(), cancellationToken ).ConfigureAwait( false );
-			return;
-		}
-		var bytes = Utf8.GetBytes( string.Concat( text, Environment.NewLine ) );
-		await stream.WriteAsync( bytes, cancellationToken ).ConfigureAwait( false );
-		await stream.FlushAsync( cancellationToken ).ConfigureAwait( false );
+		CancellationToken? cancellationToken = null
+	) {
+		ArgumentNullException.ThrowIfNull( context );
+		return context.Diagnostics.ErrorAsync(
+			( null == detail )
+				? operation
+				: $"{operation}: {detail}",
+			cancellationToken ?? context.CancellationToken
+		).AsTask();
 	}
 
 	private static string NormalizeLineEndings( string value ) => ( "\n" == Environment.NewLine )

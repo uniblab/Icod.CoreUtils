@@ -60,12 +60,4 @@ public static class Program {
 		}
 	}
 
-	/// <summary>Writes the command usage text.</summary>
-	/// <param name="output">The destination writer.</param>
-	/// <param name="cancellationToken">The cancellation token.</param>
-	/// <returns>A task that completes when usage has been written.</returns>
-	internal static ValueTask WriteUsageAsync(
-		TextWriter output,
-		CancellationToken cancellationToken = default
-	) => Command.WriteUsageAsync( output, cancellationToken );
 }
