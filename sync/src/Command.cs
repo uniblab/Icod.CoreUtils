@@ -1,8 +1,8 @@
 using Icod.CommandFramework.CommandLine;
 using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.FileSystem;
-using Icod.CommandFramework.IO;
 using Icod.CommandFramework.Platform;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 
 namespace Icod.CoreUtils.Sync;
 
@@ -171,14 +171,11 @@ public static class Command {
 				).ConfigureAwait( false );
 			}
 
-			var paths = PathnameExpander.Expand(
+			var expansion = await PathnameOperandExpander.ExpandAsync(
 				result.Operands,
-				new PathnameExpansionOptions {
-					IncludeDirectories = true,
-					IncludeFiles = true,
-					PreserveUnmatchedPatterns = true,
-				}
-			);
+				cancellationToken: cancellationToken
+			).ConfigureAwait( false );
+			var paths = expansion.Operands;
 			var failed = false;
 			foreach ( var path in paths ) {
 				cancellationToken.ThrowIfCancellationRequested();

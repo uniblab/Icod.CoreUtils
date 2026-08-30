@@ -1,7 +1,7 @@
 using System.Numerics;
 using Icod.CommandFramework.CommandLine;
 using Icod.CommandFramework.Diagnostics;
-using Icod.CommandFramework.IO;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 
 namespace Icod.CoreUtils.Truncate;
 
@@ -211,14 +211,11 @@ public static class Command {
 				referenceLength = referenceResult.Length;
 			}
 
-			var targetPaths = PathnameExpander.Expand(
+			var expansion = await PathnameOperandExpander.ExpandAsync(
 				result.Operands,
-				new PathnameExpansionOptions {
-					IncludeDirectories = true,
-					IncludeFiles = true,
-					PreserveUnmatchedPatterns = true,
-				}
-			);
+				cancellationToken: cancellationToken
+			).ConfigureAwait( false );
+			var targetPaths = expansion.Operands;
 			var failed = false;
 			foreach ( var path in targetPaths ) {
 				cancellationToken.ThrowIfCancellationRequested();
