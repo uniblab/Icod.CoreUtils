@@ -53,7 +53,9 @@ public static class PathnameOperandExpander {
 			SystemReadOnlyFileSystemProvider.Instance
 		);
 		var operandOptions = new PathnameOperandExpansionOptions {
-			ExpansionOptions = options ?? PathnameExpansionOptions.Default
+			ExpansionOptions = options ?? new PathnameExpansionOptions {
+				SymbolicLinkMode = SymbolicLinkTraversalMode.RootsOnly
+			}
 		};
 		return await expander.ExpandOperandsAsync(
 			operandList,
