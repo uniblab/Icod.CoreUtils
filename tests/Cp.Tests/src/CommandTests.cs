@@ -21,6 +21,32 @@ public sealed class CommandTests {
 		}
 	}
 
+	/// <summary>Verifies wildcard source operands expand before destination planning.</summary>
+	[Fact]
+	public async Task ExpandsSourcePatternIntoDestinationDirectory() {
+		var root = CreateTemporaryDirectory();
+		try {
+			var first = System.IO.Path.Combine( root, "first.txt" );
+			var second = System.IO.Path.Combine( root, "second.txt" );
+			var ignored = System.IO.Path.Combine( root, "ignored.bin" );
+			var destination = Directory.CreateDirectory( System.IO.Path.Combine( root, "destination" ) ).FullName;
+			await File.WriteAllTextAsync( first, "one" );
+			await File.WriteAllTextAsync( second, "two" );
+			await File.WriteAllTextAsync( ignored, "skip" );
+
+			var status = await RunAsync(
+				new[] { System.IO.Path.Combine( root, "*.txt" ), destination }
+			);
+
+			Assert.Equal( 0, status );
+			Assert.Equal( "one", await File.ReadAllTextAsync( System.IO.Path.Combine( destination, "first.txt" ) ) );
+			Assert.Equal( "two", await File.ReadAllTextAsync( System.IO.Path.Combine( destination, "second.txt" ) ) );
+			Assert.False( File.Exists( System.IO.Path.Combine( destination, "ignored.bin" ) ) );
+		} finally {
+			DeleteTree( root );
+		}
+	}
+
 	/// <summary>Verifies no-clobber retains an existing destination.</summary>
 	[Fact]
 	public async Task NoClobberRetainsDestination() {
