@@ -103,11 +103,10 @@ public static class Command {
 				).ConfigureAwait( false );
 				return 1;
 			}
-			var expansion = await PathnameOperandExpander.ExpandAsync(
+			var operands = await PathnameOperandExpander.ExpandPatternsPreservingLiteralsAsync(
 				result.Operands,
 				cancellationToken: context.CancellationToken
 			).ConfigureAwait( false );
-			var operands = expansion.Operands;
 
 			var existence = ExistenceMode.AllowFinal;
 			var resolution = ResolutionMode.Physical;

@@ -65,6 +65,56 @@ public static class PathnameOperandExpander {
 	}
 
 	/// <summary>
+	/// Expands only operands which contain pathname metacharacters while preserving
+	/// every literal operand exactly as supplied by the caller.
+	/// </summary>
+	/// <param name="operands">The operands which the command has classified as pathnames.</param>
+	/// <param name="options">Optional pathname expansion behavior.</param>
+	/// <param name="cancellationToken">A token used to cancel traversal.</param>
+	/// <returns>The ordered pathname operands after wildcard expansion.</returns>
+	public static async Task<IReadOnlyList<string>> ExpandPatternsPreservingLiteralsAsync(
+		IEnumerable<string> operands,
+		PathnameExpansionOptions? options = null,
+		CancellationToken cancellationToken = default
+	) {
+		ArgumentNullException.ThrowIfNull(
+			operands
+		);
+
+		var expansionOptions = options ?? new PathnameExpansionOptions {
+			SymbolicLinkMode = SymbolicLinkTraversalMode.RootsOnly
+		};
+		var expandedOperands = new List<string>();
+		foreach ( var operand in operands ) {
+			ArgumentNullException.ThrowIfNull(
+				operand
+			);
+			cancellationToken.ThrowIfCancellationRequested();
+
+			var pattern = PathnamePattern.Parse(
+				operand,
+				expansionOptions.PatternOptions
+			);
+			if ( !pattern.HasMetacharacters ) {
+				expandedOperands.Add(
+					operand
+				);
+				continue;
+			}
+
+			var expansion = await ExpandAsync(
+				new[] { operand },
+				expansionOptions,
+				cancellationToken
+			).ConfigureAwait( false );
+			expandedOperands.AddRange(
+				expansion.Operands
+			);
+		}
+		return expandedOperands.AsReadOnly();
+	}
+
+	/// <summary>
 	/// Expands pathname operands through an injected read-only filesystem provider.
 	/// </summary>
 	/// <param name="operands">The operands which the command has classified as pathnames.</param>
