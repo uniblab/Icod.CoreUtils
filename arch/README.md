@@ -42,6 +42,10 @@ No operands are accepted.
 
 Architecture discovery uses `.NET` `RuntimeInformation.OSArchitecture`; it does not invoke an external `uname` or inspect `/proc`. The normalization layer gives the common architectures GNU-compatible spellings across supported hosts.
 
+## PATHNAME GLOBBING
+
+`arch` does not perform `Icod.CommandFramework` pathname glob expansion. It has no pathname operands eligible for command-owned expansion, so `*`, `?`, and `**` are not interpreted as pathname patterns by `arch`. An invoking shell or other caller may still expand arguments before the program receives them.
+
 ## AUTHORS
 
 GNU `arch` was written by David MacKenzie and Karel Zak.

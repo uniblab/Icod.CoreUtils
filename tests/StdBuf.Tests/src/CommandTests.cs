@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.StdBuf.Tests;
 
-using Icod.CommandFramework.Processes;
+using Icod.Processes;
 using Xunit;
 
 public sealed class CommandTests {

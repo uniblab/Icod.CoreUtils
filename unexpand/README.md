@@ -10,6 +10,12 @@
 unexpand [OPTION]... [FILE]...
 ```
 
+## PATHNAME GLOBBING
+
+Command-line `FILE` operands that contain supported pathname patterns are expanded in-process according to the repository policy. `*` and `?` match within one pathname component, and a component exactly equal to `**` may match zero or more complete components. Matches preserve operand order and repetition; unmatched patterns are preserved as literal operands.
+
+The operand `-` is preserved and retains its standard-input meaning.
+
 ## DESCRIPTION
 
 `unexpand` implements the GNU Coreutils 9.11 blank-to-tab interface for `net10.0` and C# 13.

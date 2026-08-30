@@ -10,6 +10,10 @@
 dirname [OPTION] NAME...
 ```
 
+## PATHNAME GLOBBING
+
+`dirname` is a Class C utility and performs no in-process pathname globbing. Each `NAME` is pathname-shaped lexical text and need not identify an existing filesystem object, so wildcard characters remain literal when they reach the command unexpanded. An invoking shell may still expand an unquoted pattern before `dirname` starts.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.DirName` is a managed .NET implementation of GNU Coreutils `dirname(1)`, modeled on GNU Coreutils 9.11.

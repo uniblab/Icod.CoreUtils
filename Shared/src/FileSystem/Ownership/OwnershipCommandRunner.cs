@@ -29,6 +29,7 @@ using Icod.CommandFramework.FileSystem.Mutation;
 using Icod.CommandFramework.FileSystem.RecursiveMutation;
 using Icod.CommandFramework.FileSystem.Traversal;
 using Icod.CommandFramework.Platform;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 
 /// <summary>Identifies the ownership-changing command whose policy is being executed.</summary>
 public enum OwnershipCommandKind {
@@ -202,6 +203,13 @@ public static class OwnershipCommandRunner {
 				await WriteResolutionWarningAsync( kind, filterResult, context ).ConfigureAwait( false );
 				filter = filterResult.Selection;
 			}
+
+			var expansion = await PathnameOperandExpander.ExpandAsync(
+				paths,
+				readOnlyProvider,
+				cancellationToken: context.CancellationToken
+			).ConfigureAwait( false );
+			paths = expansion.Operands.ToArray();
 
 			var reporting = ResolveReportingMode( parsed );
 			var quiet = parsed.HasOption( "quiet" );

@@ -72,6 +72,10 @@ Identity discovery is supplied through the shared `IIdentityProvider` abstractio
 
 SELinux-style `--context` output is capability-dependent. On systems where the provider exposes no security context, the command reports that the option requires an SELinux-enabled kernel instead of fabricating a value.
 
+## PATHNAME GLOBBING
+
+`id` does not perform `Icod.CommandFramework` pathname glob expansion. Its user operands identify accounts rather than filesystem pathnames, so `*`, `?`, and `**` are not interpreted as pathname patterns by `id`. An invoking shell or other caller may still expand arguments before the program receives them.
+
 ## AUTHORS
 
 GNU `id` was written by Arnold Robbins and David MacKenzie.

@@ -60,6 +60,10 @@ Directory creation and mode application use the shared mutation and creation-mas
 
 POSIX mode fidelity depends on platform/provider capability. Security-context labeling is not currently implemented.
 
+## PATHNAME GLOBBING
+
+`mkdir` does not perform `Icod.CommandFramework` pathname glob expansion. Its `DIRECTORY` operands name directories to create rather than select existing filesystem entries, so wildcard characters that reach `mkdir` remain part of the requested pathname subject to host pathname rules. An invoking shell or other caller may still expand arguments before the program receives them.
+
 ## AUTHORS
 
 GNU `mkdir` was written by David MacKenzie.

@@ -79,6 +79,10 @@ Login-session enumeration currently reads Linux `utmp` records. On interactive W
 
 Idle time is derived from terminal access time when a `/dev` terminal is available.
 
+## PATHNAME GLOBBING
+
+`pinky` does not perform `Icod.CommandFramework` pathname glob expansion. Its `USER` operands identify accounts rather than filesystem pathnames, so `*`, `?`, and `**` are not interpreted as pathname patterns by `pinky`. Files such as `.project` and `.plan` are discovered internally and are not glob-eligible command operands. An invoking shell or other caller may still expand arguments before the program receives them.
+
 ## AUTHORS
 
 GNU `pinky` was written by Joseph Arceneaux, David MacKenzie, and Kaveh Ghazi.

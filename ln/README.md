@@ -13,6 +13,10 @@ ln [OPTION]... TARGET... DIRECTORY
 ln [OPTION]... -t DIRECTORY TARGET...
 ```
 
+## PATHNAME GLOBBING
+
+Globbing is mode- and grammar-aware. Symbolic-link `TARGET` operands are link payload text and are never pathname-expanded, so nonexistent or wildcard-bearing symbolic targets remain exactly as supplied. In hard-link mode, source `TARGET` operands use collection expansion only when the already-selected invocation targets a directory (including `-t DIRECTORY`); otherwise the single source slot must resolve to at most one pathname. Destination names and target-directory operands always remain literal.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.Ln` is a managed .NET implementation of GNU Coreutils `ln(1)`, modeled on GNU Coreutils 9.11.

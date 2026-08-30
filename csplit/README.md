@@ -10,6 +10,10 @@
 csplit [OPTION]... FILE PATTERN...
 ```
 
+## PATHNAME GLOBBING
+
+Only the initial `FILE` operand is a Class B singular pathname slot. It may resolve from an unexpanded wildcard pattern only when exactly one pathname matches; an unmatched pattern remains literal and multiple matches are rejected. Every following `PATTERN` operand belongs to `csplit`'s own control language and is never pathname-expanded. `-` remains the standard-input sentinel.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.CSplit` is a managed .NET implementation of GNU Coreutils `csplit(1)`, modeled on GNU Coreutils 9.11.

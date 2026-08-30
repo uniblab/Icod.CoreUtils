@@ -11,6 +11,12 @@ chgrp [OPTION]... GROUP FILE...
 chgrp [OPTION]... --reference=RFILE FILE...
 ```
 
+## PATHNAME GLOBBING
+
+Target `FILE` operands that contain supported pathname patterns are expanded in-process according to the repository policy. Matches preserve operand order and repetition; unmatched patterns are preserved as literal operands.
+
+The GROUP operand, `--reference=RFILE`, and `--from=CURRENT` remain literal control values. A `**` pattern selects initial targets only; recursive ownership changes remain controlled by `-R` and the command's link-traversal options.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.ChGrp` is a managed .NET implementation of GNU Coreutils `chgrp(1)`, modeled on GNU Coreutils 9.11.

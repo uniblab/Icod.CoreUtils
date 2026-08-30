@@ -2,6 +2,7 @@ namespace Icod.CoreUtils.ReadLink;
 
 using Icod.CommandFramework.CommandLine;
 using Icod.CommandFramework.Diagnostics;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 using Icod.Path;
 
 /// <summary>Implements GNU-compatible <c>readlink</c> link inspection and canonicalization.</summary>
@@ -97,6 +98,10 @@ public static class Command {
 				).ConfigureAwait( false );
 				return 1;
 			}
+			var operands = await PathnameOperandExpander.ExpandPatternsPreservingLiteralsAsync(
+				result.Operands,
+				cancellationToken: context.CancellationToken
+			).ConfigureAwait( false );
 
 			var mode = CanonicalizationMode.None;
 			var verbose = null != Environment.GetEnvironmentVariable( "POSIXLY_CORRECT" );
@@ -115,7 +120,7 @@ public static class Command {
 			}
 			var zero = result.HasOption( "zero" );
 			var noNewline = result.HasOption( "no-newline" );
-			if ( noNewline && 1 < result.Operands.Count ) {
+			if ( noNewline && 1 < operands.Count ) {
 				await context.Diagnostics.ErrorAsync(
 					"ignoring --no-newline with multiple arguments",
 					context.CancellationToken
@@ -124,7 +129,7 @@ public static class Command {
 			}
 			var delimiter = noNewline ? string.Empty : zero ? "\0" : Environment.NewLine;
 			var failed = false;
-			foreach ( var operand in result.Operands ) {
+			foreach ( var operand in operands ) {
 				context.CancellationToken.ThrowIfCancellationRequested();
 				string? output;
 				CanonicalPathFailure? failure;

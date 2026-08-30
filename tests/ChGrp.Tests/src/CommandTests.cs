@@ -29,6 +29,36 @@ public sealed class CommandTests {
 		Assert.Equal( (uint?)2001, request.GroupId );
 	}
 
+	/// <summary>Verifies pathname wildcards expand before group mutation.</summary>
+	[Fact]
+	public async Task ExpandsPathnameOperandsBeforeMutation() {
+		var root = CreateTemporaryDirectory();
+		var first = System.IO.Path.Combine( root, "first.txt" );
+		var second = System.IO.Path.Combine( root, "second.txt" );
+		await File.WriteAllTextAsync( first, "one" );
+		await File.WriteAllTextAsync( second, "two" );
+		try {
+			var metadata = new TestMetadataProvider( SystemReadOnlyFileSystemProvider.Instance );
+			var mutation = new RecordingMutationProvider();
+			var status = await ChGrpCommand.RunAsync(
+				new[] { "staff", System.IO.Path.Combine( root, "*.txt" ) },
+				CreateContext( new StringWriter(), new StringWriter() ),
+				SystemReadOnlyFileSystemProvider.Instance,
+				metadata,
+				mutation,
+				TestIdentityProvider.CreateDefault()
+			);
+			Assert.Equal( CommandExitCodes.Success, status );
+			Assert.Equal( 2, mutation.Requests.Count );
+			Assert.Contains( mutation.Requests, request => request.Path == first );
+			Assert.Contains( mutation.Requests, request => request.Path == second );
+		} finally {
+			File.Delete( first );
+			File.Delete( second );
+			Directory.Delete( root );
+		}
+	}
+
 	/// <summary>Verifies a leading plus forces a numeric group ID.</summary>
 	[Fact]
 	public async Task LeadingPlusForcesNumericGroup() {

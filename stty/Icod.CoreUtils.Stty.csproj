@@ -38,6 +38,9 @@
 		<PlatformTarget>AnyCPU</PlatformTarget>
 	</PropertyGroup>
 	<ItemGroup>
+		<PackageReference Include="Icod.Terminal" Version="0.3.0" />
+	</ItemGroup>
+	<ItemGroup>
 		<ProjectReference Include="..\Shared\Icod.CoreUtils.Shared.csproj" />
 	</ItemGroup>
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

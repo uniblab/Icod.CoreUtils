@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Icod.CommandFramework.FileSystem.Traversal;
 using Icod.CommandFramework.Platform;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 
 /// <summary>GNU-compatible SELinux file-context manipulation front end.</summary>
 public static class Command {
@@ -83,6 +84,17 @@ public static class Command {
 
 		if ( validateFixedContext && fixedContext is not null && !platform.TryValidateContext( fixedContext, out var validationError ) ) {
 			stderr.WriteLine( $"chcon: invalid context '{fixedContext}': {platform.DescribeError( validationError )}" );
+			return Failure;
+		}
+
+		try {
+			var expansion = await PathnameOperandExpander.ExpandAsync(
+				operands,
+				cancellationToken: cancellationToken
+			).ConfigureAwait( false );
+			operands = new List<string>( expansion.Operands );
+		} catch ( OperationCanceledException ) when ( cancellationToken.IsCancellationRequested ) {
+			stderr.WriteLine( "chcon: operation canceled" );
 			return Failure;
 		}
 

@@ -47,6 +47,10 @@ Inputs are parsed as decimal integers. Negative values and non-numeric tokens ar
 
 Because arbitrary-precision values are accepted, the time required to factor very large composite integers can grow substantially.
 
+## PATHNAME GLOBBING
+
+`factor` does not perform `Icod.CommandFramework` pathname glob expansion. Its operands are integers to factor rather than filesystem pathnames, so `*`, `?`, and `**` are not interpreted as pathname patterns by `factor`. An invoking shell or other caller may still expand arguments before the program receives them.
+
 ## AUTHORS
 
 GNU `factor` was written by Paul Rubin, Torbjörn Granlund, and Niels Möller.

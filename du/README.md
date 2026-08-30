@@ -10,6 +10,12 @@
 du [OPTION]... [FILE]...
 ```
 
+## PATHNAME GLOBBING
+
+Command-line `FILE` operands that contain supported pathname patterns are expanded in-process according to the repository policy. With no operands, the current directory remains the implicit operand. Matches preserve operand order and repetition; unmatched patterns are preserved as literal operands.
+
+Names read through `--files0-from=FILE` remain literal list entries and are not recursively glob-expanded. A `**` pattern only selects initial operands; `du`'s own directory traversal remains governed by its normal traversal options and semantics.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.DU` is a managed .NET implementation of GNU Coreutils `du(1)`, modeled on GNU Coreutils 9.11.

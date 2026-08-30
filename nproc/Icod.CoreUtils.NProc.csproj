@@ -40,6 +40,9 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Shared\Icod.CoreUtils.Shared.csproj" />
 	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Icod.Host" Version="1.0.0" />
+	</ItemGroup>
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
 		<ErrorReport>prompt</ErrorReport>
 		<WarningLevel>2</WarningLevel>

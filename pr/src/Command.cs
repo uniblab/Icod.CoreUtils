@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Text;
 using Icod.CommandFramework.CommandLine;
 using Icod.CommandFramework.Diagnostics;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 using Icod.CoreUtils.Shared.Time;
 
 /// <summary>Implements GNU-compatible pagination and multi-column presentation.</summary>
@@ -890,6 +891,14 @@ public static class Command {
 				return CommandExitCodes.Success;
 			}
 			var options = CreateOptions( parsed );
+			var expansion = await PathnameOperandExpander.ExpandAsync(
+				options.Files,
+				cancellationToken: context.CancellationToken
+			).ConfigureAwait( false );
+			options.Files.Clear();
+			options.Files.AddRange(
+				expansion.Operands
+			);
 			var engine = new Engine( options, context );
 			return await engine.ExecuteAsync().ConfigureAwait( false );
 		} catch ( OperationCanceledException ) {

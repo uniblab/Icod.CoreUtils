@@ -10,6 +10,14 @@
 wc [OPTION]... [FILE]...
 ```
 
+## PATHNAME GLOBBING
+
+Command-line `FILE` operands that contain supported pathname patterns are expanded in-process according to the repository policy. `*` and `?` match within one pathname component, and a component exactly equal to `**` may match zero or more complete components. Matches preserve operand order and repetition; unmatched patterns are preserved as literal operands.
+
+The operand `-` is preserved and retains its standard-input meaning.
+
+Names read through `--files0-from=FILE` remain literal list entries and are not recursively glob-expanded. The `--files0-from` option value itself is likewise a literal control pathname.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.WC` is a managed .NET implementation of GNU Coreutils `wc(1)`, modeled on GNU Coreutils 9.11.

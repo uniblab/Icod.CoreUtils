@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.HostId.Tests;
 
 using Icod.CoreUtils.HostId;
-using Icod.CommandFramework.Host;
+using Icod.Host;
 using Xunit;
 
 /// <summary>Exercises the public <c>hostid</c> command boundary.</summary>

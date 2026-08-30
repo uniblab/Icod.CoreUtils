@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Tty.Tests;
 
-using Icod.CommandFramework.Terminal;
+using Icod.Terminal;
 
 /// <summary>Provides deterministic terminal observations for command tests.</summary>
 public sealed class FakeTerminalProvider : ITerminalControlProvider {
@@ -14,6 +14,14 @@ public sealed class FakeTerminalProvider : ITerminalControlProvider {
 	public TerminalControlResult<TerminalEndpointObservation> Observe( TerminalEndpoint endpoint ) {
 		ArgumentNullException.ThrowIfNull( endpoint );
 		return this.Observation;
+	}
+
+	/// <inheritdoc />
+	public TerminalControlResult<Icod.TermInfo.TerminalSize> GetSize(
+		TerminalEndpoint endpoint
+	) {
+		ArgumentNullException.ThrowIfNull( endpoint );
+		return TerminalControlResult<Icod.TermInfo.TerminalSize>.Unsupported( "not used" );
 	}
 
 	/// <inheritdoc />

@@ -10,6 +10,10 @@
 basenc ENCODING [OPTION]... [FILE]
 ```
 
+## PATHNAME GLOBBING
+
+`FILE` is a Class B singular pathname slot. An unexpanded `*`, `?`, or exact-component `**` pattern is accepted only when it resolves to exactly one pathname. An unmatched pattern remains literal, while a pattern matching more than one pathname is rejected rather than changing command arity. Encoding-selection and other option arguments are not pathname-expanded. `-` remains the standard-input sentinel.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.BasEnc` is a managed .NET implementation of GNU Coreutils `basenc(1)`, modeled on GNU Coreutils 9.11.

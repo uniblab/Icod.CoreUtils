@@ -179,9 +179,17 @@ public static class Command {
 		if ( !resolution.IsSuccess ) {
 			throw new NotSupportedException( resolution.ErrorMessage );
 		}
+		var firstPath = await Icod.CoreUtils.Shared.FileSystem.Traversal.PathnameOperandExpander.ExpandSingularAsync(
+			options.FirstPath,
+			cancellationToken: context.CancellationToken
+		).ConfigureAwait( false );
+		var secondPath = await Icod.CoreUtils.Shared.FileSystem.Traversal.PathnameOperandExpander.ExpandSingularAsync(
+			options.SecondPath,
+			cancellationToken: context.CancellationToken
+		).ConfigureAwait( false );
 		var comparer = new ByteCollationComparer( new SystemCollationProvider( resolution.Profile! ) );
-		await using var firstSource = InputSource.OpenBinary( InputOperand.Create( options.FirstPath ), context );
-		await using var secondSource = InputSource.OpenBinary( InputOperand.Create( options.SecondPath ), context );
+		await using var firstSource = InputSource.OpenBinary( InputOperand.Create( firstPath ), context );
+		await using var secondSource = InputSource.OpenBinary( InputOperand.Create( secondPath ), context );
 		using var firstReader = new ByteRecordReader( firstSource.BinaryStream!, options.RecordSeparator );
 		using var secondReader = new ByteRecordReader( secondSource.BinaryStream!, options.RecordSeparator );
 		await using var output = new ByteOutputStream( context.StandardOutput, context.StandardOutputStream );

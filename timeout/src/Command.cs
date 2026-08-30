@@ -4,7 +4,7 @@ namespace Icod.CoreUtils.Timeout;
 
 using System.Globalization;
 using System.Text;
-using Icod.CommandFramework.Processes;
+using Icod.Processes;
 using Icod.Timing;
 
 /// <summary>Implements GNU Coreutils 9.11 <c>timeout</c>.</summary>

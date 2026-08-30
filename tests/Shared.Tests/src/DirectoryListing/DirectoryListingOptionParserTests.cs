@@ -1,7 +1,8 @@
 namespace Icod.CoreUtils.Shared.Tests.DirectoryListing;
 
 using Icod.CoreUtils.Shared.DirectoryListing;
-using Icod.CommandFramework.Terminal;
+using Icod.CoreUtils.Shared.Presentation;
+using Icod.Terminal;
 using Xunit;
 
 /// <summary>Verifies shared ls, dir, and vdir command-line profiles.</summary>
@@ -86,30 +87,69 @@ public sealed class DirectoryListingOptionParserTests {
 		Assert.Contains( "invalid-style", exception.Message );
 	}
 
-	private static TerminalPresentationSnapshot CreateSnapshot( bool terminal ) {
-		var provider = new TerminalPresentationProvider(
-			new FakeTerminalDeviceProvider(
-				terminal
-					? TerminalDeviceObservation.Attached( new TerminalDimensions( 80, 24 ) )
-					: TerminalDeviceObservation.Redirected()
-			),
+	private static OutputPresentationSnapshot CreateSnapshot( bool terminal ) {
+		var provider = new OutputPresentationProvider(
+			new FakeTerminalControlProvider( terminal ),
 			new FakeEnvironmentVariableProvider()
 		);
-		return provider.Observe( TerminalStreamKind.StandardOutput );
+		return provider.Observe( StandardStreamKind.StandardOutput );
 	}
 
-	private sealed class FakeTerminalDeviceProvider : ITerminalDeviceProvider {
-		private readonly TerminalDeviceObservation observation;
+	private sealed class FakeTerminalControlProvider : ITerminalControlProvider {
+		private readonly bool terminal;
 
 		/// <summary>Initializes a fixed terminal observation.</summary>
-		/// <param name="observation">Observation returned by the provider.</param>
-		public FakeTerminalDeviceProvider( TerminalDeviceObservation observation ) {
-			this.observation = observation;
+		/// <param name="terminal">Whether the endpoint is attached to a terminal.</param>
+		public FakeTerminalControlProvider( bool terminal ) {
+			this.terminal = terminal;
 		}
 
 		/// <inheritdoc/>
-		public TerminalDeviceObservation Observe( TerminalStreamKind stream ) {
-			return this.observation;
+		public TerminalControlResult<TerminalEndpointObservation> Observe(
+			TerminalEndpoint endpoint
+		) {
+			ArgumentNullException.ThrowIfNull( endpoint );
+			TerminalPlatformKind? platform = this.terminal
+				? TerminalPlatformKind.PosixTermios
+				: null;
+			var capabilities = this.terminal
+				? TerminalControlCapabilities.Attachment
+				: TerminalControlCapabilities.None;
+			return TerminalControlResult<TerminalEndpointObservation>.Available(
+				new TerminalEndpointObservation(
+					this.terminal,
+					null,
+					platform,
+					capabilities
+				)
+			);
+		}
+
+		/// <inheritdoc/>
+		public TerminalControlResult<Icod.TermInfo.TerminalSize> GetSize(
+			TerminalEndpoint endpoint
+		) {
+			ArgumentNullException.ThrowIfNull( endpoint );
+			return TerminalControlResult<Icod.TermInfo.TerminalSize>.Unsupported( "not used" );
+		}
+
+		/// <inheritdoc/>
+		public TerminalControlResult<TerminalModeSnapshot> GetMode(
+			TerminalEndpoint endpoint
+		) {
+			ArgumentNullException.ThrowIfNull( endpoint );
+			return TerminalControlResult<TerminalModeSnapshot>.Unsupported( "not used" );
+		}
+
+		/// <inheritdoc/>
+		public TerminalControlMutationResult SetMode(
+			TerminalEndpoint endpoint,
+			TerminalModeSnapshot mode,
+			TerminalModeApplyTiming timing
+		) {
+			ArgumentNullException.ThrowIfNull( endpoint );
+			ArgumentNullException.ThrowIfNull( mode );
+			return TerminalControlMutationResult.Unsupported( "not used" );
 		}
 	}
 

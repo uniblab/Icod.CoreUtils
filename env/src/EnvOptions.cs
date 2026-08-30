@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Env;
 
-using Icod.CommandFramework.Processes;
+using Icod.Processes;
 
 /// <summary>
 /// Represents parsed GNU <c>env</c> command-line options.

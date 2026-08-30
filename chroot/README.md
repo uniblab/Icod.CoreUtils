@@ -10,6 +10,10 @@
 chroot [OPTION]... NEWROOT [COMMAND [ARG]...]
 ```
 
+## PATHNAME GLOBBING
+
+`chroot` is a Class C utility and performs no in-process pathname globbing. `NEWROOT` is a singular process-control boundary and remains exactly as supplied, while `COMMAND` and every following `ARG` are passed through without pathname reinterpretation. An invoking shell may still expand an unquoted pattern before `chroot` starts.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.ChRoot` is a managed .NET implementation of GNU Coreutils `chroot(1)`, modeled on GNU Coreutils 9.11.

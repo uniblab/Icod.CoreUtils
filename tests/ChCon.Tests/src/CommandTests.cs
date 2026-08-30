@@ -40,6 +40,33 @@ public sealed class CommandTests {
 	}
 
 	[Fact]
+	public void ExpandsPathnameOperandsBeforeApplyingContext() {
+		var root = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
+			$"icod-chcon-glob-{System.Guid.NewGuid():N}"
+		);
+		Directory.CreateDirectory( root );
+		var first = System.IO.Path.Combine( root, "first.txt" );
+		var second = System.IO.Path.Combine( root, "second.txt" );
+		File.WriteAllText( first, "one" );
+		File.WriteAllText( second, "two" );
+		try {
+			var platform = new FakeSelinuxPlatform();
+			var pattern = System.IO.Path.Combine( root, "*.txt" );
+			var status = Command.Run(
+				new[] { "system_u:object_r:tmp_t:s0", pattern },
+				platform: platform
+			);
+			Assert.Equal( 0, status );
+			Assert.Equal( 2, platform.Sets.Count );
+			Assert.Contains( platform.Sets, item => item.Path == first );
+			Assert.Contains( platform.Sets, item => item.Path == second );
+		} finally {
+			Directory.Delete( root, true );
+		}
+	}
+
+	[Fact]
 	public void AppliesPartialContextAgainstEachExistingContext() {
 		var platform = new FakeSelinuxPlatform();
 		platform.FileContexts["one"] = "user_u:object_r:old_t:s0:c1";

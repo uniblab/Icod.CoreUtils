@@ -131,6 +131,10 @@ The core copy/conversion engine is managed, while file-opening flags, physical f
 
 Binary standard-stream boundaries are preserved on Windows, Linux, and macOS. POSIX signal behavior is available only where the runtime and host expose the corresponding signal facility.
 
+## PATHNAME GLOBBING
+
+`dd` does not perform `Icod.CommandFramework` pathname glob expansion. File names such as `if=FILE` and `of=FILE` are values in `dd`'s assignment-style operand grammar, not pathname collection operands, and `*`, `?`, and `**` are not expanded by `dd` itself. An invoking shell or other caller may still transform arguments before the program receives them.
+
 ## AUTHORS
 
 GNU `dd` was written by Paul Rubin, David MacKenzie, and Stuart Kemp.

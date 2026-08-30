@@ -9,6 +9,7 @@ using System.Text;
 using Icod.CommandFramework.CommandLine;
 using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.IO;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 
 /// <summary>
 /// Concatenates files to standard output.
@@ -223,6 +224,10 @@ public static class Command {
 					"-"
 				);
 			}
+			var expansion = await PathnameOperandExpander.ExpandAsync(
+				operands,
+				cancellationToken: context.CancellationToken
+			).ConfigureAwait( false );
 
 			using var output = new ByteOutputStream(
 				context.StandardOutput,
@@ -231,7 +236,7 @@ public static class Command {
 			var state = new TransformState();
 			var exitCode = CommandExitCodes.Success;
 
-			foreach ( var value in operands ) {
+			foreach ( var value in expansion.Operands ) {
 				context.CancellationToken.ThrowIfCancellationRequested();
 				var operand = InputOperand.Create(
 					value

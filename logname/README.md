@@ -40,6 +40,10 @@ Unlike `whoami`, `logname` describes the login identity rather than the effectiv
 
 Login-name discovery is supplied by the cross-platform identity provider. Some execution environments, service accounts, containers, or detached sessions may not have a meaningful login name even though an effective process identity exists.
 
+## PATHNAME GLOBBING
+
+`logname` does not perform `Icod.CommandFramework` pathname glob expansion. It has no pathname operands eligible for command-owned expansion, so `*`, `?`, and `**` are not interpreted as pathname patterns by `logname`. An invoking shell or other caller may still expand arguments before the program receives them.
+
 ## AUTHORS
 
 GNU `logname` was written by David MacKenzie.

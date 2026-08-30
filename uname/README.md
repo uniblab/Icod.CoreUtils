@@ -68,6 +68,10 @@ System information comes from the shared platform-information provider rather th
 
 The platform provider normalizes native Windows, Linux, and macOS information into the fields expected by `uname`. Some non-portable fields can legitimately be `unknown`; explicit `-p` or `-i` requests print that value, while `--all` omits unknown values for those two fields.
 
+## PATHNAME GLOBBING
+
+`uname` does not perform `Icod.CommandFramework` pathname glob expansion. Its arguments select system-information fields rather than identify filesystem pathnames, so `*`, `?`, and `**` are not interpreted as pathname patterns by `uname`. An invoking shell or other caller may still expand arguments before the program receives them.
+
 ## AUTHORS
 
 GNU `uname` was written by David MacKenzie.

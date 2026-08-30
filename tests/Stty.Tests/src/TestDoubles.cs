@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Stty.Tests;
 
-using Icod.CommandFramework.Terminal;
+using Icod.Terminal;
 
 /// <summary>Provides deterministic mode reads and mutations for <c>stty</c> tests.</summary>
 public sealed class FakeTerminalProvider : ITerminalControlProvider {
@@ -23,6 +23,14 @@ public sealed class FakeTerminalProvider : ITerminalControlProvider {
 	/// <inheritdoc />
 	public TerminalControlResult<TerminalEndpointObservation> Observe( TerminalEndpoint endpoint ) =>
 		TerminalControlResult<TerminalEndpointObservation>.Unsupported( "not used" );
+
+	/// <inheritdoc />
+	public TerminalControlResult<Icod.TermInfo.TerminalSize> GetSize(
+		TerminalEndpoint endpoint
+	) {
+		ArgumentNullException.ThrowIfNull( endpoint );
+		return TerminalControlResult<Icod.TermInfo.TerminalSize>.Unsupported( "not used" );
+	}
 
 	/// <inheritdoc />
 	public TerminalControlResult<TerminalModeSnapshot> GetMode( TerminalEndpoint endpoint ) {

@@ -10,6 +10,10 @@
 ptx [OPTION]... [INPUT [OUTPUT]]
 ```
 
+## PATHNAME GLOBBING
+
+Pathname eligibility depends on the selected invocation grammar. In GNU-extension mode, positional input operands form an input pathname collection and may expand to multiple matches in encounter order. In traditional `[INPUT [OUTPUT]]` mode, `INPUT` is a Class B singular pathname slot and `OUTPUT` remains a literal destination pathname. Break, ignore, only, and other path-valued option arguments remain literal.
+
 ## DESCRIPTION
 
 This project implements GNU Coreutils `ptx` for .NET 10. It generates a sorted permuted index from one or more byte-oriented input sources.

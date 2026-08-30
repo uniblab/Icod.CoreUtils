@@ -58,6 +58,10 @@ When `POSIXLY_CORRECT` is present, backslash escapes are enabled by default and 
 
 Text is written through the supplied .NET `TextWriter`. Escape `\n` and the final line terminator use the host environment's newline sequence.
 
+## PATHNAME GLOBBING
+
+`echo` does not perform `Icod.CommandFramework` pathname glob expansion. Its operands are output text, not pathname selectors, so `*`, `?`, and `**` remain literal data when they reach `echo`. An invoking shell or other caller may still expand arguments before the program receives them.
+
 ## AUTHORS
 
 GNU `echo` was written by Brian Fox and Chet Ramey.

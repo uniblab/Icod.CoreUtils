@@ -51,6 +51,10 @@ An explicit mode may specify permission bits only. Explicit security-context lab
 
 Special-file creation is highly platform and privilege dependent. The command reports provider failures for unsupported device nodes, invalid device numbers, insufficient privilege, and unavailable FIFO support rather than substituting ordinary files.
 
+## PATHNAME GLOBBING
+
+`mknod` does not perform `Icod.CommandFramework` pathname glob expansion. Its pathname operand names a filesystem object to create rather than select an existing entry, so wildcard characters that reach `mknod` remain part of the requested pathname subject to host pathname rules. An invoking shell or other caller may still expand arguments before the program receives them.
+
 ## AUTHORS
 
 GNU `mknod` was written by David MacKenzie.

@@ -225,9 +225,18 @@ public static class Command {
 			).ConfigureAwait( false );
 			return null;
 		}
+		IReadOnlyList<string> operands = parsed.Operands;
+		if ( ShufInputMode.Standard == inputMode && 1 == operands.Count ) {
+			operands = new[] {
+				await Icod.CoreUtils.Shared.FileSystem.Traversal.PathnameOperandExpander.ExpandSingularAsync(
+					operands[ 0 ],
+					cancellationToken: context.CancellationToken
+				).ConfigureAwait( false )
+			};
+		}
 		return new ShufOptions(
 			inputMode,
-			parsed.Operands,
+			operands,
 			rangeLow,
 			rangeHigh,
 			headCount,

@@ -1,7 +1,7 @@
 namespace Icod.CoreUtils.Shared.Tests.DirectoryListing;
 
 using Icod.CoreUtils.Shared.DirectoryListing;
-using Icod.CommandFramework.Terminal;
+using Icod.CoreUtils.Shared.Presentation;
 using Xunit;
 
 /// <summary>Verifies dircolors database parsing, terminal selection, and shell output.</summary>

@@ -4,6 +4,7 @@ using Icod.CommandFramework.CommandLine;
 using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.IO;
 using Icod.CommandFramework.Text;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 
 /// <summary>Implements GNU <c>fold</c> for .NET.</summary>
 /// <remarks>
@@ -94,11 +95,15 @@ public static class Command {
 						break;
 				}
 			}
-			if ( RequiresStandardInput( parsed.Operands ) && context.StandardInputStream is null ) {
+			var expansion = await PathnameOperandExpander.ExpandAsync(
+				parsed.Operands,
+				cancellationToken: context.CancellationToken
+			).ConfigureAwait( false );
+			if ( RequiresStandardInput( expansion.Operands ) && context.StandardInputStream is null ) {
 				await context.Diagnostics.ErrorAsync( "a binary standard-input stream was not supplied", context.CancellationToken ).ConfigureAwait( false );
 				return CommandExitCodes.Failure;
 			}
-			var options = new FoldOptions( mode, parsed.HasOption( SpacesKey ), width, parsed.Operands );
+			var options = new FoldOptions( mode, parsed.HasOption( SpacesKey ), width, expansion.Operands );
 			await using var output = new ByteOutputStream( context.StandardOutput, context.StandardOutputStream );
 			var processor = new FoldProcessor(
 				options,

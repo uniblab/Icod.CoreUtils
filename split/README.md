@@ -10,6 +10,10 @@
 split [OPTION]... [FILE [PREFIX]]
 ```
 
+## PATHNAME GLOBBING
+
+Only the input `FILE` slot is eligible for Class B singular pathname globbing. A wildcard-bearing input must resolve to at most one pathname; an unmatched pattern remains literal and multiple matches are rejected. `PREFIX` is an output naming prefix and always remains literal, even when it contains `*`, `?`, or `**`.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.Split` is a managed .NET implementation of GNU Coreutils `split(1)`, modeled on GNU Coreutils 9.11.

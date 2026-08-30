@@ -10,6 +10,10 @@
 sync [OPTION] [FILE]...
 ```
 
+## PATHNAME GLOBBING
+
+Supplied command-line `FILE` operands that contain supported pathname patterns are expanded in-process according to the repository policy. Matches preserve operand order and repetition; unmatched patterns are preserved as literal operands. With no operands, `sync` retains its ordinary global-flush behavior.
+
 ## DESCRIPTION
 
 This project implements GNU Coreutils `sync` against the GNU Coreutils 9.11

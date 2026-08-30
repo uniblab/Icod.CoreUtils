@@ -39,6 +39,10 @@ The command performs no requested operation and normally returns success. Comman
 
 The command has no filesystem, identity, terminal, or other platform dependency.
 
+## PATHNAME GLOBBING
+
+`true` does not perform `Icod.CommandFramework` pathname glob expansion. It has no pathname operands eligible for expansion; its purpose is solely to return a successful status. An invoking shell or other caller may still expand arguments before the program receives them.
+
 ## AUTHORS
 
 GNU `true` was written by Jim Meyering.

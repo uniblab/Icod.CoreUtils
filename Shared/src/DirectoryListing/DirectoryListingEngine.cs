@@ -25,7 +25,8 @@ namespace Icod.CoreUtils.Shared.DirectoryListing;
 using System.Globalization;
 using System.Text;
 using Icod.CommandFramework.FileSystem.Metadata;
-using Icod.CommandFramework.Terminal;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
+using Icod.CoreUtils.Shared.Presentation;
 
 /// <summary>Hosts <c>ls</c>, <c>dir</c>, and <c>vdir</c> over one reusable listing engine.</summary>
 public static class DirectoryListingCommand {
@@ -49,7 +50,7 @@ public static class DirectoryListingCommand {
 		TextWriter standardOutput,
 		TextWriter standardError,
 		IFileSystemMetadataProvider? metadataProvider = null,
-		TerminalPresentationProvider? presentationProvider = null,
+		OutputPresentationProvider? presentationProvider = null,
 		IEnvironmentVariableProvider? environmentProvider = null,
 		CancellationToken cancellationToken = default
 	) {
@@ -59,9 +60,9 @@ public static class DirectoryListingCommand {
 		ArgumentNullException.ThrowIfNull( standardOutput );
 		ArgumentNullException.ThrowIfNull( standardError );
 		metadataProvider ??= SystemFileSystemMetadataProvider.Instance;
-		presentationProvider ??= TerminalPresentationProvider.CreateSystem();
+		presentationProvider ??= OutputPresentationProvider.CreateSystem();
 		environmentProvider ??= SystemEnvironmentVariableProvider.Instance;
-		var presentation = presentationProvider.Observe( TerminalStreamKind.StandardOutput );
+		var presentation = presentationProvider.Observe( StandardStreamKind.StandardOutput );
 		DirectoryListingOptions options;
 		try {
 			options = DirectoryListingOptionParser.Parse( profile, arguments, presentation );
@@ -92,6 +93,14 @@ public static class DirectoryListingCommand {
 		if ( options.ShowVersion ) {
 			await standardOutput.WriteLineAsync( $"{commandName} (Icod.CoreUtils) 1.0" ).ConfigureAwait( false );
 			return 0;
+		}
+		var expansion = await PathnameOperandExpander.ExpandAsync(
+			options.Operands,
+			cancellationToken: cancellationToken
+		).ConfigureAwait( false );
+		options.Operands.Clear();
+		foreach ( var operand in expansion.Operands ) {
+			options.Operands.Add( operand );
 		}
 		var quotingPolicy = FileNamePresentationPolicy.ResolveDefault(
 			presentation,

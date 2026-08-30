@@ -22,7 +22,7 @@
 namespace Icod.CoreUtils.Shared.DirectoryListing;
 
 using System.Text;
-using Icod.CommandFramework.Terminal;
+using Icod.CoreUtils.Shared.Presentation;
 
 /// <summary>Identifies the shell syntax emitted by <c>dircolors</c>.</summary>
 public enum DirColorsShell {
@@ -540,6 +540,12 @@ public static class DirColorsCommand {
 
 		DirColorsDatabase database;
 		try {
+			if ( operand is not null ) {
+				operand = await Icod.CoreUtils.Shared.FileSystem.Traversal.PathnameOperandExpander.ExpandSingularAsync(
+					operand,
+					cancellationToken: cancellationToken
+				).ConfigureAwait( false );
+			}
 			if ( operand is null ) {
 				database = DirColorsDatabase.ParseBuiltIn();
 			} else if ( "-" == operand ) {

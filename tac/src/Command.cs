@@ -10,6 +10,7 @@ using Icod.CommandFramework.CommandLine;
 using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.IO;
 using Icod.CommandFramework.RegularExpressions;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 
 /// <summary>Implements GNU-compatible byte-preserving reverse-record output.</summary>
 public static class Command {
@@ -114,6 +115,14 @@ public static class Command {
 				return CommandExitCodes.Success;
 			}
 			var options = CreateOptions( parsed );
+			var expansion = await PathnameOperandExpander.ExpandAsync(
+				options.Inputs,
+				cancellationToken: context.CancellationToken
+			).ConfigureAwait( false );
+			options.Inputs.Clear();
+			options.Inputs.AddRange(
+				expansion.Operands
+			);
 			var standardInput = context.StandardInputStream;
 			if ( null == standardInput ) {
 				inputAdapter = new TextReaderStream( context.StandardInput, leaveOpen: true );

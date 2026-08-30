@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.Tty.Tests;
 
-using Icod.CommandFramework.Terminal;
+using Icod.Terminal;
 using Xunit;
 
 /// <summary>Tests the <c>tty</c> command boundary.</summary>

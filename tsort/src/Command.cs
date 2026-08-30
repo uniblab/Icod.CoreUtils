@@ -137,7 +137,14 @@ public static class Command {
 			return CommandExitCodes.Failure;
 		}
 
-		var sourceName = 0 == parsed.Operands.Count ? "-" : parsed.Operands[ 0 ];
+		var sourceName = ( 0 == parsed.Operands.Count )
+			? "-"
+			: parsed.Operands[ 0 ]
+		;
+		sourceName = await Icod.CoreUtils.Shared.FileSystem.Traversal.PathnameOperandExpander.ExpandSingularAsync(
+			sourceName,
+			cancellationToken: context.CancellationToken
+		).ConfigureAwait( false );
 		var displaySourceName = FormatSourceName( sourceName );
 		InputSource source;
 		try {

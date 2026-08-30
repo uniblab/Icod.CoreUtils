@@ -11,6 +11,10 @@ basename NAME [SUFFIX]
 basename OPTION... NAME...
 ```
 
+## PATHNAME GLOBBING
+
+`basename` is a Class C utility and performs no in-process pathname globbing. `NAME` and `SUFFIX` are lexical text, so wildcard characters such as `*`, `?`, and `**` remain part of the supplied text when they reach the command unexpanded. An invoking shell may still expand an unquoted pattern before `basename` starts.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.BaseName` is a managed .NET implementation of GNU Coreutils `basename(1)`, modeled on GNU Coreutils 9.11.

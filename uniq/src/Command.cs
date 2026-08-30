@@ -232,24 +232,28 @@ public static class Command {
 		);
 		options.BytewiseCharacters = bytewiseCharacters;
 		options.CharacterCulture = characterCulture;
+		var inputPath = await Icod.CoreUtils.Shared.FileSystem.Traversal.PathnameOperandExpander.ExpandSingularAsync(
+			options.InputPath,
+			cancellationToken: context.CancellationToken
+		).ConfigureAwait( false );
 		var outputIsStandard = string.IsNullOrEmpty( options.OutputPath ) || options.OutputPath == "-";
 		var aliasesInput = !outputIsStandard
-			&& options.InputPath != "-"
+			&& inputPath != "-"
 			&& string.Equals(
-				System.IO.Path.GetFullPath( options.InputPath ),
+				System.IO.Path.GetFullPath( inputPath ),
 				System.IO.Path.GetFullPath( options.OutputPath! ),
 				OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal
 			);
 		if ( aliasesInput ) {
 			await using var workspace = TemporaryWorkspace.Create( cancellationToken: context.CancellationToken );
 			var spoolPath = workspace.CreateFile( "uniq-XXXXXXXX.tmp", context.CancellationToken );
-			await using ( var source = InputSource.OpenBinary( InputOperand.Create( options.InputPath ), context ) ) {
+			await using ( var source = InputSource.OpenBinary( InputOperand.Create( inputPath ), context ) ) {
 				await ProcessToFileAsync( options, context, source.BinaryStream!, spoolPath ).ConfigureAwait( false );
 			}
 			File.Copy( spoolPath, options.OutputPath!, overwrite: true );
 			return CommandExitCodes.Success;
 		}
-		await using var input = InputSource.OpenBinary( InputOperand.Create( options.InputPath ), context );
+		await using var input = InputSource.OpenBinary( InputOperand.Create( inputPath ), context );
 		if ( outputIsStandard ) {
 			await using var destination = new ByteOutputStream( context.StandardOutput, context.StandardOutputStream );
 			await ProcessAsync( options, context, input.BinaryStream!, destination ).ConfigureAwait( false );

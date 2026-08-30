@@ -8,6 +8,7 @@ using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CommandFramework.FileSystem.Mutation;
 using Icod.CommandFramework.FileSystem.TransactionalReplacement;
 using Icod.CommandFramework.Platform;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 
 /// <summary>Implements GNU <c>install</c> through the shared filesystem contracts.</summary>
 public static class Command {
@@ -112,6 +113,10 @@ public static class Command {
 			return 0;
 		}
 		try {
+			await ExpandSourceOperandsAsync(
+				options,
+				cancellationToken
+			).ConfigureAwait( false );
 			var engine = new InstallEngine(
 				metadataProvider,
 				mutationProvider,
@@ -134,6 +139,40 @@ public static class Command {
 		) {
 			await error.WriteLineAsync( string.Concat( "install: ", exception.Message ) ).ConfigureAwait( false );
 			return 1;
+		}
+	}
+
+	private static async ValueTask ExpandSourceOperandsAsync(
+		InstallOptions options,
+		CancellationToken cancellationToken
+	) {
+		if ( options.DirectoryMode ) {
+			return;
+		}
+
+		var sourceCount = null == options.TargetDirectory
+			? Math.Max( 0, options.Operands.Count - 1 )
+			: options.Operands.Count
+		;
+		if ( 0 == sourceCount ) {
+			return;
+		}
+
+		var destination = null == options.TargetDirectory
+			? options.Operands[^1]
+			: null
+		;
+		var expansion = await PathnameOperandExpander.ExpandAsync(
+			options.Operands.Take( sourceCount ),
+			cancellationToken: cancellationToken
+		).ConfigureAwait( false );
+
+		options.Operands.Clear();
+		foreach ( var source in expansion.Operands ) {
+			options.Operands.Add( source );
+		}
+		if ( null != destination ) {
+			options.Operands.Add( destination );
 		}
 	}
 

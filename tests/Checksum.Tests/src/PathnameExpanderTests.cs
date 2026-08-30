@@ -113,15 +113,10 @@ public sealed class PathnameExpanderTests {
 
 		Assert.Equal(
 			new string[] {
+				"root.txt",
 				System.IO.Path.Combine( "one", "first.txt" ),
-				System.IO.Path.Combine( "one", "two", "deep.txt" ),
-				"root.txt"
-			}.OrderBy(
-				value => value,
-				OperatingSystem.IsWindows()
-					? StringComparer.OrdinalIgnoreCase
-					: StringComparer.Ordinal
-			),
+				System.IO.Path.Combine( "one", "two", "deep.txt" )
+			},
 			matches
 		);
 	}

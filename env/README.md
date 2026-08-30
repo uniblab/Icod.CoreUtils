@@ -82,6 +82,10 @@ Signal-launch options are implemented through the shared process-signal provider
 
 Child standard handles are inherited directly in normal production execution unless explicit streams are injected by a caller.
 
+## PATHNAME GLOBBING
+
+`env` does not perform `Icod.CommandFramework` pathname glob expansion. Path-valued control operands such as `--chdir=DIR` and the `COMMAND [ARG]...` vector are not glob-expanded by `env`; child-command arguments are preserved for the invoked program. Any expansion performed by an invoking shell or other caller occurs before `env` receives the arguments.
+
 ## AUTHORS
 
 GNU `env` was written by Richard Mlynarik, David MacKenzie, and Assaf Gordon.

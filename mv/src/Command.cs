@@ -3,6 +3,7 @@
 
 using Icod.CommandFramework.Diagnostics;
 using Icod.CoreUtils.Shared.FileSystem.CopyMove;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 using Icod.CommandFramework.FileSystem.RecursiveMutation;
 using Icod.CommandFramework.FileSystem.TransactionalReplacement;
 using Icod.CommandFramework.FileSystem.Traversal;
@@ -102,8 +103,12 @@ public static class Command {
 			}
 		};
 		try {
-			var result = await new CopyMoveEngine().ExecuteAsync(
+			var expansion = await PathnameOperandExpander.ExpandAsync(
 				parsed.Sources,
+				cancellationToken: cancellationToken
+			).ConfigureAwait( false );
+			var result = await new CopyMoveEngine().ExecuteAsync(
+				expansion.Operands,
 				parsed.Destination,
 				options,
 				cancellationToken

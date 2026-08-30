@@ -146,7 +146,7 @@ public sealed class PolicyTests {
 	}
 
 	private static NProcDecision Calculate(
-		Icod.CommandFramework.Host.ProcessorResourceSnapshot snapshot,
+		Icod.Host.ProcessorResourceSnapshot snapshot,
 		IReadOnlyDictionary<string, string?>? values = null
 	) {
 		return NProcPolicy.Calculate(

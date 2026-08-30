@@ -7,6 +7,7 @@ using Icod.CoreUtils.Shared.BinaryFormatting;
 using Icod.CommandFramework.CommandLine;
 using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.IO;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 
 /// <summary>
 /// Implements <c>od [OPTION]... [FILE]...</c> and the traditional offset forms.
@@ -148,6 +149,13 @@ public static class Command {
 					context.CancellationToken
 				).ConfigureAwait( false );
 			}
+			var expansion = await PathnameOperandExpander.ExpandAsync(
+				options.Files,
+				cancellationToken: context.CancellationToken
+			).ConfigureAwait( false );
+			options = options with {
+				Files = expansion.Operands
+			};
 
 			await using var input = new ConcatenatedInput(
 				options.Files,
@@ -376,14 +384,7 @@ public static class Command {
 			options = null!;
 			return false;
 		}
-		var files = PathnameExpander.Expand(
-			operands,
-			new PathnameExpansionOptions {
-				IncludeFiles = true,
-				IncludeDirectories = false,
-				PreserveUnmatchedPatterns = true
-			}
-		);
+		var files = operands.AsReadOnly();
 		options = new ParsedOptions(
 			addressRadix,
 			byteOrder,

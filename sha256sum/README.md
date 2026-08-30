@@ -10,6 +10,12 @@
 sha256sum [OPTION]... [FILE]...
 ```
 
+## PATHNAME GLOBBING
+
+Command-line `FILE` operands that contain supported pathname patterns are expanded in-process according to the repository policy. Matches preserve operand order and repetition, and unmatched patterns are preserved as literal operands. The operand `-` is preserved and retains its standard-input meaning.
+
+With `--check`, this expansion applies to checksum-list operands supplied on the command line. File names read from checksum records are data from the checksum list and are not recursively reinterpreted as glob patterns.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.Sha256Sum` is a managed .NET implementation of GNU Coreutils `sha256sum(1)`, modeled on GNU Coreutils 9.11.

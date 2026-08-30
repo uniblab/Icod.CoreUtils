@@ -101,10 +101,18 @@ public static class Command {
 				return CommandExitCodes.Failure;
 			}
 
+			var fileName = result.Operands.SingleOrDefault();
+			if ( null != fileName ) {
+				fileName = await Icod.CoreUtils.Shared.FileSystem.Traversal.PathnameOperandExpander.ExpandSingularAsync(
+					fileName,
+					cancellationToken: context.CancellationToken
+				).ConfigureAwait( false );
+			}
+
 			var names = new List<string>();
 			await foreach (
 				var record in provider.ReadAsync(
-					result.Operands.SingleOrDefault(),
+					fileName,
 					context.CancellationToken
 				).ConfigureAwait( false )
 			) {

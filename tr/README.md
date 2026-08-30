@@ -21,6 +21,10 @@ The command is intentionally byte-oriented. It translates, deletes, and squeezes
 
 The project references only `Icod.CoreUtils.Shared`. Shared owns the reusable command context, option parser, diagnostics, byte-stream adapters, and low-level `tr` escape parser. The complete set-expression grammar and transformation policy remain command-local because they are specific to `tr`.
 
+## PATHNAME GLOBBING
+
+`tr` does not perform `Icod.CommandFramework` pathname glob expansion. Its operands use `tr` character-set and repetition syntax rather than pathname-selection syntax; expanding wildcard-like text internally would change that command grammar. An invoking shell or other caller may still expand arguments before the program receives them.
+
 ## AUTHORS
 
 GNU `tr` was written by Jim Meyering.

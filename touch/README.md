@@ -10,6 +10,12 @@
 touch [OPTION]... FILE...
 ```
 
+## PATHNAME GLOBBING
+
+Target `FILE` operands that contain supported pathname patterns are expanded in-process according to the repository policy. Matches preserve operand order and repetition; unmatched patterns are preserved as literal operands and then follow ordinary `touch` creation/update semantics.
+
+`--reference=FILE` remains a literal control pathname and is not glob-expanded.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.Touch` is a managed .NET implementation of GNU Coreutils `touch(1)`, modeled on GNU Coreutils 9.11.

@@ -27,6 +27,7 @@ using System.Text;
 using Icod.CommandFramework.CommandLine;
 using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.IO;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 
 /// <summary>
 /// Provides the digest command options implementation.
@@ -340,11 +341,13 @@ public static class DigestCommand {
 		DigestCommandSettings settings,
 		DigestCommandOptions options
 	) {
-		var expanded = PathnameExpander.Expand(
+		var expansion = await PathnameOperandExpander.ExpandAsync(
 			0 == operands.Count
 				? new string[] { "-" }
-				: operands
-		);
+				: operands,
+			cancellationToken: context.CancellationToken
+		).ConfigureAwait( false );
+		var expanded = expansion.Operands;
 		var exitCode = CommandExitCodes.Success;
 		using var output = new ByteOutputStream(
 			context.StandardOutput,
@@ -437,11 +440,13 @@ public static class DigestCommand {
 		DigestCommandSettings settings,
 		DigestCommandOptions options
 	) {
-		var manifests = PathnameExpander.Expand(
+		var expansion = await PathnameOperandExpander.ExpandAsync(
 			0 == operands.Count
 				? new string[] { "-" }
-				: operands
-		);
+				: operands,
+			cancellationToken: context.CancellationToken
+		).ConfigureAwait( false );
+		var manifests = expansion.Operands;
 		var failed = false;
 		var verifiedCount = 0;
 		var formattedCount = 0;

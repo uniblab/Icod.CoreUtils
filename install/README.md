@@ -13,6 +13,12 @@ install [OPTION]... -t DIRECTORY SOURCE...
 install [OPTION]... -d DIRECTORY...
 ```
 
+## PATHNAME GLOBBING
+
+In ordinary copy forms, source operands that contain supported pathname patterns are expanded in-process according to the repository policy. Matches preserve source-operand order and repetition; unmatched source patterns are preserved as literal operands.
+
+Destination operands and `-t`/`--target-directory` values remain literal. In `-d`/`--directory` mode, positional directory operands also remain literal because they name directories to be created rather than existing source objects to select.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.Install` implements the GNU Coreutils 9.11 `install` command. It copies source files to destinations, creates directories, and applies requested ownership, mode, timestamp, stripping, backup, comparison, and SELinux-context policies.

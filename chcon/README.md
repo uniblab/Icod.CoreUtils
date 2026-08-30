@@ -12,6 +12,12 @@ chcon [OPTION]... [-u USER] [-r ROLE] [-l RANGE] [-t TYPE] FILE...
 chcon [OPTION]... --reference=RFILE FILE...
 ```
 
+## PATHNAME GLOBBING
+
+Target `FILE` operands that contain supported pathname patterns are expanded in-process according to the repository policy. Matches preserve operand order and repetition; unmatched patterns are preserved as literal operands.
+
+The complete CONTEXT operand, component values supplied by `-u`, `-r`, `-t`, or `-l`, and `--reference=RFILE` remain literal. A `**` pattern selects initial targets only; recursive context changes remain controlled by `-R` and the command's link-traversal options.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.ChCon` implements the GNU Coreutils 9.11 `chcon` command for changing SELinux file security contexts. A complete context may be supplied directly, selected from a reference file, or assembled by changing individual user, role, type, or range components.

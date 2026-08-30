@@ -122,6 +122,12 @@ public static class Command {
 				? result.Operands[ 0 ]
 				: null
 			;
+			if ( null != fileName ) {
+				fileName = await Icod.CoreUtils.Shared.FileSystem.Traversal.PathnameOperandExpander.ExpandSingularAsync(
+					fileName,
+					cancellationToken: context.CancellationToken
+				).ConfigureAwait( false );
+			}
 			var currentTerminalOnly = result.HasOption( "me" ) || 2 == result.Operands.Count;
 			var currentTerminal = ( currentTerminalOnly )
 				? await provider.GetStandardInputTerminalLineAsync(

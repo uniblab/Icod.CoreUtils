@@ -100,7 +100,22 @@ public static class Command {
 				await WriteTryHelpAsync( error, context.ProgramName, context.CancellationToken ).ConfigureAwait( false );
 				return await FinishAsync( CommandExitCodes.Failure, null, error ).ConfigureAwait( false );
 			}
-			if ( null == settings!.OutputFile ) {
+			if ( settings!.GnuExtensions ) {
+				var inputFiles = await Icod.CoreUtils.Shared.FileSystem.Traversal.PathnameOperandExpander.ExpandPatternsPreservingLiteralsAsync(
+					settings.InputFiles,
+					cancellationToken: context.CancellationToken
+				).ConfigureAwait( false );
+				settings.InputFiles.Clear();
+				settings.InputFiles.AddRange(
+					inputFiles
+				);
+			} else {
+				settings.InputFiles[ 0 ] = await Icod.CoreUtils.Shared.FileSystem.Traversal.PathnameOperandExpander.ExpandSingularAsync(
+					settings.InputFiles[ 0 ],
+					cancellationToken: context.CancellationToken
+				).ConfigureAwait( false );
+			}
+			if ( null == settings.OutputFile ) {
 				standardOutput = new ByteOutputStream( context.StandardOutput, context.StandardOutputStream );
 				destination = standardOutput;
 			} else {

@@ -11,6 +11,10 @@ link FILE1 FILE2
 link OPTION
 ```
 
+## PATHNAME GLOBBING
+
+`FILE1` is the existing-source Class B singular pathname slot. A wildcard-bearing source must resolve to at most one pathname; an unmatched pattern remains literal and multiple matches are rejected. `FILE2` names the new hard link and is always treated literally.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.Link` is a managed .NET implementation of GNU Coreutils `link(1)`, modeled on GNU Coreutils 9.11.

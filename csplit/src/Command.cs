@@ -800,6 +800,10 @@ public static class Command {
 				return CommandExitCodes.Success;
 			}
 			var options = CreateOptions( parsed, context.CancellationToken );
+			options.InputPath = await Icod.CoreUtils.Shared.FileSystem.Traversal.PathnameOperandExpander.ExpandSingularAsync(
+				options.InputPath,
+				cancellationToken: context.CancellationToken
+			).ConfigureAwait( false );
 			foreach ( var warning in options.Warnings ) {
 				await context.Diagnostics.WarningAsync(
 					warning,

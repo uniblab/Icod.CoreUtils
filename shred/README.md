@@ -10,6 +10,12 @@
 shred [OPTION]... FILE...
 ```
 
+## PATHNAME GLOBBING
+
+Target `FILE` operands that contain supported pathname patterns are expanded in-process according to the repository policy. Matches preserve operand order and repetition; unmatched patterns are preserved as literal operands.
+
+The `--random-source=FILE` option value remains a literal control pathname and is not glob-expanded. The operand `-` is preserved and retains its standard-output meaning.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.Shred` is a managed .NET implementation of GNU Coreutils `shred(1)`, modeled on GNU Coreutils 9.11.

@@ -5,6 +5,7 @@ using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.FileSystem.Metadata;
 using Icod.CommandFramework.FileSystem.Traversal;
 using Icod.CommandFramework.Platform;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 using Icod.CoreUtils.Shared.Time;
 
 /// <summary>Implements GNU-compatible <c>touch</c> timestamp mutation.</summary>
@@ -239,8 +240,13 @@ public static class Command {
 				modificationChange = FileTimestampChange.CurrentTime;
 			}
 
+			var expansion = await PathnameOperandExpander.ExpandAsync(
+				result.Operands,
+				cancellationToken: context.CancellationToken
+			).ConfigureAwait( false );
+
 			var exitCode = 0;
-			foreach ( var operand in result.Operands ) {
+			foreach ( var operand in expansion.Operands ) {
 				context.CancellationToken.ThrowIfCancellationRequested();
 				var operationalPath = ResolveOperationalPath( operand );
 				if ( null == operationalPath ) {

@@ -49,6 +49,10 @@ An explicit mode may specify permission bits only. Security-context labeling is 
 
 FIFO creation is capability-dependent. Hosts or filesystems whose mutation provider cannot create POSIX named pipes return a controlled unsupported failure rather than emulating a FIFO with an unrelated IPC mechanism.
 
+## PATHNAME GLOBBING
+
+`mkfifo` does not perform `Icod.CommandFramework` pathname glob expansion. Its pathname operands name FIFOs to create rather than select existing filesystem entries, so wildcard characters that reach `mkfifo` remain part of the requested pathname subject to host pathname rules. An invoking shell or other caller may still expand arguments before the program receives them.
+
 ## AUTHORS
 
 GNU `mkfifo` was written by David MacKenzie.

@@ -1,6 +1,6 @@
 namespace Icod.CoreUtils.HostId.Tests;
 
-using Icod.CommandFramework.Host;
+using Icod.Host;
 
 /// <summary>Supplies deterministic host-identifier observations to tests.</summary>
 public sealed class TestHostIdentifierProvider : IHostIdentifierProvider {

@@ -62,6 +62,10 @@ other  The status supplied by the SELinux execution provider for COMMAND.
 
 No non-SELinux security model is substituted. Context retrieval, file-context lookup, transition computation, validation, and execution are all delegated to the SELinux platform implementation.
 
+## PATHNAME GLOBBING
+
+`runcon` does not perform `Icod.CommandFramework` pathname glob expansion. Security-context operands and the command argument vector have their own meanings and are not reinterpreted as pathname patterns by `runcon`; child-command arguments are preserved for the invoked program. Any expansion performed by an invoking shell or other caller occurs before `runcon` receives the arguments.
+
 ## AUTHORS
 
 GNU `runcon` was written by Russell Coker.
