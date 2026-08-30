@@ -2,7 +2,7 @@ namespace Icod.CoreUtils.Stty;
 
 using System.Collections.ObjectModel;
 using System.Globalization;
-using Icod.CommandFramework.Terminal;
+using Icod.Terminal;
 
 /// <summary>Describes the result of applying ordered <c>stty</c> settings to a snapshot.</summary>
 public sealed class SttyEditResult {
