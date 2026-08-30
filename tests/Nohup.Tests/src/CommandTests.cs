@@ -130,25 +130,25 @@ public sealed class CommandTests {
 			);
 
 			Assert.True(
-				await WaitForFileAsync( startedPath ).ConfigureAwait( false ),
+				await WaitForFileAsync( startedPath ),
 				"Child process did not reach the descriptor-retention gate."
 			);
 
 			cancellation.Cancel();
-			var exitCode = await runTask.ConfigureAwait( false );
+			var exitCode = await runTask;
 			Assert.Equal( 125, exitCode );
 
 			await File.WriteAllTextAsync(
 				releasePath,
 				"release"
-			).ConfigureAwait( false );
+			);
 			Assert.True(
-				await WaitForFileAsync( finishedPath ).ConfigureAwait( false ),
+				await WaitForFileAsync( finishedPath ),
 				"Detached child did not finish after nohup returned."
 			);
 			var output = await File.ReadAllTextAsync(
 				outputPath
-			).ConfigureAwait( false );
+			);
 			Assert.Contains( "survived-out", output, StringComparison.Ordinal );
 			Assert.Contains( "survived-err", output, StringComparison.Ordinal );
 		} finally {
@@ -157,13 +157,13 @@ public sealed class CommandTests {
 				await File.WriteAllTextAsync(
 					releasePath,
 					"release"
-				).ConfigureAwait( false );
+				);
 			}
 			if ( null != runTask && !runTask.IsCompleted ) {
-				_ = await runTask.ConfigureAwait( false );
+				_ = await runTask;
 			}
 			if ( File.Exists( startedPath ) && !File.Exists( finishedPath ) ) {
-				_ = await WaitForFileAsync( finishedPath ).ConfigureAwait( false );
+				_ = await WaitForFileAsync( finishedPath );
 			}
 			Directory.Delete(
 				directory,
@@ -178,7 +178,7 @@ public sealed class CommandTests {
 				if ( File.Exists( path ) ) {
 					return true;
 				}
-				await Task.Delay( 20 ).ConfigureAwait( false );
+				await Task.Delay( 20 );
 			}
 			return false;
 		}
