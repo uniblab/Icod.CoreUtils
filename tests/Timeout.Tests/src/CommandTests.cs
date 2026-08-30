@@ -37,6 +37,7 @@ public sealed class CommandTests {
 		Assert.Equal( 124, status );
 		Assert.Contains( signals.Deliveries, item => ProcessTargetKind.Process == item.Target.Kind && 15 == item.Signal.Number );
 		Assert.Contains( signals.Deliveries, item => ProcessTargetKind.ProcessGroup == item.Target.Kind && 15 == item.Signal.Number );
+		Assert.Contains( signals.Deliveries, item => ProcessTargetKind.Process == item.Target.Kind && "CONT" == item.Signal.Name );
 		Assert.Contains( signals.Deliveries, item => ProcessTargetKind.ProcessGroup == item.Target.Kind && "CONT" == item.Signal.Name );
 	}
 
@@ -49,6 +50,7 @@ public sealed class CommandTests {
 		Assert.Equal( 124, status );
 		Assert.False( executor.LastOptions!.CreateProcessGroup );
 		Assert.DoesNotContain( signals.Deliveries, item => ProcessTargetKind.ProcessGroup == item.Target.Kind );
+		Assert.DoesNotContain( signals.Deliveries, item => "CONT" == item.Signal.Name );
 	}
 
 	/// <summary>Verifies preserve-status returns the child signal status after a timeout.</summary>

@@ -252,10 +252,18 @@ public static class Command {
 	) {
 		var direct = await signals.DeliverAsync( ProcessTarget.ForProcess( identity ), signal ).ConfigureAwait( false );
 		var group = ProcessOperationResult.Success();
-		if ( !foreground ) group = await signals.DeliverAsync( ProcessTarget.ForProcessGroup( identity.ProcessId ), signal ).ConfigureAwait( false );
-		if ( signal.Number != 9 && signal.Number != continueSignal.Number ) {
+		if ( !foreground ) {
+			group = await signals.DeliverAsync(
+				ProcessTarget.ForProcessGroup( identity.ProcessId ),
+				signal
+			).ConfigureAwait( false );
+		}
+		if ( !foreground
+			&& signal.Number != 9
+			&& signal.Number != continueSignal.Number
+		) {
 			_ = await signals.DeliverAsync( ProcessTarget.ForProcess( identity ), continueSignal ).ConfigureAwait( false );
-			if ( !foreground ) _ = await signals.DeliverAsync( ProcessTarget.ForProcessGroup( identity.ProcessId ), continueSignal ).ConfigureAwait( false );
+			_ = await signals.DeliverAsync( ProcessTarget.ForProcessGroup( identity.ProcessId ), continueSignal ).ConfigureAwait( false );
 		}
 		if ( direct.Succeeded ) return group.Succeeded || ProcessOperationStatus.Unsupported == group.Status ? direct : group;
 		return direct;
