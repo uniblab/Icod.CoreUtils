@@ -540,6 +540,12 @@ public static class DirColorsCommand {
 
 		DirColorsDatabase database;
 		try {
+			if ( operand is not null ) {
+				operand = await Icod.CoreUtils.Shared.FileSystem.Traversal.PathnameOperandExpander.ExpandSingularAsync(
+					operand,
+					cancellationToken: cancellationToken
+				).ConfigureAwait( false );
+			}
 			if ( operand is null ) {
 				database = DirColorsDatabase.ParseBuiltIn();
 			} else if ( "-" == operand ) {

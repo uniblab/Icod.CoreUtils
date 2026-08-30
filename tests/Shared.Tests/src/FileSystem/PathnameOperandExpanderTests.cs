@@ -65,4 +65,91 @@ public sealed class PathnameOperandExpanderTests {
 		}
 	}
 
+	/// <summary>Verifies a singular slot accepts exactly one wildcard match.</summary>
+	[Fact]
+	public async Task ExpandsSingularWildcardWithOneMatch() {
+		var temporary = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
+			String.Concat(
+				"Icod.CoreUtils.PathnameOperandExpanderTests-",
+				Guid.NewGuid().ToString( "N" )
+			)
+		);
+		Directory.CreateDirectory( temporary );
+		try {
+			var expected = System.IO.Path.Combine( temporary, "only.txt" );
+			await File.WriteAllTextAsync( expected, "x" );
+
+			var operand = await PathnameOperandExpander.ExpandSingularAsync(
+				System.IO.Path.Combine( temporary, "*.txt" )
+			);
+
+			Assert.Equal( expected, operand );
+		} finally {
+			try {
+				Directory.Delete( temporary, recursive: true );
+			} catch ( IOException ) {
+			} catch ( UnauthorizedAccessException ) {
+			}
+		}
+	}
+
+	/// <summary>Verifies an unmatched singular wildcard remains literal.</summary>
+	[Fact]
+	public async Task PreservesUnmatchedSingularWildcard() {
+		var pattern = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
+			String.Concat(
+				"Icod.CoreUtils.PathnameOperandExpanderTests-",
+				Guid.NewGuid().ToString( "N" ),
+				"-*.missing"
+			)
+		);
+
+		var operand = await PathnameOperandExpander.ExpandSingularAsync( pattern );
+
+		Assert.Equal( pattern, operand );
+	}
+
+	/// <summary>Verifies a singular slot rejects a wildcard with multiple matches.</summary>
+	[Fact]
+	public async Task RejectsSingularWildcardWithMultipleMatches() {
+		var temporary = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
+			String.Concat(
+				"Icod.CoreUtils.PathnameOperandExpanderTests-",
+				Guid.NewGuid().ToString( "N" )
+			)
+		);
+		Directory.CreateDirectory( temporary );
+		try {
+			await File.WriteAllTextAsync(
+				System.IO.Path.Combine( temporary, "a.txt" ),
+				"a"
+			);
+			await File.WriteAllTextAsync(
+				System.IO.Path.Combine( temporary, "b.txt" ),
+				"b"
+			);
+
+			var exception = await Assert.ThrowsAsync<IOException>(
+				() => PathnameOperandExpander.ExpandSingularAsync(
+					System.IO.Path.Combine( temporary, "*.txt" )
+				)
+			);
+
+			Assert.Contains(
+				"matched 2 pathnames",
+				exception.Message,
+				StringComparison.Ordinal
+			);
+		} finally {
+			try {
+				Directory.Delete( temporary, recursive: true );
+			} catch ( IOException ) {
+			} catch ( UnauthorizedAccessException ) {
+			}
+		}
+	}
+
 }

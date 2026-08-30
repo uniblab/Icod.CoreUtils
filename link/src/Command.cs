@@ -102,9 +102,27 @@ public static class Command {
 				return CommandExitCodes.Failure;
 			}
 
+			string source;
+			try {
+				source = await Icod.CoreUtils.Shared.FileSystem.Traversal.PathnameOperandExpander.ExpandSingularAsync(
+					parsed.Operands[ 0 ],
+					cancellationToken: context.CancellationToken
+				).ConfigureAwait( false );
+			} catch ( Exception exception ) when (
+				exception is IOException
+				or UnauthorizedAccessException
+				or ArgumentException
+				or NotSupportedException
+			) {
+				await context.Diagnostics.ErrorAsync(
+					exception.Message,
+					context.CancellationToken
+				).ConfigureAwait( false );
+				return CommandExitCodes.Failure;
+			}
 			var result = await mutationProvider.CreateHardLinkAsync(
 				parsed.Operands[ 1 ],
-				parsed.Operands[ 0 ],
+				source,
 				PathDereferenceMode.FollowEligiblePathIndirection,
 				FileSystemMutationPrecondition.DestinationMustNotExist(),
 				cancellationToken: context.CancellationToken

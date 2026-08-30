@@ -115,6 +115,50 @@ public static class PathnameOperandExpander {
 	}
 
 	/// <summary>
+	/// Expands one syntactically singular pathname slot. Literal operands and
+	/// unmatched patterns remain literal; a pattern resolving to more than one
+	/// pathname is rejected rather than changing command arity.
+	/// </summary>
+	/// <param name="operand">The operand occupying the singular pathname slot.</param>
+	/// <param name="options">Optional pathname expansion behavior.</param>
+	/// <param name="cancellationToken">A token used to cancel traversal.</param>
+	/// <returns>The literal operand or its single expanded pathname.</returns>
+	/// <exception cref="IOException">The pattern resolves to a number of pathnames other than one.</exception>
+	public static async Task<string> ExpandSingularAsync(
+		string operand,
+		PathnameExpansionOptions? options = null,
+		CancellationToken cancellationToken = default
+	) {
+		ArgumentNullException.ThrowIfNull(
+			operand
+		);
+
+		IReadOnlyList<string> operands;
+		try {
+			operands = await ExpandPatternsPreservingLiteralsAsync(
+				new[] { operand },
+				options,
+				cancellationToken
+			).ConfigureAwait( false );
+		} catch ( Exception exception ) when (
+			exception is UnauthorizedAccessException
+			or ArgumentException
+			or NotSupportedException
+		) {
+			throw new IOException(
+				exception.Message,
+				exception
+			);
+		}
+		if ( 1 == operands.Count ) {
+			return operands[ 0 ];
+		}
+		throw new IOException(
+			$"pathname pattern '{operand}' matched {operands.Count} pathnames; expected exactly one"
+		);
+	}
+
+	/// <summary>
 	/// Expands pathname operands through an injected read-only filesystem provider.
 	/// </summary>
 	/// <param name="operands">The operands which the command has classified as pathnames.</param>

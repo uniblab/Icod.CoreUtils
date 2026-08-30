@@ -129,6 +129,45 @@ public static class Command {
 				return 1;
 			}
 
+			if ( !parsing.Options.Symbolic ) {
+				try {
+					if ( targetDirectory is not null || destinationIsDirectory ) {
+						sources = await Icod.CoreUtils.Shared.FileSystem.Traversal.PathnameOperandExpander.ExpandPatternsPreservingLiteralsAsync(
+							sources,
+							cancellationToken: context.CancellationToken
+						).ConfigureAwait( false );
+					} else {
+						sources = new[] {
+							await Icod.CoreUtils.Shared.FileSystem.Traversal.PathnameOperandExpander.ExpandSingularAsync(
+								sources[ 0 ],
+								cancellationToken: context.CancellationToken
+							).ConfigureAwait( false )
+						};
+					}
+				} catch ( Exception exception ) when (
+					exception is IOException
+					or UnauthorizedAccessException
+					or ArgumentException
+					or NotSupportedException
+				) {
+					await context.Diagnostics.ErrorAsync(
+						exception.Message,
+						context.CancellationToken
+					).ConfigureAwait( false );
+					return 1;
+				}
+			}
+			if ( sources.Count > 1 && !destinationIsDirectory ) {
+				await context.StandardError.WriteLineAsync(
+					string.Concat(
+						"ln: target ",
+						Quote( destination ),
+						": Not a directory"
+					)
+				).ConfigureAwait( false );
+				return 1;
+			}
+
 			var status = 0;
 			foreach ( var source in sources ) {
 				var linkPath = ( destinationIsDirectory )

@@ -195,10 +195,15 @@ public static class BaseEncodingCommand {
 				return CommandExitCodes.Failure;
 			}
 
+			var inputPath = ( 0 == result.Operands.Count )
+				? "-"
+				: await Icod.CoreUtils.Shared.FileSystem.Traversal.PathnameOperandExpander.ExpandSingularAsync(
+					result.Operands[ 0 ],
+					cancellationToken: context.CancellationToken
+				).ConfigureAwait( false )
+			;
 			var operand = InputOperand.Create(
-				0 == result.Operands.Count
-					? "-"
-					: result.Operands[ 0 ]
+				inputPath
 			);
 
 			try {

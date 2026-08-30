@@ -107,7 +107,24 @@ public static class Command {
 				return CommandExitCodes.Failure;
 			}
 
-			var path = parsed.Operands[ 0 ];
+			string path;
+			try {
+				path = await Icod.CoreUtils.Shared.FileSystem.Traversal.PathnameOperandExpander.ExpandSingularAsync(
+					parsed.Operands[ 0 ],
+					cancellationToken: context.CancellationToken
+				).ConfigureAwait( false );
+			} catch ( Exception exception ) when (
+				exception is IOException
+				or UnauthorizedAccessException
+				or ArgumentException
+				or NotSupportedException
+			) {
+				await context.Diagnostics.ErrorAsync(
+					exception.Message,
+					context.CancellationToken
+				).ConfigureAwait( false );
+				return CommandExitCodes.Failure;
+			}
 			var metadata = await TryObserveAsync(
 				path,
 				metadataProvider,

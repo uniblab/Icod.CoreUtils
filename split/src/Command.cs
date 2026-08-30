@@ -641,7 +641,10 @@ public static class Command {
 			return null;
 		}
 		if ( 0 < parsed.Operands.Count ) {
-			options.InputPath = parsed.Operands[0];
+			options.InputPath = await Icod.CoreUtils.Shared.FileSystem.Traversal.PathnameOperandExpander.ExpandSingularAsync(
+				parsed.Operands[ 0 ],
+				cancellationToken: context.CancellationToken
+			).ConfigureAwait( false );
 		}
 		if ( 1 < parsed.Operands.Count ) {
 			options.Prefix = parsed.Operands[1];
