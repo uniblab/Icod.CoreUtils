@@ -4,6 +4,7 @@ using Icod.CommandFramework.CommandLine;
 using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.IO;
 using Icod.CommandFramework.Text;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 using TabStopParser = Icod.CoreUtils.Shared.Text.TabStopParser;
 
 /// <summary>Implements GNU <c>expand</c> for .NET.</summary>
@@ -104,7 +105,11 @@ public static class Command {
 				).ConfigureAwait( false );
 				return CommandExitCodes.Failure;
 			}
-			if ( RequiresStandardInput( parsed.Operands ) && context.StandardInputStream is null ) {
+			var expansion = await PathnameOperandExpander.ExpandAsync(
+				parsed.Operands,
+				cancellationToken: context.CancellationToken
+			).ConfigureAwait( false );
+			if ( RequiresStandardInput( expansion.Operands ) && context.StandardInputStream is null ) {
 				await context.Diagnostics.ErrorAsync(
 					"a binary standard-input stream was not supplied",
 					context.CancellationToken
@@ -114,7 +119,7 @@ public static class Command {
 			var options = new ExpandOptions(
 				parsed.HasOption( InitialKey ),
 				tabResult.TabStops!,
-				parsed.Operands
+				expansion.Operands
 			);
 			await using var output = new ByteOutputStream(
 				context.StandardOutput,

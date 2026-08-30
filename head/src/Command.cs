@@ -6,6 +6,7 @@ namespace Icod.CoreUtils.Head;
 using Icod.CommandFramework.CommandLine;
 using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.IO;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 using Icod.CoreUtils.Shared.Numerics;
 
 /// <summary>
@@ -296,6 +297,11 @@ public static class Command {
 				? new string[] { "-" }
 				: parseResult.Operands
 			;
+			var expansion = await PathnameOperandExpander.ExpandAsync(
+				operands,
+				cancellationToken: context.CancellationToken
+			).ConfigureAwait( false );
+			operands = expansion.Operands;
 			var showHeaders = settings.Verbose
 				|| (
 					!settings.Quiet

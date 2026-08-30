@@ -4,6 +4,7 @@ using System.Globalization;
 using Icod.CommandFramework.CommandLine;
 using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.IO;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 
 /// <summary>Implements GNU <c>fmt</c> for .NET.</summary>
 /// <remarks>
@@ -204,6 +205,10 @@ public static class Command {
 		if ( !goalSpecified ) {
 			goalWidth = maximumWidth * 187 / 200;
 		}
+		var expansion = await PathnameOperandExpander.ExpandAsync(
+			parsed.Operands,
+			cancellationToken: context.CancellationToken
+		).ConfigureAwait( false );
 		return new FmtOptions(
 			parsed.HasOption( CrownKey ),
 			parsed.HasOption( TaggedKey ),
@@ -212,7 +217,7 @@ public static class Command {
 			maximumWidth,
 			goalWidth,
 			prefix,
-			parsed.Operands
+			expansion.Operands
 		);
 	}
 

@@ -7,6 +7,7 @@ using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.IO;
 using Icod.CommandFramework.RegularExpressions;
 using Icod.CommandFramework.Text;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 
 /// <summary>Implements GNU <c>nl</c> for .NET.</summary>
 /// <remarks>
@@ -244,6 +245,10 @@ public static class Command {
 					break;
 			}
 		}
+		var expansion = await PathnameOperandExpander.ExpandAsync(
+			parsed.Operands,
+			cancellationToken: context.CancellationToken
+		).ConfigureAwait( false );
 		return new NlOptions(
 			header,
 			body,
@@ -256,7 +261,7 @@ public static class Command {
 			separator,
 			start,
 			width,
-			parsed.Operands
+			expansion.Operands
 		);
 	}
 

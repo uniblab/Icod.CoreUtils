@@ -11,6 +11,7 @@ using System.Text;
 using Icod.CommandFramework.CommandLine;
 using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.IO;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 using Icod.CoreUtils.Shared.Ordering;
 using Icod.CommandFramework.Records;
 using Icod.CommandFramework.Temporary;
@@ -415,6 +416,16 @@ public static class Command {
 		CommandContext context
 	) {
 		if ( null == settings.Files0From ) {
+			var expansion = await PathnameOperandExpander.ExpandAsync(
+				settings.InputFiles,
+				cancellationToken: context.CancellationToken
+			).ConfigureAwait( false );
+			settings.InputFiles = expansion.Operands.ToList();
+			if ( settings.CheckMode && 1 < settings.InputFiles.Count ) {
+				throw new ArgumentException(
+					"extra operand; --check accepts at most one input file"
+				);
+			}
 			return;
 		}
 		await using var source = InputSource.OpenBinary(

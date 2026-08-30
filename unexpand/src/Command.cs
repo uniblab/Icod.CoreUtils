@@ -4,6 +4,7 @@ using Icod.CommandFramework.CommandLine;
 using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.IO;
 using Icod.CommandFramework.Text;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 using TabStopParser = Icod.CoreUtils.Shared.Text.TabStopParser;
 
 /// <summary>Implements GNU <c>unexpand</c> for .NET.</summary>
@@ -99,11 +100,15 @@ public static class Command {
 			}
 			var convertAll = parsed.Options.Any( option => option.Definition.Key is AllKey or TabsKey )
 				&& !parsed.HasOption( FirstOnlyKey );
-			if ( RequiresStandardInput( parsed.Operands ) && context.StandardInputStream is null ) {
+			var expansion = await PathnameOperandExpander.ExpandAsync(
+				parsed.Operands,
+				cancellationToken: context.CancellationToken
+			).ConfigureAwait( false );
+			if ( RequiresStandardInput( expansion.Operands ) && context.StandardInputStream is null ) {
 				await context.Diagnostics.ErrorAsync( "a binary standard-input stream was not supplied", context.CancellationToken ).ConfigureAwait( false );
 				return CommandExitCodes.Failure;
 			}
-			var options = new UnexpandOptions( convertAll, tabResult.TabStops!, parsed.Operands );
+			var options = new UnexpandOptions( convertAll, tabResult.TabStops!, expansion.Operands );
 			await using var output = new ByteOutputStream( context.StandardOutput, context.StandardOutputStream );
 			var processor = new UnexpandProcessor(
 				options,

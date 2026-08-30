@@ -6,6 +6,7 @@ using Icod.CommandFramework.Delimiters;
 using Icod.CommandFramework.Diagnostics;
 using Icod.CoreUtils.Shared.Escapes;
 using Icod.CommandFramework.IO;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 
 /// <summary>Implements GNU <c>paste</c> for .NET.</summary>
 /// <remarks>
@@ -116,12 +117,16 @@ public static class Command {
 			await context.StandardError.WriteLineAsync( "Try 'paste --help' for more information.".AsMemory(), context.CancellationToken ).ConfigureAwait( false );
 			return null;
 		}
+		var expansion = await PathnameOperandExpander.ExpandAsync(
+			parsed.Operands,
+			cancellationToken: context.CancellationToken
+		).ConfigureAwait( false );
 		return new PasteOptions(
 			parsed.HasOption( SerialKey ),
 			parsed.HasOption( ZeroKey ) ? (byte)0 : (byte)'\n',
 			parsed.HasOption( ZeroKey ) ? new byte[] { 0 } : Encoding.UTF8.GetBytes( Environment.NewLine ),
 			delimiters.Value ?? new SeparatorCycle( new[] { new ByteSeparator( new[] { (byte)'\t' } ) } ),
-			parsed.Operands
+			expansion.Operands
 		);
 	}
 

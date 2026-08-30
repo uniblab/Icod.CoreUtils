@@ -9,6 +9,7 @@ using System.Text;
 using Icod.CommandFramework.CommandLine;
 using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.IO;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 
 /// <summary>
 /// Counts lines, words, characters, bytes, and maximum display width.
@@ -461,7 +462,11 @@ public static class Command {
 				);
 				implicitStandardInput = true;
 			} else {
-				foreach ( var operand in operands ) {
+				var expansion = await PathnameOperandExpander.ExpandAsync(
+					operands,
+					cancellationToken: context.CancellationToken
+				).ConfigureAwait( false );
+				foreach ( var operand in expansion.Operands ) {
 					requests.Add(
 						new InputRequest(
 							operand,

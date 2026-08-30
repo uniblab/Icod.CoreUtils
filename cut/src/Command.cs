@@ -4,6 +4,7 @@ using System.Text;
 using Icod.CommandFramework.CommandLine;
 using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.IO;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 using Icod.CoreUtils.Shared.Ranges;
 using Icod.CommandFramework.Text;
 
@@ -242,10 +243,14 @@ public static class Command {
 					? new[] { (byte)'\t' }
 					: fieldDelimiter;
 		}
+		var expansion = await PathnameOperandExpander.ExpandAsync(
+			parsed.Operands,
+			cancellationToken: context.CancellationToken
+		).ConfigureAwait( false );
 		return new CutOptions(
 			mode,
 			ranges.Value!,
-			parsed.Operands,
+			expansion.Operands,
 			locale,
 			parsed.HasOption( ZeroKey ) ? (byte)0 : (byte)'\n',
 			parsed.HasOption( ZeroKey ) ? new byte[] { 0 } : Encoding.UTF8.GetBytes( Environment.NewLine ),
