@@ -10,6 +10,12 @@
 truncate [OPTION]... FILE...
 ```
 
+## PATHNAME GLOBBING
+
+Target `FILE` operands that contain supported pathname patterns are expanded in-process according to the repository policy. Matches preserve operand order and repetition; unmatched patterns are preserved as literal operands.
+
+The reference pathname supplied by `--reference=RFILE` remains literal and is not glob-expanded.
+
 ## DESCRIPTION
 
 This directory implements GNU `truncate` behavior for Icod.CoreUtils.

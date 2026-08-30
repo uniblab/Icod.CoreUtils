@@ -10,6 +10,12 @@
 rm [OPTION]... [FILE]...
 ```
 
+## PATHNAME GLOBBING
+
+Command-line `FILE` operands that contain supported pathname patterns are expanded in-process using the canonical traversal expander. Matches preserve operand order and repetition; unmatched patterns are preserved as literal operands.
+
+A `**` pattern selects explicit removal roots only. It does not authorize recursive directory removal; directory recursion still requires `-r`/`-R`/`--recursive`. Wildcard-discovered symbolic-link directories are not traversed by globbing, and the command's existing `.`/`..` and filesystem-root protections remain in force after expansion.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.Rm` is a managed .NET implementation of GNU Coreutils `rm(1)`, modeled on GNU Coreutils 9.11.

@@ -10,6 +10,10 @@
 stat [OPTION]... FILE...
 ```
 
+## PATHNAME GLOBBING
+
+Command-line `FILE` operands that contain supported pathname patterns are expanded in-process according to the repository policy. Matches preserve operand order and repetition; unmatched patterns are preserved as literal operands. Formatting strings and other option values are not pathname operands and remain literal.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.Stat` is a managed .NET implementation of GNU Coreutils `stat(1)`, modeled on GNU Coreutils 9.11.

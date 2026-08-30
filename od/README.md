@@ -10,6 +10,12 @@
 od [OPTION]... [FILE]...
 ```
 
+## PATHNAME GLOBBING
+
+Actual command-line file operands that contain supported pathname patterns are expanded in-process according to the repository policy. Old-style `od` OFFSET and LABEL syntax is classified before expansion, so those control operands are not treated as pathname patterns. Matches preserve operand order and repetition; unmatched patterns are preserved as literal operands.
+
+The operand `-` is preserved and retains its standard-input meaning.
+
 ## DESCRIPTION
 
 `od` writes an unambiguous textual representation of binary input. This Batch 13 implementation is based on GNU Coreutils 9.11 (`src/od.c`, tag `v9.11`, commit `c01fd163a47468a8296fb369f5233853bb551bb6`).

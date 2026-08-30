@@ -10,6 +10,12 @@
 rmdir [OPTION]... DIRECTORY...
 ```
 
+## PATHNAME GLOBBING
+
+Command-line `DIRECTORY` operands that contain supported pathname patterns are expanded in-process according to the repository policy. Matches preserve operand order and repetition; unmatched patterns are preserved as literal operands.
+
+`-p`/`--parents` is applied after pathname selection to each selected directory. A `**` pattern does not itself enable parent removal or any additional recursive behavior.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.RmDir` is a managed .NET implementation of GNU Coreutils `rmdir(1)`, modeled on GNU Coreutils 9.11.

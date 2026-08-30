@@ -10,6 +10,10 @@
 df [OPTION]... [FILE]...
 ```
 
+## PATHNAME GLOBBING
+
+Supplied command-line `FILE` operands that contain supported pathname patterns are expanded in-process according to the repository policy. Matches preserve operand order and repetition; unmatched patterns are preserved as literal operands. With no `FILE` operands, `df` retains its ordinary behavior of reporting all mounted filesystems.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.Df` is a managed .NET implementation of GNU Coreutils `df(1)`, modeled on GNU Coreutils 9.11.

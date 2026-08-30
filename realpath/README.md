@@ -10,6 +10,12 @@
 realpath [OPTION]... FILE...
 ```
 
+## PATHNAME GLOBBING
+
+Command-line operands that actually contain supported pathname patterns are expanded in-process according to the repository policy. Matches preserve operand order and repetition, and unmatched patterns are preserved as literal operands.
+
+Non-pattern operands bypass pathname expansion and retain their original spelling so the neutral `Icod.Path` resolver can interpret the intended pathname dialect without host-separator rewriting. `--relative-to=DIR` and `--relative-base=DIR` are literal control pathnames and are not glob-expanded.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.RealPath` implements GNU-compatible lexical, physical, and no-link canonical pathname output over the neutral `Icod.Path` resolver.

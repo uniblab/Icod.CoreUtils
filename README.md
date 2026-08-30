@@ -6,7 +6,7 @@ Standard BSD and Linux coreutils ported to .NET.
 
 ## Pathname globbing policy
 
-`Icod.CoreUtils` intends to provide consistent pathname globbing for appropriate filesystem operands through `Icod.CommandFramework`, rather than relying exclusively on the invoking shell to expand pathnames. This gives utilities a defined cross-platform expansion model when wildcard-bearing operands reach the application unexpanded.
+`Icod.CoreUtils` provides consistent in-process pathname globbing for appropriate filesystem operands through `Icod.CommandFramework`, rather than relying exclusively on the invoking shell to expand pathnames. This gives Class A utilities a defined cross-platform expansion model when wildcard-bearing operands reach the application unexpanded.
 
 Globbing is **command- and operand-specific**. A utility must expand only operands whose semantic role is an eligible filesystem pathname. It must not blindly expand every argument merely because the argument contains wildcard characters. Destination names, names being created, lexical pathname text, expressions, data, and arguments belonging to a child command remain literal unless a tool explicitly defines otherwise.
 
@@ -16,15 +16,17 @@ For this CoreUtils policy, the pathname glob syntax is:
 - `?` — matches exactly one character within one pathname component; it does not consume a pathname separator.
 - `**` — matches zero or more complete pathname components when, and only when, the complete component is exactly `**`. For example, `src/**/*.cs` is recursive, while an occurrence of `**` embedded inside another component does not acquire recursive meaning.
 
-Recursive `**` expansion is pathname selection. It does not imply or enable a utility's own recursive operation. For example, expanding `rm **/*.tmp` produces explicit operands; it does not grant `rm` permission to recursively remove directories. Likewise, expanding a set of pathnames for `chmod` is distinct from `chmod -R`.
+Recursive `**` expansion is pathname selection. It does not imply or enable a utility's own recursive operation. For example, expanding `rm **/*.tmp` produces explicit operands; it does not grant `rm` permission to recursively remove directories. Likewise, expanding a set of pathnames for `chmod` is distinct from `chmod -R`. Wildcards do not match a leading `.` unless the pattern names that period explicitly. Matching is ordinal case-insensitive on Windows and ordinal case-sensitive on other supported hosts.
+
+Class A expansion preserves operand order and repetition. Explicitly named intermediate symbolic-link components may be followed where necessary to reach the named path, while wildcard-discovered symbolic-link directories are not recursively traversed by globbing. Globbing selects pathnames; it does not canonicalize literal operands.
 
 The invoking shell may already have expanded an unquoted pattern before the utility starts. In that case the utility simply receives the resulting literal pathname operands. The policy in this section governs wildcard-bearing pathname operands that reach an `Icod.CoreUtils` application unexpanded.
 
-Unmatched-pattern behavior is a separate command-level policy and is not fixed globally by this declaration. Each participating utility must preserve its own operand semantics and document any command-specific unmatched-pattern behavior when globbing support is implemented.
+For the Class A utilities below, an unmatched pattern is preserved as its original literal operand. Commands then apply their ordinary operand semantics to that literal. The conventional `-` operand is likewise preserved for commands that use it as a standard-input or standard-output sentinel.
 
-### Utilities in which globbing will be implemented
+### Class A utilities with in-process globbing
 
-The following utilities are the committed globbing implementation set. This declaration records intended behavior; it does **not** claim that every listed utility already implements the policy in the current release.
+The following utilities implement the repository pathname-globbing policy for their eligible command-line pathname operands.
 
 | Area | Utilities |
 | --- | --- |
@@ -36,7 +38,14 @@ The following utilities are the committed globbing implementation set. This decl
 | Removal and destructive operations | `rm`, `rmdir`, `shred` |
 | Other pathname operations | `sync`, `touch`, `truncate` |
 
-Eligibility remains operand-specific even for utilities in this table. In particular, source collections may be expandable while destinations and other singular control operands remain literal. For example, the source operands of `cp`, `mv`, and `install` are candidates for expansion, while their destination operand is not. Similarly, an option such as `--reference=FILE` does not automatically become expandable merely because the utility also accepts expandable primary pathname operands.
+Eligibility remains operand-specific even for utilities in this table. In particular, source collections may be expandable while destinations and other singular control operands remain literal. The following qualifications are part of the Class A contract:
+
+- `cp`, `mv`, and ordinary file-copy forms of `install` expand source operands only. Destination operands and `--target-directory` values remain literal. `install -d` directory-creation operands remain literal because they name objects to be created.
+- Option values such as `--reference=FILE` remain literal unless a command explicitly documents otherwise. Owner/group/mode/context specifications are not pathname patterns.
+- `sort --files0-from`, `wc --files0-from`, and `du --files0-from` treat names read from those lists literally; command-line pathname operands remain independently eligible for expansion.
+- `readlink` and `realpath` preserve the original spelling of non-pattern operands so that `Icod.Path` can interpret the intended pathname dialect. `realpath --relative-to` and `--relative-base` values remain literal.
+- `**` selects explicit operands only. Command recursion such as `ls -R`, `chmod -R`, ownership recursion, `rm -r`, `rmdir --parents`, and `du` traversal remains controlled by each utility's own options and semantics.
+- Old-style `od` offset/label operands are classified before pathname expansion, so only actual file operands are globbed.
 
 ### Utilities in which CommandFramework globbing will not apply
 

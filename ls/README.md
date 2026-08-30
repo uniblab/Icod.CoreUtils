@@ -10,6 +10,12 @@
 ls [OPTION]... [FILE]...
 ```
 
+## PATHNAME GLOBBING
+
+Command-line `FILE` operands that contain supported pathname patterns are expanded in-process according to the repository policy. With no operands, the current directory remains the implicit operand. Matches preserve operand order and repetition; unmatched patterns are preserved as literal operands.
+
+A `**` pattern selects explicit listing roots or entries only. It does not enable the command's own recursive listing behavior; recursion remains controlled by `-R`/`--recursive`.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.Ls` is a managed .NET implementation of GNU Coreutils `ls(1)`, modeled on GNU Coreutils 9.11.

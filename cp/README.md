@@ -12,6 +12,12 @@ cp [OPTION]... SOURCE... DIRECTORY
 cp [OPTION]... -t DIRECTORY SOURCE...
 ```
 
+## PATHNAME GLOBBING
+
+Source operands that contain supported pathname patterns are expanded in-process according to the repository policy. Matches preserve source-operand order and repetition; unmatched source patterns are preserved as literal operands.
+
+The destination operand is never glob-expanded. In `-t`/`--target-directory` form, the target-directory option value remains literal while the positional source operands are eligible for expansion. A `**` pattern selects source operands only and does not enable recursive copying; directory recursion remains controlled by the command's recursive options.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.Cp` is a managed .NET implementation of GNU Coreutils `cp(1)`, modeled on GNU Coreutils 9.11.
