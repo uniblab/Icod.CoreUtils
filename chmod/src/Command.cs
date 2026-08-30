@@ -14,6 +14,7 @@ using SystemFileCreationMaskProvider = Icod.CommandFramework.FileSystem.Modes.Sy
 using Icod.CommandFramework.FileSystem.Mutation;
 using Icod.CommandFramework.FileSystem.RecursiveMutation;
 using Icod.CommandFramework.FileSystem.Traversal;
+using Icod.CoreUtils.Shared.FileSystem.Traversal;
 
 /// <summary>
 /// Implements GNU <c>chmod</c> over the shared metadata, traversal, and mutation contracts.
@@ -173,6 +174,13 @@ public static class Command {
 				modeSource = ModeSource.FromReference( referenceMode.Mode );
 				paths = operands;
 			}
+
+			var expansion = await PathnameOperandExpander.ExpandAsync(
+				paths,
+				readOnlyProvider,
+				cancellationToken: context.CancellationToken
+			).ConfigureAwait( false );
+			paths = expansion.Operands.ToArray();
 
 			var reporting = ResolveReportingMode( parsed );
 			var quiet = parsed.HasOption( "quiet" );

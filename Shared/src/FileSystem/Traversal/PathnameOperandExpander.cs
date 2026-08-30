@@ -64,4 +64,43 @@ public static class PathnameOperandExpander {
 		).ConfigureAwait( false );
 	}
 
+	/// <summary>
+	/// Expands pathname operands through an injected read-only filesystem provider.
+	/// </summary>
+	/// <param name="operands">The operands which the command has classified as pathnames.</param>
+	/// <param name="provider">The read-only filesystem provider used for expansion.</param>
+	/// <param name="options">Optional pathname expansion behavior.</param>
+	/// <param name="cancellationToken">A token used to cancel traversal.</param>
+	/// <returns>The canonical pathname expansion result.</returns>
+	public static async Task<PathnameOperandExpansionResult> ExpandAsync(
+		IEnumerable<string> operands,
+		IReadOnlyFileSystemProvider provider,
+		PathnameExpansionOptions? options = null,
+		CancellationToken cancellationToken = default
+	) {
+		ArgumentNullException.ThrowIfNull(
+			operands
+		);
+		ArgumentNullException.ThrowIfNull(
+			provider
+		);
+
+		var operandList = operands as IReadOnlyList<string>
+			?? operands.ToArray()
+		;
+		var expander = new PathnameExpander(
+			provider
+		);
+		var operandOptions = new PathnameOperandExpansionOptions {
+			ExpansionOptions = options ?? new PathnameExpansionOptions {
+				SymbolicLinkMode = SymbolicLinkTraversalMode.RootsOnly
+			}
+		};
+		return await expander.ExpandOperandsAsync(
+			operandList,
+			operandOptions,
+			cancellationToken
+		).ConfigureAwait( false );
+	}
+
 }

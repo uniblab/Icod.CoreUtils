@@ -29,6 +29,38 @@ public sealed class CommandTests {
 		Assert.Equal( PathDereferenceMode.FollowEligiblePathIndirection, request.DereferenceMode );
 	}
 
+	/// <summary>Verifies pathname wildcards expand before mode mutation.</summary>
+	[Fact]
+	public async Task ExpandsPathnameOperandsBeforeMutation() {
+		var root = CreateTemporaryDirectory();
+		var first = System.IO.Path.Combine( root, "first.txt" );
+		var second = System.IO.Path.Combine( root, "second.txt" );
+		await File.WriteAllTextAsync( first, "one" );
+		await File.WriteAllTextAsync( second, "two" );
+		try {
+			var metadata = new TestMetadataProvider( SystemReadOnlyFileSystemProvider.Instance ) {
+				DefaultMode = Convert.ToInt32( "644", 8 )
+			};
+			var mutation = new RecordingMutationProvider();
+			var status = await ChModCommand.RunAsync(
+				new[] { "600", System.IO.Path.Combine( root, "*.txt" ) },
+				CreateContext( new StringWriter(), new StringWriter() ),
+				SystemReadOnlyFileSystemProvider.Instance,
+				metadata,
+				mutation,
+				new FixedMaskProvider( FileCreationMask.None )
+			);
+			Assert.Equal( CommandExitCodes.Success, status );
+			Assert.Equal( 2, mutation.ModeRequests.Count );
+			Assert.Contains( mutation.ModeRequests, request => request.Path == first );
+			Assert.Contains( mutation.ModeRequests, request => request.Path == second );
+		} finally {
+			File.Delete( first );
+			File.Delete( second );
+			Directory.Delete( root );
+		}
+	}
+
 	/// <summary>Verifies symbolic modes beginning with a dash are not mistaken for command options.</summary>
 	[Fact]
 	public async Task AcceptsDashPrefixedSymbolicModeAndAppliesUmask() {
