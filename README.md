@@ -6,7 +6,7 @@ Standard BSD and Linux coreutils ported to .NET.
 
 ## Pathname globbing policy
 
-`Icod.CoreUtils` provides consistent in-process pathname globbing for appropriate filesystem operands through `Icod.CommandFramework`, rather than relying exclusively on the invoking shell to expand pathnames. This gives Class A utilities a defined cross-platform expansion model when wildcard-bearing operands reach the application unexpanded.
+`Icod.CoreUtils` provides consistent in-process pathname globbing for appropriate filesystem operands through `Icod.CommandFramework`, rather than relying exclusively on the invoking shell to expand pathnames. This gives Class A and Class B utilities a defined cross-platform expansion model when wildcard-bearing operands reach the application unexpanded.
 
 Globbing is **command- and operand-specific**. A utility must expand only operands whose semantic role is an eligible filesystem pathname. It must not blindly expand every argument merely because the argument contains wildcard characters. Destination names, names being created, lexical pathname text, expressions, data, and arguments belonging to a child command remain literal unless a tool explicitly defines otherwise.
 
@@ -47,6 +47,32 @@ Eligibility remains operand-specific even for utilities in this table. In partic
 - `**` selects explicit operands only. Command recursion such as `ls -R`, `chmod -R`, ownership recursion, `rm -r`, `rmdir --parents`, and `du` traversal remains controlled by each utility's own options and semantics.
 - Old-style `od` offset/label operands are classified before pathname expansion, so only actual file operands are globbed.
 
+### Class B utilities with slot-aware in-process globbing
+
+Class B uses the same pathname syntax, leading-dot rule, platform case behavior, symbolic-link traversal policy, and literal-preservation rules as Class A, but it preserves the command's syntactic arity. A singular pathname slot is expanded independently: a literal operand remains literal, an unmatched pattern remains literal, exactly one match replaces the pattern, and more than one match is an error. Matches from one singular slot never spill into another argument position.
+
+Some Class B commands are mode-aware. An argument position is eligible only when the command grammar has already identified it as an existing-path input. Data operands, destinations, names being created, symbolic-link payload text, and option values remain literal unless a command explicitly documents otherwise.
+
+| Area | Utilities |
+| --- | --- |
+| Encoded-data input | `base32`, `base64`, `basenc` |
+| Fixed-arity file comparison | `comm`, `join` |
+| Splitting, filtering, indexing, and ordering | `csplit`, `split`, `uniq`, `ptx`, `shuf`, `tsort` |
+| Link and name operations | `ln`, `link`, `unlink` |
+| Configuration and accounting input | `dircolors`, `users`, `who` |
+
+The following qualifications are part of the Class B contract:
+
+- `base32`, `base64`, `basenc`, and `tsort` singular-expand their optional input `FILE`; `-` remains standard input.
+- `comm` and `join` expand `FILE1` and `FILE2` independently. Each slot may resolve to exactly one pathname, but expansion never flattens the two slots into a shared operand list.
+- `csplit` expands only its initial input `FILE`; every following `PATTERN` remains command-language syntax.
+- `split` expands only its input `FILE`; output `PREFIX` remains literal. `uniq` likewise expands only `INPUT`; `OUTPUT` remains literal.
+- `ptx` uses collection expansion for GNU-extension input operands. Traditional `[INPUT [OUTPUT]]` mode singular-expands `INPUT` and leaves `OUTPUT` literal. Break/ignore/only parameter-file option values remain literal.
+- `shuf` singular-expands its positional `FILE` only in ordinary file mode. `--echo` operands are data, `--input-range` has no pathname operand, and `--output` and `--random-source` values remain literal.
+- `ln` never expands symbolic-link targets. Hard-link sources use collection expansion only when the already-selected grammar targets a directory; otherwise the source is a singular slot. Destination names and target-directory operands remain literal.
+- `link` singular-expands existing source `FILE1` while creation name `FILE2` remains literal. `unlink` singular-expands its one pathname and rejects multiple matches before attempting removal.
+- `dircolors` and `users` singular-expand their optional input `FILE`. `who` singular-expands only the one-operand accounting-file form; the traditional two-operand form remains literal control syntax.
+
 ### Utilities in which CommandFramework globbing will not apply
 
 The following utilities will **not** perform `Icod.CommandFramework` pathname expansion. This does not prevent an invoking shell from expanding a pattern before launching the utility; it means the utility itself will not reinterpret wildcard-bearing arguments as filesystem glob patterns.
@@ -57,10 +83,12 @@ The following utilities will **not** perform `Icod.CommandFramework` pathname ex
 | Numeric, data, and string operations | `echo`, `expr`, `factor`, `numfmt`, `printf`, `seq`, `sleep`, `tr`, `yes` |
 | Pure status commands | `false`, `true` |
 | Creation and template commands | `mkdir`, `mkfifo`, `mknod`, `mktemp` |
+| Lexical and destination pathname grammars | `basename`, `dirname`, `pathchk`, `tee` |
+| Singular control and option-file grammars | `chroot`, `date`, `stty` |
 | Command wrappers and executors | `env`, `nice`, `nohup`, `runcon`, `stdbuf`, `timeout` |
 | Special command grammars | `dd`, `test` |
 | Multicall dispatcher | `coreutils` |
 
-This exclusion is intentional. Creation-oriented utilities must preserve the names they are asked to create. Data- and expression-oriented utilities may legitimately receive `*`, `?`, or `**` as ordinary text. Wrapper utilities must pass the child command and its arguments through without reinterpreting them. `dd` and `test` have command grammars in which automatic argv expansion would alter the meaning of the command. The `coreutils` multicall dispatcher likewise leaves pathname policy to the selected utility rather than applying globbing itself.
+This exclusion is intentional. Creation-oriented utilities must preserve the names they are asked to create. Data- and expression-oriented utilities may legitimately receive `*`, `?`, or `**` as ordinary text. `basename` and `dirname` operate lexically on supplied pathname-shaped strings, while `pathchk` examines the pathname spelling itself. `tee` operands are output destinations. `chroot` keeps its process-root boundary explicit, and the path-valued arguments accepted by `date` and `stty` are option/control values rather than general input pathname operands. Wrapper utilities must pass the child command and its arguments through without reinterpreting them. `dd` and `test` have command grammars in which automatic argv expansion would alter the meaning of the command. The `coreutils` multicall dispatcher likewise leaves pathname policy to the selected utility rather than applying globbing itself.
 
-Utilities not listed in either table remain intentionally undecided. Their pathname roles will be reviewed individually before a globbing policy is assigned to them.
+The Class A, Class B, and no-internal-globbing tables above define the pathname-expansion policy for the current command suite. New utilities or new operand forms must choose their pathname class explicitly rather than inheriting globbing merely because an argument happens to contain wildcard characters.

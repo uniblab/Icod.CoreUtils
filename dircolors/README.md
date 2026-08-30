@@ -10,6 +10,10 @@
 dircolors [OPTION]... [FILE]
 ```
 
+## PATHNAME GLOBBING
+
+The optional database `FILE` is a Class B singular pathname slot. A wildcard-bearing operand must resolve to at most one pathname; an unmatched pattern remains literal and multiple matches are rejected. `-` remains the standard-input database sentinel. Option values are not pathname-expanded.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.DirColors` is a managed .NET implementation of GNU Coreutils `dircolors(1)`, modeled on GNU Coreutils 9.11.

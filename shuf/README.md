@@ -12,6 +12,10 @@ shuf -e [OPTION]... [ARG]...
 shuf -i LO-HI [OPTION]...
 ```
 
+## PATHNAME GLOBBING
+
+Only ordinary file-input mode treats the positional `FILE` as a Class B singular pathname slot. A wildcard-bearing `FILE` must resolve to at most one pathname; an unmatched pattern remains literal and multiple matches are rejected. Under `--echo`, positional `ARG` values are data and are never globbed; `--input-range` has no pathname operand. `--output` and `--random-source` values remain literal option arguments.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.Shuf` is a managed .NET implementation of GNU Coreutils `shuf(1)`, modeled on GNU Coreutils 9.11.

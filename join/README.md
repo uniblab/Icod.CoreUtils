@@ -10,6 +10,10 @@
 join [OPTION]... FILE1 FILE2
 ```
 
+## PATHNAME GLOBBING
+
+`FILE1` and `FILE2` are independent Class B singular pathname slots. Each wildcard-bearing slot is expanded separately and must resolve to at most one pathname; matches from one slot never spill into the other. An unmatched pattern remains literal, while multiple matches for either slot are an error. `-` retains its standard-input meaning.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.Join` is a managed .NET implementation of GNU Coreutils `join(1)`, modeled on GNU Coreutils 9.11.

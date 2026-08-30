@@ -10,6 +10,10 @@
 users [OPTION]... [FILE]
 ```
 
+## PATHNAME GLOBBING
+
+The optional accounting-database `FILE` is a Class B singular pathname slot. A wildcard-bearing operand must resolve to at most one pathname; an unmatched pattern remains literal and multiple matches are rejected.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.Users` is a managed .NET implementation of GNU Coreutils `users(1)`, modeled on GNU Coreutils 9.11.

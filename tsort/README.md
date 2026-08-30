@@ -10,6 +10,10 @@
 tsort [OPTION] [FILE]
 ```
 
+## PATHNAME GLOBBING
+
+The optional `FILE` operand is a Class B singular pathname slot. A wildcard-bearing operand must resolve to at most one pathname; an unmatched pattern remains literal and multiple matches are rejected. `-` remains the standard-input sentinel.
+
 ## DESCRIPTION
 
 `tsort` writes a total order that is consistent with precedence pairs read from a file or standard input. Batch 24 is audited against GNU Coreutils 9.11.

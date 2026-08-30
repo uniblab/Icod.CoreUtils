@@ -10,6 +10,10 @@
 uniq [OPTION]... [INPUT [OUTPUT]]
 ```
 
+## PATHNAME GLOBBING
+
+Only `INPUT` is a Class B singular pathname slot. A wildcard-bearing input must resolve to at most one pathname; an unmatched pattern remains literal and multiple matches are rejected. `OUTPUT` is a destination pathname and always remains literal. `-` retains its standard-stream meaning.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.Uniq` is a managed .NET implementation of GNU Coreutils `uniq(1)`, modeled on GNU Coreutils 9.11.

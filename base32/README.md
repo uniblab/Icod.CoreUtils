@@ -10,6 +10,10 @@
 base32 [OPTION]... [FILE]
 ```
 
+## PATHNAME GLOBBING
+
+`FILE` is a Class B singular pathname slot. An unexpanded `*`, `?`, or exact-component `**` pattern is accepted only when it resolves to exactly one pathname. An unmatched pattern remains literal, while a pattern matching more than one pathname is rejected rather than changing command arity. `-` remains the standard-input sentinel.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.Base32` is a managed .NET implementation of GNU Coreutils `base32(1)`, modeled on GNU Coreutils 9.11.

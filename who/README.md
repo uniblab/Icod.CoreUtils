@@ -11,6 +11,10 @@ who [OPTION]... [FILE]
 who [OPTION]... ARG1 ARG2
 ```
 
+## PATHNAME GLOBBING
+
+Only the one-operand `[FILE]` form has a Class B singular pathname slot. A wildcard-bearing accounting filename must resolve to at most one pathname; an unmatched pattern remains literal and multiple matches are rejected. The traditional two-operand `ARG1 ARG2` form, such as `who am i`, is control syntax and is never pathname-expanded.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.Who` is a managed .NET implementation of GNU Coreutils `who(1)`, modeled on GNU Coreutils 9.11.

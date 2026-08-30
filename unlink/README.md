@@ -11,6 +11,10 @@ unlink FILE
 unlink OPTION
 ```
 
+## PATHNAME GLOBBING
+
+`FILE` is a Class B singular pathname slot. A wildcard-bearing operand may select exactly one pathname; an unmatched pattern remains literal, while multiple matches are rejected before any removal is attempted. This preserves `unlink`'s deliberately singular operation.
+
 ## DESCRIPTION
 
 `Icod.CoreUtils.Unlink` is a managed .NET implementation of GNU Coreutils `unlink(1)`, modeled on GNU Coreutils 9.11.
