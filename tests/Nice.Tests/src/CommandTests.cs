@@ -30,6 +30,22 @@ public sealed class CommandTests {
 		Assert.True( executor.Called );
 	}
 
+	/// <summary>Verifies GNU accepts an unambiguous prefix of a long option name.</summary>
+	[Fact]
+	public async Task AbbreviatesLongAdjustmentOption() {
+		var priorities = new FakePriorityProvider();
+		var executor = new RecordingExecutor();
+		var status = await Command.RunAsync(
+			new[] { "--adj=4", "child" },
+			CreateContext(),
+			processExecutor: executor,
+			priorityProvider: priorities
+		);
+		Assert.Equal( 0, status );
+		Assert.Equal( 4, priorities.LastSetValue );
+		Assert.NotNull( executor.Options );
+	}
+
 	/// <summary>Verifies GNU numeric parsing accepts leading but rejects trailing whitespace.</summary>
 	[Theory]
 	[InlineData( " 5", true )]

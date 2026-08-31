@@ -51,6 +51,13 @@ public static class Command {
 			options = EnvOptions.Parse( args, originalEnvironment, signals );
 		} catch ( EnvUsageException exception ) {
 			await WriteDiagnosticAsync( stderr, $"env: {exception.Message}", cancellationToken ).ConfigureAwait( false );
+			if ( exception.SuggestSplitString ) {
+				await WriteDiagnosticAsync(
+					stderr,
+					"env: use -[v]S to pass options in shebang lines",
+					cancellationToken
+				).ConfigureAwait( false );
+			}
 			await WriteDiagnosticAsync( stderr, "Try 'env --help' for more information.", cancellationToken ).ConfigureAwait( false );
 			return InternalFailure;
 		}

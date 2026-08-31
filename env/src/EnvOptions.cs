@@ -39,6 +39,21 @@ public sealed class EnvOptions {
 	/// <summary>Gets whether version information was requested.</summary>
 	public bool ShowVersion { get; internal set; }
 
+	private static readonly string[] LongOptionNames = [
+		"--argv0",
+		"--ignore-environment",
+		"--null",
+		"--unset",
+		"--chdir",
+		"--default-signal",
+		"--ignore-signal",
+		"--block-signal",
+		"--list-signal-handling",
+		"--debug",
+		"--split-string",
+		"--help",
+		"--version"
+	];
 	private readonly List<string> _operands = [];
 	private readonly List<string> _unsetNames = [];
 
@@ -89,8 +104,20 @@ public sealed class EnvOptions {
 	) {
 		var token = work[ index ];
 		var equals = token.IndexOf( '=' );
-		var name = 0 <= equals ? token[ ..equals ] : token;
+		var prefix = 0 <= equals ? token[ ..equals ] : token;
 		var attached = 0 <= equals ? token[ ( equals + 1 ).. ] : null;
+		var name = ResolveLongOption(
+			prefix,
+			out var ambiguous
+		);
+		if ( null == name ) {
+			if ( ambiguous ) {
+				throw new EnvUsageException(
+					$"option '{prefix}' is ambiguous"
+				);
+			}
+			return false;
+		}
 		switch ( name ) {
 			case "--help":
 				RequireNoAttachedValue( name, attached );
@@ -154,6 +181,31 @@ public sealed class EnvOptions {
 		}
 	}
 
+	private static string? ResolveLongOption(
+		string prefix,
+		out bool ambiguous
+	) {
+		ambiguous = false;
+		string? match = null;
+		foreach ( var candidate in LongOptionNames ) {
+			if ( !candidate.StartsWith(
+				prefix,
+				StringComparison.Ordinal
+			) ) {
+				continue;
+			}
+			if ( candidate == prefix ) {
+				return candidate;
+			}
+			if ( null != match ) {
+				ambiguous = true;
+				return null;
+			}
+			match = candidate;
+		}
+		return match;
+	}
+
 	private static bool ParseShortOptions(
 		EnvOptions options,
 		List<string> work,
@@ -191,6 +243,12 @@ public sealed class EnvOptions {
 					return true;
 				}
 				default:
+					if ( option is ' ' or '\t' or '\n' or '\v' or '\f' or '\r' ) {
+						throw new EnvUsageException(
+							$"invalid option -- '{option}'",
+							suggestSplitString: true
+						);
+					}
 					throw new EnvUsageException( $"invalid option -- '{option}'" );
 			}
 		}
@@ -292,6 +350,14 @@ public sealed class EnvOptions {
 /// Reports a command-line syntax error for GNU <c>env</c>.
 /// </summary>
 public sealed class EnvUsageException : Exception {
+	/// <summary>Gets whether the GNU shebang split-string guidance should accompany this error.</summary>
+	public bool SuggestSplitString { get; }
+
 	/// <summary>Initializes a usage exception.</summary>
-	public EnvUsageException( string message ) : base( message ) { }
+	public EnvUsageException(
+		string message,
+		bool suggestSplitString = false
+	) : base( message ) {
+		this.SuggestSplitString = suggestSplitString;
+	}
 }

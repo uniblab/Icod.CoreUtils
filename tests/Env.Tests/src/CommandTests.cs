@@ -27,6 +27,58 @@ public sealed class CommandTests {
 		Assert.Equal( "A=1\0", Text( output ) );
 	}
 
+	/// <summary>Verifies GNU accepts an unambiguous prefix of a long option name.</summary>
+	[Fact]
+	public async Task AbbreviatesUniqueLongOption() {
+		var source = ProcessEnvironment.CreateEmptyBuilder().Set( "OLD", "value" ).Build();
+		var output = new MemoryStream();
+		var exitCode = await Command.RunAsync(
+			[ "--ignore-e", "A=1" ],
+			stdout: output,
+			stderr: new MemoryStream(),
+			sourceEnvironment: source
+		);
+		Assert.Equal( 0, exitCode );
+		Assert.Equal(
+			string.Concat( "A=1", Environment.NewLine ),
+			Text( output )
+		);
+	}
+
+	/// <summary>Verifies GNU rejects an ambiguous long-option prefix.</summary>
+	[Fact]
+	public async Task RejectsAmbiguousLongOption() {
+		var error = new MemoryStream();
+		var exitCode = await Command.RunAsync(
+			[ "--ignore" ],
+			stdout: new MemoryStream(),
+			stderr: error
+		);
+		Assert.Equal( 125, exitCode );
+		Assert.Contains(
+			"ambiguous",
+			Text( error ),
+			StringComparison.Ordinal
+		);
+	}
+
+	/// <summary>Verifies GNU diagnoses a whitespace-bearing shebang option and recommends <c>-S</c>.</summary>
+	[Fact]
+	public async Task ShebangWhitespaceOptionSuggestsSplitString() {
+		var error = new MemoryStream();
+		var exitCode = await Command.RunAsync(
+			[ "-i command" ],
+			stdout: new MemoryStream(),
+			stderr: error
+		);
+		Assert.Equal( 125, exitCode );
+		Assert.Contains(
+			"use -[v]S",
+			Text( error ),
+			StringComparison.Ordinal
+		);
+	}
+
 	/// <summary>Verifies clearing, removal, assignments, lookup, and exact arguments reach F4.</summary>
 	[Fact]
 	public async Task BuildsExactChildEnvironmentAndArguments() {

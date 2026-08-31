@@ -23,6 +23,28 @@ public sealed class CommandTests {
 		Assert.Equal( ProcessCancellationPolicy.LeaveRunning, executor.Options.CancellationPolicy );
 	}
 
+	/// <summary>Verifies GNU accepts unambiguous abbreviations of the standard long options.</summary>
+	[Theory]
+	[InlineData( "--h", "Usage: nohup" )]
+	[InlineData( "--v", "nohup (Icod.CoreUtils) 9.11" )]
+	public async Task AbbreviatesStandardLongOptions(
+		string option,
+		string expected
+	) {
+		var output = new MemoryStream();
+		var exitCode = await Command.RunAsync(
+			[ option ],
+			stdout: output,
+			stderr: new MemoryStream()
+		);
+		Assert.Equal( 0, exitCode );
+		Assert.Contains(
+			expected,
+			Encoding.UTF8.GetString( output.ToArray() ),
+			StringComparison.Ordinal
+		);
+	}
+
 	/// <summary>Verifies terminal output uses one append file for stdout and terminal stderr.</summary>
 	[Fact]
 	public async Task RedirectsTerminalOutputAndErrorToNohupOut() {

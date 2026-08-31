@@ -11,6 +11,10 @@ public static class Command {
 	private const int DefaultInternalFailure = 125;
 	private const int PosixInternalFailure = 127;
 	private static readonly Encoding Utf8 = new UTF8Encoding( false );
+	private static readonly string[] LongOptionNames = [
+		"--help",
+		"--version"
+	];
 
 	/// <summary>Runs GNU <c>nohup</c> asynchronously.</summary>
 	public static async Task<int> RunAsync(
@@ -40,6 +44,32 @@ public static class Command {
 		var operands = new List<string>();
 		if ( 0 < args.Length ) {
 			var token = args[ 0 ];
+			if ( "--" != token && token.StartsWith( "--", StringComparison.Ordinal ) ) {
+				var equals = token.IndexOf( '=' );
+				var prefix = 0 <= equals
+					? token[ ..equals ]
+					: token
+				;
+				var resolved = ResolveLongOption( prefix );
+				if ( null != resolved ) {
+					if ( 0 <= equals ) {
+						await WriteDiagnosticAsync(
+							stderr,
+							commandError,
+							$"nohup: option '{resolved}' doesn't allow an argument",
+							cancellationToken
+						).ConfigureAwait( false );
+						await WriteDiagnosticAsync(
+							stderr,
+							commandError,
+							"Try 'nohup --help' for more information.",
+							cancellationToken
+						).ConfigureAwait( false );
+						return internalFailure;
+					}
+					token = resolved;
+				}
+			}
 			if ( "--help" == token ) {
 				await WriteAsync( stdout, commandOutput, string.Concat( NormalizeLineEndings( HelpText ), Environment.NewLine ), cancellationToken ).ConfigureAwait( false );
 				return 0;
@@ -280,6 +310,28 @@ public static class Command {
 		var bytes = Utf8.GetBytes( string.Concat( message, Environment.NewLine ) );
 		await stream.WriteAsync( bytes, cancellationToken ).ConfigureAwait( false );
 		await stream.FlushAsync( cancellationToken ).ConfigureAwait( false );
+	}
+
+	private static string? ResolveLongOption(
+		string prefix
+	) {
+		string? match = null;
+		foreach ( var candidate in LongOptionNames ) {
+			if ( !candidate.StartsWith(
+				prefix,
+				StringComparison.Ordinal
+			) ) {
+				continue;
+			}
+			if ( candidate == prefix ) {
+				return candidate;
+			}
+			if ( null != match ) {
+				return null;
+			}
+			match = candidate;
+		}
+		return match;
 	}
 
 	private static string NormalizeLineEndings( string value ) => "\n" == Environment.NewLine

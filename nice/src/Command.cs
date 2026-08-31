@@ -10,6 +10,11 @@ using Icod.Processes;
 public static class Command {
 	private const int InternalFailure = 125;
 	private const string ProgramName = "nice";
+	private static readonly string[] LongOptionNames = [
+		"--adjustment",
+		"--help",
+		"--version"
+	];
 
 	/// <summary>Runs <c>nice</c> synchronously for compatibility with historical callers.</summary>
 	public static int Run(
@@ -243,6 +248,28 @@ public static class Command {
 				index++;
 				continue;
 			}
+			if ( "--" != token && token.StartsWith( "--", StringComparison.Ordinal ) ) {
+				var equals = token.IndexOf( '=' );
+				var prefix = 0 <= equals
+					? token[ ..equals ]
+					: token
+				;
+				var resolved = ResolveLongOption( prefix );
+				if ( null == resolved ) {
+					return NiceArguments.Failure(
+						$"unrecognized option '{token}'"
+					);
+				}
+				if ( 0 <= equals && ( "--help" == resolved || "--version" == resolved ) ) {
+					return NiceArguments.Failure(
+						$"option '{resolved}' doesn't allow an argument"
+					);
+				}
+				token = 0 <= equals
+					? string.Concat( resolved, token[ equals.. ] )
+					: resolved
+				;
+			}
 			if ( "--help" == token ) {
 				return NiceArguments.Help;
 			}
@@ -295,6 +322,28 @@ public static class Command {
 			: args.Skip( index + 1 ).ToArray()
 		;
 		return new NiceArguments( adjustment, null != adjustmentText, command, commandArguments, false, false, null );
+	}
+
+	private static string? ResolveLongOption(
+		string prefix
+	) {
+		string? match = null;
+		foreach ( var candidate in LongOptionNames ) {
+			if ( !candidate.StartsWith(
+				prefix,
+				StringComparison.Ordinal
+			) ) {
+				continue;
+			}
+			if ( candidate == prefix ) {
+				return candidate;
+			}
+			if ( null != match ) {
+				return null;
+			}
+			match = candidate;
+		}
+		return match;
 	}
 
 	private static bool IsHistoricalAdjustment( string token ) {
