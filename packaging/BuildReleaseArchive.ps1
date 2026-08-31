@@ -372,20 +372,25 @@ try {
             $standaloneStdBuf = Join-Path $stageDirectory (
                 Get-ExecutableFileName -CommandName 'stdbuf' -Rid $RuntimeIdentifier
             )
+            $stdBufSmokeExecutable = Join-Path $stageDirectory (
+                Get-ExecutableFileName -CommandName 'true' -Rid $RuntimeIdentifier
+            )
             Invoke-Executable `
                 -Path $standaloneStdBuf `
-                -Arguments @('-o0', '/bin/true') `
+                -Arguments @('-o0', $stdBufSmokeExecutable) `
                 -RequireOutput $false
             Invoke-Executable `
                 -Path $routerExecutable `
-                -Arguments @('stdbuf', '-o0', '/bin/true') `
+                -Arguments @('stdbuf', '-o0', $stdBufSmokeExecutable) `
                 -RequireOutput $false
-            Assert-PosixProcessIdentityReplacement `
-                -Path $standaloneStdBuf `
-                -Arguments (@('-o0') + $identityCommandArguments)
-            Assert-PosixProcessIdentityReplacement `
-                -Path $routerExecutable `
-                -Arguments (@('stdbuf', '-o0') + $identityCommandArguments)
+            if ($IsLinuxPlatform) {
+                Assert-PosixProcessIdentityReplacement `
+                    -Path $standaloneStdBuf `
+                    -Arguments (@('-o0') + $identityCommandArguments)
+                Assert-PosixProcessIdentityReplacement `
+                    -Path $routerExecutable `
+                    -Arguments (@('stdbuf', '-o0') + $identityCommandArguments)
+            }
         }
     } else {
         Write-Host "Skipping executable smoke tests because host RID '$currentRid' does not match '$RuntimeIdentifier'."

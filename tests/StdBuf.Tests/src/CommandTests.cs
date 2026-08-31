@@ -153,6 +153,14 @@ public sealed class CommandTests {
 			File.Exists( commandAssembly ),
 			$"Standalone command was not built at '{commandAssembly}'."
 		);
+		var processIdentityProbe = System.IO.Path.Combine(
+			AppContext.BaseDirectory,
+			"stdbuf-buffering-probe"
+		);
+		Assert.True(
+			File.Exists( processIdentityProbe ),
+			$"Missing native process-identity probe: {processIdentityProbe}"
+		);
 
 		var dotnet = Environment.GetEnvironmentVariable(
 			"DOTNET_HOST_PATH"
@@ -171,13 +179,10 @@ public sealed class CommandTests {
 			"-o0"
 		);
 		startInfo.ArgumentList.Add(
-			"/bin/sh"
+			processIdentityProbe
 		);
 		startInfo.ArgumentList.Add(
-			"-c"
-		);
-		startInfo.ArgumentList.Add(
-			"printf '%s' \"$$\""
+			"--process-id"
 		);
 
 		System.Diagnostics.Process? process = null;

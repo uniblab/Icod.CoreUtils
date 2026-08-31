@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 static int drain_available(int descriptor)
@@ -25,8 +26,17 @@ static int drain_available(int descriptor)
     }
 }
 
-int main(void)
+int main(int argc, char **argv)
 {
+    if (argc == 2 && strcmp(argv[1], "--process-id") == 0)
+    {
+        if (printf("%ld", (long)getpid()) < 0)
+            return 9;
+        if (fflush(stdout) != 0)
+            return 10;
+        return 0;
+    }
+
     int descriptors[2];
     int saved_stdout;
     int flags;
