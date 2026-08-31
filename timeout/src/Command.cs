@@ -93,6 +93,10 @@ public static class Command {
 			await WriteDiagnosticAsync( stderr, "timeout: required host signals are unavailable", cancellationToken ).ConfigureAwait( false );
 			return InternalFailure;
 		}
+		var childSignalPolicy = CreateChildSignalPolicy(
+			timeoutSignal,
+			signals
+		);
 
 		if ( cancellationToken.IsCancellationRequested ) return InternalFailure;
 		var started = new TaskCompletionSource<ProcessIdentity>( TaskCreationOptions.RunContinuationsAsynchronously );
@@ -144,6 +148,7 @@ public static class Command {
 			CreateProcessGroup = !parsed.Foreground && !monitorOwnsProcessGroup,
 			ResolveExecutable = true,
 			ReturnLaunchFailureResult = true,
+			SignalPolicy = childSignalPolicy,
 			StandardInput = stdin,
 			StandardOutput = stdout,
 			StandardError = stderr,
@@ -396,6 +401,50 @@ public static class Command {
 			).ConfigureAwait( false );
 		}
 		executorCancellation.Cancel();
+	}
+
+	private static ProcessLaunchSignalPolicy? CreateChildSignalPolicy(
+		ProcessSignal timeoutSignal,
+		IProcessSignalProvider signals
+	) {
+		ArgumentNullException.ThrowIfNull( timeoutSignal );
+		ArgumentNullException.ThrowIfNull( signals );
+		if ( OperatingSystem.IsWindows() ) {
+			return null;
+		}
+
+		var policy = new ProcessLaunchSignalPolicy();
+		if ( 0 < timeoutSignal.Number ) {
+			policy.SetDisposition(
+				timeoutSignal,
+				ProcessSignalLaunchDisposition.Default,
+				ignoreErrors: true
+			);
+		}
+		var terminalInput = signals.ParseSignal(
+			"TTIN"
+		);
+		if ( terminalInput.Succeeded ) {
+			policy.SetDisposition(
+				terminalInput.Value!,
+				ProcessSignalLaunchDisposition.Default,
+				ignoreErrors: true
+			);
+		}
+		var terminalOutput = signals.ParseSignal(
+			"TTOU"
+		);
+		if ( terminalOutput.Succeeded ) {
+			policy.SetDisposition(
+				terminalOutput.Value!,
+				ProcessSignalLaunchDisposition.Default,
+				ignoreErrors: true
+			);
+		}
+		return policy.IsEmpty
+			? null
+			: policy
+		;
 	}
 
 	private static ProcessOperationResult<ProcessSignal> ParseSignal( IProcessSignalProvider signals, string text ) {

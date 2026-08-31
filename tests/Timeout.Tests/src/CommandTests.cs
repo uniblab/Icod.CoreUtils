@@ -265,6 +265,70 @@ public sealed class CommandTests {
 		Assert.Equal( 124, status );
 	}
 
+	/// <summary>Verifies POSIX timeout monitors are not stopped by terminal background-I/O signals.</summary>
+	[Theory]
+	[InlineData( "TTIN" )]
+	[InlineData( "TTOU" )]
+	public async Task StandalonePosixMonitorSuppressesTerminalStopSignals(
+		string signalName
+	) {
+		ArgumentNullException.ThrowIfNull( signalName );
+		if ( OperatingSystem.IsWindows() ) {
+			return;
+		}
+
+		var timeoutAssembly = GetTimeoutAssemblyPath();
+		Assert.True( File.Exists( timeoutAssembly ), $"timeout was not built at '{timeoutAssembly}'." );
+		var dotnet = Environment.GetEnvironmentVariable(
+			"DOTNET_HOST_PATH"
+		) ?? "dotnet";
+		var startInfo = new System.Diagnostics.ProcessStartInfo(
+			dotnet
+		) {
+			UseShellExecute = false
+		};
+		startInfo.ArgumentList.Add(
+			timeoutAssembly
+		);
+		startInfo.ArgumentList.Add(
+			"0.2"
+		);
+		startInfo.ArgumentList.Add(
+			"/bin/sh"
+		);
+		startInfo.ArgumentList.Add(
+			"-c"
+		);
+		startInfo.ArgumentList.Add(
+			$"kill -{signalName} \"$PPID\"; sleep 30"
+		);
+
+		System.Diagnostics.Process? process = null;
+		try {
+			process = System.Diagnostics.Process.Start(
+				startInfo
+			) ?? throw new InvalidOperationException( "Unable to start standalone timeout." );
+			using var waitCancellation = new CancellationTokenSource(
+				TimeSpan.FromSeconds( 10 )
+			);
+			await process.WaitForExitAsync(
+				waitCancellation.Token
+			);
+
+			Assert.Equal( 124, process.ExitCode );
+		} finally {
+			if ( null != process ) {
+				if ( !process.HasExited ) {
+					process.Kill(
+						entireProcessTree: true
+					);
+					await process.WaitForExitAsync();
+				}
+				process.Dispose();
+			}
+		}
+	}
+
 	/// <summary>Verifies a hexadecimal exponent marker requires decimal exponent digits.</summary>
 	[Theory]
 	[InlineData( "0x1p" )]

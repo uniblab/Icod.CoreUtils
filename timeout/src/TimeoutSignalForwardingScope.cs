@@ -58,10 +58,16 @@ internal sealed class TimeoutSignalForwardingScope : IDisposable {
 			);
 			if ( 0 < timeoutSignal.Number
 				&& timeoutSignal.Name is not "HUP" and not "INT" and not "QUIT" and not "TERM"
-				&& timeoutSignal.Name is not "KILL" and not "STOP"
+				&& timeoutSignal.Name is not "KILL" and not "STOP" and not "TTIN" and not "TTOU"
 			) {
 				scope.Add( (PosixSignal)timeoutSignal.Number, timeoutSignal.Name, forward );
 			}
+			scope.AddTerminalStopSuppression(
+				PosixSignal.SIGTTIN
+			);
+			scope.AddTerminalStopSuppression(
+				PosixSignal.SIGTTOU
+			);
 			return scope;
 		} catch ( Exception exception ) when ( exception is IOException or PlatformNotSupportedException or NotSupportedException ) {
 			scope.Dispose();
@@ -129,6 +135,17 @@ internal sealed class TimeoutSignalForwardingScope : IDisposable {
 			forward
 		);
 	}
+
+	private void AddTerminalStopSuppression(
+		PosixSignal signal
+	) => this._registrations.Add(
+		PosixSignalRegistration.Create(
+			signal,
+			static context => {
+				context.Cancel = true;
+			}
+		)
+	);
 
 	private void Add(
 		PosixSignal signal,
