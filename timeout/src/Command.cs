@@ -94,8 +94,7 @@ public static class Command {
 			return InternalFailure;
 		}
 		var childSignalPolicy = CreateChildSignalPolicy(
-			timeoutSignal,
-			signals
+			timeoutSignal
 		);
 
 		if ( cancellationToken.IsCancellationRequested ) return InternalFailure;
@@ -404,11 +403,9 @@ public static class Command {
 	}
 
 	private static ProcessLaunchSignalPolicy? CreateChildSignalPolicy(
-		ProcessSignal timeoutSignal,
-		IProcessSignalProvider signals
+		ProcessSignal timeoutSignal
 	) {
 		ArgumentNullException.ThrowIfNull( timeoutSignal );
-		ArgumentNullException.ThrowIfNull( signals );
 		if ( OperatingSystem.IsWindows() ) {
 			return null;
 		}
@@ -417,26 +414,6 @@ public static class Command {
 		if ( 0 < timeoutSignal.Number ) {
 			policy.SetDisposition(
 				timeoutSignal,
-				ProcessSignalLaunchDisposition.Default,
-				ignoreErrors: true
-			);
-		}
-		var terminalInput = signals.ParseSignal(
-			"TTIN"
-		);
-		if ( terminalInput.Succeeded ) {
-			policy.SetDisposition(
-				terminalInput.Value!,
-				ProcessSignalLaunchDisposition.Default,
-				ignoreErrors: true
-			);
-		}
-		var terminalOutput = signals.ParseSignal(
-			"TTOU"
-		);
-		if ( terminalOutput.Succeeded ) {
-			policy.SetDisposition(
-				terminalOutput.Value!,
 				ProcessSignalLaunchDisposition.Default,
 				ignoreErrors: true
 			);
