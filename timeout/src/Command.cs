@@ -109,6 +109,7 @@ public static class Command {
 		forwardingScope = forwardHostSignals && usingSystemExecutor
 			? TimeoutSignalForwardingScope.Create(
 				timeoutSignal,
+				signals,
 				name => {
 					var identity = monitoredIdentity;
 					if ( null != identity ) {

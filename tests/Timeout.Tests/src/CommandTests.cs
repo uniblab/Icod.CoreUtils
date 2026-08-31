@@ -231,6 +231,40 @@ public sealed class CommandTests {
 		}
 	}
 
+	/// <summary>Verifies standalone Linux timeout preserves an inherited ignored interrupt disposition.</summary>
+	[Fact]
+	public async Task StandaloneLinuxMonitorHonorsInheritedIgnoredInterrupt() {
+		if ( !OperatingSystem.IsLinux() ) {
+			return;
+		}
+
+		var status = await RunStandaloneWithIgnoredInterruptAsync(
+			"0.2",
+			"/bin/sh",
+			"-c",
+			"kill -INT \"$PPID\"; sleep 30"
+		);
+		Assert.Equal( 124, status );
+	}
+
+	/// <summary>Verifies an explicitly selected timeout signal is handled even when inherited as ignored.</summary>
+	[Fact]
+	public async Task StandaloneLinuxMonitorHandlesSelectedIgnoredTimeoutSignal() {
+		if ( !OperatingSystem.IsLinux() ) {
+			return;
+		}
+
+		var status = await RunStandaloneWithIgnoredInterruptAsync(
+			"--signal=INT",
+			"--kill-after=0.2",
+			"0.2",
+			"/bin/sh",
+			"-c",
+			"sleep 30"
+		);
+		Assert.Equal( 124, status );
+	}
+
 	/// <summary>Verifies a hexadecimal exponent marker requires decimal exponent digits.</summary>
 	[Theory]
 	[InlineData( "0x1p" )]
@@ -271,6 +305,70 @@ public sealed class CommandTests {
 		var executor = FakeExecutor.Exited( 12 );
 		var status = await Command.RunAsync( new[] { "--pres", "0", "child" }, stdout: Stream.Null, stderr: Stream.Null, processExecutor: executor, signalProvider: new FakeSignals( executor ), clock: new NeverClock() );
 		Assert.Equal( 12, status );
+	}
+
+	private static async Task<int> RunStandaloneWithIgnoredInterruptAsync(
+		params string[] timeoutArguments
+	) {
+		var timeoutAssembly = GetTimeoutAssemblyPath();
+		if ( !File.Exists( timeoutAssembly ) ) {
+			throw new FileNotFoundException(
+				"Standalone timeout was not built.",
+				timeoutAssembly
+			);
+		}
+		var dotnet = Environment.GetEnvironmentVariable(
+			"DOTNET_HOST_PATH"
+		) ?? "dotnet";
+		var startInfo = new System.Diagnostics.ProcessStartInfo(
+			"/bin/sh"
+		) {
+			UseShellExecute = false
+		};
+		startInfo.ArgumentList.Add(
+			"-c"
+		);
+		startInfo.ArgumentList.Add(
+			"trap '' INT; exec \"$@\""
+		);
+		startInfo.ArgumentList.Add(
+			"icod-timeout-ignore-test"
+		);
+		startInfo.ArgumentList.Add(
+			dotnet
+		);
+		startInfo.ArgumentList.Add(
+			timeoutAssembly
+		);
+		foreach ( var argument in timeoutArguments ) {
+			startInfo.ArgumentList.Add(
+				argument
+			);
+		}
+
+		System.Diagnostics.Process? process = null;
+		try {
+			process = System.Diagnostics.Process.Start(
+				startInfo
+			) ?? throw new InvalidOperationException( "Unable to start standalone timeout." );
+			using var waitCancellation = new CancellationTokenSource(
+				TimeSpan.FromSeconds( 10 )
+			);
+			await process.WaitForExitAsync(
+				waitCancellation.Token
+			);
+			return process.ExitCode;
+		} finally {
+			if ( null != process ) {
+				if ( !process.HasExited ) {
+					process.Kill(
+						entireProcessTree: true
+					);
+					await process.WaitForExitAsync();
+				}
+				process.Dispose();
+			}
+		}
 	}
 
 	private static string GetTimeoutAssemblyPath() {

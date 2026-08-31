@@ -12,17 +12,50 @@ internal sealed class TimeoutSignalForwardingScope : IDisposable {
 	/// <summary>Creates forwarding registrations on POSIX hosts and returns null on Windows.</summary>
 	internal static TimeoutSignalForwardingScope? Create(
 		ProcessSignal timeoutSignal,
+		IProcessSignalProvider signals,
 		Action<string> forward
 	) {
 		ArgumentNullException.ThrowIfNull( timeoutSignal );
+		ArgumentNullException.ThrowIfNull( signals );
 		ArgumentNullException.ThrowIfNull( forward );
 		if ( OperatingSystem.IsWindows() ) return null;
 		var scope = new TimeoutSignalForwardingScope();
+		var currentProcess = new ProcessIdentity(
+			Environment.ProcessId
+		);
 		try {
-			scope.Add( PosixSignal.SIGHUP, "HUP", forward );
-			scope.Add( PosixSignal.SIGINT, "INT", forward );
-			scope.Add( PosixSignal.SIGQUIT, "QUIT", forward );
-			scope.Add( PosixSignal.SIGTERM, "TERM", forward );
+			scope.AddIfNeeded(
+				PosixSignal.SIGHUP,
+				"HUP",
+				timeoutSignal,
+				signals,
+				currentProcess,
+				forward
+			);
+			scope.AddIfNeeded(
+				PosixSignal.SIGINT,
+				"INT",
+				timeoutSignal,
+				signals,
+				currentProcess,
+				forward
+			);
+			scope.AddIfNeeded(
+				PosixSignal.SIGQUIT,
+				"QUIT",
+				timeoutSignal,
+				signals,
+				currentProcess,
+				forward
+			);
+			scope.AddIfNeeded(
+				PosixSignal.SIGTERM,
+				"TERM",
+				timeoutSignal,
+				signals,
+				currentProcess,
+				forward
+			);
 			if ( 0 < timeoutSignal.Number
 				&& timeoutSignal.Name is not "HUP" and not "INT" and not "QUIT" and not "TERM"
 				&& timeoutSignal.Name is not "KILL" and not "STOP"
@@ -59,6 +92,42 @@ internal sealed class TimeoutSignalForwardingScope : IDisposable {
 				signalName
 			);
 		}
+	}
+
+	private void AddIfNeeded(
+		PosixSignal signal,
+		string name,
+		ProcessSignal timeoutSignal,
+		IProcessSignalProvider signals,
+		ProcessIdentity currentProcess,
+		Action<string> forward
+	) {
+		var canObserveDisposition = ProcessControlCapabilities.None
+			!= ( signals.Capabilities & ProcessControlCapabilities.SignalDisposition )
+		;
+		if ( canObserveDisposition ) {
+			var parsed = signals.ParseSignal(
+				name
+			);
+			if ( parsed.Succeeded
+				&& parsed.Value!.Number != timeoutSignal.Number
+			) {
+				var disposition = signals.ObserveDisposition(
+					currentProcess,
+					parsed.Value
+				);
+				if ( disposition.Succeeded
+					&& ProcessSignalDisposition.Ignored == disposition.Value
+				) {
+					return;
+				}
+			}
+		}
+		this.Add(
+			signal,
+			name,
+			forward
+		);
 	}
 
 	private void Add(
