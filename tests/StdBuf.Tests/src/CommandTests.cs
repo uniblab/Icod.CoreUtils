@@ -1,5 +1,6 @@
 namespace Icod.CoreUtils.StdBuf.Tests;
 
+using System.Runtime.InteropServices;
 using Icod.Processes;
 using Xunit;
 
@@ -297,6 +298,61 @@ public sealed class CommandTests {
 			"failed to run command 'blocked': permission denied",
 			cannotInvokeError.ToString()
 		);
+	}
+
+	[Fact]
+	public void LinuxPlatformPrefersArchitectureQualifiedNativeShim() {
+		if ( !OperatingSystem.IsLinux() ) {
+			return;
+		}
+
+		var architectureName = RuntimeInformation.OSArchitecture switch {
+			Architecture.X64 => "x64",
+			Architecture.Arm64 => "arm64",
+			_ => null
+		};
+		if ( null == architectureName ) {
+			return;
+		}
+
+		var fallbackPath = System.IO.Path.Combine(
+			AppContext.BaseDirectory,
+			"libicodstdbuf.so"
+		);
+		Assert.True(
+			File.Exists( fallbackPath ),
+			$"Missing native buffering shim: {fallbackPath}"
+		);
+		var qualifiedPath = System.IO.Path.Combine(
+			AppContext.BaseDirectory,
+			$"libicodstdbuf-linux-{architectureName}.so"
+		);
+		var createdQualifiedShim = false;
+		if ( !File.Exists( qualifiedPath ) ) {
+			File.Copy(
+				fallbackPath,
+				qualifiedPath
+			);
+			createdQualifiedShim = true;
+		}
+
+		try {
+			Assert.True(
+				SystemStdBufPlatform.Instance.TryGetPreloadConfiguration(
+					out var configuration,
+					out var unsupportedReason
+				),
+				unsupportedReason
+			);
+			Assert.Equal(
+				System.IO.Path.GetFullPath( qualifiedPath ),
+				configuration.LibraryPath
+			);
+		} finally {
+			if ( createdQualifiedShim ) {
+				File.Delete( qualifiedPath );
+			}
+		}
 	}
 
 	[Fact]

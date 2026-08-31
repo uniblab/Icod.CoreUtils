@@ -4,6 +4,7 @@ namespace Icod.CoreUtils.StdBuf;
 
 using System.Globalization;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using Icod.Processes;
 
 /// <summary>
@@ -496,6 +497,7 @@ public interface IStdBufPlatform {
 /// </summary>
 public sealed class SystemStdBufPlatform : IStdBufPlatform {
 	private const string NativeShimName = "libicodstdbuf.so";
+	private const string NativeShimPrefix = "libicodstdbuf-linux-";
 
 	/// <summary>Gets the shared system platform provider.</summary>
 	public static SystemStdBufPlatform Instance {
@@ -516,14 +518,16 @@ public sealed class SystemStdBufPlatform : IStdBufPlatform {
 			return false;
 		}
 
-		var libraryPath = System.IO.Path.GetFullPath(
-			System.IO.Path.Combine(
-				AppContext.BaseDirectory,
-				NativeShimName
-			)
+		var preferredShimName = RuntimeInformation.OSArchitecture switch {
+			Architecture.X64 => $"{NativeShimPrefix}x64.so",
+			Architecture.Arm64 => $"{NativeShimPrefix}arm64.so",
+			_ => NativeShimName
+		};
+		var libraryPath = ResolveNativeShimPath(
+			preferredShimName
 		);
-		if ( !File.Exists( libraryPath ) ) {
-			unsupportedReason = $"the native preload shim '{libraryPath}' is unavailable";
+		if ( null == libraryPath ) {
+			unsupportedReason = $"the native preload shims '{preferredShimName}' and '{NativeShimName}' are unavailable";
 			return false;
 		}
 		if ( libraryPath.Contains( ':' ) || libraryPath.Any( char.IsWhiteSpace ) ) {
@@ -538,5 +542,33 @@ public sealed class SystemStdBufPlatform : IStdBufPlatform {
 		);
 		unsupportedReason = string.Empty;
 		return true;
+	}
+
+	private static string? ResolveNativeShimPath(
+		string preferredShimName
+	) {
+		var preferredPath = System.IO.Path.GetFullPath(
+			System.IO.Path.Combine(
+				AppContext.BaseDirectory,
+				preferredShimName
+			)
+		);
+		if ( File.Exists( preferredPath ) ) {
+			return preferredPath;
+		}
+		if ( NativeShimName == preferredShimName ) {
+			return null;
+		}
+
+		var fallbackPath = System.IO.Path.GetFullPath(
+			System.IO.Path.Combine(
+				AppContext.BaseDirectory,
+				NativeShimName
+			)
+		);
+		return File.Exists( fallbackPath )
+			? fallbackPath
+			: null
+		;
 	}
 }

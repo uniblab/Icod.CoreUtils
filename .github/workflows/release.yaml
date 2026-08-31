@@ -135,25 +135,96 @@ jobs:
           retention-days: 7
 
   package:
-    needs: [metadata, validate]
+    needs: [metadata, validate, archives]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-linux-x64
+          path: artifacts/native-archives/linux-x64
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-linux-arm64
+          path: artifacts/native-archives/linux-arm64
+      - name: Stage Linux stdbuf native assets
+        shell: pwsh
+        run: |
+          $nativeDirectory = [System.IO.Path]::GetFullPath('artifacts/native')
+          New-Item -ItemType Directory -Path $nativeDirectory -Force | Out-Null
+
+          foreach ($rid in @('linux-x64', 'linux-arm64')) {
+              $artifactDirectory = Join-Path 'artifacts/native-archives' $rid
+              $archives = @(
+                  Get-ChildItem -LiteralPath $artifactDirectory -File -Filter '*.zip'
+              )
+              if (1 -ne $archives.Count) {
+                  throw "Expected one $rid release archive; found $($archives.Count)."
+              }
+
+              $extractDirectory = Join-Path 'artifacts/native-extract' $rid
+              Expand-Archive `
+                  -LiteralPath $archives[0].FullName `
+                  -DestinationPath $extractDirectory `
+                  -Force
+              $shims = @(
+                  Get-ChildItem `
+                      -LiteralPath $extractDirectory `
+                      -Recurse `
+                      -File `
+                      -Filter 'libicodstdbuf.so'
+              )
+              if (1 -ne $shims.Count) {
+                  throw "Expected one libicodstdbuf.so in the $rid archive; found $($shims.Count)."
+              }
+
+              Copy-Item `
+                  -LiteralPath $shims[0].FullName `
+                  -Destination (Join-Path $nativeDirectory "libicodstdbuf-$rid.so")
+          }
       - name: Pack coreutils
         run: >-
           dotnet pack coreutils/Icod.CoreUtils.Router.csproj
           -c Release
           -o artifacts/release
           -p:ContinuousIntegrationBuild=true
+          -p:StdBufPackNativeAssetDirectory=${{ github.workspace }}/artifacts/native
       - name: Require expected package
         shell: pwsh
         run: |
           $path = 'artifacts/release/Icod.CoreUtils.${{ needs.metadata.outputs.version }}.nupkg'
           if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
               throw "Expected package '$path' was not produced."
+          }
+      - name: Require multi-architecture stdbuf assets
+        shell: pwsh
+        run: |
+          $path = 'artifacts/release/Icod.CoreUtils.${{ needs.metadata.outputs.version }}.nupkg'
+          [xml]$project = Get-Content -LiteralPath 'coreutils/Icod.CoreUtils.Router.csproj' -Raw
+          $targetFramework = @(
+              $project.Project.PropertyGroup.TargetFramework |
+                  Where-Object { -not [string]::IsNullOrWhiteSpace("$_") }
+          )[0]
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $archive = [System.IO.Compression.ZipFile]::OpenRead($path)
+          try {
+              foreach ($assetName in @(
+                  'libicodstdbuf-linux-x64.so',
+                  'libicodstdbuf-linux-arm64.so'
+              )) {
+                  $entryPath = "tools/$targetFramework/any/$assetName"
+                  $entry = $archive.Entries |
+                      Where-Object { $_.FullName -eq $entryPath } |
+                      Select-Object -First 1
+                  if ($null -eq $entry) {
+                      throw "Package '$path' does not contain '$entryPath'."
+                  }
+              }
+          } finally {
+              $archive.Dispose()
           }
       - name: Upload NuGet package
         uses: actions/upload-artifact@v4
