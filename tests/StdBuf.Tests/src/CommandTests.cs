@@ -125,6 +125,99 @@ public sealed class CommandTests {
 		Assert.Equal( "program", options.ArgumentZero );
 	}
 
+	/// <summary>Verifies the standalone host really replaces itself instead of supervising an extra child process.</summary>
+	[Fact]
+	public async Task StandaloneLinuxStdBufPreservesProcessIdentity() {
+		if ( !OperatingSystem.IsLinux() ) {
+			return;
+		}
+
+		var targetFrameworkDirectory = new DirectoryInfo(
+			AppContext.BaseDirectory
+		);
+		var configurationDirectory = targetFrameworkDirectory.Parent
+			?? throw new InvalidOperationException();
+		var testsDirectory = configurationDirectory.Parent?.Parent?.Parent
+			?? throw new InvalidOperationException();
+		var repositoryDirectory = testsDirectory.Parent
+			?? throw new InvalidOperationException();
+		var commandAssembly = System.IO.Path.Combine(
+			repositoryDirectory.FullName,
+			"bin",
+			configurationDirectory.Name,
+			targetFrameworkDirectory.Name,
+			"stdbuf.dll"
+		);
+		Assert.True(
+			File.Exists( commandAssembly ),
+			$"Standalone command was not built at '{commandAssembly}'."
+		);
+
+		var dotnet = Environment.GetEnvironmentVariable(
+			"DOTNET_HOST_PATH"
+		) ?? "dotnet";
+		var startInfo = new System.Diagnostics.ProcessStartInfo(
+			dotnet
+		) {
+			UseShellExecute = false,
+			RedirectStandardOutput = true,
+			RedirectStandardError = true
+		};
+		startInfo.ArgumentList.Add(
+			commandAssembly
+		);
+		startInfo.ArgumentList.Add(
+			"-o0"
+		);
+		startInfo.ArgumentList.Add(
+			"/bin/sh"
+		);
+		startInfo.ArgumentList.Add(
+			"-c"
+		);
+		startInfo.ArgumentList.Add(
+			"printf '%s' \"$$\""
+		);
+
+		System.Diagnostics.Process? process = null;
+		try {
+			process = System.Diagnostics.Process.Start(
+				startInfo
+			) ?? throw new InvalidOperationException( "Unable to start standalone command." );
+			var expectedProcessId = process.Id;
+			var outputTask = process.StandardOutput.ReadToEndAsync();
+			var errorTask = process.StandardError.ReadToEndAsync();
+			using var waitCancellation = new CancellationTokenSource(
+				TimeSpan.FromSeconds( 10 )
+			);
+			await process.WaitForExitAsync(
+				waitCancellation.Token
+			);
+
+			var output = await outputTask;
+			var error = await errorTask;
+			Assert.True(
+				0 == process.ExitCode,
+				$"Standalone command exited with status {process.ExitCode}: {error}"
+			);
+			Assert.True(
+				int.TryParse( output, out var actualProcessId ),
+				$"Replacement command reported an invalid process ID: '{output}'."
+			);
+			Assert.Equal( expectedProcessId, actualProcessId );
+		} finally {
+			if ( null != process ) {
+				if ( !process.HasExited ) {
+					process.Kill(
+						entireProcessTree: true
+					);
+					await process.WaitForExitAsync();
+				}
+				process.Dispose();
+			}
+		}
+	}
+
 	[Fact]
 	public async Task LaterModeOptionReplacesEarlierMode() {
 		var executor = new FakeProcessExecutor();
