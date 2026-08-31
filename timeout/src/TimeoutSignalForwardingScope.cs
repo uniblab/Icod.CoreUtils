@@ -5,6 +5,8 @@ using Icod.Processes;
 
 /// <summary>Owns POSIX signal registrations used to forward terminal and termination signals to a supervised job.</summary>
 internal sealed class TimeoutSignalForwardingScope : IDisposable {
+	private readonly HashSet<string> _suppressed = new( StringComparer.Ordinal );
+	private readonly object _sync = new();
 	private readonly List<PosixSignalRegistration> _registrations = new();
 
 	/// <summary>Creates forwarding registrations on POSIX hosts and returns null on Windows.</summary>
@@ -37,6 +39,28 @@ internal sealed class TimeoutSignalForwardingScope : IDisposable {
 		}
 	}
 
+	/// <summary>Suppresses forwarding when the monitor receives a signal reflected from its own process group.</summary>
+	internal void SuppressForwarding(
+		string signalName
+	) {
+		ArgumentNullException.ThrowIfNull( signalName );
+		lock ( this._sync ) {
+			this._suppressed.Add(
+				signalName
+			);
+		}
+	}
+
+	private bool IsForwardingSuppressed(
+		string signalName
+	) {
+		lock ( this._sync ) {
+			return this._suppressed.Contains(
+				signalName
+			);
+		}
+	}
+
 	private void Add(
 		PosixSignal signal,
 		string name,
@@ -46,7 +70,9 @@ internal sealed class TimeoutSignalForwardingScope : IDisposable {
 			signal,
 			context => {
 				context.Cancel = true;
-				forward( name );
+				if ( !this.IsForwardingSuppressed( name ) ) {
+					forward( name );
+				}
 			}
 		)
 	);

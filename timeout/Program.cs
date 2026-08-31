@@ -29,6 +29,12 @@ public static class Program {
 	) {
 		ArgumentNullException.ThrowIfNull( args );
 
+		if ( !OperatingSystem.IsWindows()
+			&& Command.ShouldCreateMonitorProcessGroup( args )
+		) {
+			_ = TimeoutProcessGroup.TryCreateForCurrentProcess();
+		}
+
 		return Command.RunAsync(
 			args,
 			forwardHostSignals: true

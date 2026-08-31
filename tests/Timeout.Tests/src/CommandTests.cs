@@ -139,6 +139,98 @@ public sealed class CommandTests {
 		Assert.Equal( 124, status );
 	}
 
+	/// <summary>Verifies the standalone POSIX monitor leads the same process group inherited by its command.</summary>
+	[Fact]
+	public async Task StandalonePosixMonitorLeadsTimedProcessGroup() {
+		if ( OperatingSystem.IsWindows() ) {
+			return;
+		}
+
+		var observationPath = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
+			$"icod-timeout-pgid-{Guid.NewGuid():N}"
+		);
+		try {
+			var timeoutAssembly = GetTimeoutAssemblyPath();
+			Assert.True( File.Exists( timeoutAssembly ), $"timeout was not built at '{timeoutAssembly}'." );
+			var dotnet = Environment.GetEnvironmentVariable(
+				"DOTNET_HOST_PATH"
+			) ?? "dotnet";
+			var startInfo = new System.Diagnostics.ProcessStartInfo(
+				dotnet
+			) {
+				UseShellExecute = false
+			};
+			startInfo.ArgumentList.Add(
+				timeoutAssembly
+			);
+			startInfo.ArgumentList.Add(
+				"2"
+			);
+			startInfo.ArgumentList.Add(
+				"/bin/sh"
+			);
+			startInfo.ArgumentList.Add(
+				"-c"
+			);
+			startInfo.ArgumentList.Add(
+				"printf '%s:%s' \"$$\" \"$(ps -o pgid= -p $$)\" > \"$1\"; sleep 30"
+			);
+			startInfo.ArgumentList.Add(
+				"icod-timeout-test"
+			);
+			startInfo.ArgumentList.Add(
+				observationPath
+			);
+
+			using var process = System.Diagnostics.Process.Start(
+				startInfo
+			) ?? throw new InvalidOperationException( "Unable to start standalone timeout." );
+			var timeoutProcessId = process.Id;
+			await process.WaitForExitAsync();
+
+			Assert.Equal( 124, process.ExitCode );
+			Assert.True(
+				File.Exists( observationPath ),
+				"Timed child did not report its process-group identity."
+			);
+			var fields = (
+				await File.ReadAllTextAsync(
+					observationPath
+				)
+			).Split(
+				':'
+			);
+			Assert.Equal( 2, fields.Length );
+			Assert.True(
+				int.TryParse(
+					fields[ 0 ],
+					out var childProcessId
+				)
+			);
+			Assert.True(
+				int.TryParse(
+					fields[ 1 ],
+					out var childProcessGroupId
+				)
+			);
+			Assert.NotEqual(
+				timeoutProcessId,
+				childProcessId
+			);
+			Assert.Equal(
+				timeoutProcessId,
+				childProcessGroupId
+			);
+		} finally {
+			if ( File.Exists( observationPath ) ) {
+				File.Delete(
+					observationPath
+				);
+			}
+		}
+	}
+
 	/// <summary>Verifies a hexadecimal exponent marker requires decimal exponent digits.</summary>
 	[Theory]
 	[InlineData( "0x1p" )]
@@ -179,6 +271,25 @@ public sealed class CommandTests {
 		var executor = FakeExecutor.Exited( 12 );
 		var status = await Command.RunAsync( new[] { "--pres", "0", "child" }, stdout: Stream.Null, stderr: Stream.Null, processExecutor: executor, signalProvider: new FakeSignals( executor ), clock: new NeverClock() );
 		Assert.Equal( 12, status );
+	}
+
+	private static string GetTimeoutAssemblyPath() {
+		var targetFrameworkDirectory = new DirectoryInfo(
+			AppContext.BaseDirectory
+		);
+		var configurationDirectory = targetFrameworkDirectory.Parent
+			?? throw new InvalidOperationException();
+		var testsDirectory = configurationDirectory.Parent?.Parent?.Parent
+			?? throw new InvalidOperationException();
+		var repositoryDirectory = testsDirectory.Parent
+			?? throw new InvalidOperationException();
+		return System.IO.Path.Combine(
+			repositoryDirectory.FullName,
+			"bin",
+			configurationDirectory.Name,
+			targetFrameworkDirectory.Name,
+			"timeout.dll"
+		);
 	}
 
 	private static string GetProcessTestHostPath() {
