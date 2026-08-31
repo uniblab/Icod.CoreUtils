@@ -128,6 +128,59 @@ function Invoke-Tool {
     }
 }
 
+function Assert-PosixProcessIdentityReplacement {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path,
+
+        [Parameter(Mandatory = $true)]
+        [string[]]$Arguments
+    )
+
+    Write-Host "> $Path $($Arguments -join ' ') [process identity]"
+    $startInfo = [System.Diagnostics.ProcessStartInfo]::new($Path)
+    $startInfo.UseShellExecute = $false
+    $startInfo.RedirectStandardOutput = $true
+    $startInfo.RedirectStandardError = $true
+    foreach ($argument in $Arguments) {
+        $startInfo.ArgumentList.Add($argument)
+    }
+
+    $process = [System.Diagnostics.Process]::Start($startInfo)
+    if ($null -eq $process) {
+        throw "Unable to start tool '$Path' for process-identity verification."
+    }
+
+    try {
+        $expectedProcessId = $process.Id
+        if (-not $process.WaitForExit(10000)) {
+            $process.Kill($true)
+            $process.WaitForExit()
+            throw "Tool '$Path' did not exit during process-identity verification."
+        }
+
+        $output = $process.StandardOutput.ReadToEnd()
+        $errorOutput = $process.StandardError.ReadToEnd()
+        if (0 -ne $process.ExitCode) {
+            throw "Tool '$Path' exited with status $($process.ExitCode) during process-identity verification: $errorOutput"
+        }
+
+        [int]$actualProcessId = 0
+        if (-not [int]::TryParse($output.Trim(), [ref]$actualProcessId)) {
+            throw "Tool '$Path' reported an invalid replacement process ID: '$output'."
+        }
+        if ($expectedProcessId -ne $actualProcessId) {
+            throw "Tool '$Path' supervised process $actualProcessId instead of replacing process $expectedProcessId."
+        }
+    } finally {
+        if (-not $process.HasExited) {
+            $process.Kill($true)
+            $process.WaitForExit()
+        }
+        $process.Dispose()
+    }
+}
+
 function Read-ToolSettingsFromPackage {
     param(
         [Parameter(Mandatory = $true)]
@@ -345,6 +398,19 @@ try {
             -RequireOutput:$requireVersionOutput
     }
 
+    if (-not $IsWindowsPlatform) {
+        $identityCommandArguments = @(
+            '/bin/sh',
+            '-c',
+            'printf ''%s'' "$$"'
+        )
+        foreach ($commandName in @('env', 'nice', 'nohup')) {
+            Assert-PosixProcessIdentityReplacement `
+                -Path $routerShim `
+                -Arguments (@($commandName) + $identityCommandArguments)
+        }
+    }
+
     if ($IsLinuxPlatform) {
         $standaloneStdBuf = Get-ExecutablePath `
             -Directory $standaloneOutputPath `
@@ -355,6 +421,9 @@ try {
         Invoke-Tool `
             -Path $routerShim `
             -Arguments @('stdbuf', '-o0', '/bin/true')
+        Assert-PosixProcessIdentityReplacement `
+            -Path $routerShim `
+            -Arguments (@('stdbuf', '-o0') + $identityCommandArguments)
     }
 
     Write-Host ''
