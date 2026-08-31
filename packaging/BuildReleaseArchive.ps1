@@ -131,6 +131,59 @@ function Invoke-Executable {
     }
 }
 
+function Assert-PosixProcessIdentityReplacement {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path,
+
+        [Parameter(Mandatory = $true)]
+        [string[]]$Arguments
+    )
+
+    Write-Host "> $Path $($Arguments -join ' ') [process identity]"
+    $startInfo = [System.Diagnostics.ProcessStartInfo]::new($Path)
+    $startInfo.UseShellExecute = $false
+    $startInfo.RedirectStandardOutput = $true
+    $startInfo.RedirectStandardError = $true
+    foreach ($argument in $Arguments) {
+        $startInfo.ArgumentList.Add($argument)
+    }
+
+    $process = [System.Diagnostics.Process]::Start($startInfo)
+    if ($null -eq $process) {
+        throw "Unable to start executable '$Path' for process-identity verification."
+    }
+
+    try {
+        $expectedProcessId = $process.Id
+        if (-not $process.WaitForExit(10000)) {
+            $process.Kill($true)
+            $process.WaitForExit()
+            throw "Executable '$Path' did not exit during process-identity verification."
+        }
+
+        $output = $process.StandardOutput.ReadToEnd()
+        $errorOutput = $process.StandardError.ReadToEnd()
+        if (0 -ne $process.ExitCode) {
+            throw "Executable '$Path' exited with status $($process.ExitCode) during process-identity verification: $errorOutput"
+        }
+
+        [int]$actualProcessId = 0
+        if (-not [int]::TryParse($output.Trim(), [ref]$actualProcessId)) {
+            throw "Executable '$Path' reported an invalid replacement process ID: '$output'."
+        }
+        if ($expectedProcessId -ne $actualProcessId) {
+            throw "Executable '$Path' supervised process $actualProcessId instead of replacing process $expectedProcessId."
+        }
+    } finally {
+        if (-not $process.HasExited) {
+            $process.Kill($true)
+            $process.WaitForExit()
+        }
+        $process.Dispose()
+    }
+}
+
 function Assert-ArchiveContents {
     param(
         [Parameter(Mandatory = $true)]
@@ -287,6 +340,25 @@ try {
                 -RequireOutput $requireVersionOutput
         }
 
+        if (-not $IsWindowsPlatform) {
+            $identityCommandArguments = @(
+                '/bin/sh',
+                '-c',
+                'printf ''%s'' "$$"'
+            )
+            foreach ($commandName in @('env', 'nice', 'nohup')) {
+                $standaloneExecutable = Join-Path $stageDirectory (
+                    Get-ExecutableFileName -CommandName $commandName -Rid $RuntimeIdentifier
+                )
+                Assert-PosixProcessIdentityReplacement `
+                    -Path $standaloneExecutable `
+                    -Arguments $identityCommandArguments
+                Assert-PosixProcessIdentityReplacement `
+                    -Path $routerExecutable `
+                    -Arguments (@($commandName) + $identityCommandArguments)
+            }
+        }
+
         if ($IsLinuxPlatform) {
             $standaloneStdBuf = Join-Path $stageDirectory (
                 Get-ExecutableFileName -CommandName 'stdbuf' -Rid $RuntimeIdentifier
@@ -299,6 +371,12 @@ try {
                 -Path $routerExecutable `
                 -Arguments @('stdbuf', '-o0', '/bin/true') `
                 -RequireOutput $false
+            Assert-PosixProcessIdentityReplacement `
+                -Path $standaloneStdBuf `
+                -Arguments (@('-o0') + $identityCommandArguments)
+            Assert-PosixProcessIdentityReplacement `
+                -Path $routerExecutable `
+                -Arguments (@('stdbuf', '-o0') + $identityCommandArguments)
         }
     } else {
         Write-Host "Skipping executable smoke tests because host RID '$currentRid' does not match '$RuntimeIdentifier'."
