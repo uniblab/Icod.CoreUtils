@@ -233,6 +233,16 @@ try {
                 Join-Path $stageDirectory $documentationFileName
             )
         }
+
+        if ('stdbuf' -eq $commandName -and $RuntimeIdentifier.StartsWith('linux-', [System.StringComparison]::OrdinalIgnoreCase)) {
+            $publishedStdBufShim = Join-Path $publishDirectory 'libicodstdbuf.so'
+            if (-not (Test-Path -LiteralPath $publishedStdBufShim -PathType Leaf)) {
+                throw "Publish did not produce '$publishedStdBufShim'."
+            }
+            Copy-Item `
+                -LiteralPath $publishedStdBufShim `
+                -Destination (Join-Path $stageDirectory 'libicodstdbuf.so')
+        }
     }
 
     Copy-Item -LiteralPath (Join-Path $repositoryRoot 'LICENSE') -Destination (
@@ -276,6 +286,20 @@ try {
                 -ExpectedExitCode $expectedVersionExitCode `
                 -RequireOutput $requireVersionOutput
         }
+
+        if ($IsLinuxPlatform) {
+            $standaloneStdBuf = Join-Path $stageDirectory (
+                Get-ExecutableFileName -CommandName 'stdbuf' -Rid $RuntimeIdentifier
+            )
+            Invoke-Executable `
+                -Path $standaloneStdBuf `
+                -Arguments @('-o0', '/bin/true') `
+                -RequireOutput $false
+            Invoke-Executable `
+                -Path $routerExecutable `
+                -Arguments @('stdbuf', '-o0', '/bin/true') `
+                -RequireOutput $false
+        }
     } else {
         Write-Host "Skipping executable smoke tests because host RID '$currentRid' does not match '$RuntimeIdentifier'."
     }
@@ -308,6 +332,9 @@ try {
         $expectedFileNames += Get-ExecutableFileName -CommandName $commandName -Rid $RuntimeIdentifier
         $expectedFileNames += "$commandName.README.md"
         $expectedFileNames += "$commandName.LICENSE.txt"
+    }
+    if ($RuntimeIdentifier.StartsWith('linux-', [System.StringComparison]::OrdinalIgnoreCase)) {
+        $expectedFileNames += 'libicodstdbuf.so'
     }
 
     Assert-ArchiveContents `

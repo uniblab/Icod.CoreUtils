@@ -11,6 +11,9 @@ Set-StrictMode -Version Latest
 $IsWindowsPlatform = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform(
     [System.Runtime.InteropServices.OSPlatform]::Windows
 )
+$IsLinuxPlatform = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform(
+    [System.Runtime.InteropServices.OSPlatform]::Linux
+)
 
 function Get-ProjectProperty {
     param(
@@ -179,7 +182,7 @@ function Assert-ToolPackage {
         [string]$ExpectedCommand,
 
         [Parameter(Mandatory = $true)]
-        [string[]]$RequiredAssemblies
+        [string[]]$RequiredFiles
     )
 
     $result = Read-ToolSettingsFromPackage -PackagePath $PackagePath -TargetFramework $TargetFramework
@@ -197,8 +200,8 @@ function Assert-ToolPackage {
             throw "Command '$($command.Name)' in '$PackagePath' uses unexpected runner '$($command.Runner)'."
         }
 
-        foreach ($assembly in $RequiredAssemblies) {
-            $entryPath = "tools/$TargetFramework/any/$assembly"
+        foreach ($fileName in $RequiredFiles) {
+            $entryPath = "tools/$TargetFramework/any/$fileName"
             if (-not ($archive.Entries | Where-Object {
                 $_.FullName -eq $entryPath
             } | Select-Object -First 1)) {
@@ -303,16 +306,19 @@ try {
         throw "Router package '$routerPackagePath' was not produced."
     }
 
-    $commandAssemblies = @('coreutils.dll')
+    $requiredPackageFiles = @('coreutils.dll')
     foreach ($commandName in $commandNames) {
-        $commandAssemblies += "$commandName.dll"
+        $requiredPackageFiles += "$commandName.dll"
+    }
+    if ($IsLinuxPlatform) {
+        $requiredPackageFiles += 'libicodstdbuf.so'
     }
 
     Assert-ToolPackage `
         -PackagePath $routerPackagePath `
         -TargetFramework $targetFramework `
         -ExpectedCommand 'coreutils' `
-        -RequiredAssemblies $commandAssemblies
+        -RequiredFiles $requiredPackageFiles
 
     Write-LocalNuGetConfig -PackageDirectory $packageDirectory -Path $nugetConfigPath
 
@@ -337,6 +343,18 @@ try {
             -Arguments @($commandName, '--version') `
             -ExpectedExitCode $expectedVersionExitCode `
             -RequireOutput:$requireVersionOutput
+    }
+
+    if ($IsLinuxPlatform) {
+        $standaloneStdBuf = Get-ExecutablePath `
+            -Directory $standaloneOutputPath `
+            -CommandName 'stdbuf'
+        Invoke-Tool `
+            -Path $standaloneStdBuf `
+            -Arguments @('-o0', '/bin/true')
+        Invoke-Tool `
+            -Path $routerShim `
+            -Arguments @('stdbuf', '-o0', '/bin/true')
     }
 
     Write-Host ''
