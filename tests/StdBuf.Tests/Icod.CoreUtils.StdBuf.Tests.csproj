@@ -11,6 +11,10 @@
 		<AssemblyName>Icod.CoreUtils.StdBuf.Tests</AssemblyName>
 		<RootNamespace>Icod.CoreUtils.StdBuf.Tests</RootNamespace>
 		<StdBufNativeCompiler Condition=" '$(StdBufNativeCompiler)' == '' ">cc</StdBufNativeCompiler>
+		<StdBufNativeLibraryFlags Condition="$([System.OperatingSystem]::IsLinux())">-shared -fPIC</StdBufNativeLibraryFlags>
+		<StdBufNativeLibraryFlags Condition="$([System.OperatingSystem]::IsMacOS())">-dynamiclib</StdBufNativeLibraryFlags>
+		<StdBufNativeShimFileName Condition="$([System.OperatingSystem]::IsLinux())">libicodstdbuf.so</StdBufNativeShimFileName>
+		<StdBufNativeShimFileName Condition="$([System.OperatingSystem]::IsMacOS())">libicodstdbuf.dylib</StdBufNativeShimFileName>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
 		<PlatformTarget>AnyCPU</PlatformTarget>
@@ -48,8 +52,8 @@
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
 	</PropertyGroup>
-	<Target Name="BuildStdBufNativeTestAssets" AfterTargets="Build" Condition="$([MSBuild]::IsOSPlatform('Linux'))">
-		<Exec Command="&quot;$(StdBufNativeCompiler)&quot; -shared -fPIC -O2 -std=c11 -Wall -Wextra -Werror -o &quot;$(TargetDir)libicodstdbuf.so&quot; &quot;$(MSBuildProjectDirectory)/../../stdbuf/native/icod_stdbuf.c&quot;" />
+	<Target Name="BuildStdBufNativeTestAssets" AfterTargets="Build" Condition=" '$(StdBufNativeShimFileName)' != '' ">
+		<Exec Command="&quot;$(StdBufNativeCompiler)&quot; $(StdBufNativeLibraryFlags) -O2 -std=c11 -Wall -Wextra -Werror -o &quot;$(TargetDir)$(StdBufNativeShimFileName)&quot; &quot;$(MSBuildProjectDirectory)/../../stdbuf/native/icod_stdbuf.c&quot;" />
 		<Exec Command="&quot;$(StdBufNativeCompiler)&quot; -O2 -std=c11 -Wall -Wextra -Werror -o &quot;$(TargetDir)stdbuf-buffering-probe&quot; &quot;$(MSBuildProjectDirectory)/native/buffering_probe.c&quot;" />
 	</Target>
 </Project>

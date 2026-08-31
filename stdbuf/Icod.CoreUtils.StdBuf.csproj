@@ -34,7 +34,11 @@
 		<AssemblyName>stdbuf</AssemblyName>
 		<RootNamespace>Icod.CoreUtils.StdBuf</RootNamespace>
 		<StdBufNativeCompiler Condition=" '$(StdBufNativeCompiler)' == '' ">cc</StdBufNativeCompiler>
-		<StdBufNativeShimPath>$(IntermediateOutputPath)libicodstdbuf.so</StdBufNativeShimPath>
+		<StdBufNativeLibraryFlags Condition="$([System.OperatingSystem]::IsLinux())">-shared -fPIC</StdBufNativeLibraryFlags>
+		<StdBufNativeLibraryFlags Condition="$([System.OperatingSystem]::IsMacOS())">-dynamiclib</StdBufNativeLibraryFlags>
+		<StdBufNativeShimFileName Condition="$([System.OperatingSystem]::IsLinux())">libicodstdbuf.so</StdBufNativeShimFileName>
+		<StdBufNativeShimFileName Condition="$([System.OperatingSystem]::IsMacOS())">libicodstdbuf.dylib</StdBufNativeShimFileName>
+		<StdBufNativeShimPath>$(IntermediateOutputPath)$(StdBufNativeShimFileName)</StdBufNativeShimPath>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
 		<PlatformTarget>AnyCPU</PlatformTarget>
@@ -74,15 +78,15 @@
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
 	</PropertyGroup>
-	<Target Name="BuildStdBufNativeShim" BeforeTargets="CopyFilesToOutputDirectory" Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+	<Target Name="BuildStdBufNativeShim" BeforeTargets="CopyFilesToOutputDirectory" Condition=" '$(StdBufNativeShimFileName)' != '' ">
 		<MakeDir Directories="$(IntermediateOutputPath);$(TargetDir)" />
-		<Exec Command="&quot;$(StdBufNativeCompiler)&quot; -shared -fPIC -O2 -std=c11 -Wall -Wextra -Werror -o &quot;$(StdBufNativeShimPath)&quot; &quot;$(MSBuildProjectDirectory)/native/icod_stdbuf.c&quot;" />
-		<Copy SourceFiles="$(StdBufNativeShimPath)" DestinationFiles="$(TargetDir)libicodstdbuf.so" SkipUnchangedFiles="true" />
+		<Exec Command="&quot;$(StdBufNativeCompiler)&quot; $(StdBufNativeLibraryFlags) -O2 -std=c11 -Wall -Wextra -Werror -o &quot;$(StdBufNativeShimPath)&quot; &quot;$(MSBuildProjectDirectory)/native/icod_stdbuf.c&quot;" />
+		<Copy SourceFiles="$(StdBufNativeShimPath)" DestinationFiles="$(TargetDir)$(StdBufNativeShimFileName)" SkipUnchangedFiles="true" />
 	</Target>
-	<Target Name="PublishStdBufNativeShim" BeforeTargets="ComputeFilesToPublish" DependsOnTargets="BuildStdBufNativeShim" Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+	<Target Name="PublishStdBufNativeShim" BeforeTargets="ComputeFilesToPublish" DependsOnTargets="BuildStdBufNativeShim" Condition=" '$(StdBufNativeShimFileName)' != '' ">
 		<ItemGroup>
 			<ResolvedFileToPublish Include="$(StdBufNativeShimPath)">
-				<RelativePath>libicodstdbuf.so</RelativePath>
+				<RelativePath>$(StdBufNativeShimFileName)</RelativePath>
 				<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
 			</ResolvedFileToPublish>
 		</ItemGroup>

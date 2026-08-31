@@ -146,6 +146,9 @@ public static class Command {
 				preload.Separator,
 				preload.LibraryPath
 			);
+		if ( preload.ForceFlatNamespace ) {
+			options.EnvironmentVariables[ "DYLD_FORCE_FLAT_NAMESPACE" ] = "y";
+		}
 
 		var result = await processExecutor.RunAsync(
 			options,
@@ -458,7 +461,7 @@ public static class Command {
 		stdout.WriteLine( "Otherwise MODE is a byte count; K/M/G/... are powers of 1024," );
 		stdout.WriteLine( "KB/MB/GB/... are powers of 1000, and KiB/MiB/GiB/... are binary prefixes." );
 		stdout.WriteLine();
-		stdout.WriteLine( "Active buffering control is available on supported Linux ELF targets." );
+		stdout.WriteLine( "Active buffering control is available on supported Linux ELF and macOS Mach-O targets." );
 	}
 
 	private static void PrintVersion(
@@ -476,7 +479,8 @@ public static class Command {
 public readonly record struct StdBufPreloadConfiguration(
 	string EnvironmentVariable,
 	string LibraryPath,
-	string Separator
+	string Separator,
+	bool ForceFlatNamespace = false
 );
 
 /// <summary>
@@ -493,11 +497,13 @@ public interface IStdBufPlatform {
 }
 
 /// <summary>
-/// Resolves the repository-owned Linux ELF preload shim used by <c>stdbuf</c>.
+/// Resolves the repository-owned POSIX preload shim used by <c>stdbuf</c>.
 /// </summary>
 public sealed class SystemStdBufPlatform : IStdBufPlatform {
-	private const string NativeShimName = "libicodstdbuf.so";
-	private const string NativeShimPrefix = "libicodstdbuf-linux-";
+	private const string LinuxNativeShimName = "libicodstdbuf.so";
+	private const string LinuxNativeShimPrefix = "libicodstdbuf-linux-";
+	private const string MacOSNativeShimName = "libicodstdbuf.dylib";
+	private const string MacOSNativeShimPrefix = "libicodstdbuf-osx-";
 
 	/// <summary>Gets the shared system platform provider.</summary>
 	public static SystemStdBufPlatform Instance {
@@ -513,39 +519,70 @@ public sealed class SystemStdBufPlatform : IStdBufPlatform {
 		out string unsupportedReason
 	) {
 		configuration = default;
-		if ( !OperatingSystem.IsLinux() ) {
-			unsupportedReason = "the native preload implementation is supported only on Linux ELF targets";
+
+		string nativeShimName;
+		string nativeShimPrefix;
+		string nativeShimExtension;
+		string preloadEnvironmentVariable;
+		var forceFlatNamespace = false;
+		if ( OperatingSystem.IsLinux() ) {
+			nativeShimName = LinuxNativeShimName;
+			nativeShimPrefix = LinuxNativeShimPrefix;
+			nativeShimExtension = "so";
+			preloadEnvironmentVariable = "LD_PRELOAD";
+		} else if ( OperatingSystem.IsMacOS() ) {
+			nativeShimName = MacOSNativeShimName;
+			nativeShimPrefix = MacOSNativeShimPrefix;
+			nativeShimExtension = "dylib";
+			preloadEnvironmentVariable = "DYLD_INSERT_LIBRARIES";
+			forceFlatNamespace = true;
+		} else {
+			unsupportedReason = "the native preload implementation is supported only on Linux ELF and macOS Mach-O targets";
 			return false;
 		}
 
-		var preferredShimName = RuntimeInformation.OSArchitecture switch {
-			Architecture.X64 => $"{NativeShimPrefix}x64.so",
-			Architecture.Arm64 => $"{NativeShimPrefix}arm64.so",
-			_ => NativeShimName
+		var architectureName = RuntimeInformation.OSArchitecture switch {
+			Architecture.X64 => "x64",
+			Architecture.Arm64 => "arm64",
+			_ => null
 		};
+		var preferredShimName = ( null == architectureName )
+			? nativeShimName
+			: $"{nativeShimPrefix}{architectureName}.{nativeShimExtension}"
+		;
 		var libraryPath = ResolveNativeShimPath(
-			preferredShimName
+			preferredShimName,
+			nativeShimName
 		);
 		if ( null == libraryPath ) {
-			unsupportedReason = $"the native preload shims '{preferredShimName}' and '{NativeShimName}' are unavailable";
+			unsupportedReason = ( nativeShimName == preferredShimName )
+				? $"the native preload shim '{nativeShimName}' is unavailable"
+				: $"the native preload shims '{preferredShimName}' and '{nativeShimName}' are unavailable"
+			;
 			return false;
 		}
-		if ( libraryPath.Contains( ':' ) || libraryPath.Any( char.IsWhiteSpace ) ) {
-			unsupportedReason = "the native preload shim path cannot contain ':' or whitespace";
+		if ( libraryPath.Contains( ':' ) ) {
+			unsupportedReason = "the native preload shim path cannot contain ':'";
+			return false;
+		}
+		if ( OperatingSystem.IsLinux() && libraryPath.Any( char.IsWhiteSpace ) ) {
+			unsupportedReason = "the Linux native preload shim path cannot contain whitespace";
 			return false;
 		}
 
 		configuration = new StdBufPreloadConfiguration(
-			"LD_PRELOAD",
+			preloadEnvironmentVariable,
 			libraryPath,
-			":"
+			":",
+			forceFlatNamespace
 		);
 		unsupportedReason = string.Empty;
 		return true;
 	}
 
 	private static string? ResolveNativeShimPath(
-		string preferredShimName
+		string preferredShimName,
+		string fallbackShimName
 	) {
 		var preferredPath = System.IO.Path.GetFullPath(
 			System.IO.Path.Combine(
@@ -556,14 +593,14 @@ public sealed class SystemStdBufPlatform : IStdBufPlatform {
 		if ( File.Exists( preferredPath ) ) {
 			return preferredPath;
 		}
-		if ( NativeShimName == preferredShimName ) {
+		if ( fallbackShimName == preferredShimName ) {
 			return null;
 		}
 
 		var fallbackPath = System.IO.Path.GetFullPath(
 			System.IO.Path.Combine(
 				AppContext.BaseDirectory,
-				NativeShimName
+				fallbackShimName
 			)
 		);
 		return File.Exists( fallbackPath )

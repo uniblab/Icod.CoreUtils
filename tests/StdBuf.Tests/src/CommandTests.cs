@@ -128,8 +128,8 @@ public sealed class CommandTests {
 
 	/// <summary>Verifies the standalone host really replaces itself instead of supervising an extra child process.</summary>
 	[Fact]
-	public async Task StandaloneLinuxStdBufPreservesProcessIdentity() {
-		if ( !OperatingSystem.IsLinux() ) {
+	public async Task StandalonePosixStdBufPreservesProcessIdentity() {
+		if ( !OperatingSystem.IsLinux() && !OperatingSystem.IsMacOS() ) {
 			return;
 		}
 
@@ -301,8 +301,27 @@ public sealed class CommandTests {
 	}
 
 	[Fact]
-	public void LinuxPlatformPrefersArchitectureQualifiedNativeShim() {
-		if ( !OperatingSystem.IsLinux() ) {
+	public async Task FlatNamespaceRequirementIsAppliedToChildEnvironment() {
+		var executor = new FakeProcessExecutor();
+		var status = await Command.RunAsync(
+			new[] { "-o0", "program" },
+			processExecutor: executor,
+			platform: FakeStdBufPlatform.Supported(
+				forceFlatNamespace: true
+			),
+			environmentVariableProvider: static _ => null
+		);
+		Assert.Equal( 0, status );
+		var options = Assert.IsType<ProcessRunOptions>( executor.Options );
+		Assert.Equal(
+			"y",
+			options.EnvironmentVariables[ "DYLD_FORCE_FLAT_NAMESPACE" ]
+		);
+	}
+
+	[Fact]
+	public void SupportedPlatformPrefersArchitectureQualifiedNativeShim() {
+		if ( !OperatingSystem.IsLinux() && !OperatingSystem.IsMacOS() ) {
 			return;
 		}
 
@@ -315,9 +334,22 @@ public sealed class CommandTests {
 			return;
 		}
 
+		var isMacOS = OperatingSystem.IsMacOS();
+		var platformName = ( isMacOS )
+			? "osx"
+			: "linux"
+		;
+		var extension = ( isMacOS )
+			? "dylib"
+			: "so"
+		;
+		var expectedEnvironmentVariable = ( isMacOS )
+			? "DYLD_INSERT_LIBRARIES"
+			: "LD_PRELOAD"
+		;
 		var fallbackPath = System.IO.Path.Combine(
 			AppContext.BaseDirectory,
-			"libicodstdbuf.so"
+			$"libicodstdbuf.{extension}"
 		);
 		Assert.True(
 			File.Exists( fallbackPath ),
@@ -325,7 +357,7 @@ public sealed class CommandTests {
 		);
 		var qualifiedPath = System.IO.Path.Combine(
 			AppContext.BaseDirectory,
-			$"libicodstdbuf-linux-{architectureName}.so"
+			$"libicodstdbuf-{platformName}-{architectureName}.{extension}"
 		);
 		var createdQualifiedShim = false;
 		if ( !File.Exists( qualifiedPath ) ) {
@@ -348,6 +380,14 @@ public sealed class CommandTests {
 				System.IO.Path.GetFullPath( qualifiedPath ),
 				configuration.LibraryPath
 			);
+			Assert.Equal(
+				expectedEnvironmentVariable,
+				configuration.EnvironmentVariable
+			);
+			Assert.Equal(
+				isMacOS,
+				configuration.ForceFlatNamespace
+			);
 		} finally {
 			if ( createdQualifiedShim ) {
 				File.Delete( qualifiedPath );
@@ -356,8 +396,8 @@ public sealed class CommandTests {
 	}
 
 	[Fact]
-	public async Task LinuxNativeShimAppliesLineBuffering() {
-		if ( !OperatingSystem.IsLinux() ) {
+	public async Task PosixNativeShimAppliesLineBuffering() {
+		if ( !OperatingSystem.IsLinux() && !OperatingSystem.IsMacOS() ) {
 			return;
 		}
 
@@ -413,15 +453,23 @@ public sealed class CommandTests {
 	}
 
 	private sealed class FakeStdBufPlatform : IStdBufPlatform {
+		private readonly bool _forceFlatNamespace;
 		private readonly bool _supported;
 
 		private FakeStdBufPlatform(
-			bool supported
+			bool supported,
+			bool forceFlatNamespace = false
 		) {
 			this._supported = supported;
+			this._forceFlatNamespace = forceFlatNamespace;
 		}
 
-		public static FakeStdBufPlatform Supported() => new( true );
+		public static FakeStdBufPlatform Supported(
+			bool forceFlatNamespace = false
+		) => new(
+			true,
+			forceFlatNamespace
+		);
 		public static FakeStdBufPlatform Unsupported() => new( false );
 
 		public bool TryGetPreloadConfiguration(
@@ -436,7 +484,8 @@ public sealed class CommandTests {
 			configuration = new StdBufPreloadConfiguration(
 				"LD_PRELOAD",
 				"/opt/icod/libicodstdbuf.so",
-				":"
+				":",
+				this._forceFlatNamespace
 			);
 			unsupportedReason = string.Empty;
 			return true;

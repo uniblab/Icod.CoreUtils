@@ -287,14 +287,23 @@ try {
             )
         }
 
-        if ('stdbuf' -eq $commandName -and $RuntimeIdentifier.StartsWith('linux-', [System.StringComparison]::OrdinalIgnoreCase)) {
-            $publishedStdBufShim = Join-Path $publishDirectory 'libicodstdbuf.so'
-            if (-not (Test-Path -LiteralPath $publishedStdBufShim -PathType Leaf)) {
-                throw "Publish did not produce '$publishedStdBufShim'."
+        if ('stdbuf' -eq $commandName) {
+            $stdBufShimFileName = if ($RuntimeIdentifier.StartsWith('linux-', [System.StringComparison]::OrdinalIgnoreCase)) {
+                'libicodstdbuf.so'
+            } elseif ($RuntimeIdentifier.StartsWith('osx-', [System.StringComparison]::OrdinalIgnoreCase)) {
+                'libicodstdbuf.dylib'
+            } else {
+                $null
             }
-            Copy-Item `
-                -LiteralPath $publishedStdBufShim `
-                -Destination (Join-Path $stageDirectory 'libicodstdbuf.so')
+            if ($null -ne $stdBufShimFileName) {
+                $publishedStdBufShim = Join-Path $publishDirectory $stdBufShimFileName
+                if (-not (Test-Path -LiteralPath $publishedStdBufShim -PathType Leaf)) {
+                    throw "Publish did not produce '$publishedStdBufShim'."
+                }
+                Copy-Item `
+                    -LiteralPath $publishedStdBufShim `
+                    -Destination (Join-Path $stageDirectory $stdBufShimFileName)
+            }
         }
     }
 
@@ -359,7 +368,7 @@ try {
             }
         }
 
-        if ($IsLinuxPlatform) {
+        if ($IsLinuxPlatform -or $IsMacOSPlatform) {
             $standaloneStdBuf = Join-Path $stageDirectory (
                 Get-ExecutableFileName -CommandName 'stdbuf' -Rid $RuntimeIdentifier
             )
@@ -413,6 +422,8 @@ try {
     }
     if ($RuntimeIdentifier.StartsWith('linux-', [System.StringComparison]::OrdinalIgnoreCase)) {
         $expectedFileNames += 'libicodstdbuf.so'
+    } elseif ($RuntimeIdentifier.StartsWith('osx-', [System.StringComparison]::OrdinalIgnoreCase)) {
+        $expectedFileNames += 'libicodstdbuf.dylib'
     }
 
     Assert-ArchiveContents `

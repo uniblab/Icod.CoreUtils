@@ -207,15 +207,23 @@
 			<Pack>true</Pack>
 			<PackagePath>\</PackagePath>
 		</Content>
-		<ItemGroup Condition=" '$(StdBufPackNativeAssetDirectory)' != '' ">
-			<None Include="$(StdBufPackNativeAssetDirectory)/libicodstdbuf-linux-x64.so">
-				<Pack>true</Pack>
-				<PackagePath>tools/$(TargetFramework)/any/</PackagePath>
-			</None>
-			<None Include="$(StdBufPackNativeAssetDirectory)/libicodstdbuf-linux-arm64.so">
-				<Pack>true</Pack>
-				<PackagePath>tools/$(TargetFramework)/any/</PackagePath>
-			</None>
-		</ItemGroup>
+	</ItemGroup>
+	<ItemGroup Condition=" '$(StdBufPackNativeAssetDirectory)' != '' ">
+		<None Include="$(StdBufPackNativeAssetDirectory)/libicodstdbuf-linux-x64.so">
+			<Pack>true</Pack>
+			<PackagePath>tools/$(TargetFramework)/any/</PackagePath>
+		</None>
+		<None Include="$(StdBufPackNativeAssetDirectory)/libicodstdbuf-linux-arm64.so">
+			<Pack>true</Pack>
+			<PackagePath>tools/$(TargetFramework)/any/</PackagePath>
+		</None>
+		<None Include="$(StdBufPackNativeAssetDirectory)/libicodstdbuf-osx-x64.dylib">
+			<Pack>true</Pack>
+			<PackagePath>tools/$(TargetFramework)/any/</PackagePath>
+		</None>
+		<None Include="$(StdBufPackNativeAssetDirectory)/libicodstdbuf-osx-arm64.dylib">
+			<Pack>true</Pack>
+			<PackagePath>tools/$(TargetFramework)/any/</PackagePath>
+		</None>
 	</ItemGroup>
 </Project>
