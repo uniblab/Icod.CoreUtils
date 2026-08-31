@@ -1,5 +1,6 @@
 namespace Icod.CoreUtils.Timeout.Tests;
 
+using System.Globalization;
 using System.Text;
 using Icod.Processes;
 using Icod.Timing;
@@ -97,6 +98,53 @@ public sealed class CommandTests {
 		Assert.Null( executor.LastOptions );
 	}
 
+	/// <summary>Verifies GNU operand2sig accepts shell-style signal exit statuses.</summary>
+	[Theory]
+	[InlineData( "143" )]
+	[InlineData( "271" )]
+	public async Task AcceptsShellExitStatusSignalNumbers(
+		string signal
+	) {
+		ArgumentNullException.ThrowIfNull( signal );
+		var executor = FakeExecutor.Waiting();
+		var signals = new FakeSignals( executor ) { CompleteOnSignalNumber = 15 };
+		var status = await Command.RunAsync(
+			new[] { "--signal", signal, "1", "child" },
+			stdout: Stream.Null,
+			stderr: Stream.Null,
+			processExecutor: executor,
+			signalProvider: signals,
+			clock: new ImmediateClock()
+		);
+		Assert.Equal( 124, status );
+		Assert.Contains(
+			signals.Deliveries,
+			item => ProcessTargetKind.Process == item.Target.Kind && 15 == item.Signal.Number
+		);
+	}
+
+	/// <summary>Verifies GNU operand2sig does not trim signal operands.</summary>
+	[Theory]
+	[InlineData( " 15" )]
+	[InlineData( "15 " )]
+	[InlineData( " TERM" )]
+	[InlineData( "TERM " )]
+	public async Task RejectsWhitespaceAroundSignalOperands(
+		string signal
+	) {
+		ArgumentNullException.ThrowIfNull( signal );
+		var executor = FakeExecutor.Exited( 0 );
+		var status = await Command.RunAsync(
+			new[] { "--signal", signal, "1", "child" },
+			stdout: Stream.Null,
+			stderr: Stream.Null,
+			processExecutor: executor,
+			signalProvider: new FakeSignals( executor )
+		);
+		Assert.Equal( 125, status );
+		Assert.Null( executor.LastOptions );
+	}
+
 	/// <summary>Verifies GNU hexadecimal floating-point durations and suffix scaling.</summary>
 	[Fact]
 	public async Task ParsesHexadecimalFloatingDuration() {
@@ -106,6 +154,72 @@ public sealed class CommandTests {
 		var status = await Command.RunAsync( new[] { "0x1.8p1s", "child" }, stdout: Stream.Null, stderr: Stream.Null, processExecutor: executor, signalProvider: signals, clock: clock );
 		Assert.Equal( 124, status );
 		Assert.Equal( TimeSpan.FromSeconds( 3 ), Assert.Single( clock.Delays ) );
+	}
+
+	/// <summary>Verifies durations accept both the current locale and the C locale.</summary>
+	[Theory]
+	[InlineData( "0,25", 0.25 )]
+	[InlineData( "0.25", 0.25 )]
+	[InlineData( "0x1,8p1s", 3.0 )]
+	[InlineData( "0x1.8p1s", 3.0 )]
+	public async Task AcceptsCurrentAndCLocaleDurations(
+		string duration,
+		double expectedSeconds
+	) {
+		ArgumentNullException.ThrowIfNull( duration );
+		var culture = (CultureInfo)CultureInfo.InvariantCulture.Clone();
+		culture.NumberFormat.NumberDecimalSeparator = ",";
+		culture.NumberFormat.NumberGroupSeparator = "_";
+		var previousCulture = CultureInfo.CurrentCulture;
+		try {
+			CultureInfo.CurrentCulture = culture;
+			var executor = FakeExecutor.Waiting();
+			var signals = new FakeSignals( executor ) { CompleteOnSignalNumber = 15 };
+			var clock = new RecordingImmediateClock();
+			var status = await Command.RunAsync(
+				new[] { duration, "child" },
+				stdout: Stream.Null,
+				stderr: Stream.Null,
+				processExecutor: executor,
+				signalProvider: signals,
+				clock: clock
+			);
+			Assert.Equal( 124, status );
+			Assert.Equal(
+				TimeSpan.FromSeconds( expectedSeconds ),
+				Assert.Single( clock.Delays )
+			);
+		} finally {
+			CultureInfo.CurrentCulture = previousCulture;
+		}
+	}
+
+	/// <summary>Verifies a localized hexadecimal spelling of zero still disables the timer.</summary>
+	[Fact]
+	public async Task LocalizedHexadecimalZeroDisablesTimeout() {
+		var culture = (CultureInfo)CultureInfo.InvariantCulture.Clone();
+		culture.NumberFormat.NumberDecimalSeparator = ",";
+		culture.NumberFormat.NumberGroupSeparator = "_";
+		var previousCulture = CultureInfo.CurrentCulture;
+		try {
+			CultureInfo.CurrentCulture = culture;
+			var executor = FakeExecutor.Exited( 0 );
+			var clock = new RecordingClock();
+			var signals = new FakeSignals( executor );
+			var status = await Command.RunAsync(
+				new[] { "0x0,0p0", "child" },
+				stdout: Stream.Null,
+				stderr: Stream.Null,
+				processExecutor: executor,
+				signalProvider: signals,
+				clock: clock
+			);
+			Assert.Equal( 0, status );
+			Assert.Empty( clock.Delays );
+			Assert.Empty( signals.Deliveries );
+		} finally {
+			CultureInfo.CurrentCulture = previousCulture;
+		}
 	}
 
 	/// <summary>Verifies an exponent-free trailing hexadecimal <c>d</c> remains a digit rather than a day suffix.</summary>

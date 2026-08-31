@@ -425,8 +425,34 @@ public static class Command {
 	}
 
 	private static ProcessOperationResult<ProcessSignal> ParseSignal( IProcessSignalProvider signals, string text ) {
-		if ( string.IsNullOrEmpty( text ) || text[ 0 ] is '+' or '-' ) {
-			return ProcessOperationResult<ProcessSignal>.Failure( ProcessOperationStatus.InvalidArgument, "invalid signal" );
+		if ( string.IsNullOrEmpty( text )
+			|| text.Any( char.IsWhiteSpace )
+			|| text[ 0 ] is '+' or '-'
+		) {
+			return ProcessOperationResult<ProcessSignal>.Failure(
+				ProcessOperationStatus.InvalidArgument,
+				"invalid signal"
+			);
+		}
+		if ( char.IsAsciiDigit( text[ 0 ] ) ) {
+			if ( !int.TryParse(
+				text,
+				NumberStyles.None,
+				CultureInfo.InvariantCulture,
+				out var numericSignal
+			) ) {
+				return ProcessOperationResult<ProcessSignal>.Failure(
+					ProcessOperationStatus.InvalidArgument,
+					"invalid signal"
+				);
+			}
+			numericSignal &= ( 0xFF <= numericSignal )
+				? 0xFF
+				: 0x7F
+			;
+			return signals.TranslateSignal(
+				numericSignal
+			);
 		}
 		return signals.ParseSignal( text );
 	}
@@ -576,7 +602,9 @@ public static class Command {
 			value = value[ 2.. ];
 			var exponent = value.IndexOfAny( [ 'p', 'P' ] );
 			if ( 0 <= exponent ) value = value[ ..exponent ];
-			return value.Any( static character => character is not '0' and not '.' );
+			return value.Any(
+				static character => Uri.IsHexDigit( character ) && '0' != character
+			);
 		}
 		var decimalExponent = value.IndexOfAny( [ 'e', 'E' ] );
 		if ( 0 <= decimalExponent ) value = value[ ..decimalExponent ];
@@ -595,12 +623,54 @@ public static class Command {
 		}
 		if ( text.Equals( "nan", StringComparison.OrdinalIgnoreCase ) ) { value = double.NaN; return true; }
 		if ( text.StartsWith( "0x", StringComparison.OrdinalIgnoreCase ) ) {
-			if ( !TryParseHexFloat( text[ 2.. ], out value ) ) return false;
+			var hexadecimal = text[ 2.. ];
+			var decimalSeparator = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+			if ( "." != decimalSeparator
+				&& hexadecimal.Contains(
+					decimalSeparator,
+					StringComparison.Ordinal
+				)
+			) {
+				var localizedHexadecimal = hexadecimal.Replace(
+					decimalSeparator,
+					".",
+					StringComparison.Ordinal
+				);
+				if ( TryParseHexFloat(
+					localizedHexadecimal,
+					out value
+				) ) {
+					value *= sign;
+					return true;
+				}
+			}
+			if ( !TryParseHexFloat(
+				hexadecimal,
+				out value
+			) ) {
+				return false;
+			}
 			value *= sign;
 			return true;
 		}
-		if ( !double.TryParse( ( 0 > sign ? "-" : string.Empty ) + text, NumberStyles.Float, CultureInfo.InvariantCulture, out value ) ) return false;
-		return true;
+		var signedText = ( 0 > sign )
+			? string.Concat( "-", text )
+			: text
+		;
+		if ( double.TryParse(
+			signedText,
+			NumberStyles.Float,
+			CultureInfo.CurrentCulture,
+			out value
+		) ) {
+			return true;
+		}
+		return double.TryParse(
+			signedText,
+			NumberStyles.Float,
+			CultureInfo.InvariantCulture,
+			out value
+		);
 	}
 
 	private static bool TryParseHexFloat( string text, out double value ) {
