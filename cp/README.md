@@ -131,7 +131,7 @@ The shared engine provides one copy policy across Windows, Linux, and macOS whil
 
 GNU `cp` was written by Torbjörn Granlund, David MacKenzie, and Jim Meyering.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

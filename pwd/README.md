@@ -56,7 +56,7 @@ Physical resolution uses .NET filesystem APIs and recognizes the host's director
 
 GNU `pwd` was written by Jim Meyering.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

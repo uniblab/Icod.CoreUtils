@@ -57,7 +57,7 @@ Windows has no POSIX `SIGHUP` disposition to install. Its terminal-input handlin
 
 GNU `nohup` was written by Jim Meyering.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

@@ -55,7 +55,7 @@ Because arbitrary-precision values are accepted, the time required to factor ver
 
 GNU `factor` was written by Paul Rubin, Torbjörn Granlund, and Niels Möller.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

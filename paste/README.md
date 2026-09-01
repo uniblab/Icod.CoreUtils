@@ -44,7 +44,7 @@ Output rows are newly generated records. Following repository policy, default ou
 
 GNU `paste` was written by David M. Ihnat and David MacKenzie.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

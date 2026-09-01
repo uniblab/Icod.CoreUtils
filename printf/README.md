@@ -24,7 +24,7 @@ The implementation is managed and platform-neutral. Windows, Linux, and macOS ar
 
 GNU `printf` was written by David MacKenzie.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

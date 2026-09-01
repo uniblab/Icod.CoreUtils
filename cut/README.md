@@ -46,7 +46,7 @@ Terminated input records retain their LF or NUL separator. When an unterminated 
 
 GNU `cut` was written by David M. Ihnat, David MacKenzie, and Jim Meyering.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

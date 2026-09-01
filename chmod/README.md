@@ -92,7 +92,7 @@ Recursive operations retain observed entry identities as mutation preconditions 
 
 GNU `chmod` was written by David MacKenzie and Jim Meyering.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

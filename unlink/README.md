@@ -52,7 +52,7 @@ Removal is performed through the shared metadata and mutation providers with no-
 
 GNU `unlink` was written by Michael Stone.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

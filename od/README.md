@@ -45,7 +45,7 @@ Integral aliases `C`, `S`, and `I` are 1, 2, and 4 bytes. Integral `L` is 4 byte
 
 GNU `od` was written by Jim Meyering.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

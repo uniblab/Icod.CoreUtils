@@ -152,7 +152,7 @@ The project targets .NET 10 and is intended for Windows, Linux, and macOS. File 
 
 GNU `cksum` was written by Pádraig Brady and Q. Frank Xia.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

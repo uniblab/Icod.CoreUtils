@@ -84,7 +84,7 @@ The `--resolution` result reflects the resolution exposed by this implementation
 
 GNU `date` was written by David MacKenzie.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

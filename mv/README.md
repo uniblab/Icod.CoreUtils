@@ -85,7 +85,7 @@ Cross-filesystem fallback therefore preserves only metadata classes the active p
 
 GNU `mv` was written by Mike Parker, David MacKenzie, and Jim Meyering.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

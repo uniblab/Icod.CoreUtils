@@ -87,7 +87,7 @@ Permission and write-protection checks are platform/provider aware: Windows read
 
 GNU `rm` was written by Paul Rubin, David MacKenzie, Richard M. Stallman, and Jim Meyering.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

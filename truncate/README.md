@@ -109,7 +109,7 @@ platform-injection, and native I/O-block-size tests.  CI coverage is expected on
 
 GNU `truncate` was written by Pádraig Brady.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

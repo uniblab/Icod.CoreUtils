@@ -83,7 +83,7 @@ Production standard output is binary when `-` is used, so overwrite bytes are no
 
 GNU `shred` was written by Colin Plumb.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

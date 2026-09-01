@@ -59,7 +59,7 @@ Basic regular expressions use the shared fully managed GNU-compatible engine. Le
 
 GNU `expr` was written by Mike Parker, James Youngman, and Paul Eggert.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

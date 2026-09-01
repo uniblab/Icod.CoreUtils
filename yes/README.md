@@ -53,7 +53,7 @@ The repeated line uses the host environment's newline sequence and is written th
 
 GNU `yes` was written by David MacKenzie.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

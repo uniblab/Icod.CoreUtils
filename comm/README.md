@@ -51,7 +51,7 @@ Records are preserved as bytes. Comparison uses the shared managed collation env
 
 GNU `comm` was written by Richard M. Stallman and David MacKenzie.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

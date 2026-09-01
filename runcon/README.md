@@ -70,7 +70,7 @@ No non-SELinux security model is substituted. Context retrieval, file-context lo
 
 GNU `runcon` was written by Russell Coker.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

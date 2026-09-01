@@ -82,7 +82,7 @@ External runs use the shared temporary-workspace infrastructure. Collation and s
 
 GNU `sort` was written by Mike Haertel and Paul Eggert.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

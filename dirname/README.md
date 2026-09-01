@@ -51,7 +51,7 @@ The pathname reduction follows GNU `/` separator semantics without consulting th
 
 GNU `dirname` was written by David MacKenzie and Jim Meyering.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

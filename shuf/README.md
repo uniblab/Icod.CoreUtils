@@ -54,7 +54,7 @@ Randomness and record handling are managed and platform-neutral. `--random-sourc
 
 GNU `shuf` was written by Paul Eggert.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

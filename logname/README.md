@@ -48,7 +48,7 @@ Login-name discovery is supplied by the cross-platform identity provider. Some e
 
 GNU `logname` was written by David MacKenzie.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

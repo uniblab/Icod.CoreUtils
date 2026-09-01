@@ -50,7 +50,7 @@ The required CI platforms are Windows, Ubuntu, and macOS. FreeBSD uses its POSIX
 
 GNU `mktemp` was written by Jim Meyering and Eric Blake.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

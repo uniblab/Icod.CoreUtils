@@ -60,7 +60,7 @@ The pathname algorithm uses `/` as the GNU pathname separator and does not acces
 
 GNU `basename` was written by David MacKenzie.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

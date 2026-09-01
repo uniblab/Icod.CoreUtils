@@ -57,7 +57,7 @@ Production execution uses binary standard streams. Unmodified input bytes, embed
 
 GNU `cat` was written by Torbjörn Granlund and Richard M. Stallman.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

@@ -68,7 +68,7 @@ POSIX mode fidelity depends on platform/provider capability. Security-context la
 
 GNU `mkdir` was written by David MacKenzie.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

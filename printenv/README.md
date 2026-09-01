@@ -51,7 +51,7 @@ Values come from the current .NET process environment. Environment-variable nami
 
 GNU `printenv` was written by David MacKenzie and Richard Mlynarik.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

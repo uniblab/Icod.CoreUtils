@@ -59,7 +59,7 @@ Special-file creation is highly platform and privilege dependent. The command re
 
 GNU `mknod` was written by David MacKenzie.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

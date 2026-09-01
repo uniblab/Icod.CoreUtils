@@ -57,7 +57,7 @@ The dedicated `tests/TSort.Tests` project includes the GNU 9.11 fixture shapes, 
 
 GNU `tsort` was written by Mark Kettenis.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

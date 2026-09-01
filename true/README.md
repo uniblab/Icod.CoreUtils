@@ -47,7 +47,7 @@ The command has no filesystem, identity, terminal, or other platform dependency.
 
 GNU `true` was written by Jim Meyering.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

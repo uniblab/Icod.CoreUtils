@@ -48,7 +48,7 @@ Effective-user lookup is provided by the cross-platform identity abstraction. On
 
 GNU `whoami` was written by Richard Mlynarik.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

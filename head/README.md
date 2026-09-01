@@ -52,7 +52,7 @@ Output is byte preserving. Seekable files use direct positioning; forward-only s
 
 GNU `head` was written by David MacKenzie and Jim Meyering.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

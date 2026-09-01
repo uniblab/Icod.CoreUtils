@@ -57,7 +57,7 @@ Normal output is byte preserving. Seekable files are scanned backward; forward-o
 
 GNU `tail` was written by Paul Rubin, David MacKenzie, Ian Lance Taylor, and Jim Meyering.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

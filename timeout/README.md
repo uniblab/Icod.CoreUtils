@@ -18,6 +18,14 @@ The command keeps policy in the command project while consuming Completion Gate 
 
 Windows uses the platform substitutions declared by F4.  A non-foreground TERM or KILL timeout uses process-tree cancellation because POSIX group-signal semantics are not available; unsupported signal operations are reported rather than silently pretending to have POSIX behavior.
 
+## DURATION AND SIGNAL OPERANDS
+
+`DURATION` accepts GNU floating-point syntax in either the current locale or the C locale, including hexadecimal floating-point forms. The `s`, `m`, `h`, and `d` suffixes select seconds, minutes, hours, and days; an omitted suffix means seconds. A zero duration disables the timeout.
+
+Signal options accept names such as `TERM` and `SIGTERM`, unsigned decimal signal numbers, and GNU `operand2sig` numeric termination-status forms. For example, `143` denotes `TERM` because it represents the conventional `128 + 15` shell status for termination by signal 15.
+
+Surrounding whitespace and signed numeric signal operands are rejected rather than silently normalized.
+
 ## DEFERRED LINUX PARENT-DEATH PROTECTION
 
 GNU Coreutils 9.11 uses Linux `prctl(PR_SET_PDEATHSIG, ...)` in the forked child immediately before `exec`, followed by a parent-PID check, so the monitored command cannot silently outlive a `timeout` monitor that dies unexpectedly.
@@ -34,7 +42,7 @@ Windows has no `fork()`/`prctl()` equivalent, and this Linux-specific parent-dea
 
 GNU `timeout` was written by Pádraig Brady.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

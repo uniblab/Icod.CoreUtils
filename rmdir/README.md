@@ -60,7 +60,7 @@ Directory observation and removal use no-follow semantics through the shared met
 
 GNU `rmdir` was written by David MacKenzie.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

@@ -38,7 +38,7 @@ Implementation files are under [`src`](src). Tests are in `tests/Fmt.Tests`.
 
 GNU `fmt` was written by Ross Paterson.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

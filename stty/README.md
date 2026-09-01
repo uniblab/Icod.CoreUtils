@@ -63,7 +63,7 @@ Windows console support preserves the complete native console mode and supports 
 
 GNU `stty` was written by David MacKenzie.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

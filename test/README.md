@@ -120,7 +120,7 @@ String ordering uses the active locale collation rules supplied by the evaluatio
 
 GNU `test` was written by Kevin Braunsdorf and Matthew Bradburn.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

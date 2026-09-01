@@ -48,7 +48,7 @@ Identity and group discovery is supplied by `Icod.CommandFramework`'s system ide
 
 GNU `groups` was written by David MacKenzie and James Youngman.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

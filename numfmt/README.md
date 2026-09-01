@@ -25,7 +25,7 @@ The implementation is managed and platform-neutral. Windows, Linux, and macOS ar
 
 GNU `numfmt` was written by Assaf Gordon.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

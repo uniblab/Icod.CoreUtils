@@ -32,7 +32,7 @@ Implementation files are under [`src`](src). Tests are in `tests/NL.Tests`.
 
 GNU `nl` was written by Scott Bartram and David MacKenzie.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

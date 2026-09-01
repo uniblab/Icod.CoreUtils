@@ -20,7 +20,7 @@ chroot [OPTION]... NEWROOT [COMMAND [ARG]...]
 
 The native implementation changes the current process root to `NEWROOT`, normally changes the working directory to `/`, optionally applies requested user/group credentials, and then replaces the process image with `COMMAND`.
 
-If no command is supplied, the command runs `$SHELL -i`, defaulting to `/bin/sh -i`.
+If no command is supplied, the command runs `$SHELL -i`; when `SHELL` is unset, it uses `/bin/sh -i`. An explicitly empty `SHELL` is not treated as unset.
 
 ## OPTIONS
 
@@ -63,7 +63,7 @@ Changing root and changing credentials normally require elevated privilege. Thes
 
 GNU `chroot` was written by Roland McGrath.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 
