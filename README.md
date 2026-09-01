@@ -1,10 +1,9 @@
 # Icod.CoreUtils
 
-![Icod.CoreUtils](Icod.CoreUtils.banner.png)
+![Icod TUI Toolchain](https://raw.githubusercontent.com/uniblab/Icod.CoreUtils/v1.0.1/Icod.CoreUtils.banner.png)
 
 [![PR build and test](https://github.com/uniblab/Icod.CoreUtils/actions/workflows/pr-build-and-test.yaml/badge.svg)](https://github.com/uniblab/Icod.CoreUtils/actions/workflows/pr-build-and-test.yaml)
 [![Main build and test](https://github.com/uniblab/Icod.CoreUtils/actions/workflows/push-main.yaml/badge.svg?branch=main)](https://github.com/uniblab/Icod.CoreUtils/actions/workflows/push-main.yaml)
-[![Release package](https://github.com/uniblab/Icod.CoreUtils/actions/workflows/release.yaml/badge.svg?branch=main)](https://github.com/uniblab/Icod.CoreUtils/actions/workflows/release.yaml)
 
 A cross-platform, managed implementation of the GNU Coreutils/Fileutils/Textutils command family for **.NET 10**, written in **C# 13**.
 
