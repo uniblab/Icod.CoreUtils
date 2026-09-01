@@ -23,6 +23,49 @@ public sealed class CommandTests {
 		Assert.Contains( "Usage: runcon", output.ToString() );
 	}
 
+	[Theory]
+	[InlineData( "--he", "Usage: runcon" )]
+	[InlineData( "--ver", "9.11" )]
+	public void InformationalLongOptionAbbreviationsDoNotRequireSelinux(
+		string option,
+		string expected
+	) {
+		ArgumentNullException.ThrowIfNull( option );
+		ArgumentNullException.ThrowIfNull( expected );
+		var output = new StringWriter();
+		var status = Command.Run(
+			new[] { option },
+			stdout: output,
+			platform: new FakeSelinuxPlatform { IsSupported = false }
+		);
+		Assert.Equal( 0, status );
+		Assert.Contains(
+			expected,
+			output.ToString()
+		);
+	}
+
+	[Fact]
+	public void QuestionMarkIsNotAHelpOption() {
+		var output = new StringWriter();
+		var error = new StringWriter();
+		var status = Command.Run(
+			new[] { "-?" },
+			stdout: output,
+			stderr: error,
+			platform: new FakeSelinuxPlatform { IsSupported = false }
+		);
+		Assert.Equal( 125, status );
+		Assert.DoesNotContain(
+			"Usage: runcon",
+			output.ToString()
+		);
+		Assert.Contains(
+			"invalid option -- '?'",
+			error.ToString()
+		);
+	}
+
 
 	[Fact]
 	public void OptionsWithoutCommandStillPrintCurrentContextLikeGnuRuncon() {
@@ -50,6 +93,27 @@ public sealed class CommandTests {
 	}
 
 	[Fact]
+	public void DuplicateComponentBeforeHelpIsStillAnError() {
+		var output = new StringWriter();
+		var error = new StringWriter();
+		var status = Command.Run(
+			new[] { "--user", "one", "--user", "two", "--help" },
+			stdout: output,
+			stderr: error,
+			platform: new FakeSelinuxPlatform { IsSupported = false }
+		);
+		Assert.Equal( 125, status );
+		Assert.DoesNotContain(
+			"Usage: runcon",
+			output.ToString()
+		);
+		Assert.Contains(
+			"option '--user' specified more than once",
+			error.ToString()
+		);
+	}
+
+	[Fact]
 	public void CompleteContextExecutesLiteralArgumentVector() {
 		var platform = new FakeSelinuxPlatform();
 		var status = Command.Run( new[] { "user_u:role_r:type_t:s0", "printf", "%s", "; rm -rf /" }, platform: platform );
@@ -65,6 +129,47 @@ public sealed class CommandTests {
 		var status = Command.Run( new[] { "--type=new_t", "--range=s0:c1", "program" }, platform: platform );
 		Assert.Equal( 0, status );
 		Assert.Equal( "user_u:role_r:new_t:s0:c1", platform.ExecutionContext );
+	}
+
+	[Fact]
+	public void ComponentLongOptionAbbreviationIsAccepted() {
+		var platform = new FakeSelinuxPlatform { CurrentContext = "user_u:role_r:old_t:s0" };
+		var status = Command.Run(
+			new[] { "--ty=new_t", "program" },
+			platform: platform
+		);
+		Assert.Equal( 0, status );
+		Assert.Equal(
+			"user_u:role_r:new_t:s0",
+			platform.ExecutionContext
+		);
+	}
+
+	[Fact]
+	public void EmptyComponentReachesContextValidation() {
+		var error = new StringWriter();
+		var platform = new FakeSelinuxPlatform {
+			CurrentContext = "user_u:role_r:type_t:s0",
+			ValidationSucceeds = false
+		};
+		var status = Command.Run(
+			new[] { "--user=", "program" },
+			stderr: error,
+			platform: platform
+		);
+		Assert.Equal( 125, status );
+		Assert.Equal(
+			":role_r:type_t:s0",
+			platform.ValidatedContext
+		);
+		Assert.Contains(
+			"invalid context",
+			error.ToString()
+		);
+		Assert.DoesNotContain(
+			"non-empty argument",
+			error.ToString()
+		);
 	}
 
 	[Fact]
@@ -135,7 +240,7 @@ public sealed class CommandTests {
 		var platform = new FakeSelinuxPlatform { IsSupported = false, UnsupportedReason = "SELinux unavailable" };
 		var status = Command.Run( new[] { "u:r:t:s0" }, stderr: error, platform: platform );
 		Assert.Equal( 125, status );
-		Assert.Contains( "missing command operand after context", error.ToString() );
+		Assert.Contains( "no command specified", error.ToString() );
 		Assert.DoesNotContain( "SELinux unavailable", error.ToString() );
 	}
 
@@ -159,13 +264,23 @@ public sealed class CommandTests {
 		public IReadOnlyList<string>? Command { get; set; }
 		public string? ComputeSource { get; set; }
 		public string? ComputeTarget { get; set; }
+		public string? ValidatedContext { get; set; }
 		public bool SearchPath { get; set; }
+		public bool ValidationSucceeds { get; set; } = true;
 		public SelinuxExecutionResult ExecutionResult { get; set; } = new( 0, 0, null );
 		public bool IsEnabled( out int errorNumber ) { errorNumber = Enabled ? 0 : 1; return Enabled; }
 		public bool TryGetCurrentContext( out string context, out int errorNumber ) { context = CurrentContext; errorNumber = 0; return true; }
 		public bool TryGetFileContext( string path, bool dereference, out string context, out int errorNumber ) { errorNumber = 0; return FileContexts.TryGetValue( path, out context! ); }
 		public bool TrySetFileContext( string path, string context, bool dereference, out int errorNumber ) { errorNumber = 0; return true; }
-		public bool TryValidateContext( string context, out int errorNumber ) { errorNumber = 0; return true; }
+		public bool TryValidateContext( string context, out int errorNumber ) {
+			ArgumentNullException.ThrowIfNull( context );
+			ValidatedContext = context;
+			errorNumber = ValidationSucceeds
+				? 0
+				: 22
+			;
+			return ValidationSucceeds;
+		}
 		public bool TryComputeProcessContext( string sourceContext, string executableContext, out string context, out int errorNumber ) {
 			ComputeSource = sourceContext; ComputeTarget = executableContext; context = ComputedContext; errorNumber = 0; return true;
 		}

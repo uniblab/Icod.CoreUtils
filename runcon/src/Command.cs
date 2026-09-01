@@ -24,6 +24,8 @@ public static class Command {
 		public bool RoleSpecified { get; set; }
 		public bool TypeSpecified { get; set; }
 		public bool RangeSpecified { get; set; }
+		public bool ShowHelp { get; set; }
+		public bool ShowVersion { get; set; }
 		public List<string> Operands { get; } = new();
 		public bool HasComponents => UserSpecified || RoleSpecified || TypeSpecified || RangeSpecified;
 	}
@@ -60,22 +62,29 @@ public static class Command {
 		stdout ??= Console.Out;
 		stderr ??= Console.Error;
 
-		if ( TryHandleInformationalOption( args, stdout, out var informationalStatus ) ) {
-			return ValueTask.FromResult( informationalStatus );
-		}
 		if ( !TryParse( args, stderr, out var options ) ) {
 			return ValueTask.FromResult( InternalFailure );
+		}
+		if ( options.ShowHelp ) {
+			PrintHelp(
+				stdout
+			);
+			return ValueTask.FromResult( 0 );
+		}
+		if ( options.ShowVersion ) {
+			stdout.WriteLine( "runcon (Icod.CoreUtils) 9.11" );
+			return ValueTask.FromResult( 0 );
 		}
 		if ( cancellationToken.IsCancellationRequested ) {
 			stderr.WriteLine( "runcon: operation canceled" );
 			return ValueTask.FromResult( InternalFailure );
 		}
 
-		// GNU runcon diagnoses a bare CONTEXT operand as a missing command before
-		// consulting SELinux.  Preserve that CLI error ordering on unsupported hosts.
+		// GNU runcon diagnoses a bare CONTEXT operand as "no command specified"
+		// before consulting SELinux. Preserve that CLI error ordering on unsupported hosts.
 		if ( options.Operands.Count == 1 && !options.Compute && !options.HasComponents ) {
 			return ValueTask.FromResult(
-				ReportError( stderr, "missing command operand after context" )
+				ReportError( stderr, "no command specified" )
 			);
 		}
 
@@ -107,7 +116,7 @@ public static class Command {
 
 		if ( !options.Compute && !options.HasComponents ) {
 			if ( options.Operands.Count < 2 ) {
-				return ReportError( stderr, "missing command operand after context" );
+				return ReportError( stderr, "no command specified" );
 			}
 			context = options.Operands[ 0 ];
 			command = options.Operands.GetRange( 1, options.Operands.Count - 1 );
@@ -199,6 +208,9 @@ public static class Command {
 				if ( !ParseLongOption( args, ref i, arg, options, stderr ) ) {
 					return false;
 				}
+				if ( options.ShowHelp || options.ShowVersion ) {
+					return true;
+				}
 				continue;
 			}
 			if ( !ParseShortOptions( args, ref i, arg, options, stderr ) ) {
@@ -217,16 +229,26 @@ public static class Command {
 		TextWriter stderr
 	) {
 		var equals = arg.IndexOf( '=' );
-		var name = ( equals < 0 )
-			? arg
-			: arg[ ..equals ]
+		var optionText = ( equals < 0 )
+			? arg[ 2.. ]
+			: arg[ 2..equals ]
 		;
+		var option = ResolveLongOption(
+			optionText
+		);
+		if ( null == option ) {
+			return Error( stderr, $"unrecognized option '{arg}'" );
+		}
+		var name = string.Concat(
+			"--",
+			option
+		);
 		var inlineValue = ( equals < 0 )
 			? null
 			: arg[ ( equals + 1 ).. ]
 		;
-		switch ( name ) {
-			case "--compute":
+		switch ( option ) {
+			case "compute":
 				if ( inlineValue is not null ) {
 					return Error(
 						stderr,
@@ -235,7 +257,7 @@ public static class Command {
 				}
 				options.Compute = true;
 				return true;
-			case "--user":
+			case "user":
 				return TakeComponent(
 					args,
 					ref index,
@@ -248,7 +270,7 @@ public static class Command {
 						options.UserSpecified = true;
 					}
 				);
-			case "--role":
+			case "role":
 				return TakeComponent(
 					args,
 					ref index,
@@ -261,7 +283,7 @@ public static class Command {
 						options.RoleSpecified = true;
 					}
 				);
-			case "--type":
+			case "type":
 				return TakeComponent(
 					args,
 					ref index,
@@ -274,7 +296,7 @@ public static class Command {
 						options.TypeSpecified = true;
 					}
 				);
-			case "--range":
+			case "range":
 				return TakeComponent(
 					args,
 					ref index,
@@ -287,9 +309,55 @@ public static class Command {
 						options.RangeSpecified = true;
 					}
 				);
+			case "help":
+				if ( inlineValue is not null ) {
+					return Error(
+						stderr,
+						"option '--help' doesn't allow an argument"
+					);
+				}
+				options.ShowHelp = true;
+				return true;
+			case "version":
+				if ( inlineValue is not null ) {
+					return Error(
+						stderr,
+						"option '--version' doesn't allow an argument"
+					);
+				}
+				options.ShowVersion = true;
+				return true;
 			default:
 				return Error( stderr, $"unrecognized option '{arg}'" );
 		}
+	}
+
+	private static string? ResolveLongOption(
+		string name
+	) {
+		string[] options = [
+			"role",
+			"type",
+			"user",
+			"range",
+			"compute",
+			"help",
+			"version"
+		];
+		string? match = null;
+		foreach ( var option in options ) {
+			if ( !option.StartsWith(
+				name,
+				StringComparison.Ordinal
+			) ) {
+				continue;
+			}
+			if ( null != match ) {
+				return null;
+			}
+			match = option;
+		}
+		return match;
 	}
 
 	private static bool ParseShortOptions(
@@ -367,12 +435,6 @@ public static class Command {
 			}
 			value = args[ ++index ];
 		}
-		if ( value.Length == 0 ) {
-			return Error(
-				stderr,
-				$"option '{name}' requires a non-empty argument"
-			);
-		}
 		setter( value );
 		return true;
 	}
@@ -382,72 +444,10 @@ public static class Command {
 			stderr.WriteLine( $"runcon: {platform.UnsupportedReason}" );
 			return false;
 		}
-		if ( platform.IsEnabled( out var error ) ) {
+		if ( platform.IsEnabled( out _ ) ) {
 			return true;
 		}
-		stderr.WriteLine( $"runcon: SELinux is disabled or unavailable: {platform.DescribeError( error )}" );
-		return false;
-	}
-
-	private static bool TryHandleInformationalOption(
-		string[] args,
-		TextWriter stdout,
-		out int status
-	) {
-		status = 0;
-		for ( var i = 0; i < args.Length; i++ ) {
-			var arg = args[ i ];
-			if ( arg == "--" ) {
-				break;
-			}
-			if ( arg.Length == 0 || arg[ 0 ] != '-' || arg == "-" ) {
-				// GNU runcon uses '+' getopt semantics: the first operand ends option parsing.
-				break;
-			}
-			if ( arg == "--help" || arg == "-?" ) {
-				PrintHelp( stdout );
-				return true;
-			}
-			if ( arg == "--version" ) {
-				stdout.WriteLine( "runcon (Icod.CoreUtils) 9.11-compatible" );
-				return true;
-			}
-
-			if ( arg is "--user" or "--role" or "--type" or "--range" ) {
-				if ( i + 1 < args.Length ) {
-					i++;
-				}
-				continue;
-			}
-			if (
-				arg.StartsWith( "--user=", StringComparison.Ordinal )
-					|| arg.StartsWith( "--role=", StringComparison.Ordinal )
-					|| arg.StartsWith( "--type=", StringComparison.Ordinal )
-					|| arg.StartsWith( "--range=", StringComparison.Ordinal )
-					|| arg == "--compute"
-			) {
-				continue;
-			}
-			if ( arg.StartsWith( "--", StringComparison.Ordinal ) ) {
-				return false;
-			}
-
-			if ( arg.Length > 1 && arg[ 0 ] == '-' ) {
-				for ( var p = 1; p < arg.Length; p++ ) {
-					var option = arg[ p ];
-					if ( option == 'c' ) {
-						continue;
-					}
-					if ( option is not ( 'u' or 'r' or 't' or 'l' ) ) {
-						return false;
-					}
-					if ( p + 1 == arg.Length && i + 1 < args.Length ) {
-						i++;
-					}
-					break;
-				}
-			}
-		}
+		stderr.WriteLine( "runcon: runcon may be used only on a SELinux kernel" );
 		return false;
 	}
 
@@ -463,8 +463,8 @@ public static class Command {
 	}
 
 	private static void PrintHelp( TextWriter stdout ) {
-		stdout.WriteLine( "Usage: runcon CONTEXT COMMAND [args]" );
-		stdout.WriteLine( "  or:  runcon [ -c ] [-u USER] [-r ROLE] [-t TYPE] [-l RANGE] COMMAND [args]" );
+		stdout.WriteLine( "Usage: runcon [CONTEXT COMMAND [ARG]...]" );
+		stdout.WriteLine( "  or:  runcon [-c] [-u USER] [-r ROLE] [-t TYPE] [-l RANGE] COMMAND [ARG]..." );
 		stdout.WriteLine( "Run a program in a different SELinux security context." );
 		stdout.WriteLine( "With neither CONTEXT nor COMMAND, print the current security context." );
 		stdout.WriteLine();
