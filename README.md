@@ -1,10 +1,9 @@
 # Icod.CoreUtils
 
-![Icod.CoreUtils](Icod.CoreUtils.banner.png)
+![Icod TUI Toolchain](https://raw.githubusercontent.com/uniblab/Icod.CoreUtils/v1.0.1/Icod.CoreUtils.banner.png)
 
 [![PR build and test](https://github.com/uniblab/Icod.CoreUtils/actions/workflows/pr-build-and-test.yaml/badge.svg)](https://github.com/uniblab/Icod.CoreUtils/actions/workflows/pr-build-and-test.yaml)
 [![Main build and test](https://github.com/uniblab/Icod.CoreUtils/actions/workflows/push-main.yaml/badge.svg?branch=main)](https://github.com/uniblab/Icod.CoreUtils/actions/workflows/push-main.yaml)
-[![Release package](https://github.com/uniblab/Icod.CoreUtils/actions/workflows/release.yaml/badge.svg?branch=main)](https://github.com/uniblab/Icod.CoreUtils/actions/workflows/release.yaml)
 
 A cross-platform, managed implementation of the GNU Coreutils/Fileutils/Textutils command family for **.NET 10**, written in **C# 13**.
 
@@ -14,6 +13,18 @@ The current suite contains **105 command projects**, available both as individua
 
 > [!IMPORTANT]
 > `Icod.CoreUtils` is an independent implementation and is not an official GNU or Free Software Foundation project. GNU Coreutils is used as the primary behavioral and command-line compatibility reference.
+
+## Acknowledgments and attribution
+
+`Icod.CoreUtils` stands on a long tradition of Unix command-line software. It is inspired by the original UNIX utilities and by decades of design, implementation, maintenance, documentation, and testing performed by the many authors, maintainers, and contributors responsible for GNU fileutils, textutils, shellutils, and GNU Coreutils. Their work provides the historical and behavioral foundation against which this independent managed implementation is designed and audited.
+
+The original UNIX systems and utilities, GNU Coreutils and its predecessor projects, and their respective source code and copyrights remain the work of their respective authors and copyright holders.
+
+**C#/.NET migration and Icod.CoreUtils implementation:** Timothy J. Bruce <uniblab@hotmail.com>
+
+**Copyright (C) 2026 Timothy J. Bruce <uniblab@hotmail.com>.**
+
+This attribution is intended to recognize the work on which `Icod.CoreUtils` is based and inspired while distinguishing that prior work from the independent C#/.NET implementation in this repository.
 
 ## Goals
 
