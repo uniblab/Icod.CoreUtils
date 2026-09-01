@@ -80,7 +80,7 @@ SELinux-style `--context` output is capability-dependent. On systems where the p
 
 GNU `id` was written by Arnold Robbins and David MacKenzie.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

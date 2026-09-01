@@ -61,7 +61,7 @@ Numeric parsing and formatting use invariant culture, so decimal points and comm
 
 GNU `seq` was written by Ulrich Drepper.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

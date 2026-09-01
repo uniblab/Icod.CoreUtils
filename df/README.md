@@ -96,7 +96,7 @@ Filesystem observations are obtained through the shared filesystem-usage and met
 
 GNU `df` was written by Torbjörn Granlund, David MacKenzie, and Paul Eggert.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

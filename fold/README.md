@@ -44,7 +44,7 @@ Implementation files are documented in `src/README.md`; dedicated tests are in `
 
 GNU `fold` was written by David MacKenzie.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

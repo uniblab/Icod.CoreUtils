@@ -26,7 +26,7 @@ The conformance baseline is GNU Coreutils 9.11. The command supports strict, mis
 
 GNU `readlink` was written by Dmitry V. Levin.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

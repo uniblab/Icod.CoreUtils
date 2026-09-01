@@ -54,7 +54,7 @@ Terminal discovery is provider-backed through `Icod.CommandFramework.Terminal`. 
 
 GNU `tty` was written by David MacKenzie.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

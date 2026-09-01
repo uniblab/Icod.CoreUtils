@@ -23,6 +23,28 @@ public sealed class CommandTests {
 		Assert.Equal( ProcessCancellationPolicy.LeaveRunning, executor.Options.CancellationPolicy );
 	}
 
+	/// <summary>Verifies GNU accepts unambiguous abbreviations of the standard long options.</summary>
+	[Theory]
+	[InlineData( "--h", "Usage: nohup" )]
+	[InlineData( "--v", "nohup (Icod.CoreUtils) 9.11" )]
+	public async Task AbbreviatesStandardLongOptions(
+		string option,
+		string expected
+	) {
+		var output = new MemoryStream();
+		var exitCode = await Command.RunAsync(
+			[ option ],
+			stdout: output,
+			stderr: new MemoryStream()
+		);
+		Assert.Equal( 0, exitCode );
+		Assert.Contains(
+			expected,
+			Encoding.UTF8.GetString( output.ToArray() ),
+			StringComparison.Ordinal
+		);
+	}
+
 	/// <summary>Verifies terminal output uses one append file for stdout and terminal stderr.</summary>
 	[Fact]
 	public async Task RedirectsTerminalOutputAndErrorToNohupOut() {
@@ -42,6 +64,274 @@ public sealed class CommandTests {
 		Assert.Same( executor.Options.StandardOutput, executor.Options.StandardError );
 		Assert.Equal( "nohup.out", files.Paths.Single() );
 		Assert.Contains( "appending output", Encoding.UTF8.GetString( diagnostics.ToArray() ), StringComparison.Ordinal );
+	}
+
+	/// <summary>Verifies POSIX terminal stdout/stderr use native child descriptor duplication.</summary>
+	[Fact]
+	public async Task UsesNativeDescriptorDuplicationForTerminalOutputAndError() {
+		if ( OperatingSystem.IsWindows() ) {
+			return;
+		}
+
+		var path = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
+			$"icod-nohup-native-{Guid.NewGuid():N}"
+		);
+		try {
+			var terminal = new FakeTerminalProvider { Output = true, Error = true };
+			var executor = new FakeExecutor();
+			var diagnostics = new StringWriter();
+			var exitCode = await Command.RunAsync(
+				[ "tool" ],
+				terminalProvider: terminal,
+				processExecutor: executor,
+				outputFileProvider: new FileBackedOutputFiles( path ),
+				commandError: diagnostics,
+				replaceCurrentProcess: true
+			);
+
+			Assert.Equal( 0, exitCode );
+			Assert.NotNull( executor.Options );
+			Assert.True( executor.Options!.ReplaceCurrentProcess );
+			Assert.Equal( "tool", executor.Options.ArgumentZero );
+			Assert.Null( executor.Options.StandardOutput );
+			Assert.Null( executor.Options.StandardError );
+			Assert.Collection(
+				executor.Options.PosixFileDescriptorDuplications,
+				duplication => {
+					Assert.Equal( 1, duplication.DestinationDescriptor );
+					Assert.True( duplication.CloseSource );
+				},
+				duplication => {
+					Assert.Equal( 1, duplication.SourceDescriptor );
+					Assert.Equal( 2, duplication.DestinationDescriptor );
+					Assert.False( duplication.CloseSource );
+				}
+			);
+			Assert.Contains( "appending output", diagnostics.ToString(), StringComparison.Ordinal );
+		} finally {
+			if ( File.Exists( path ) ) {
+				File.Delete( path );
+			}
+		}
+	}
+
+	/// <summary>Verifies the standalone host really replaces itself instead of supervising an extra child process.</summary>
+	[Fact]
+	public async Task StandalonePosixNohupPreservesProcessIdentity() {
+		if ( OperatingSystem.IsWindows() ) {
+			return;
+		}
+
+		var targetFrameworkDirectory = new DirectoryInfo(
+			AppContext.BaseDirectory
+		);
+		var configurationDirectory = targetFrameworkDirectory.Parent
+			?? throw new InvalidOperationException();
+		var testsDirectory = configurationDirectory.Parent?.Parent?.Parent
+			?? throw new InvalidOperationException();
+		var repositoryDirectory = testsDirectory.Parent
+			?? throw new InvalidOperationException();
+		var commandAssembly = System.IO.Path.Combine(
+			repositoryDirectory.FullName,
+			"bin",
+			configurationDirectory.Name,
+			targetFrameworkDirectory.Name,
+			"nohup.dll"
+		);
+		Assert.True(
+			File.Exists( commandAssembly ),
+			$"Standalone command was not built at '{commandAssembly}'."
+		);
+
+		var dotnet = Environment.GetEnvironmentVariable(
+			"DOTNET_HOST_PATH"
+		) ?? "dotnet";
+		var startInfo = new System.Diagnostics.ProcessStartInfo(
+			dotnet
+		) {
+			UseShellExecute = false,
+			RedirectStandardOutput = true,
+			RedirectStandardError = true
+		};
+		startInfo.ArgumentList.Add(
+			commandAssembly
+		);
+		startInfo.ArgumentList.Add(
+			"/bin/sh"
+		);
+		startInfo.ArgumentList.Add(
+			"-c"
+		);
+		startInfo.ArgumentList.Add(
+			"printf '%s' \"$$\""
+		);
+
+		System.Diagnostics.Process? process = null;
+		try {
+			process = System.Diagnostics.Process.Start(
+				startInfo
+			) ?? throw new InvalidOperationException( "Unable to start standalone command." );
+			var expectedProcessId = process.Id;
+			var outputTask = process.StandardOutput.ReadToEndAsync();
+			var errorTask = process.StandardError.ReadToEndAsync();
+			using var waitCancellation = new CancellationTokenSource(
+				TimeSpan.FromSeconds( 10 )
+			);
+			await process.WaitForExitAsync(
+				waitCancellation.Token
+			);
+
+			var output = await outputTask;
+			var error = await errorTask;
+			Assert.True(
+				0 == process.ExitCode,
+				$"Standalone command exited with status {process.ExitCode}: {error}"
+			);
+			Assert.True(
+				int.TryParse( output, out var actualProcessId ),
+				$"Replacement command reported an invalid process ID: '{output}'."
+			);
+			Assert.Equal( expectedProcessId, actualProcessId );
+		} finally {
+			if ( null != process ) {
+				if ( !process.HasExited ) {
+					process.Kill(
+						entireProcessTree: true
+					);
+					await process.WaitForExitAsync();
+				}
+				process.Dispose();
+			}
+		}
+	}
+
+	/// <summary>Verifies a detached POSIX child retains native output descriptors after <c>nohup</c> returns.</summary>
+	[Fact]
+	public async Task PosixChildRetainsOutputDescriptorsAfterNohupReturns() {
+		if ( OperatingSystem.IsWindows() ) {
+			return;
+		}
+
+		var directory = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
+			$"icod-nohup-detached-{Guid.NewGuid():N}"
+		);
+		Directory.CreateDirectory( directory );
+		var outputPath = System.IO.Path.Combine( directory, "nohup.out" );
+		var startedPath = System.IO.Path.Combine( directory, "started" );
+		var releasePath = System.IO.Path.Combine( directory, "release" );
+		var finishedPath = System.IO.Path.Combine( directory, "finished" );
+		using var cancellation = new CancellationTokenSource();
+		Task<int>? runTask = null;
+		try {
+			var terminal = new FakeTerminalProvider { Output = true, Error = true };
+			var diagnostics = new StringWriter();
+			runTask = Command.RunAsync(
+				[
+					"/bin/sh",
+					"-c",
+					"printf started > \"$1\"; while [ ! -f \"$2\" ]; do :; done; printf survived-out; printf survived-err >&2; printf finished > \"$3\"",
+					"nohup-test",
+					startedPath,
+					releasePath,
+					finishedPath
+				],
+				terminalProvider: terminal,
+				processExecutor: SystemProcessExecutor.Instance,
+				outputFileProvider: new FileBackedOutputFiles( outputPath ),
+				cancellationToken: cancellation.Token,
+				commandError: diagnostics
+			);
+
+			Assert.True(
+				await WaitForFileAsync( startedPath ),
+				"Child process did not reach the descriptor-retention gate."
+			);
+
+			cancellation.Cancel();
+			var exitCode = await runTask;
+			Assert.Equal( 125, exitCode );
+
+			await File.WriteAllTextAsync(
+				releasePath,
+				"release"
+			);
+			Assert.True(
+				await WaitForFileAsync( finishedPath ),
+				"Detached child did not finish after nohup returned."
+			);
+			var output = await File.ReadAllTextAsync(
+				outputPath
+			);
+			Assert.Contains( "survived-out", output, StringComparison.Ordinal );
+			Assert.Contains( "survived-err", output, StringComparison.Ordinal );
+		} finally {
+			cancellation.Cancel();
+			if ( !File.Exists( releasePath ) ) {
+				await File.WriteAllTextAsync(
+					releasePath,
+					"release"
+				);
+			}
+			if ( null != runTask && !runTask.IsCompleted ) {
+				_ = await runTask;
+			}
+			if ( File.Exists( startedPath ) && !File.Exists( finishedPath ) ) {
+				_ = await WaitForFileAsync( finishedPath );
+			}
+			Directory.Delete(
+				directory,
+				true
+			);
+		}
+
+		static async Task<bool> WaitForFileAsync(
+			string path
+		) {
+			for ( var attempt = 0; 250 > attempt; attempt++ ) {
+				if ( File.Exists( path ) ) {
+					return true;
+				}
+				await Task.Delay( 20 );
+			}
+			return false;
+		}
+	}
+
+	/// <summary>Verifies POSIX terminal stderr duplicates inherited stdout without opening a managed stream.</summary>
+	[Fact]
+	public async Task UsesNativeDescriptorDuplicationForTerminalError() {
+		if ( OperatingSystem.IsWindows() ) {
+			return;
+		}
+
+		var terminal = new FakeTerminalProvider { Error = true };
+		var executor = new FakeExecutor();
+		var diagnostics = new StringWriter();
+		var opens = 0;
+		var exitCode = await Command.RunAsync(
+			[ "tool" ],
+			terminalProvider: terminal,
+			processExecutor: executor,
+			standardStreamStateProvider: new FakeStandardStreamStateProvider(),
+			standardOutputFactory: () => {
+				opens++;
+				return new MemoryStream();
+			},
+			commandError: diagnostics
+		);
+
+		Assert.Equal( 0, exitCode );
+		Assert.Equal( 0, opens );
+		Assert.NotNull( executor.Options );
+		Assert.Null( executor.Options!.StandardOutput );
+		Assert.Null( executor.Options.StandardError );
+		var duplication = Assert.Single( executor.Options.PosixFileDescriptorDuplications );
+		Assert.Equal( 1, duplication.SourceDescriptor );
+		Assert.Equal( 2, duplication.DestinationDescriptor );
+		Assert.False( duplication.CloseSource );
+		Assert.Contains( "redirecting standard error", diagnostics.ToString(), StringComparison.Ordinal );
 	}
 
 	/// <summary>Verifies a failed current-directory output falls back to HOME.</summary>
@@ -290,6 +580,32 @@ public sealed class CommandTests {
 	private sealed class NoopDisposable : IDisposable {
 		public static NoopDisposable Instance { get; } = new();
 		public void Dispose() { }
+	}
+
+	private sealed class FileBackedOutputFiles : INohupOutputFileProvider {
+		private readonly string _path;
+
+		public FileBackedOutputFiles(
+			string path
+		) {
+			ArgumentException.ThrowIfNullOrWhiteSpace( path );
+			this._path = path;
+		}
+
+		public NohupOutputDestination OpenAppend(
+			string path
+		) {
+			ArgumentException.ThrowIfNullOrWhiteSpace( path );
+			return new NohupOutputDestination(
+				this._path,
+				new FileStream(
+					this._path,
+					FileMode.Append,
+					FileAccess.Write,
+					FileShare.Read | FileShare.Write | FileShare.Delete
+				)
+			);
+		}
 	}
 
 	private sealed class FakeOutputFiles : INohupOutputFileProvider {

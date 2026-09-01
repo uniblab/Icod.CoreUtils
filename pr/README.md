@@ -68,7 +68,7 @@ Pagination is managed. Header dates use the repository's shared time abstraction
 
 GNU `pr` was written by Pete TerMaat and Roland Huebner.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

@@ -93,16 +93,61 @@ public static class Command {
 			await WriteDiagnosticAsync( stderr, "timeout: required host signals are unavailable", cancellationToken ).ConfigureAwait( false );
 			return InternalFailure;
 		}
+		var childSignalPolicy = CreateChildSignalPolicy(
+			timeoutSignal
+		);
 
 		if ( cancellationToken.IsCancellationRequested ) return InternalFailure;
 		var started = new TaskCompletionSource<ProcessIdentity>( TaskCreationOptions.RunContinuationsAsynchronously );
 		using var executorCancellation = new CancellationTokenSource();
 		var windowsTreeSubstitution = usingSystemExecutor && OperatingSystem.IsWindows() && !parsed.Foreground;
+		var monitorProcessGroupAvailable = usingSystemExecutor
+			&& forwardHostSignals
+			&& !parsed.Foreground
+			&& TimeoutProcessGroup.OwnsCurrentProcessGroup
+		;
+		ProcessIdentity? monitoredIdentity = null;
+		var monitorOwnsProcessGroup = false;
+		TimeoutSignalForwardingScope? forwardingScope = null;
+		forwardingScope = forwardHostSignals && usingSystemExecutor
+			? TimeoutSignalForwardingScope.Create(
+				timeoutSignal,
+				signals,
+				name => {
+					var identity = monitoredIdentity;
+					if ( null != identity ) {
+						var processGroupId = monitorOwnsProcessGroup
+							? Environment.ProcessId
+							: identity.ProcessId
+						;
+						_ = ForwardExternalSignalAsync(
+							name,
+							identity,
+							parsed.Foreground,
+							processGroupId,
+							monitorOwnsProcessGroup,
+							parsed.Verbose,
+							command,
+							stderr,
+							signals,
+							continueSignalResult.Value!,
+							forwardingScope
+						);
+					}
+				}
+			)
+			: null
+		;
+		monitorOwnsProcessGroup = monitorProcessGroupAvailable
+			&& null != forwardingScope
+		;
+		using var forwardingScopeOwner = forwardingScope;
 		var runOptions = new ProcessRunOptions( command ) {
 			CancellationPolicy = windowsTreeSubstitution ? ProcessCancellationPolicy.KillProcessTree : ProcessCancellationPolicy.LeaveRunning,
-			CreateProcessGroup = !parsed.Foreground,
+			CreateProcessGroup = !parsed.Foreground && !monitorOwnsProcessGroup,
 			ResolveExecutable = true,
 			ReturnLaunchFailureResult = true,
+			SignalPolicy = childSignalPolicy,
 			StandardInput = stdin,
 			StandardOutput = stdout,
 			StandardError = stderr,
@@ -120,15 +165,24 @@ public static class Command {
 		var first = await Task.WhenAny( runTask, started.Task ).ConfigureAwait( false );
 		if ( ReferenceEquals( first, runTask ) ) return await FinishProcessAsync( runTask, stderr, command ).ConfigureAwait( false );
 		var identity = await started.Task.ConfigureAwait( false );
-		using var forwardingScope = forwardHostSignals && usingSystemExecutor
-			? TimeoutSignalForwardingScope.Create( timeoutSignal, name => _ = ForwardExternalSignalAsync( name, identity, parsed.Foreground, parsed.Verbose, command, stderr, signals, continueSignalResult.Value! ) )
-			: null
+		monitoredIdentity = identity;
+		var processGroupId = monitorOwnsProcessGroup
+			? Environment.ProcessId
+			: identity.ProcessId
 		;
 		var cancellationTask = CancellationAsTask( cancellationToken );
 		if ( !duration.Enabled ) {
 			var completed = await Task.WhenAny( runTask, cancellationTask ).ConfigureAwait( false );
 			if ( ReferenceEquals( completed, runTask ) ) return await FinishProcessAsync( runTask, stderr, command ).ConfigureAwait( false );
-			await ForceCleanupAsync( identity, parsed.Foreground, signals, killSignalResult.Value!, executorCancellation ).ConfigureAwait( false );
+			await ForceCleanupAsync(
+				identity,
+				parsed.Foreground,
+				processGroupId,
+				monitorOwnsProcessGroup,
+				signals,
+				killSignalResult.Value!,
+				executorCancellation
+			).ConfigureAwait( false );
 			_ = await ObserveRunResultAsync( runTask ).ConfigureAwait( false );
 			return InternalFailure;
 		}
@@ -142,7 +196,15 @@ public static class Command {
 		}
 		if ( ReferenceEquals( winner, cancellationTask ) ) {
 			timeoutDelayCancellation.Cancel();
-			await ForceCleanupAsync( identity, parsed.Foreground, signals, killSignalResult.Value!, executorCancellation ).ConfigureAwait( false );
+			await ForceCleanupAsync(
+				identity,
+				parsed.Foreground,
+				processGroupId,
+				monitorOwnsProcessGroup,
+				signals,
+				killSignalResult.Value!,
+				executorCancellation
+			).ConfigureAwait( false );
 			_ = await ObserveRunResultAsync( runTask ).ConfigureAwait( false );
 			return InternalFailure;
 		}
@@ -159,14 +221,25 @@ public static class Command {
 			initialDelivery = await DeliverTimeoutSignalAsync(
 				identity,
 				parsed.Foreground,
+				processGroupId,
+				monitorOwnsProcessGroup,
 				timeoutSignal,
 				continueSignalResult.Value!,
-				signals
+				signals,
+				forwardingScope
 			).ConfigureAwait( false );
 		}
 		if ( ProcessOperationStatus.Unsupported == initialDelivery.Status ) {
 			await WriteDiagnosticAsync( stderr, $"timeout: cannot send signal {timeoutSignal.Name}: {initialDelivery.Message ?? "unsupported on this host"}", CancellationToken.None ).ConfigureAwait( false );
-			await ForceCleanupAsync( identity, parsed.Foreground, signals, killSignalResult.Value!, executorCancellation ).ConfigureAwait( false );
+			await ForceCleanupAsync(
+				identity,
+				parsed.Foreground,
+				processGroupId,
+				monitorOwnsProcessGroup,
+				signals,
+				killSignalResult.Value!,
+				executorCancellation
+			).ConfigureAwait( false );
 			_ = await ObserveRunResultAsync( runTask ).ConfigureAwait( false );
 			return InternalFailure;
 		}
@@ -177,7 +250,15 @@ public static class Command {
 			winner = await Task.WhenAny( runTask, killDelayTask, cancellationTask ).ConfigureAwait( false );
 			if ( ReferenceEquals( winner, cancellationTask ) ) {
 				killDelayCancellation.Cancel();
-				await ForceCleanupAsync( identity, parsed.Foreground, signals, killSignalResult.Value!, executorCancellation ).ConfigureAwait( false );
+				await ForceCleanupAsync(
+					identity,
+					parsed.Foreground,
+					processGroupId,
+					monitorOwnsProcessGroup,
+					signals,
+					killSignalResult.Value!,
+					executorCancellation
+				).ConfigureAwait( false );
 				_ = await ObserveRunResultAsync( runTask ).ConfigureAwait( false );
 				return InternalFailure;
 			}
@@ -185,7 +266,16 @@ public static class Command {
 				lastSignal = killSignalResult.Value!;
 				if ( parsed.Verbose ) await WriteSignalDiagnosticAsync( stderr, lastSignal, command ).ConfigureAwait( false );
 				if ( windowsTreeSubstitution ) executorCancellation.Cancel();
-				else _ = await DeliverTimeoutSignalAsync( identity, parsed.Foreground, lastSignal, continueSignalResult.Value!, signals ).ConfigureAwait( false );
+				else _ = await DeliverTimeoutSignalAsync(
+					identity,
+					parsed.Foreground,
+					processGroupId,
+					monitorOwnsProcessGroup,
+					lastSignal,
+					continueSignalResult.Value!,
+					signals,
+					forwardingScope
+				).ConfigureAwait( false );
 			} else killDelayCancellation.Cancel();
 		}
 
@@ -227,17 +317,29 @@ public static class Command {
 		string signalName,
 		ProcessIdentity identity,
 		bool foreground,
+		int processGroupId,
+		bool groupIncludesMonitor,
 		bool verbose,
 		string command,
 		Stream? stderr,
 		IProcessSignalProvider signals,
-		ProcessSignal continueSignal
+		ProcessSignal continueSignal,
+		TimeoutSignalForwardingScope? forwardingScope
 	) {
 		try {
 			var parsed = signals.ParseSignal( signalName );
 			if ( !parsed.Succeeded ) return;
 			if ( verbose ) await WriteSignalDiagnosticAsync( stderr, parsed.Value!, command ).ConfigureAwait( false );
-			_ = await DeliverTimeoutSignalAsync( identity, foreground, parsed.Value!, continueSignal, signals ).ConfigureAwait( false );
+			_ = await DeliverTimeoutSignalAsync(
+				identity,
+				foreground,
+				processGroupId,
+				groupIncludesMonitor,
+				parsed.Value!,
+				continueSignal,
+				signals,
+				forwardingScope
+			).ConfigureAwait( false );
 		} catch {
 			// A signal callback cannot safely surface an asynchronous forwarding failure.
 		}
@@ -246,16 +348,32 @@ public static class Command {
 	private static async Task<ProcessOperationResult> DeliverTimeoutSignalAsync(
 		ProcessIdentity identity,
 		bool foreground,
+		int processGroupId,
+		bool groupIncludesMonitor,
 		ProcessSignal signal,
 		ProcessSignal continueSignal,
-		IProcessSignalProvider signals
+		IProcessSignalProvider signals,
+		TimeoutSignalForwardingScope? forwardingScope
 	) {
 		var direct = await signals.DeliverAsync( ProcessTarget.ForProcess( identity ), signal ).ConfigureAwait( false );
 		var group = ProcessOperationResult.Success();
-		if ( !foreground ) group = await signals.DeliverAsync( ProcessTarget.ForProcessGroup( identity.ProcessId ), signal ).ConfigureAwait( false );
-		if ( signal.Number != 9 && signal.Number != continueSignal.Number ) {
+		if ( !foreground ) {
+			if ( groupIncludesMonitor ) {
+				forwardingScope?.SuppressForwarding(
+					signal.Name
+				);
+			}
+			group = await signals.DeliverAsync(
+				ProcessTarget.ForProcessGroup( processGroupId ),
+				signal
+			).ConfigureAwait( false );
+		}
+		if ( !foreground
+			&& signal.Number != 9
+			&& signal.Number != continueSignal.Number
+		) {
 			_ = await signals.DeliverAsync( ProcessTarget.ForProcess( identity ), continueSignal ).ConfigureAwait( false );
-			if ( !foreground ) _ = await signals.DeliverAsync( ProcessTarget.ForProcessGroup( identity.ProcessId ), continueSignal ).ConfigureAwait( false );
+			_ = await signals.DeliverAsync( ProcessTarget.ForProcessGroup( processGroupId ), continueSignal ).ConfigureAwait( false );
 		}
 		if ( direct.Succeeded ) return group.Succeeded || ProcessOperationStatus.Unsupported == group.Status ? direct : group;
 		return direct;
@@ -264,6 +382,8 @@ public static class Command {
 	private static async Task ForceCleanupAsync(
 		ProcessIdentity identity,
 		bool foreground,
+		int processGroupId,
+		bool groupIncludesMonitor,
 		IProcessSignalProvider signals,
 		ProcessSignal killSignal,
 		CancellationTokenSource executorCancellation
@@ -273,13 +393,66 @@ public static class Command {
 			return;
 		}
 		_ = await signals.DeliverAsync( ProcessTarget.ForProcess( identity ), killSignal ).ConfigureAwait( false );
-		if ( !foreground ) _ = await signals.DeliverAsync( ProcessTarget.ForProcessGroup( identity.ProcessId ), killSignal ).ConfigureAwait( false );
+		if ( !foreground && !groupIncludesMonitor ) {
+			_ = await signals.DeliverAsync(
+				ProcessTarget.ForProcessGroup( processGroupId ),
+				killSignal
+			).ConfigureAwait( false );
+		}
 		executorCancellation.Cancel();
 	}
 
+	private static ProcessLaunchSignalPolicy? CreateChildSignalPolicy(
+		ProcessSignal timeoutSignal
+	) {
+		ArgumentNullException.ThrowIfNull( timeoutSignal );
+		if ( OperatingSystem.IsWindows() ) {
+			return null;
+		}
+
+		var policy = new ProcessLaunchSignalPolicy();
+		if ( 0 < timeoutSignal.Number ) {
+			policy.SetDisposition(
+				timeoutSignal,
+				ProcessSignalLaunchDisposition.Default,
+				ignoreErrors: true
+			);
+		}
+		return policy.IsEmpty
+			? null
+			: policy
+		;
+	}
+
 	private static ProcessOperationResult<ProcessSignal> ParseSignal( IProcessSignalProvider signals, string text ) {
-		if ( string.IsNullOrEmpty( text ) || text[ 0 ] is '+' or '-' ) {
-			return ProcessOperationResult<ProcessSignal>.Failure( ProcessOperationStatus.InvalidArgument, "invalid signal" );
+		if ( string.IsNullOrEmpty( text )
+			|| text.Any( char.IsWhiteSpace )
+			|| text[ 0 ] is '+' or '-'
+		) {
+			return ProcessOperationResult<ProcessSignal>.Failure(
+				ProcessOperationStatus.InvalidArgument,
+				"invalid signal"
+			);
+		}
+		if ( char.IsAsciiDigit( text[ 0 ] ) ) {
+			if ( !int.TryParse(
+				text,
+				NumberStyles.None,
+				CultureInfo.InvariantCulture,
+				out var numericSignal
+			) ) {
+				return ProcessOperationResult<ProcessSignal>.Failure(
+					ProcessOperationStatus.InvalidArgument,
+					"invalid signal"
+				);
+			}
+			numericSignal &= ( 0xFF <= numericSignal )
+				? 0xFF
+				: 0x7F
+			;
+			return signals.TranslateSignal(
+				numericSignal
+			);
 		}
 		return signals.ParseSignal( text );
 	}
@@ -299,6 +472,21 @@ public static class Command {
 			TaskContinuationOptions.ExecuteSynchronously,
 			TaskScheduler.Default
 		);
+	}
+
+	/// <summary>Gets whether the standalone POSIX host should establish itself as the monitored process-group leader.</summary>
+	internal static bool ShouldCreateMonitorProcessGroup(
+		string[] args
+	) {
+		ArgumentNullException.ThrowIfNull( args );
+		var parsed = ParseArguments( args );
+		return null == parsed.Error
+			&& !parsed.ShowHelp
+			&& !parsed.ShowVersion
+			&& !parsed.Foreground
+			&& null != parsed.DurationText
+			&& null != parsed.Command
+		;
 	}
 
 	private static TimeoutArguments ParseArguments( string[] args ) {
@@ -414,7 +602,9 @@ public static class Command {
 			value = value[ 2.. ];
 			var exponent = value.IndexOfAny( [ 'p', 'P' ] );
 			if ( 0 <= exponent ) value = value[ ..exponent ];
-			return value.Any( static character => character is not '0' and not '.' );
+			return value.Any(
+				static character => Uri.IsHexDigit( character ) && '0' != character
+			);
 		}
 		var decimalExponent = value.IndexOfAny( [ 'e', 'E' ] );
 		if ( 0 <= decimalExponent ) value = value[ ..decimalExponent ];
@@ -433,12 +623,54 @@ public static class Command {
 		}
 		if ( text.Equals( "nan", StringComparison.OrdinalIgnoreCase ) ) { value = double.NaN; return true; }
 		if ( text.StartsWith( "0x", StringComparison.OrdinalIgnoreCase ) ) {
-			if ( !TryParseHexFloat( text[ 2.. ], out value ) ) return false;
+			var hexadecimal = text[ 2.. ];
+			var decimalSeparator = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+			if ( "." != decimalSeparator
+				&& hexadecimal.Contains(
+					decimalSeparator,
+					StringComparison.Ordinal
+				)
+			) {
+				var localizedHexadecimal = hexadecimal.Replace(
+					decimalSeparator,
+					".",
+					StringComparison.Ordinal
+				);
+				if ( TryParseHexFloat(
+					localizedHexadecimal,
+					out value
+				) ) {
+					value *= sign;
+					return true;
+				}
+			}
+			if ( !TryParseHexFloat(
+				hexadecimal,
+				out value
+			) ) {
+				return false;
+			}
 			value *= sign;
 			return true;
 		}
-		if ( !double.TryParse( ( 0 > sign ? "-" : string.Empty ) + text, NumberStyles.Float, CultureInfo.InvariantCulture, out value ) ) return false;
-		return true;
+		var signedText = ( 0 > sign )
+			? string.Concat( "-", text )
+			: text
+		;
+		if ( double.TryParse(
+			signedText,
+			NumberStyles.Float,
+			CultureInfo.CurrentCulture,
+			out value
+		) ) {
+			return true;
+		}
+		return double.TryParse(
+			signedText,
+			NumberStyles.Float,
+			CultureInfo.InvariantCulture,
+			out value
+		);
 	}
 
 	private static bool TryParseHexFloat( string text, out double value ) {

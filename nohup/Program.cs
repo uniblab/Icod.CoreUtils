@@ -42,7 +42,10 @@ internal static class Program {
 			outputFileProvider: SystemNohupOutputFileProvider.Instance,
 			standardStreamStateProvider: SystemNohupStandardStreamStateProvider.Instance,
 			sourceEnvironment: ProcessEnvironment.CreateInheritedBuilder().Build(),
-			standardOutputFactory: Console.OpenStandardOutput
+			standardOutputFactory: Console.OpenStandardOutput,
+			commandOutput: Console.Out,
+			commandError: Console.Error,
+			replaceCurrentProcess: !OperatingSystem.IsWindows()
 		).ConfigureAwait( false );
 	}
 }

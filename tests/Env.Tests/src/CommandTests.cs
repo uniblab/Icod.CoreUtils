@@ -27,6 +27,58 @@ public sealed class CommandTests {
 		Assert.Equal( "A=1\0", Text( output ) );
 	}
 
+	/// <summary>Verifies GNU accepts an unambiguous prefix of a long option name.</summary>
+	[Fact]
+	public async Task AbbreviatesUniqueLongOption() {
+		var source = ProcessEnvironment.CreateEmptyBuilder().Set( "OLD", "value" ).Build();
+		var output = new MemoryStream();
+		var exitCode = await Command.RunAsync(
+			[ "--ignore-e", "A=1" ],
+			stdout: output,
+			stderr: new MemoryStream(),
+			sourceEnvironment: source
+		);
+		Assert.Equal( 0, exitCode );
+		Assert.Equal(
+			string.Concat( "A=1", Environment.NewLine ),
+			Text( output )
+		);
+	}
+
+	/// <summary>Verifies GNU rejects an ambiguous long-option prefix.</summary>
+	[Fact]
+	public async Task RejectsAmbiguousLongOption() {
+		var error = new MemoryStream();
+		var exitCode = await Command.RunAsync(
+			[ "--ignore" ],
+			stdout: new MemoryStream(),
+			stderr: error
+		);
+		Assert.Equal( 125, exitCode );
+		Assert.Contains(
+			"ambiguous",
+			Text( error ),
+			StringComparison.Ordinal
+		);
+	}
+
+	/// <summary>Verifies GNU diagnoses a whitespace-bearing shebang option and recommends <c>-S</c>.</summary>
+	[Fact]
+	public async Task ShebangWhitespaceOptionSuggestsSplitString() {
+		var error = new MemoryStream();
+		var exitCode = await Command.RunAsync(
+			[ "-i command" ],
+			stdout: new MemoryStream(),
+			stderr: error
+		);
+		Assert.Equal( 125, exitCode );
+		Assert.Contains(
+			"use -[v]S",
+			Text( error ),
+			StringComparison.Ordinal
+		);
+	}
+
 	/// <summary>Verifies clearing, removal, assignments, lookup, and exact arguments reach F4.</summary>
 	[Fact]
 	public async Task BuildsExactChildEnvironmentAndArguments() {
@@ -98,10 +150,102 @@ public sealed class CommandTests {
 		var exitCode = await Command.RunAsync(
 			[ "tool", "arg" ],
 			processExecutor: executor,
-			sourceEnvironment: ProcessEnvironment.CreateEmptyBuilder().Build()
+			sourceEnvironment: ProcessEnvironment.CreateEmptyBuilder().Build(),
+			replaceCurrentProcess: true
 		);
 		Assert.Equal( 0, exitCode );
 		Assert.Equal( "tool", executor.Options!.ArgumentZero );
+		Assert.True( executor.Options.ReplaceCurrentProcess );
+	}
+
+	/// <summary>Verifies the standalone host really replaces itself instead of supervising an extra child process.</summary>
+	[Fact]
+	public async Task StandalonePosixEnvPreservesProcessIdentity() {
+		if ( OperatingSystem.IsWindows() ) {
+			return;
+		}
+
+		var targetFrameworkDirectory = new DirectoryInfo(
+			AppContext.BaseDirectory
+		);
+		var configurationDirectory = targetFrameworkDirectory.Parent
+			?? throw new InvalidOperationException();
+		var testsDirectory = configurationDirectory.Parent?.Parent?.Parent
+			?? throw new InvalidOperationException();
+		var repositoryDirectory = testsDirectory.Parent
+			?? throw new InvalidOperationException();
+		var commandAssembly = System.IO.Path.Combine(
+			repositoryDirectory.FullName,
+			"bin",
+			configurationDirectory.Name,
+			targetFrameworkDirectory.Name,
+			"env.dll"
+		);
+		Assert.True(
+			File.Exists( commandAssembly ),
+			$"Standalone command was not built at '{commandAssembly}'."
+		);
+
+		var dotnet = Environment.GetEnvironmentVariable(
+			"DOTNET_HOST_PATH"
+		) ?? "dotnet";
+		var startInfo = new System.Diagnostics.ProcessStartInfo(
+			dotnet
+		) {
+			UseShellExecute = false,
+			RedirectStandardOutput = true,
+			RedirectStandardError = true
+		};
+		startInfo.ArgumentList.Add(
+			commandAssembly
+		);
+		startInfo.ArgumentList.Add(
+			"/bin/sh"
+		);
+		startInfo.ArgumentList.Add(
+			"-c"
+		);
+		startInfo.ArgumentList.Add(
+			"printf '%s' \"$$\""
+		);
+
+		System.Diagnostics.Process? process = null;
+		try {
+			process = System.Diagnostics.Process.Start(
+				startInfo
+			) ?? throw new InvalidOperationException( "Unable to start standalone command." );
+			var expectedProcessId = process.Id;
+			var outputTask = process.StandardOutput.ReadToEndAsync();
+			var errorTask = process.StandardError.ReadToEndAsync();
+			using var waitCancellation = new CancellationTokenSource(
+				TimeSpan.FromSeconds( 10 )
+			);
+			await process.WaitForExitAsync(
+				waitCancellation.Token
+			);
+
+			var output = await outputTask;
+			var error = await errorTask;
+			Assert.True(
+				0 == process.ExitCode,
+				$"Standalone command exited with status {process.ExitCode}: {error}"
+			);
+			Assert.True(
+				int.TryParse( output, out var actualProcessId ),
+				$"Replacement command reported an invalid process ID: '{output}'."
+			);
+			Assert.Equal( expectedProcessId, actualProcessId );
+		} finally {
+			if ( null != process ) {
+				if ( !process.HasExited ) {
+					process.Kill(
+						entireProcessTree: true
+					);
+					await process.WaitForExitAsync();
+				}
+				process.Dispose();
+			}
+		}
 	}
 
 	/// <summary>Verifies launch signal options create one consolidated child policy.</summary>

@@ -139,7 +139,7 @@ Binary standard-stream boundaries are preserved on Windows, Linux, and macOS. PO
 
 GNU `dd` was written by Paul Rubin, David MacKenzie, and Stuart Kemp.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

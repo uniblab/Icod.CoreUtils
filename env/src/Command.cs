@@ -18,6 +18,9 @@ public static class Command {
 		TextWriter? stderr = null
 	) {
 		ArgumentNullException.ThrowIfNull( args );
+		if ( null == stdin && null == stdout && null == stderr ) {
+			return RunAsync( args ).GetAwaiter().GetResult();
+		}
 		using var input = null == stdin ? null : new MemoryStream( Utf8.GetBytes( stdin.ReadToEnd() ), writable: false );
 		using var output = new MemoryStream();
 		using var error = new MemoryStream();
@@ -36,7 +39,8 @@ public static class Command {
 		IProcessExecutor? processExecutor = null,
 		IProcessSignalProvider? signalProvider = null,
 		ProcessEnvironment? sourceEnvironment = null,
-		CancellationToken cancellationToken = default
+		CancellationToken cancellationToken = default,
+		bool replaceCurrentProcess = false
 	) {
 		ArgumentNullException.ThrowIfNull( args );
 		var executor = processExecutor ?? SystemProcessExecutor.Instance;
@@ -47,6 +51,13 @@ public static class Command {
 			options = EnvOptions.Parse( args, originalEnvironment, signals );
 		} catch ( EnvUsageException exception ) {
 			await WriteDiagnosticAsync( stderr, $"env: {exception.Message}", cancellationToken ).ConfigureAwait( false );
+			if ( exception.SuggestSplitString ) {
+				await WriteDiagnosticAsync(
+					stderr,
+					"env: use -[v]S to pass options in shebang lines",
+					cancellationToken
+				).ConfigureAwait( false );
+			}
 			await WriteDiagnosticAsync( stderr, "Try 'env --help' for more information.", cancellationToken ).ConfigureAwait( false );
 			return InternalFailure;
 		}
@@ -134,6 +145,7 @@ public static class Command {
 			ArgumentZero = argumentZero,
 			CancellationPolicy = ProcessCancellationPolicy.KillProcessTree,
 			Environment = environment,
+			ReplaceCurrentProcess = replaceCurrentProcess,
 			ResolveExecutable = true,
 			ReturnLaunchFailureResult = true,
 			SignalPolicy = options.SignalPolicy.IsEmpty ? null : options.SignalPolicy,

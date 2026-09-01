@@ -29,7 +29,7 @@ The project references only `Icod.CoreUtils.Shared`. Shared owns the reusable co
 
 GNU `tr` was written by Jim Meyering.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

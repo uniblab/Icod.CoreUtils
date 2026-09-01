@@ -69,7 +69,7 @@ File and filesystem data come from `IFileSystemMetadataProvider`, allowing the s
 
 GNU `stat` was written by Michael Meskes.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

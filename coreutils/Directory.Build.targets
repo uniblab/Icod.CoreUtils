@@ -1,0 +1,8 @@
+<Project>
+	<ItemGroup Condition="'$(MSBuildProjectName)' == 'Icod.CoreUtils.Router' and $([MSBuild]::IsOSPlatform('Linux'))">
+		<None Include="$(OutputPath)libicodstdbuf.so">
+			<TargetPath>libicodstdbuf.so</TargetPath>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</None>
+	</ItemGroup>
+</Project>

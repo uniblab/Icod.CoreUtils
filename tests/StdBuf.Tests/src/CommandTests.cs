@@ -1,5 +1,6 @@
 namespace Icod.CoreUtils.StdBuf.Tests;
 
+using System.Runtime.InteropServices;
 using Icod.Processes;
 using Xunit;
 
@@ -107,6 +108,123 @@ public sealed class CommandTests {
 	}
 
 	[Fact]
+	public async Task PosixHostCanRequestCurrentProcessReplacement() {
+		if ( OperatingSystem.IsWindows() ) {
+			return;
+		}
+		var executor = new FakeProcessExecutor();
+		var status = await Command.RunAsync(
+			new[] { "-oL", "program" },
+			processExecutor: executor,
+			platform: FakeStdBufPlatform.Supported(),
+			environmentVariableProvider: static _ => null,
+			replaceCurrentProcess: true
+		);
+		Assert.Equal( 0, status );
+		var options = Assert.IsType<ProcessRunOptions>( executor.Options );
+		Assert.True( options.ReplaceCurrentProcess );
+		Assert.Equal( "program", options.ArgumentZero );
+	}
+
+	/// <summary>Verifies the standalone host really replaces itself instead of supervising an extra child process.</summary>
+	[Fact]
+	public async Task StandalonePosixStdBufPreservesProcessIdentity() {
+		if ( !OperatingSystem.IsLinux() && !OperatingSystem.IsMacOS() ) {
+			return;
+		}
+
+		var targetFrameworkDirectory = new DirectoryInfo(
+			AppContext.BaseDirectory
+		);
+		var configurationDirectory = targetFrameworkDirectory.Parent
+			?? throw new InvalidOperationException();
+		var testsDirectory = configurationDirectory.Parent?.Parent?.Parent
+			?? throw new InvalidOperationException();
+		var repositoryDirectory = testsDirectory.Parent
+			?? throw new InvalidOperationException();
+		var commandAssembly = System.IO.Path.Combine(
+			repositoryDirectory.FullName,
+			"bin",
+			configurationDirectory.Name,
+			targetFrameworkDirectory.Name,
+			"stdbuf.dll"
+		);
+		Assert.True(
+			File.Exists( commandAssembly ),
+			$"Standalone command was not built at '{commandAssembly}'."
+		);
+		var processIdentityProbe = System.IO.Path.Combine(
+			AppContext.BaseDirectory,
+			"stdbuf-buffering-probe"
+		);
+		Assert.True(
+			File.Exists( processIdentityProbe ),
+			$"Missing native process-identity probe: {processIdentityProbe}"
+		);
+
+		var dotnet = Environment.GetEnvironmentVariable(
+			"DOTNET_HOST_PATH"
+		) ?? "dotnet";
+		var startInfo = new System.Diagnostics.ProcessStartInfo(
+			dotnet
+		) {
+			UseShellExecute = false,
+			RedirectStandardOutput = true,
+			RedirectStandardError = true
+		};
+		startInfo.ArgumentList.Add(
+			commandAssembly
+		);
+		startInfo.ArgumentList.Add(
+			"-o0"
+		);
+		startInfo.ArgumentList.Add(
+			processIdentityProbe
+		);
+		startInfo.ArgumentList.Add(
+			"--process-id"
+		);
+
+		System.Diagnostics.Process? process = null;
+		try {
+			process = System.Diagnostics.Process.Start(
+				startInfo
+			) ?? throw new InvalidOperationException( "Unable to start standalone command." );
+			var expectedProcessId = process.Id;
+			var outputTask = process.StandardOutput.ReadToEndAsync();
+			var errorTask = process.StandardError.ReadToEndAsync();
+			using var waitCancellation = new CancellationTokenSource(
+				TimeSpan.FromSeconds( 10 )
+			);
+			await process.WaitForExitAsync(
+				waitCancellation.Token
+			);
+
+			var output = await outputTask;
+			var error = await errorTask;
+			Assert.True(
+				0 == process.ExitCode,
+				$"Standalone command exited with status {process.ExitCode}: {error}"
+			);
+			Assert.True(
+				int.TryParse( output, out var actualProcessId ),
+				$"Replacement command reported an invalid process ID: '{output}'."
+			);
+			Assert.Equal( expectedProcessId, actualProcessId );
+		} finally {
+			if ( null != process ) {
+				if ( !process.HasExited ) {
+					process.Kill(
+						entireProcessTree: true
+					);
+					await process.WaitForExitAsync();
+				}
+				process.Dispose();
+			}
+		}
+	}
+
+	[Fact]
 	public async Task LaterModeOptionReplacesEarlierMode() {
 		var executor = new FakeProcessExecutor();
 		var status = await Command.RunAsync(
@@ -188,8 +306,103 @@ public sealed class CommandTests {
 	}
 
 	[Fact]
-	public async Task LinuxNativeShimAppliesLineBuffering() {
-		if ( !OperatingSystem.IsLinux() ) {
+	public async Task FlatNamespaceRequirementIsAppliedToChildEnvironment() {
+		var executor = new FakeProcessExecutor();
+		var status = await Command.RunAsync(
+			new[] { "-o0", "program" },
+			processExecutor: executor,
+			platform: FakeStdBufPlatform.Supported(
+				forceFlatNamespace: true
+			),
+			environmentVariableProvider: static _ => null
+		);
+		Assert.Equal( 0, status );
+		var options = Assert.IsType<ProcessRunOptions>( executor.Options );
+		Assert.Equal(
+			"y",
+			options.EnvironmentVariables[ "DYLD_FORCE_FLAT_NAMESPACE" ]
+		);
+	}
+
+	[Fact]
+	public void SupportedPlatformPrefersArchitectureQualifiedNativeShim() {
+		if ( !OperatingSystem.IsLinux() && !OperatingSystem.IsMacOS() ) {
+			return;
+		}
+
+		var architectureName = RuntimeInformation.OSArchitecture switch {
+			Architecture.X64 => "x64",
+			Architecture.Arm64 => "arm64",
+			_ => null
+		};
+		if ( null == architectureName ) {
+			return;
+		}
+
+		var isMacOS = OperatingSystem.IsMacOS();
+		var platformName = ( isMacOS )
+			? "osx"
+			: "linux"
+		;
+		var extension = ( isMacOS )
+			? "dylib"
+			: "so"
+		;
+		var expectedEnvironmentVariable = ( isMacOS )
+			? "DYLD_INSERT_LIBRARIES"
+			: "LD_PRELOAD"
+		;
+		var fallbackPath = System.IO.Path.Combine(
+			AppContext.BaseDirectory,
+			$"libicodstdbuf.{extension}"
+		);
+		Assert.True(
+			File.Exists( fallbackPath ),
+			$"Missing native buffering shim: {fallbackPath}"
+		);
+		var qualifiedPath = System.IO.Path.Combine(
+			AppContext.BaseDirectory,
+			$"libicodstdbuf-{platformName}-{architectureName}.{extension}"
+		);
+		var createdQualifiedShim = false;
+		if ( !File.Exists( qualifiedPath ) ) {
+			File.Copy(
+				fallbackPath,
+				qualifiedPath
+			);
+			createdQualifiedShim = true;
+		}
+
+		try {
+			Assert.True(
+				SystemStdBufPlatform.Instance.TryGetPreloadConfiguration(
+					out var configuration,
+					out var unsupportedReason
+				),
+				unsupportedReason
+			);
+			Assert.Equal(
+				System.IO.Path.GetFullPath( qualifiedPath ),
+				configuration.LibraryPath
+			);
+			Assert.Equal(
+				expectedEnvironmentVariable,
+				configuration.EnvironmentVariable
+			);
+			Assert.Equal(
+				isMacOS,
+				configuration.ForceFlatNamespace
+			);
+		} finally {
+			if ( createdQualifiedShim ) {
+				File.Delete( qualifiedPath );
+			}
+		}
+	}
+
+	[Fact]
+	public async Task PosixNativeShimAppliesLineBuffering() {
+		if ( !OperatingSystem.IsLinux() && !OperatingSystem.IsMacOS() ) {
 			return;
 		}
 
@@ -245,15 +458,23 @@ public sealed class CommandTests {
 	}
 
 	private sealed class FakeStdBufPlatform : IStdBufPlatform {
+		private readonly bool _forceFlatNamespace;
 		private readonly bool _supported;
 
 		private FakeStdBufPlatform(
-			bool supported
+			bool supported,
+			bool forceFlatNamespace = false
 		) {
 			this._supported = supported;
+			this._forceFlatNamespace = forceFlatNamespace;
 		}
 
-		public static FakeStdBufPlatform Supported() => new( true );
+		public static FakeStdBufPlatform Supported(
+			bool forceFlatNamespace = false
+		) => new(
+			true,
+			forceFlatNamespace
+		);
 		public static FakeStdBufPlatform Unsupported() => new( false );
 
 		public bool TryGetPreloadConfiguration(
@@ -268,7 +489,8 @@ public sealed class CommandTests {
 			configuration = new StdBufPreloadConfiguration(
 				"LD_PRELOAD",
 				"/opt/icod/libicodstdbuf.so",
-				":"
+				":",
+				this._forceFlatNamespace
 			);
 			unsupportedReason = string.Empty;
 			return true;

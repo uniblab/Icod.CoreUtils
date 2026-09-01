@@ -131,6 +131,59 @@ function Invoke-Executable {
     }
 }
 
+function Assert-PosixProcessIdentityReplacement {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path,
+
+        [Parameter(Mandatory = $true)]
+        [string[]]$Arguments
+    )
+
+    Write-Host "> $Path $($Arguments -join ' ') [process identity]"
+    $startInfo = [System.Diagnostics.ProcessStartInfo]::new($Path)
+    $startInfo.UseShellExecute = $false
+    $startInfo.RedirectStandardOutput = $true
+    $startInfo.RedirectStandardError = $true
+    foreach ($argument in $Arguments) {
+        $startInfo.ArgumentList.Add($argument)
+    }
+
+    $process = [System.Diagnostics.Process]::Start($startInfo)
+    if ($null -eq $process) {
+        throw "Unable to start executable '$Path' for process-identity verification."
+    }
+
+    try {
+        $expectedProcessId = $process.Id
+        if (-not $process.WaitForExit(10000)) {
+            $process.Kill($true)
+            $process.WaitForExit()
+            throw "Executable '$Path' did not exit during process-identity verification."
+        }
+
+        $output = $process.StandardOutput.ReadToEnd()
+        $errorOutput = $process.StandardError.ReadToEnd()
+        if (0 -ne $process.ExitCode) {
+            throw "Executable '$Path' exited with status $($process.ExitCode) during process-identity verification: $errorOutput"
+        }
+
+        [int]$actualProcessId = 0
+        if (-not [int]::TryParse($output.Trim(), [ref]$actualProcessId)) {
+            throw "Executable '$Path' reported an invalid replacement process ID: '$output'."
+        }
+        if ($expectedProcessId -ne $actualProcessId) {
+            throw "Executable '$Path' supervised process $actualProcessId instead of replacing process $expectedProcessId."
+        }
+    } finally {
+        if (-not $process.HasExited) {
+            $process.Kill($true)
+            $process.WaitForExit()
+        }
+        $process.Dispose()
+    }
+}
+
 function Assert-ArchiveContents {
     param(
         [Parameter(Mandatory = $true)]
@@ -233,6 +286,25 @@ try {
                 Join-Path $stageDirectory $documentationFileName
             )
         }
+
+        if ('stdbuf' -eq $commandName) {
+            $stdBufShimFileName = if ($RuntimeIdentifier.StartsWith('linux-', [System.StringComparison]::OrdinalIgnoreCase)) {
+                'libicodstdbuf.so'
+            } elseif ($RuntimeIdentifier.StartsWith('osx-', [System.StringComparison]::OrdinalIgnoreCase)) {
+                'libicodstdbuf.dylib'
+            } else {
+                $null
+            }
+            if ($null -ne $stdBufShimFileName) {
+                $publishedStdBufShim = Join-Path $publishDirectory $stdBufShimFileName
+                if (-not (Test-Path -LiteralPath $publishedStdBufShim -PathType Leaf)) {
+                    throw "Publish did not produce '$publishedStdBufShim'."
+                }
+                Copy-Item `
+                    -LiteralPath $publishedStdBufShim `
+                    -Destination (Join-Path $stageDirectory $stdBufShimFileName)
+            }
+        }
     }
 
     Copy-Item -LiteralPath (Join-Path $repositoryRoot 'LICENSE') -Destination (
@@ -276,6 +348,50 @@ try {
                 -ExpectedExitCode $expectedVersionExitCode `
                 -RequireOutput $requireVersionOutput
         }
+
+        if (-not $IsWindowsPlatform) {
+            $identityCommandArguments = @(
+                '/bin/sh',
+                '-c',
+                'printf ''%s'' "$$"'
+            )
+            foreach ($commandName in @('env', 'nice', 'nohup')) {
+                $standaloneExecutable = Join-Path $stageDirectory (
+                    Get-ExecutableFileName -CommandName $commandName -Rid $RuntimeIdentifier
+                )
+                Assert-PosixProcessIdentityReplacement `
+                    -Path $standaloneExecutable `
+                    -Arguments $identityCommandArguments
+                Assert-PosixProcessIdentityReplacement `
+                    -Path $routerExecutable `
+                    -Arguments (@($commandName) + $identityCommandArguments)
+            }
+        }
+
+        if ($IsLinuxPlatform -or $IsMacOSPlatform) {
+            $standaloneStdBuf = Join-Path $stageDirectory (
+                Get-ExecutableFileName -CommandName 'stdbuf' -Rid $RuntimeIdentifier
+            )
+            $stdBufSmokeExecutable = Join-Path $stageDirectory (
+                Get-ExecutableFileName -CommandName 'true' -Rid $RuntimeIdentifier
+            )
+            Invoke-Executable `
+                -Path $standaloneStdBuf `
+                -Arguments @('-o0', $stdBufSmokeExecutable) `
+                -RequireOutput $false
+            Invoke-Executable `
+                -Path $routerExecutable `
+                -Arguments @('stdbuf', '-o0', $stdBufSmokeExecutable) `
+                -RequireOutput $false
+            if ($IsLinuxPlatform) {
+                Assert-PosixProcessIdentityReplacement `
+                    -Path $standaloneStdBuf `
+                    -Arguments (@('-o0') + $identityCommandArguments)
+                Assert-PosixProcessIdentityReplacement `
+                    -Path $routerExecutable `
+                    -Arguments (@('stdbuf', '-o0') + $identityCommandArguments)
+            }
+        }
     } else {
         Write-Host "Skipping executable smoke tests because host RID '$currentRid' does not match '$RuntimeIdentifier'."
     }
@@ -308,6 +424,11 @@ try {
         $expectedFileNames += Get-ExecutableFileName -CommandName $commandName -Rid $RuntimeIdentifier
         $expectedFileNames += "$commandName.README.md"
         $expectedFileNames += "$commandName.LICENSE.txt"
+    }
+    if ($RuntimeIdentifier.StartsWith('linux-', [System.StringComparison]::OrdinalIgnoreCase)) {
+        $expectedFileNames += 'libicodstdbuf.so'
+    } elseif ($RuntimeIdentifier.StartsWith('osx-', [System.StringComparison]::OrdinalIgnoreCase)) {
+        $expectedFileNames += 'libicodstdbuf.dylib'
     }
 
     Assert-ArchiveContents `

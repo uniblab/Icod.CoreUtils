@@ -10,12 +10,21 @@ public sealed class NohupOutputDestination : IDisposable, IAsyncDisposable {
 	/// <summary>Gets the display path used for diagnostics.</summary>
 	public string Path { get; }
 
+	/// <summary>Gets the open POSIX descriptor when the destination is a native file stream.</summary>
+	internal int? PosixFileDescriptor { get; }
+
 	/// <summary>Initializes a destination.</summary>
 	public NohupOutputDestination( string path, Stream stream ) {
 		ArgumentException.ThrowIfNullOrWhiteSpace( path );
 		ArgumentNullException.ThrowIfNull( stream );
 		this.Path = path;
 		this.Stream = stream;
+		this.PosixFileDescriptor = !OperatingSystem.IsWindows()
+			&& stream is FileStream fileStream
+			&& !fileStream.SafeFileHandle.IsInvalid
+				? fileStream.SafeFileHandle.DangerousGetHandle().ToInt32()
+				: null
+		;
 	}
 
 	/// <inheritdoc />

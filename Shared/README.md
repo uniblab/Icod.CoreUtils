@@ -4,8 +4,9 @@
 
 ## External foundation dependencies
 
-- `Icod.CommandFramework` 1.1.0 owns neutral command infrastructure, general text/time mechanism, process and terminal mechanism, filesystem traversal and metadata, inode-pool observation, current-process creation-mask observation, and host file-clone/reflink mechanism consumed by Coreutils.
-- `Icod.Path` 1.0.0 owns canonical and platform-aware pathname behavior used by the suite.
+- `Icod.CommandFramework` 2.1.0 owns neutral command infrastructure, general text/time mechanism, process and terminal mechanism, filesystem traversal and metadata, inode-pool observation, current-process creation-mask observation, and host file-clone/reflink mechanism consumed by Coreutils.
+- `Icod.Path` 1.1.0 owns canonical and platform-aware pathname behavior used by the suite.
+- `Icod.Terminal` 0.3.0 provides the terminal foundation consumed by shared command infrastructure.
 
 `Icod.CoreUtils.Shared` must not reintroduce copies of framework-owned public types. A shared API that exposes a framework concept uses the permanent foundation type directly so consumers see one CLR type identity.
 
@@ -17,7 +18,7 @@
 <ProjectReference Include="..\Shared\Icod.CoreUtils.Shared.csproj" />
 ```
 
-Do not add a `PackageReference` to `Icod.CoreUtils.Shared` and do not publish it to NuGet.org or GitHub Packages. Any remaining co-resident sibling-suite `ProjectReference` to this library is transitional Gate G extraction debt. G4 through G8 must replace that dependency with the actual published neutral owner, normally `Icod.CommandFramework` and, where applicable, `Icod.Path`.
+Do not add a `PackageReference` to `Icod.CoreUtils.Shared` and do not publish it to NuGet.org or GitHub Packages. Completion Gate G is complete: cross-repository mechanism belongs behind its canonical published foundation package rather than a co-resident sibling-suite `ProjectReference`.
 
 ## Coreutils-owned areas
 
@@ -60,7 +61,7 @@ GNU-visible prompting, operand interpretation, reflink selection policy, overwri
 1. `Icod.CommandFramework` contains mechanism that is useful independently of Coreutils.
 2. `Icod.CoreUtils.Shared` contains demonstrated Coreutils/Fileutils/Textutils reuse, not general CLI infrastructure.
 3. `Icod.CoreUtils.Shared` remains in this repository and is consumed by same-repository `ProjectReference`, never by package reference.
-4. Remaining sibling-suite references are temporary extraction debt and do not establish a public CoreUtils package boundary.
+4. Sibling-suite mechanism belongs behind published neutral package boundaries and does not establish a public CoreUtils package boundary.
 5. Individual commands retain command-specific grammar and presentation when reuse is not demonstrated.
 6. Public signatures use the permanent package owner of a type; duplicate lookalike value models are not permitted.
 7. Injected standard streams are not owned or disposed by shared command logic.

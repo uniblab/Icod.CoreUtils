@@ -87,7 +87,7 @@ Idle time is derived from terminal access time when a `/dev` terminal is availab
 
 GNU `pinky` was written by Joseph Arceneaux, David MacKenzie, and Kaveh Ghazi.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

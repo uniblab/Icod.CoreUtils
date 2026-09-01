@@ -76,7 +76,7 @@ The platform provider normalizes native Windows, Linux, and macOS information in
 
 GNU `uname` was written by David MacKenzie.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

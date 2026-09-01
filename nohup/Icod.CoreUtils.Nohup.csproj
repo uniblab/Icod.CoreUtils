@@ -37,13 +37,6 @@
 	<PropertyGroup Condition=" '$(PlatformTarget)' == '' ">
 		<PlatformTarget>AnyCPU</PlatformTarget>
 	</PropertyGroup>
-	<ItemGroup>
-		<PackageReference Include="Icod.Processes" Version="1.0.0" />
-		<PackageReference Include="Icod.Terminal" Version="0.3.0" />
-	</ItemGroup>
-	<ItemGroup>
-		<ProjectReference Include="..\Shared\Icod.CoreUtils.Shared.csproj" />
-	</ItemGroup>
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
 		<ErrorReport>prompt</ErrorReport>
 		<WarningLevel>2</WarningLevel>
@@ -84,5 +77,12 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 			<TargetPath>$(AssemblyName).LICENSE.txt</TargetPath>
 		</Content>
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Icod.Processes" Version="1.2.0" />
+		<PackageReference Include="Icod.Terminal" Version="0.3.0" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Shared\Icod.CoreUtils.Shared.csproj" />
 	</ItemGroup>
 </Project>

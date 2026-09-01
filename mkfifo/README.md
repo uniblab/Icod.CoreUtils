@@ -57,7 +57,7 @@ FIFO creation is capability-dependent. Hosts or filesystems whose mutation provi
 
 GNU `mkfifo` was written by David MacKenzie.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

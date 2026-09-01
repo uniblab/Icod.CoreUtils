@@ -1,0 +1,54 @@
+name: archive-validation
+
+on:
+  pull_request:
+  push:
+    branches:
+      - '**'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate-release-archives:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            platform: Linux
+            architecture: x64
+            rid: linux-x64
+          - os: macos-15
+            platform: macOS
+            architecture: ARM64
+            rid: osx-arm64
+          - os: windows-latest
+            platform: Windows
+            architecture: x64
+            rid: win-x64
+    name: ${{ matrix.platform }} ${{ matrix.architecture }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Build and validate representative release archive
+        shell: pwsh
+        run: |
+          [xml]$project = Get-Content -LiteralPath 'coreutils/Icod.CoreUtils.Router.csproj' -Raw
+          $versionNode = $project.SelectSingleNode('/Project/PropertyGroup/PackageVersion')
+          if ($null -eq $versionNode -or [string]::IsNullOrWhiteSpace($versionNode.InnerText)) {
+              throw 'coreutils router project must declare PackageVersion.'
+          }
+
+          ./packaging/BuildReleaseArchive.ps1 `
+              -Configuration Release `
+              -RuntimeIdentifier '${{ matrix.rid }}' `
+              -Version $versionNode.InnerText

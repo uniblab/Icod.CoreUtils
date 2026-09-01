@@ -97,7 +97,7 @@ could not be invoked, and 127 means COMMAND could not be found.
 		var command = parsed.Command.ToArray();
 		if ( 0 == command.Length ) {
 			var shell = environmentVariableProvider( "SHELL" );
-			if ( string.IsNullOrEmpty( shell ) ) {
+			if ( null == shell ) {
 				shell = "/bin/sh";
 			}
 			command = [ shell, "-i" ];
@@ -144,14 +144,23 @@ could not be invoked, and 127 means COMMAND could not be found.
 				return parsed;
 			}
 			var equals = token.IndexOf( '=' );
-			var option = token;
+			var name = 0 <= equals
+				? token[ 2..equals ]
+				: token[ 2.. ]
+			;
+			var option = ResolveLongOption(
+				name
+			);
+			if ( null == option ) {
+				parsed.Error = $"chroot: unrecognized option '{token}'";
+				return parsed;
+			}
 			string? attached = null;
 			if ( 0 <= equals ) {
-				option = token[ ..equals ];
 				attached = token[ ( equals + 1 ).. ];
 			}
 			switch ( option ) {
-				case "--groups":
+				case "groups":
 					if ( null == attached ) {
 						if ( index + 1 >= args.Count ) {
 							parsed.Error = "chroot: option '--groups' requires an argument";
@@ -162,7 +171,7 @@ could not be invoked, and 127 means COMMAND could not be found.
 					}
 					parsed.GroupsSpec = attached;
 					break;
-				case "--userspec":
+				case "userspec":
 					if ( null == attached ) {
 						if ( index + 1 >= args.Count ) {
 							parsed.Error = "chroot: option '--userspec' requires an argument";
@@ -176,29 +185,26 @@ could not be invoked, and 127 means COMMAND could not be found.
 					}
 					parsed.UserSpec = attached;
 					break;
-				case "--skip-chdir":
+				case "skip-chdir":
 					if ( null != attached ) {
 						parsed.Error = "chroot: option '--skip-chdir' doesn't allow an argument";
 						return parsed;
 					}
 					parsed.SkipChdir = true;
 					break;
-				case "--help":
+				case "help":
 					if ( null != attached ) {
 						parsed.Error = "chroot: option '--help' doesn't allow an argument";
 						return parsed;
 					}
 					parsed.ShowHelp = true;
 					return parsed;
-				case "--version":
+				case "version":
 					if ( null != attached ) {
 						parsed.Error = "chroot: option '--version' doesn't allow an argument";
 						return parsed;
 					}
 					parsed.ShowVersion = true;
-					return parsed;
-				default:
-					parsed.Error = $"chroot: unrecognized option '{token}'";
 					return parsed;
 			}
 			index++;
@@ -215,6 +221,20 @@ could not be invoked, and 127 means COMMAND could not be found.
 			parsed.Command.Add( args[ index ] );
 		}
 		return parsed;
+	}
+
+	private static string? ResolveLongOption( string name ) {
+		string[] options = [ "groups", "userspec", "skip-chdir", "help", "version" ];
+		var matches = options.Where(
+			option => option.StartsWith(
+				name,
+				StringComparison.Ordinal
+			)
+		).ToArray();
+		return 1 == matches.Length
+			? matches[ 0 ]
+			: null
+		;
 	}
 
 	private static string NormalizeLineEndings( string value ) {

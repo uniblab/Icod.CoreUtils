@@ -90,7 +90,7 @@ Child standard handles are inherited directly in normal production execution unl
 
 GNU `env` was written by Richard Mlynarik, David MacKenzie, and Assaf Gordon.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

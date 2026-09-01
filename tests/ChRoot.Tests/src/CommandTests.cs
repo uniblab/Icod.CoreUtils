@@ -78,6 +78,22 @@ public sealed class CommandTests {
 	}
 
 	[Fact]
+	public async Task AcceptsUnambiguousLongOptionAbbreviations() {
+		var platform = new FakeChrootPlatform { CurrentRoot = true };
+		var status = await Command.RunAsync(
+			[ "--gr=wheel,audio", "--user=alice:staff", "--skip", "/", "/bin/id" ],
+			stdout: new StringWriter(),
+			stderr: new StringWriter(),
+			platform: platform
+		);
+		Assert.Equal( 0, status );
+		Assert.NotNull( platform.Request );
+		Assert.Equal( "wheel,audio", platform.Request!.GroupsSpec );
+		Assert.Equal( "alice:staff", platform.Request.UserSpec );
+		Assert.True( platform.Request.SkipChdir );
+	}
+
+	[Fact]
 	public async Task UserGroupsAndSkipChdirArePassedToPlatform() {
 		var platform = new FakeChrootPlatform { CurrentRoot = true };
 		var status = await Command.RunAsync(
@@ -165,6 +181,16 @@ public sealed class CommandTests {
 		);
 		Assert.Equal( 0, status );
 		Assert.Equal( new[] { "/bin/sh", "-i" }, platform.Request!.Command.ToArray() );
+		platform.Request = null;
+		status = await Command.RunAsync(
+			[ "/sandbox" ],
+			stdout: new StringWriter(),
+			stderr: new StringWriter(),
+			platform: platform,
+			environmentVariableProvider: static _ => string.Empty
+		);
+		Assert.Equal( 0, status );
+		Assert.Equal( new[] { string.Empty, "-i" }, platform.Request!.Command.ToArray() );
 	}
 
 	[Fact]

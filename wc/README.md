@@ -59,7 +59,7 @@ Byte input is never newline-normalized before counting. Display-width calculatio
 
 GNU `wc` was written by Paul Rubin and David MacKenzie.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

@@ -48,7 +48,7 @@ The implementation deliberately uses the cross-platform host identifier provider
 
 GNU `hostid` was written by Jim Meyering.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

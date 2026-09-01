@@ -122,7 +122,7 @@ Recursive traversal uses stable filesystem identities to diagnose directory loop
 
 GNU `vdir` was written by Richard M. Stallman and David MacKenzie.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

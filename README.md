@@ -1,6 +1,6 @@
 # Icod.CoreUtils
 
-![Icod.ProcPs](https://raw.githubusercontent.com/uniblab/Icod.ProcPs/v1.0.0/Icod.CoreUtils.banner.png)
+![Icod.CoreUtils](Icod.CoreUtils.banner.png)
 
 [![PR build and test](https://github.com/uniblab/Icod.CoreUtils/actions/workflows/pr-build-and-test.yaml/badge.svg)](https://github.com/uniblab/Icod.CoreUtils/actions/workflows/pr-build-and-test.yaml)
 [![Main build and test](https://github.com/uniblab/Icod.CoreUtils/actions/workflows/push-main.yaml/badge.svg?branch=main)](https://github.com/uniblab/Icod.CoreUtils/actions/workflows/push-main.yaml)

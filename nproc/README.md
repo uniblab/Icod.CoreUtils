@@ -55,7 +55,7 @@ Processor discovery is provider-backed rather than tied to `/proc` or another si
 
 GNU `nproc` was written by Giuseppe Scrivano.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

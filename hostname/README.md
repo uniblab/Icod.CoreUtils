@@ -52,7 +52,7 @@ Host-name mutation is implemented with the native `sethostname` ABI on Linux, ma
 
 GNU `hostname` was written by Jim Meyering.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

@@ -1,5 +1,6 @@
 namespace Icod.CoreUtils.Timeout.Tests;
 
+using System.Globalization;
 using System.Text;
 using Icod.Processes;
 using Icod.Timing;
@@ -37,6 +38,7 @@ public sealed class CommandTests {
 		Assert.Equal( 124, status );
 		Assert.Contains( signals.Deliveries, item => ProcessTargetKind.Process == item.Target.Kind && 15 == item.Signal.Number );
 		Assert.Contains( signals.Deliveries, item => ProcessTargetKind.ProcessGroup == item.Target.Kind && 15 == item.Signal.Number );
+		Assert.Contains( signals.Deliveries, item => ProcessTargetKind.Process == item.Target.Kind && "CONT" == item.Signal.Name );
 		Assert.Contains( signals.Deliveries, item => ProcessTargetKind.ProcessGroup == item.Target.Kind && "CONT" == item.Signal.Name );
 	}
 
@@ -49,6 +51,7 @@ public sealed class CommandTests {
 		Assert.Equal( 124, status );
 		Assert.False( executor.LastOptions!.CreateProcessGroup );
 		Assert.DoesNotContain( signals.Deliveries, item => ProcessTargetKind.ProcessGroup == item.Target.Kind );
+		Assert.DoesNotContain( signals.Deliveries, item => "CONT" == item.Signal.Name );
 	}
 
 	/// <summary>Verifies preserve-status returns the child signal status after a timeout.</summary>
@@ -95,6 +98,53 @@ public sealed class CommandTests {
 		Assert.Null( executor.LastOptions );
 	}
 
+	/// <summary>Verifies GNU operand2sig accepts shell-style signal exit statuses.</summary>
+	[Theory]
+	[InlineData( "143" )]
+	[InlineData( "271" )]
+	public async Task AcceptsShellExitStatusSignalNumbers(
+		string signal
+	) {
+		ArgumentNullException.ThrowIfNull( signal );
+		var executor = FakeExecutor.Waiting();
+		var signals = new FakeSignals( executor ) { CompleteOnSignalNumber = 15 };
+		var status = await Command.RunAsync(
+			new[] { "--signal", signal, "1", "child" },
+			stdout: Stream.Null,
+			stderr: Stream.Null,
+			processExecutor: executor,
+			signalProvider: signals,
+			clock: new ImmediateClock()
+		);
+		Assert.Equal( 124, status );
+		Assert.Contains(
+			signals.Deliveries,
+			item => ProcessTargetKind.Process == item.Target.Kind && 15 == item.Signal.Number
+		);
+	}
+
+	/// <summary>Verifies GNU operand2sig does not trim signal operands.</summary>
+	[Theory]
+	[InlineData( " 15" )]
+	[InlineData( "15 " )]
+	[InlineData( " TERM" )]
+	[InlineData( "TERM " )]
+	public async Task RejectsWhitespaceAroundSignalOperands(
+		string signal
+	) {
+		ArgumentNullException.ThrowIfNull( signal );
+		var executor = FakeExecutor.Exited( 0 );
+		var status = await Command.RunAsync(
+			new[] { "--signal", signal, "1", "child" },
+			stdout: Stream.Null,
+			stderr: Stream.Null,
+			processExecutor: executor,
+			signalProvider: new FakeSignals( executor )
+		);
+		Assert.Equal( 125, status );
+		Assert.Null( executor.LastOptions );
+	}
+
 	/// <summary>Verifies GNU hexadecimal floating-point durations and suffix scaling.</summary>
 	[Fact]
 	public async Task ParsesHexadecimalFloatingDuration() {
@@ -104,6 +154,72 @@ public sealed class CommandTests {
 		var status = await Command.RunAsync( new[] { "0x1.8p1s", "child" }, stdout: Stream.Null, stderr: Stream.Null, processExecutor: executor, signalProvider: signals, clock: clock );
 		Assert.Equal( 124, status );
 		Assert.Equal( TimeSpan.FromSeconds( 3 ), Assert.Single( clock.Delays ) );
+	}
+
+	/// <summary>Verifies durations accept both the current locale and the C locale.</summary>
+	[Theory]
+	[InlineData( "0,25", 0.25 )]
+	[InlineData( "0.25", 0.25 )]
+	[InlineData( "0x1,8p1s", 3.0 )]
+	[InlineData( "0x1.8p1s", 3.0 )]
+	public async Task AcceptsCurrentAndCLocaleDurations(
+		string duration,
+		double expectedSeconds
+	) {
+		ArgumentNullException.ThrowIfNull( duration );
+		var culture = (CultureInfo)CultureInfo.InvariantCulture.Clone();
+		culture.NumberFormat.NumberDecimalSeparator = ",";
+		culture.NumberFormat.NumberGroupSeparator = "_";
+		var previousCulture = CultureInfo.CurrentCulture;
+		try {
+			CultureInfo.CurrentCulture = culture;
+			var executor = FakeExecutor.Waiting();
+			var signals = new FakeSignals( executor ) { CompleteOnSignalNumber = 15 };
+			var clock = new RecordingImmediateClock();
+			var status = await Command.RunAsync(
+				new[] { duration, "child" },
+				stdout: Stream.Null,
+				stderr: Stream.Null,
+				processExecutor: executor,
+				signalProvider: signals,
+				clock: clock
+			);
+			Assert.Equal( 124, status );
+			Assert.Equal(
+				TimeSpan.FromSeconds( expectedSeconds ),
+				Assert.Single( clock.Delays )
+			);
+		} finally {
+			CultureInfo.CurrentCulture = previousCulture;
+		}
+	}
+
+	/// <summary>Verifies a localized hexadecimal spelling of zero still disables the timer.</summary>
+	[Fact]
+	public async Task LocalizedHexadecimalZeroDisablesTimeout() {
+		var culture = (CultureInfo)CultureInfo.InvariantCulture.Clone();
+		culture.NumberFormat.NumberDecimalSeparator = ",";
+		culture.NumberFormat.NumberGroupSeparator = "_";
+		var previousCulture = CultureInfo.CurrentCulture;
+		try {
+			CultureInfo.CurrentCulture = culture;
+			var executor = FakeExecutor.Exited( 0 );
+			var clock = new RecordingClock();
+			var signals = new FakeSignals( executor );
+			var status = await Command.RunAsync(
+				new[] { "0x0,0p0", "child" },
+				stdout: Stream.Null,
+				stderr: Stream.Null,
+				processExecutor: executor,
+				signalProvider: signals,
+				clock: clock
+			);
+			Assert.Equal( 0, status );
+			Assert.Empty( clock.Delays );
+			Assert.Empty( signals.Deliveries );
+		} finally {
+			CultureInfo.CurrentCulture = previousCulture;
+		}
 	}
 
 	/// <summary>Verifies an exponent-free trailing hexadecimal <c>d</c> remains a digit rather than a day suffix.</summary>
@@ -135,6 +251,196 @@ public sealed class CommandTests {
 		// integration test is the deliberate inter-process communication exception to test stream isolation.
 		var status = await Command.RunAsync( new[] { "0.05", dotnet, host, "sleep", "30000" } );
 		Assert.Equal( 124, status );
+	}
+
+	/// <summary>Verifies the standalone POSIX monitor leads the same process group inherited by its command.</summary>
+	[Fact]
+	public async Task StandalonePosixMonitorLeadsTimedProcessGroup() {
+		if ( OperatingSystem.IsWindows() ) {
+			return;
+		}
+
+		var observationPath = System.IO.Path.Combine(
+			System.IO.Path.GetTempPath(),
+			$"icod-timeout-pgid-{Guid.NewGuid():N}"
+		);
+		try {
+			var timeoutAssembly = GetTimeoutAssemblyPath();
+			Assert.True( File.Exists( timeoutAssembly ), $"timeout was not built at '{timeoutAssembly}'." );
+			var dotnet = Environment.GetEnvironmentVariable(
+				"DOTNET_HOST_PATH"
+			) ?? "dotnet";
+			var startInfo = new System.Diagnostics.ProcessStartInfo(
+				dotnet
+			) {
+				UseShellExecute = false
+			};
+			startInfo.ArgumentList.Add(
+				timeoutAssembly
+			);
+			startInfo.ArgumentList.Add(
+				"2"
+			);
+			startInfo.ArgumentList.Add(
+				"/bin/sh"
+			);
+			startInfo.ArgumentList.Add(
+				"-c"
+			);
+			startInfo.ArgumentList.Add(
+				"printf '%s:%s' \"$$\" \"$(ps -o pgid= -p $$)\" > \"$1\"; sleep 30"
+			);
+			startInfo.ArgumentList.Add(
+				"icod-timeout-test"
+			);
+			startInfo.ArgumentList.Add(
+				observationPath
+			);
+
+			using var process = System.Diagnostics.Process.Start(
+				startInfo
+			) ?? throw new InvalidOperationException( "Unable to start standalone timeout." );
+			var timeoutProcessId = process.Id;
+			await process.WaitForExitAsync();
+
+			Assert.Equal( 124, process.ExitCode );
+			Assert.True(
+				File.Exists( observationPath ),
+				"Timed child did not report its process-group identity."
+			);
+			var fields = (
+				await File.ReadAllTextAsync(
+					observationPath
+				)
+			).Split(
+				':'
+			);
+			Assert.Equal( 2, fields.Length );
+			Assert.True(
+				int.TryParse(
+					fields[ 0 ],
+					out var childProcessId
+				)
+			);
+			Assert.True(
+				int.TryParse(
+					fields[ 1 ],
+					out var childProcessGroupId
+				)
+			);
+			Assert.NotEqual(
+				timeoutProcessId,
+				childProcessId
+			);
+			Assert.Equal(
+				timeoutProcessId,
+				childProcessGroupId
+			);
+		} finally {
+			if ( File.Exists( observationPath ) ) {
+				File.Delete(
+					observationPath
+				);
+			}
+		}
+	}
+
+	/// <summary>Verifies standalone Linux timeout preserves an inherited ignored interrupt disposition.</summary>
+	[Fact]
+	public async Task StandaloneLinuxMonitorHonorsInheritedIgnoredInterrupt() {
+		if ( !OperatingSystem.IsLinux() ) {
+			return;
+		}
+
+		var status = await RunStandaloneWithIgnoredInterruptAsync(
+			"0.2",
+			"/bin/sh",
+			"-c",
+			"kill -INT \"$PPID\"; sleep 30"
+		);
+		Assert.Equal( 124, status );
+	}
+
+	/// <summary>Verifies an explicitly selected timeout signal is handled even when inherited as ignored.</summary>
+	[Fact]
+	public async Task StandaloneLinuxMonitorHandlesSelectedIgnoredTimeoutSignal() {
+		if ( !OperatingSystem.IsLinux() ) {
+			return;
+		}
+
+		var status = await RunStandaloneWithIgnoredInterruptAsync(
+			"--signal=INT",
+			"--kill-after=0.2",
+			"0.2",
+			"/bin/sh",
+			"-c",
+			"sleep 30"
+		);
+		Assert.Equal( 124, status );
+	}
+
+	/// <summary>Verifies POSIX timeout monitors are not stopped by terminal background-I/O signals.</summary>
+	[Theory]
+	[InlineData( "TTIN" )]
+	[InlineData( "TTOU" )]
+	public async Task StandalonePosixMonitorSuppressesTerminalStopSignals(
+		string signalName
+	) {
+		ArgumentNullException.ThrowIfNull( signalName );
+		if ( OperatingSystem.IsWindows() ) {
+			return;
+		}
+
+		var timeoutAssembly = GetTimeoutAssemblyPath();
+		Assert.True( File.Exists( timeoutAssembly ), $"timeout was not built at '{timeoutAssembly}'." );
+		var dotnet = Environment.GetEnvironmentVariable(
+			"DOTNET_HOST_PATH"
+		) ?? "dotnet";
+		var startInfo = new System.Diagnostics.ProcessStartInfo(
+			dotnet
+		) {
+			UseShellExecute = false
+		};
+		startInfo.ArgumentList.Add(
+			timeoutAssembly
+		);
+		startInfo.ArgumentList.Add(
+			"0.2"
+		);
+		startInfo.ArgumentList.Add(
+			"/bin/sh"
+		);
+		startInfo.ArgumentList.Add(
+			"-c"
+		);
+		startInfo.ArgumentList.Add(
+			$"kill -{signalName} \"$PPID\"; sleep 30"
+		);
+
+		System.Diagnostics.Process? process = null;
+		try {
+			process = System.Diagnostics.Process.Start(
+				startInfo
+			) ?? throw new InvalidOperationException( "Unable to start standalone timeout." );
+			using var waitCancellation = new CancellationTokenSource(
+				TimeSpan.FromSeconds( 10 )
+			);
+			await process.WaitForExitAsync(
+				waitCancellation.Token
+			);
+
+			Assert.Equal( 124, process.ExitCode );
+		} finally {
+			if ( null != process ) {
+				if ( !process.HasExited ) {
+					process.Kill(
+						entireProcessTree: true
+					);
+					await process.WaitForExitAsync();
+				}
+				process.Dispose();
+			}
+		}
 	}
 
 	/// <summary>Verifies a hexadecimal exponent marker requires decimal exponent digits.</summary>
@@ -177,6 +483,89 @@ public sealed class CommandTests {
 		var executor = FakeExecutor.Exited( 12 );
 		var status = await Command.RunAsync( new[] { "--pres", "0", "child" }, stdout: Stream.Null, stderr: Stream.Null, processExecutor: executor, signalProvider: new FakeSignals( executor ), clock: new NeverClock() );
 		Assert.Equal( 12, status );
+	}
+
+	private static async Task<int> RunStandaloneWithIgnoredInterruptAsync(
+		params string[] timeoutArguments
+	) {
+		var timeoutAssembly = GetTimeoutAssemblyPath();
+		if ( !File.Exists( timeoutAssembly ) ) {
+			throw new FileNotFoundException(
+				"Standalone timeout was not built.",
+				timeoutAssembly
+			);
+		}
+		var dotnet = Environment.GetEnvironmentVariable(
+			"DOTNET_HOST_PATH"
+		) ?? "dotnet";
+		var startInfo = new System.Diagnostics.ProcessStartInfo(
+			"/bin/sh"
+		) {
+			UseShellExecute = false
+		};
+		startInfo.ArgumentList.Add(
+			"-c"
+		);
+		startInfo.ArgumentList.Add(
+			"trap '' INT; exec \"$@\""
+		);
+		startInfo.ArgumentList.Add(
+			"icod-timeout-ignore-test"
+		);
+		startInfo.ArgumentList.Add(
+			dotnet
+		);
+		startInfo.ArgumentList.Add(
+			timeoutAssembly
+		);
+		foreach ( var argument in timeoutArguments ) {
+			startInfo.ArgumentList.Add(
+				argument
+			);
+		}
+
+		System.Diagnostics.Process? process = null;
+		try {
+			process = System.Diagnostics.Process.Start(
+				startInfo
+			) ?? throw new InvalidOperationException( "Unable to start standalone timeout." );
+			using var waitCancellation = new CancellationTokenSource(
+				TimeSpan.FromSeconds( 10 )
+			);
+			await process.WaitForExitAsync(
+				waitCancellation.Token
+			);
+			return process.ExitCode;
+		} finally {
+			if ( null != process ) {
+				if ( !process.HasExited ) {
+					process.Kill(
+						entireProcessTree: true
+					);
+					await process.WaitForExitAsync();
+				}
+				process.Dispose();
+			}
+		}
+	}
+
+	private static string GetTimeoutAssemblyPath() {
+		var targetFrameworkDirectory = new DirectoryInfo(
+			AppContext.BaseDirectory
+		);
+		var configurationDirectory = targetFrameworkDirectory.Parent
+			?? throw new InvalidOperationException();
+		var testsDirectory = configurationDirectory.Parent?.Parent?.Parent
+			?? throw new InvalidOperationException();
+		var repositoryDirectory = testsDirectory.Parent
+			?? throw new InvalidOperationException();
+		return System.IO.Path.Combine(
+			repositoryDirectory.FullName,
+			"bin",
+			configurationDirectory.Name,
+			targetFrameworkDirectory.Name,
+			"timeout.dll"
+		);
 	}
 
 	private static string GetProcessTestHostPath() {

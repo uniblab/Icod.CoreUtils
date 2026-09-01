@@ -130,7 +130,7 @@ Unless inode mode is selected, output scaling follows the shared `DU_BLOCK_SIZE`
 
 GNU `du` was written by Torbjörn Granlund, David MacKenzie, Paul Eggert, and Jim Meyering.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

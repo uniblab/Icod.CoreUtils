@@ -92,7 +92,7 @@ Recursive processing uses the shared race-aware traversal engine and mutation pr
 
 GNU `chown` was written by David MacKenzie and Jim Meyering.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

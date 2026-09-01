@@ -43,7 +43,7 @@ Default GNU sentence recognition and traditional line recognition stream their s
 
 GNU `ptx` was written by François Pinard.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

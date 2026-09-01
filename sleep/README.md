@@ -58,7 +58,7 @@ Waiting is implemented asynchronously with .NET timers and cancellation support.
 
 GNU `sleep` was written by Jim Meyering and Paul Eggert.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

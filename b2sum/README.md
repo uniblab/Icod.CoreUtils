@@ -94,7 +94,7 @@ The project targets .NET 10 and is intended for Windows, Linux, and macOS. File 
 
 GNU `b2sum` was written by Pádraig Brady and Samuel Neves.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

@@ -232,7 +232,10 @@ public sealed class SystemChrootPlatform : IChrootPlatform {
 			setSupplementary = true;
 			if ( !string.IsNullOrEmpty( groupsSpec ) ) {
 				var resolvedGroups = new List<uint>();
-				foreach ( var token in groupsSpec.Split( ',' ) ) {
+				foreach ( var token in groupsSpec.Split(
+					',',
+					StringSplitOptions.RemoveEmptyEntries
+				) ) {
 					var text = token.Trim();
 					if ( string.IsNullOrEmpty( text ) ) {
 						return CredentialResolution.Failure( $"invalid group list '{groupsSpec}'" );
@@ -242,6 +245,9 @@ public sealed class SystemChrootPlatform : IChrootPlatform {
 						return CredentialResolution.Failure( group.Error! );
 					}
 					resolvedGroups.Add( group.GroupId!.Value );
+				}
+				if ( 0 == resolvedGroups.Count ) {
+					return CredentialResolution.Failure( $"invalid group list '{groupsSpec}'" );
 				}
 				supplementary = resolvedGroups.ToArray();
 			}

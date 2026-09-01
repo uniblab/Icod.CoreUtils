@@ -98,7 +98,7 @@ Cancellation is reported as failure because the current command contract uses st
 
 GNU `chcon` was written by Russell Coker and Jim Meyering.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

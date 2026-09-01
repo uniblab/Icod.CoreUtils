@@ -116,7 +116,7 @@ An explicitly named directory symlink or eligible directory reparse point may an
 
 GNU `install` was written by David MacKenzie.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

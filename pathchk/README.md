@@ -60,7 +60,7 @@ The validation is lexical and limit-oriented. Successful `pathchk` output does n
 
 GNU `pathchk` was written by Paul Eggert, David MacKenzie, and Jim Meyering.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

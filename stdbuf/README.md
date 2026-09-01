@@ -58,7 +58,11 @@ other  The exit status translated from COMMAND.
 
 ## PLATFORM NOTES
 
-Active buffering control is available only on supported Linux ELF targets in the current implementation. Other platforms report that standard-stream buffering control is unsupported rather than pretending to apply the requested modes.
+Active buffering control is available on supported Linux ELF and macOS Mach-O targets. Linux uses `LD_PRELOAD`; macOS uses `DYLD_INSERT_LIBRARIES` together with `DYLD_FORCE_FLAT_NAMESPACE=y`, matching the Darwin preload contract used by GNU Coreutils 9.11. Windows reports that standard-stream buffering control is unsupported rather than pretending to apply the requested modes.
+
+On macOS, platform security policy can suppress `DYLD_*` variables for protected or restricted executables. That loader behavior is outside what `stdbuf` can override.
+
+On Apple Silicon, Apple-provided `arm64e` executables are likewise outside the supported preload target set for the ordinary third-party `arm64` shim under the default platform security model. Normal `arm64` Mach-O programs remain supported.
 
 The child retains native standard-handle inheritance; `stdbuf` does not interpose managed pipes that would defeat the buffering behavior it is trying to control.
 
@@ -70,7 +74,7 @@ The child retains native standard-handle inheritance; `stdbuf` does not interpos
 
 GNU `stdbuf` was written by Pádraig Brady.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

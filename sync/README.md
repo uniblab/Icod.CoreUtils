@@ -60,7 +60,7 @@ but an individual kernel flush cannot necessarily be interrupted after entry.
 
 GNU `sync` was written by Jim Meyering and Giuseppe Scrivano.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

@@ -29,6 +29,19 @@ internal static class Program {
 	) {
 		ArgumentNullException.ThrowIfNull( args );
 
+		if ( !OperatingSystem.IsWindows() ) {
+			// GNU env ultimately execvp()s its command. Replace this process on POSIX so
+			// terminal signals, job control, PID identity, and configured signal policy
+			// belong directly to the executed command.
+			return await Command.RunAsync(
+				args,
+				stdin: null,
+				stdout: null,
+				stderr: null,
+				replaceCurrentProcess: true
+			).ConfigureAwait( false );
+		}
+
 		using var cancellation = new CancellationTokenSource();
 		ConsoleCancelEventHandler handler = (
 			object? sender,
@@ -39,8 +52,8 @@ internal static class Program {
 		};
 		Console.CancelKeyPress += handler;
 		try {
-			// Null binary streams deliberately preserve native standard-handle inheritance
-			// for a child command while env itself uses the current process console.
+			// Windows has no execve-equivalent process-image replacement. Null binary
+			// streams still preserve the native standard handles for the child command.
 			return await Command.RunAsync(
 				args,
 				stdin: null,

@@ -11,6 +11,9 @@ Set-StrictMode -Version Latest
 $IsWindowsPlatform = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform(
     [System.Runtime.InteropServices.OSPlatform]::Windows
 )
+$IsLinuxPlatform = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform(
+    [System.Runtime.InteropServices.OSPlatform]::Linux
+)
 
 function Get-ProjectProperty {
     param(
@@ -125,6 +128,59 @@ function Invoke-Tool {
     }
 }
 
+function Assert-PosixProcessIdentityReplacement {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path,
+
+        [Parameter(Mandatory = $true)]
+        [string[]]$Arguments
+    )
+
+    Write-Host "> $Path $($Arguments -join ' ') [process identity]"
+    $startInfo = [System.Diagnostics.ProcessStartInfo]::new($Path)
+    $startInfo.UseShellExecute = $false
+    $startInfo.RedirectStandardOutput = $true
+    $startInfo.RedirectStandardError = $true
+    foreach ($argument in $Arguments) {
+        $startInfo.ArgumentList.Add($argument)
+    }
+
+    $process = [System.Diagnostics.Process]::Start($startInfo)
+    if ($null -eq $process) {
+        throw "Unable to start tool '$Path' for process-identity verification."
+    }
+
+    try {
+        $expectedProcessId = $process.Id
+        if (-not $process.WaitForExit(10000)) {
+            $process.Kill($true)
+            $process.WaitForExit()
+            throw "Tool '$Path' did not exit during process-identity verification."
+        }
+
+        $output = $process.StandardOutput.ReadToEnd()
+        $errorOutput = $process.StandardError.ReadToEnd()
+        if (0 -ne $process.ExitCode) {
+            throw "Tool '$Path' exited with status $($process.ExitCode) during process-identity verification: $errorOutput"
+        }
+
+        [int]$actualProcessId = 0
+        if (-not [int]::TryParse($output.Trim(), [ref]$actualProcessId)) {
+            throw "Tool '$Path' reported an invalid replacement process ID: '$output'."
+        }
+        if ($expectedProcessId -ne $actualProcessId) {
+            throw "Tool '$Path' supervised process $actualProcessId instead of replacing process $expectedProcessId."
+        }
+    } finally {
+        if (-not $process.HasExited) {
+            $process.Kill($true)
+            $process.WaitForExit()
+        }
+        $process.Dispose()
+    }
+}
+
 function Read-ToolSettingsFromPackage {
     param(
         [Parameter(Mandatory = $true)]
@@ -179,7 +235,7 @@ function Assert-ToolPackage {
         [string]$ExpectedCommand,
 
         [Parameter(Mandatory = $true)]
-        [string[]]$RequiredAssemblies
+        [string[]]$RequiredFiles
     )
 
     $result = Read-ToolSettingsFromPackage -PackagePath $PackagePath -TargetFramework $TargetFramework
@@ -197,8 +253,8 @@ function Assert-ToolPackage {
             throw "Command '$($command.Name)' in '$PackagePath' uses unexpected runner '$($command.Runner)'."
         }
 
-        foreach ($assembly in $RequiredAssemblies) {
-            $entryPath = "tools/$TargetFramework/any/$assembly"
+        foreach ($fileName in $RequiredFiles) {
+            $entryPath = "tools/$TargetFramework/any/$fileName"
             if (-not ($archive.Entries | Where-Object {
                 $_.FullName -eq $entryPath
             } | Select-Object -First 1)) {
@@ -303,16 +359,19 @@ try {
         throw "Router package '$routerPackagePath' was not produced."
     }
 
-    $commandAssemblies = @('coreutils.dll')
+    $requiredPackageFiles = @('coreutils.dll')
     foreach ($commandName in $commandNames) {
-        $commandAssemblies += "$commandName.dll"
+        $requiredPackageFiles += "$commandName.dll"
+    }
+    if ($IsLinuxPlatform) {
+        $requiredPackageFiles += 'libicodstdbuf.so'
     }
 
     Assert-ToolPackage `
         -PackagePath $routerPackagePath `
         -TargetFramework $targetFramework `
         -ExpectedCommand 'coreutils' `
-        -RequiredAssemblies $commandAssemblies
+        -RequiredFiles $requiredPackageFiles
 
     Write-LocalNuGetConfig -PackageDirectory $packageDirectory -Path $nugetConfigPath
 
@@ -337,6 +396,34 @@ try {
             -Arguments @($commandName, '--version') `
             -ExpectedExitCode $expectedVersionExitCode `
             -RequireOutput:$requireVersionOutput
+    }
+
+    if (-not $IsWindowsPlatform) {
+        $identityCommandArguments = @(
+            '/bin/sh',
+            '-c',
+            'printf ''%s'' "$$"'
+        )
+        foreach ($commandName in @('env', 'nice', 'nohup')) {
+            Assert-PosixProcessIdentityReplacement `
+                -Path $routerShim `
+                -Arguments (@($commandName) + $identityCommandArguments)
+        }
+    }
+
+    if ($IsLinuxPlatform) {
+        $standaloneStdBuf = Get-ExecutablePath `
+            -Directory $standaloneOutputPath `
+            -CommandName 'stdbuf'
+        Invoke-Tool `
+            -Path $standaloneStdBuf `
+            -Arguments @('-o0', '/bin/true')
+        Invoke-Tool `
+            -Path $routerShim `
+            -Arguments @('stdbuf', '-o0', '/bin/true')
+        Assert-PosixProcessIdentityReplacement `
+            -Path $routerShim `
+            -Arguments (@('stdbuf', '-o0') + $identityCommandArguments)
     }
 
     Write-Host ''

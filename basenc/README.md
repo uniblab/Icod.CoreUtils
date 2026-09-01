@@ -100,7 +100,7 @@ The project targets .NET 10 and is intended for Windows, Linux, and macOS. Comma
 
 GNU `basenc` was written by Simon Josefsson and Assaf Gordon.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

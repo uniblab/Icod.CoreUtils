@@ -57,7 +57,7 @@ Records remain byte preserving. Character-sensitive skip/width and case behavior
 
 GNU `uniq` was written by Richard M. Stallman and David MacKenzie.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

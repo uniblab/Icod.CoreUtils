@@ -92,7 +92,7 @@ Recursive operations use race-aware traversal observations and stable filesystem
 
 GNU `chgrp` was written by David MacKenzie and Jim Meyering.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

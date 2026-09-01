@@ -97,7 +97,7 @@ Accordingly, the production `who` command currently reports login records as uns
 
 GNU `who` was written by Joseph Arceneaux, David MacKenzie, and Michael Stone.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

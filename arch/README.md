@@ -50,7 +50,7 @@ Architecture discovery uses `.NET` `RuntimeInformation.OSArchitecture`; it does 
 
 GNU `arch` was written by David MacKenzie and Karel Zak.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 

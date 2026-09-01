@@ -56,7 +56,7 @@ The implementation uses temporary spools and the shared managed GNU basic-regula
 
 GNU `csplit` was written by Stuart Kemp and David MacKenzie.
 
-Migrated to .Net by Timothy J. Bruce <uniblab@hotmail.com>.
+Migrated to .NET by Timothy J. Bruce <uniblab@hotmail.com>.
 
 ## COPYRIGHT
 
