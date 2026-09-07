@@ -2,10 +2,14 @@ namespace Icod.CoreUtils.Ptx;
 
 using System.Text;
 using Icod.CommandFramework.RegularExpressions;
+using Icod.CommandFramework.Text;
 
 /// <summary>Provides byte-oriented keyword and context matching over the Shared GNU Emacs regular-expression engine.</summary>
 internal sealed class PtxPatterns {
 	private static readonly Encoding Latin1 = Encoding.Latin1;
+	private static readonly RegularExpressionInputOptions ByteInputOptions = new() {
+		DecodingMode = TextDecodingMode.Bytes
+	};
 	private readonly bool[] wordMap;
 	private readonly ICompiledRegularExpression? wordExpression;
 	private readonly ICompiledRegularExpression? sentenceExpression;
@@ -95,13 +99,18 @@ internal sealed class PtxPatterns {
 			}
 			return words;
 		}
-		var text = Latin1.GetString( context.Span );
+
+		var prepared = RegularExpressionPreparedByteInput.Prepare(
+			context,
+			ByteInputOptions,
+			cancellationToken
+		);
 		var index = 0;
-		while ( index < text.Length ) {
+		while ( index < prepared.Length ) {
 			cancellationToken.ThrowIfCancellationRequested();
 			var result = this.wordExpression.Match(
-				text,
-				new RegularExpressionMatchOptions { StartIndex = index },
+				prepared,
+				new RegularExpressionByteMatchOptions { StartByteOffset = index },
 				cancellationToken
 			);
 			EnsureMatchSucceeded( result );
@@ -109,12 +118,12 @@ internal sealed class PtxPatterns {
 				break;
 			}
 			var match = result.Match;
-			if ( 0 == match.Length ) {
-				index = checked( match.Index + 1 );
+			if ( 0 == match.ByteLength ) {
+				index = checked( match.ByteIndex + 1 );
 				continue;
 			}
-			words.Add( new PtxWordSpan( match.Index, match.Length ) );
-			index = checked( match.Index + match.Length );
+			words.Add( new PtxWordSpan( match.ByteIndex, match.ByteLength ) );
+			index = checked( match.ByteIndex + match.ByteLength );
 		}
 		return words;
 	}
@@ -239,6 +248,14 @@ internal sealed class PtxPatterns {
 	}
 
 	private static void EnsureMatchSucceeded( RegularExpressionMatchResult result ) {
+		if ( !result.IsSuccess ) {
+			throw new InvalidDataException(
+				result.Diagnostic?.Message ?? "error in regular expression matcher"
+			);
+		}
+	}
+
+	private static void EnsureMatchSucceeded( RegularExpressionByteMatchResult result ) {
 		if ( !result.IsSuccess ) {
 			throw new InvalidDataException(
 				result.Diagnostic?.Message ?? "error in regular expression matcher"
