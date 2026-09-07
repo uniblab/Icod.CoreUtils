@@ -22,7 +22,7 @@ build()
 test()
 {
     printf '\n=== Test ===\n'
-    dotnet test Icod.CoreUtils.sln  \
+    dotnet test Icod.CoreUtils.sln \
         -c Debug \
         --no-build
 }
@@ -33,13 +33,13 @@ pack()
     dotnet pack Icod.CoreUtils.sln \
         -c Debug \
         --no-build \
-	--output artifacts 
+        --output artifacts
 }
 
 validate()
 {
     printf '\n=== Validate ===\n'
-    ./.github/scripts/verify-release-package.sh artifacts Debug
+    pwsh -NoLogo -NoProfile -File packaging/VerifyLocalPackage.ps1 -ArtifactDirectory artifacts
 }
 
 case "${1-}" in
@@ -49,7 +49,7 @@ case "${1-}" in
         build
         test
         pack
-	validate
+        validate
         ;;
 
     clean)
