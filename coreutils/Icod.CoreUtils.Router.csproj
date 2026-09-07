@@ -33,8 +33,6 @@
 		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 		<AssemblyName>coreutils</AssemblyName>
 		<RootNamespace>Icod.CoreUtils.Router</RootNamespace>
-		<Version>1.0.2</Version>
-		<PackageVersion>1.0.2</PackageVersion>
 		<AssemblyVersion>1.0.0.0</AssemblyVersion>
 	</PropertyGroup>
 	<PropertyGroup>
