@@ -2,8 +2,8 @@
 
 ![Icod TUI Toolchain](https://raw.githubusercontent.com/uniblab/Icod.CoreUtils/v1.0.1/Icod.CoreUtils.banner.png)
 
-[![PR build and test](https://github.com/uniblab/Icod.CoreUtils/actions/workflows/pr-build-and-test.yaml/badge.svg)](https://github.com/uniblab/Icod.CoreUtils/actions/workflows/pr-build-and-test.yaml)
-[![Main build and test](https://github.com/uniblab/Icod.CoreUtils/actions/workflows/push-main.yaml/badge.svg?branch=main)](https://github.com/uniblab/Icod.CoreUtils/actions/workflows/push-main.yaml)
+[![Pull request validation](https://github.com/uniblab/Icod.CoreUtils/actions/workflows/pull-request.yaml/badge.svg)](https://github.com/uniblab/Icod.CoreUtils/actions/workflows/pull-request.yaml)
+[![Main validation](https://github.com/uniblab/Icod.CoreUtils/actions/workflows/main.yaml/badge.svg?branch=main)](https://github.com/uniblab/Icod.CoreUtils/actions/workflows/main.yaml)
 
 A cross-platform, managed implementation of the GNU Coreutils/Fileutils/Textutils command family for **.NET 10**, written in **C# 13**.
 
@@ -268,7 +268,9 @@ Release builds use the repository's stricter warning policy and treat compiler w
 
 ## Continuous integration
 
-Pull requests are validated in the `Staging` configuration on:
+All GitHub Actions workflow files use the `.yaml` extension.
+
+Pull requests are validated by `pull-request.yaml` in the `Staging` configuration on:
 
 ```text
 windows-latest
@@ -276,11 +278,9 @@ ubuntu-latest
 macos-latest
 ```
 
-Pushes to `main` are validated in the `Release` configuration on the same three operating-system families.
+The Linux pull-request job also packs and validates the Staging NuGet package.
 
-The release workflow is separately triggered by SemVer-style `v*` tags. Release tags must identify commits contained in `main`, and the tag version must agree with both `<Version>` and `<PackageVersion>` in the `coreutils` router project.
-
-Release validation covers:
+Pushes to `main` are validated by `main.yaml` in the `Release` configuration across the complete supported distribution matrix:
 
 ```text
 Windows x64
@@ -290,6 +290,12 @@ Linux ARM64
 macOS x64
 macOS ARM64
 ```
+
+`distribution-validation.yaml` provides the same six-platform distribution gate as a manually dispatched workflow for `Debug`, `Staging`, or `Release`.
+
+The release workflow is separately triggered by SemVer-style `v*` tags. Release tags must identify commits contained in `main`, and the tag version must agree with the centralized `<Version>` and `<PackageVersion>` values in the root `Directory.Build.props`.
+
+`release.yaml` builds six executable archives and four Unix `stdbuf` native assets in parallel. The NuGet package waits only for the four native assets, NuGet.org and GitHub Packages publish independently in parallel, and the GitHub Release is the final convergence gate.
 
 ## Distribution model
 
@@ -402,6 +408,7 @@ Icod.CoreUtils/
 ├── tests/              command and shared-library test projects
 ├── packaging/          distribution support
 ├── .github/            CI, release, and repository automation
+├── Directory.Build.props
 ├── Icod.CoreUtils.sln
 ├── build.cmd
 ├── build.sh
