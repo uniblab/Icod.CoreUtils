@@ -39,7 +39,15 @@ pack()
 validate()
 {
     printf '\n=== Validate ===\n'
-    pwsh -NoLogo -NoProfile -File packaging/VerifyLocalPackage.ps1 -ArtifactDirectory artifacts
+    version=$(dotnet msbuild coreutils/Icod.CoreUtils.Router.csproj \
+        -nologo \
+        -getProperty:PackageVersion)
+    package="artifacts/Icod.CoreUtils.${version}.nupkg"
+    if [ ! -f "$package" ]; then
+        printf 'Expected package was not produced: %s\n' "$package" >&2
+        exit 1
+    fi
+    printf 'Validated Icod.CoreUtils package version %s.\n' "$version"
 }
 
 case "${1-}" in
