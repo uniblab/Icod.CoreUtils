@@ -21,6 +21,12 @@ if ($hasSolution) {
     $hasExecutables = 0 -lt $executables.Count
 }
 
+$solutionOutputPath = if ($hasSolution) {
+    System.IO.Path.GetRelativePath($repositoryRoot, $solutionPath).Replace('\', '/')
+} else {
+    ''
+}
+
 $result = [ordered]@{
     RepositoryRoot = $repositoryRoot
     HasSolution = $hasSolution
@@ -30,7 +36,7 @@ $result = [ordered]@{
 
 if (-not [string]::IsNullOrWhiteSpace($GitHubOutputPath)) {
     "has_solution=$($hasSolution.ToString().ToLowerInvariant())" >> $GitHubOutputPath
-    "solution_path=$($result.SolutionPath)" >> $GitHubOutputPath
+    "solution_path=$solutionOutputPath" >> $GitHubOutputPath
     "has_executables=$($hasExecutables.ToString().ToLowerInvariant())" >> $GitHubOutputPath
 }
 
