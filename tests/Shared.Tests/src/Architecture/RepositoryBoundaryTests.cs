@@ -5,6 +5,39 @@ using Xunit;
 
 /// <summary>Guards the Completion Gate G3M3 repository-local Shared-library boundary.</summary>
 public sealed class RepositoryBoundaryTests {
+	/// <summary>Verifies that the repository version is centralized and the router does not override it.</summary>
+	[Fact]
+	public void RepositoryVersionIsCentralized() {
+		var repositoryRoot = FindRepositoryRoot();
+		var propsPath = System.IO.Path.Combine(
+			repositoryRoot,
+			"Directory.Build.props"
+		);
+		var routerPath = System.IO.Path.Combine(
+			repositoryRoot,
+			"coreutils",
+			"Icod.CoreUtils.Router.csproj"
+		);
+		var props = XDocument.Load( propsPath );
+		var router = XDocument.Load( routerPath );
+
+		var versions = props.Descendants()
+			.Where( static element => element.Name.LocalName == "Version" )
+			.Select( static element => element.Value.Trim() )
+			.ToArray();
+		var packageVersions = props.Descendants()
+			.Where( static element => element.Name.LocalName == "PackageVersion" )
+			.Select( static element => element.Value.Trim() )
+			.ToArray();
+
+		Assert.Single( versions );
+		Assert.Single( packageVersions );
+		Assert.False( string.IsNullOrWhiteSpace( versions[ 0 ] ) );
+		Assert.Equal( versions[ 0 ], packageVersions[ 0 ] );
+		Assert.Null( GetProjectProperty( router, "Version" ) );
+		Assert.Null( GetProjectProperty( router, "PackageVersion" ) );
+	}
+
 	/// <summary>Verifies that the Shared project is non-packable and consumes only the published neutral foundations expected by G3M3.</summary>
 	[Fact]
 	public void SharedProjectIsRepositoryLocalAndNonPackable() {
@@ -131,7 +164,7 @@ public sealed class RepositoryBoundaryTests {
 				static element => element.Name.LocalName == "PackageReference"
 			)
 			.Any(
-				static element => string.Equals(
+				element => string.Equals(
 					GetItemInclude( element ),
 					"Icod.CoreUtils.Shared",
 					StringComparison.OrdinalIgnoreCase
