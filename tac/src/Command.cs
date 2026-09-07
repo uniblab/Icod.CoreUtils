@@ -466,13 +466,15 @@ public static class Command {
 		ICompiledRegularExpression expression,
 		CancellationToken cancellationToken
 	) {
-		var inputOptions = new RegularExpressionInputOptions();
+		var preparedInput = RegularExpressionPreparedByteInput.Prepare(
+			input,
+			cancellationToken: cancellationToken
+		);
 		SeparatorMatch? lastMatch = null;
 		var searchOffset = 0;
-		while ( searchOffset < input.Length ) {
+		while ( searchOffset < preparedInput.Length ) {
 			var result = expression.Match(
-				input,
-				inputOptions,
+				preparedInput,
 				new RegularExpressionByteMatchOptions { StartByteOffset = searchOffset },
 				cancellationToken
 			);
@@ -481,7 +483,7 @@ public static class Command {
 					result.Diagnostic?.Message ?? "regular-expression matching failed"
 				);
 			}
-			if ( null == result.Match || result.Match.ByteIndex >= input.Length ) {
+			if ( null == result.Match || result.Match.ByteIndex >= preparedInput.Length ) {
 				break;
 			}
 			var localStart = result.Match.ByteIndex;
@@ -525,58 +527,25 @@ public static class Command {
 			if ( OperationStatus.Done == status && candidate + consumed > target ) {
 				return probeStart + candidate;
 			}
-			if ( !IsUtf8ContinuationByte( probe[candidate] ) ) {
-				break;
-			}
 		}
 		return tentativeStart;
 	}
 
 	private static int GetNextUtf8Boundary( ReadOnlySpan<byte> input, int start ) {
-		var status = Rune.DecodeFromUtf8( input[start..], out _, out var consumed );
-		return start + ( OperationStatus.Done == status ? consumed : 1 );
+		if ( start >= input.Length ) {
+			return input.Length;
+		}
+		var status = Rune.DecodeFromUtf8(
+			input[start..],
+			out _,
+			out var consumed
+		);
+		return OperationStatus.Done == status && 0 < consumed
+			? checked( start + consumed )
+			: checked( start + 1 );
 	}
 
 	private static bool IsUtf8ContinuationByte( byte value ) => 0x80 == ( value & 0xC0 );
-
-	private static int[] BuildFailureTable( byte[] pattern ) {
-		var failure = new int[pattern.Length];
-		var matched = 0;
-		for ( var index = 1; index < pattern.Length; index++ ) {
-			while ( 0 < matched && pattern[matched] != pattern[index] ) {
-				matched = failure[matched - 1];
-			}
-			if ( pattern[matched] == pattern[index] ) {
-				matched++;
-			}
-			failure[index] = matched;
-		}
-		return failure;
-	}
-
-	private static Task WriteNonemptyIndexRecordAsync(
-		Stream index,
-		long start,
-		long length,
-		CancellationToken cancellationToken
-	) => 0 == length
-		? Task.CompletedTask
-		: WriteIndexRecordAsync( index, start, length, cancellationToken );
-
-	private static async Task WriteIndexRecordAsync(
-		Stream index,
-		long start,
-		long length,
-		CancellationToken cancellationToken
-	) {
-		if ( length < 0 ) {
-			throw new InvalidOperationException( "invalid record boundary" );
-		}
-		var buffer = new byte[IndexRecordSize];
-		BinaryPrimitives.WriteInt64LittleEndian( buffer.AsSpan( 0, sizeof( long ) ), start );
-		BinaryPrimitives.WriteInt64LittleEndian( buffer.AsSpan( sizeof( long ), sizeof( long ) ), length );
-		await index.WriteAsync( buffer, cancellationToken ).ConfigureAwait( false );
-	}
 
 	private static async Task WriteForwardAsync(
 		Stream input,
@@ -584,15 +553,25 @@ public static class Command {
 		ByteOutputStream output,
 		CancellationToken cancellationToken
 	) {
-		await index.FlushAsync( cancellationToken ).ConfigureAwait( false );
-		var metadata = new byte[IndexRecordSize];
-		for ( long position = 0; position < index.Length; position += IndexRecordSize ) {
-			index.Position = position;
-			await ReadExactlyAsync( index, metadata, cancellationToken ).ConfigureAwait( false );
-			var start = BinaryPrimitives.ReadInt64LittleEndian( metadata.AsSpan( 0, sizeof( long ) ) );
-			var length = BinaryPrimitives.ReadInt64LittleEndian( metadata.AsSpan( sizeof( long ), sizeof( long ) ) );
-			input.Position = start;
-			await CopyExactlyAsync( input, output, length, cancellationToken ).ConfigureAwait( false );
+		index.Position = 0;
+		var recordBuffer = new byte[IndexRecordSize];
+		var copyBuffer = new byte[BufferSize];
+		while ( true ) {
+			var count = await index.ReadAsync( recordBuffer.AsMemory(), cancellationToken ).ConfigureAwait( false );
+			if ( 0 == count ) {
+				break;
+			}
+			if ( IndexRecordSize != count ) {
+				await ReadExactlyAsync(
+					index,
+					recordBuffer.AsMemory( count ),
+					cancellationToken
+				).ConfigureAwait( false );
+			}
+			var recordStart = BinaryPrimitives.ReadInt64LittleEndian( recordBuffer.AsSpan( 0, sizeof( long ) ) );
+			var recordLength = BinaryPrimitives.ReadInt64LittleEndian( recordBuffer.AsSpan( sizeof( long ), sizeof( long ) ) );
+			input.Position = recordStart;
+			await CopyExactlyAsync( input, output, recordLength, copyBuffer, cancellationToken ).ConfigureAwait( false );
 		}
 	}
 
@@ -602,46 +581,88 @@ public static class Command {
 		ByteOutputStream output,
 		CancellationToken cancellationToken
 	) {
-		await index.FlushAsync( cancellationToken ).ConfigureAwait( false );
-		var metadata = new byte[IndexRecordSize];
-		for ( long position = index.Length - IndexRecordSize; position >= 0; position -= IndexRecordSize ) {
+		var recordBuffer = new byte[IndexRecordSize];
+		var copyBuffer = new byte[BufferSize];
+		for ( var position = index.Length - IndexRecordSize; 0 <= position; position -= IndexRecordSize ) {
 			index.Position = position;
-			await ReadExactlyAsync( index, metadata, cancellationToken ).ConfigureAwait( false );
-			var start = BinaryPrimitives.ReadInt64LittleEndian( metadata.AsSpan( 0, sizeof( long ) ) );
-			var length = BinaryPrimitives.ReadInt64LittleEndian( metadata.AsSpan( sizeof( long ), sizeof( long ) ) );
-			input.Position = start;
-			await CopyExactlyAsync( input, output, length, cancellationToken ).ConfigureAwait( false );
+			await ReadExactlyAsync( index, recordBuffer, cancellationToken ).ConfigureAwait( false );
+			var recordStart = BinaryPrimitives.ReadInt64LittleEndian( recordBuffer.AsSpan( 0, sizeof( long ) ) );
+			var recordLength = BinaryPrimitives.ReadInt64LittleEndian( recordBuffer.AsSpan( sizeof( long ), sizeof( long ) ) );
+			input.Position = recordStart;
+			await CopyExactlyAsync( input, output, recordLength, copyBuffer, cancellationToken ).ConfigureAwait( false );
 		}
+	}
+
+	private static async Task WriteIndexRecordAsync(
+		Stream index,
+		long start,
+		long length,
+		CancellationToken cancellationToken
+	) {
+		var buffer = new byte[IndexRecordSize];
+		BinaryPrimitives.WriteInt64LittleEndian( buffer.AsSpan( 0, sizeof( long ) ), start );
+		BinaryPrimitives.WriteInt64LittleEndian( buffer.AsSpan( sizeof( long ), sizeof( long ) ), length );
+		await index.WriteAsync( buffer.AsMemory(), cancellationToken ).ConfigureAwait( false );
+	}
+
+	private static Task WriteNonemptyIndexRecordAsync(
+		Stream index,
+		long start,
+		long length,
+		CancellationToken cancellationToken
+	) {
+		return 0 < length
+			? WriteIndexRecordAsync( index, start, length, cancellationToken )
+			: Task.CompletedTask;
+	}
+
+	private static int[] BuildFailureTable( ReadOnlySpan<byte> pattern ) {
+		var table = new int[pattern.Length];
+		var matched = 0;
+		for ( var index = 1; index < pattern.Length; index++ ) {
+			while ( 0 < matched && pattern[index] != pattern[matched] ) {
+				matched = table[matched - 1];
+			}
+			if ( pattern[index] == pattern[matched] ) {
+				matched++;
+			}
+			table[index] = matched;
+		}
+		return table;
 	}
 
 	private static async Task ReadExactlyAsync(
 		Stream input,
-		Memory<byte> destination,
+		Memory<byte> buffer,
 		CancellationToken cancellationToken
 	) {
-		var offset = 0;
-		while ( offset < destination.Length ) {
-			var read = await input.ReadAsync( destination[offset..], cancellationToken ).ConfigureAwait( false );
-			if ( 0 == read ) {
+		var total = 0;
+		while ( total < buffer.Length ) {
+			var count = await input.ReadAsync( buffer[total..], cancellationToken ).ConfigureAwait( false );
+			if ( 0 == count ) {
 				throw new EndOfStreamException();
 			}
-			offset += read;
+			total += count;
 		}
 	}
 
+	private static Task ReadExactlyAsync(
+		Stream input,
+		byte[] buffer,
+		CancellationToken cancellationToken
+	) => ReadExactlyAsync( input, buffer.AsMemory(), cancellationToken );
+
 	private static async Task CopyExactlyAsync(
 		Stream input,
-		Stream output,
+		ByteOutputStream output,
 		long count,
+		byte[] buffer,
 		CancellationToken cancellationToken
 	) {
-		var buffer = new byte[BufferSize];
 		var remaining = count;
 		while ( 0 < remaining ) {
-			var read = await input.ReadAsync(
-				buffer.AsMemory( 0, (int)Math.Min( buffer.Length, remaining ) ),
-				cancellationToken
-			).ConfigureAwait( false );
+			var wanted = (int)Math.Min( buffer.Length, remaining );
+			var read = await input.ReadAsync( buffer.AsMemory( 0, wanted ), cancellationToken ).ConfigureAwait( false );
 			if ( 0 == read ) {
 				throw new EndOfStreamException();
 			}
@@ -651,38 +672,31 @@ public static class Command {
 	}
 
 	private static async Task WriteHelpAsync( CommandContext context ) {
-		const string help = """
-Usage: tac [OPTION]... [FILE]...
-Write each FILE to standard output, last record first.
-
-  -b, --before           attach the separator before instead of after each record
-  -r, --regex            interpret the separator as a regular expression
-  -s, --separator=STRING use STRING instead of newline as the record separator;
-                         an empty STRING specifies NUL
-      --help             display this help and exit
-      --version          output version information and exit
-""";
-		await WriteStandardOutputTextAsync(
-			context,
-			string.Concat(
-				help.ReplaceLineEndings( Environment.NewLine ),
-				Environment.NewLine
-			)
-		).ConfigureAwait( false );
+		const string help = "Usage: tac [OPTION]... [FILE]...\n"
+			+ "Write each FILE to standard output, last line first.\n\n"
+			+ "  -b, --before           attach the separator before instead of after\n"
+			+ "  -r, --regex            interpret the separator as a regular expression\n"
+			+ "  -s, --separator=STRING use STRING as the separator instead of newline\n"
+			+ "      --help             display this help and exit\n"
+			+ "      --version          output version information and exit\n";
+		await WriteStandardOutputTextAsync( context, help ).ConfigureAwait( false );
 	}
 
 	private static async Task WriteStandardOutputTextAsync(
 		CommandContext context,
-		string value
+		string text
 	) {
-		await using var output = new ByteOutputStream(
-			context.StandardOutput,
-			context.StandardOutputStream
-		);
-		await output.WriteTextAsync(
-			value,
+		if ( null != context.StandardOutputStream ) {
+			var bytes = Encoding.UTF8.GetBytes( text );
+			await context.StandardOutputStream.WriteAsync(
+				bytes,
+				context.CancellationToken
+			).ConfigureAwait( false );
+			return;
+		}
+		await context.StandardOutput.WriteAsync(
+			text.AsMemory(),
 			context.CancellationToken
 		).ConfigureAwait( false );
-		await output.CompleteAsync( context.CancellationToken ).ConfigureAwait( false );
 	}
 }
