@@ -13,14 +13,6 @@ Import-Module (Join-Path $PSScriptRoot 'RepositoryTools.psm1') -Force
 
 $solutionPath = Get-RepositorySolution -RepositoryRoot $repositoryRoot -AllowMissing
 $hasSolution = $null -ne $solutionPath
-$hasExecutables = $false
-
-if ($hasSolution) {
-    $projects = @(Get-SolutionProjects -SolutionPath $solutionPath -RepositoryRoot $repositoryRoot)
-    $executables = @(Get-ExecutableProjects -ProjectPaths $projects -Configuration $Configuration)
-    $hasExecutables = 0 -lt $executables.Count
-}
-
 $solutionOutputPath = if ($hasSolution) {
     [System.IO.Path]::GetRelativePath($repositoryRoot, $solutionPath).Replace('\', '/')
 } else {
@@ -31,13 +23,11 @@ $result = [ordered]@{
     RepositoryRoot = $repositoryRoot
     HasSolution = $hasSolution
     SolutionPath = if ($hasSolution) { $solutionPath } else { '' }
-    HasExecutables = $hasExecutables
 }
 
 if (-not [string]::IsNullOrWhiteSpace($GitHubOutputPath)) {
     "has_solution=$($hasSolution.ToString().ToLowerInvariant())" >> $GitHubOutputPath
     "solution_path=$solutionOutputPath" >> $GitHubOutputPath
-    "has_executables=$($hasExecutables.ToString().ToLowerInvariant())" >> $GitHubOutputPath
 }
 
 [pscustomobject]$result
