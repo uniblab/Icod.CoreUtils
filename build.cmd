@@ -8,42 +8,36 @@ if /I "%~1"=="restore" goto run-restore
 if /I "%~1"=="build"   goto run-build
 if /I "%~1"=="test"    goto run-test
 if /I "%~1"=="pack"    goto run-pack
-if /I "%~1"=="validate"    goto run-validate
+if /I "%~1"=="validate" goto run-validate
 
 echo Invalid section: "%~1"
 echo Usage: %~nx0 [clean^|restore^|build^|test^|pack^|validate]
 exit /b 1
 
-
 :all
-call :clean   || exit /b 1
+call :clean || exit /b 1
 call :restore || exit /b 1
-call :build   || exit /b 1
-call :test    || exit /b 1
-call :pack    || exit /b 1
-call :validate    || exit /b 1
+call :build || exit /b 1
+call :test || exit /b 1
+call :pack || exit /b 1
+call :validate || exit /b 1
 exit /b 0
-
 
 :run-clean
 call :clean
 exit /b %errorlevel%
 
-
 :run-restore
 call :restore
 exit /b %errorlevel%
-
 
 :run-build
 call :build
 exit /b %errorlevel%
 
-
 :run-test
 call :test
 exit /b %errorlevel%
-
 
 :run-pack
 call :pack
@@ -53,13 +47,11 @@ exit /b %errorlevel%
 call :validate
 exit /b %errorlevel%
 
-
 :clean
 echo.
 echo === Clean ===
 dotnet clean Icod.CoreUtils.sln -c Debug
 exit /b %errorlevel%
-
 
 :restore
 echo.
@@ -67,13 +59,11 @@ echo === Restore ===
 dotnet restore Icod.CoreUtils.sln
 exit /b %errorlevel%
 
-
 :build
 echo.
 echo === Build ===
 dotnet build Icod.CoreUtils.sln -c Debug --no-restore
 exit /b %errorlevel%
-
 
 :test
 echo.
@@ -90,5 +80,5 @@ exit /b %errorlevel%
 :validate
 echo.
 echo === Validate ===
-call .github\scripts\verify-release-package.cmd artifacts Debug
+powershell -NoLogo -NoProfile -ExecutionPolicy Bypass -File packaging\VerifyLocalPackage.ps1 -ArtifactDirectory artifacts
 exit /b %errorlevel%
