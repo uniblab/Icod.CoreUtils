@@ -7,6 +7,7 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 . (Join-Path $PSScriptRoot 'CoreUtilsCommands.ps1')
+Import-Module (Join-Path $PSScriptRoot 'CoreUtilsVersion.psm1') -Force
 
 $IsWindowsPlatform = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform(
     [System.Runtime.InteropServices.OSPlatform]::Windows
@@ -302,7 +303,7 @@ $commandNames = @($projectMap.Keys)
 [xml]$routerProject = Get-Content -LiteralPath $routerProjectPath -Raw
 $targetFramework = Get-ProjectProperty -Project $routerProject -Name 'TargetFramework'
 $routerPackageId = Get-ProjectProperty -Project $routerProject -Name 'PackageId'
-$routerVersion = Get-ProjectProperty -Project $routerProject -Name 'PackageVersion'
+$routerVersion = Get-CoreUtilsVersion -RepositoryRoot $repositoryRoot
 
 $validationRoot = Join-Path $repositoryRoot 'artifacts/distribution-validation'
 $packageDirectory = Join-Path $validationRoot 'packages'
