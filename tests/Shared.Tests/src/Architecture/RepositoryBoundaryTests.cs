@@ -56,7 +56,7 @@ public sealed class RepositoryBoundaryTests {
 			GetProjectProperty( project, "IsPackable" )
 		);
 		Assert.Equal(
-			"2.1.0",
+			"2.2.1",
 			GetPackageVersion( project, "Icod.CommandFramework" )
 		);
 		Assert.Equal(
