@@ -81,12 +81,12 @@ This helper exists so the NuGet package does not have to wait for, download, and
 
 ## GitHub workflow model
 
-Workflow names and responsibilities follow the organization templates:
+All GitHub Actions workflow files use the `.yaml` extension. Workflow names and responsibilities follow the organization templates:
 
-- `pull-request.yml` — `Staging` build/test on Windows, Linux, and macOS; Linux also packs and validates the NuGet package.
-- `main.yml` — six-platform `Release` distribution validation after pushes to `main`.
-- `distribution-validation.yml` — manually dispatched six-platform validation for `Debug`, `Staging`, or `Release`.
-- `release.yml` — tagged release construction and publication.
+- `pull-request.yaml` — `Staging` build/test on Windows, Linux, and macOS; Linux also packs and validates the NuGet package.
+- `main.yaml` — six-platform `Release` distribution validation after pushes to `main`.
+- `distribution-validation.yaml` — manually dispatched six-platform validation for `Debug`, `Staging`, or `Release`.
+- `release.yaml` — tagged release construction and publication.
 
 The release workflow uses parallel artifact production:
 
