@@ -22,7 +22,7 @@ if ($hasSolution) {
 }
 
 $solutionOutputPath = if ($hasSolution) {
-    System.IO.Path.GetRelativePath($repositoryRoot, $solutionPath).Replace('\', '/')
+    [System.IO.Path]::GetRelativePath($repositoryRoot, $solutionPath).Replace('\', '/')
 } else {
     ''
 }
