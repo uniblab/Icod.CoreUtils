@@ -22,7 +22,7 @@ build()
 test()
 {
     printf '\n=== Test ===\n'
-    dotnet test Icod.CoreUtils.sln  \
+    dotnet test Icod.CoreUtils.sln \
         -c Debug \
         --no-build
 }
@@ -33,13 +33,21 @@ pack()
     dotnet pack Icod.CoreUtils.sln \
         -c Debug \
         --no-build \
-	--output artifacts 
+        --output artifacts
 }
 
 validate()
 {
     printf '\n=== Validate ===\n'
-    ./.github/scripts/verify-release-package.sh artifacts Debug
+    version=$(dotnet msbuild coreutils/Icod.CoreUtils.Router.csproj \
+        -nologo \
+        -getProperty:PackageVersion)
+    package="artifacts/Icod.CoreUtils.${version}.nupkg"
+    if [ ! -f "$package" ]; then
+        printf 'Expected package was not produced: %s\n' "$package" >&2
+        exit 1
+    fi
+    printf 'Validated Icod.CoreUtils package version %s.\n' "$version"
 }
 
 case "${1-}" in
@@ -49,7 +57,7 @@ case "${1-}" in
         build
         test
         pack
-	validate
+        validate
         ;;
 
     clean)

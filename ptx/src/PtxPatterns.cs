@@ -2,10 +2,14 @@ namespace Icod.CoreUtils.Ptx;
 
 using System.Text;
 using Icod.CommandFramework.RegularExpressions;
+using Icod.CommandFramework.Text;
 
 /// <summary>Provides byte-oriented keyword and context matching over the Shared GNU Emacs regular-expression engine.</summary>
 internal sealed class PtxPatterns {
 	private static readonly Encoding Latin1 = Encoding.Latin1;
+	private static readonly RegularExpressionInputOptions ByteInputOptions = new() {
+		DecodingMode = TextDecodingMode.Bytes
+	};
 	private readonly bool[] wordMap;
 	private readonly ICompiledRegularExpression? wordExpression;
 	private readonly ICompiledRegularExpression? sentenceExpression;
@@ -68,6 +72,19 @@ internal sealed class PtxPatterns {
 	/// <summary>Gets whether a custom word expression was compiled.</summary>
 	internal bool HasWordExpression => null != this.wordExpression;
 
+	/// <summary>Prepares authoritative <c>ptx</c> bytes using the one-byte/one-match-unit contract.</summary>
+	/// <param name="input">The authoritative bytes.</param>
+	/// <param name="cancellationToken">The cancellation token.</param>
+	/// <returns>The immutable prepared byte input.</returns>
+	internal static RegularExpressionPreparedByteInput PrepareByteInput(
+		ReadOnlyMemory<byte> input,
+		CancellationToken cancellationToken
+	) => RegularExpressionPreparedByteInput.Prepare(
+		input,
+		ByteInputOptions,
+		cancellationToken
+	);
+
 	/// <summary>Finds all positive-length words in one effective context.</summary>
 	/// <param name="context">The byte context.</param>
 	/// <param name="cancellationToken">The cancellation token.</param>
@@ -95,13 +112,14 @@ internal sealed class PtxPatterns {
 			}
 			return words;
 		}
-		var text = Latin1.GetString( context.Span );
+
+		var prepared = PrepareByteInput( context, cancellationToken );
 		var index = 0;
-		while ( index < text.Length ) {
+		while ( index < prepared.Length ) {
 			cancellationToken.ThrowIfCancellationRequested();
 			var result = this.wordExpression.Match(
-				text,
-				new RegularExpressionMatchOptions { StartIndex = index },
+				prepared,
+				new RegularExpressionByteMatchOptions { StartByteOffset = index },
 				cancellationToken
 			);
 			EnsureMatchSucceeded( result );
@@ -109,46 +127,47 @@ internal sealed class PtxPatterns {
 				break;
 			}
 			var match = result.Match;
-			if ( 0 == match.Length ) {
-				index = checked( match.Index + 1 );
+			if ( 0 == match.ByteLength ) {
+				index = checked( match.ByteIndex + 1 );
 				continue;
 			}
-			words.Add( new PtxWordSpan( match.Index, match.Length ) );
-			index = checked( match.Index + match.Length );
+			words.Add( new PtxWordSpan( match.ByteIndex, match.ByteLength ) );
+			index = checked( match.ByteIndex + match.ByteLength );
 		}
 		return words;
 	}
 
-	/// <summary>Finds the next custom sentence separator in decoded one-to-one text.</summary>
-	/// <param name="text">The complete source text.</param>
-	/// <param name="startIndex">The search start.</param>
+	/// <summary>Finds the next custom sentence separator in prepared one-byte units.</summary>
+	/// <param name="input">The complete prepared source.</param>
+	/// <param name="startIndex">The search start byte offset.</param>
 	/// <param name="cancellationToken">The cancellation token.</param>
 	/// <returns>The match span, or <see langword="null"/> when no separator remains.</returns>
 	internal PtxWordSpan? FindSentenceSeparator(
-		string text,
+		RegularExpressionPreparedByteInput input,
 		int startIndex,
 		CancellationToken cancellationToken
 	) {
+		ArgumentNullException.ThrowIfNull( input );
 		if ( null == this.sentenceExpression ) {
 			return null;
 		}
 		var result = this.sentenceExpression.Match(
-			text,
-			new RegularExpressionMatchOptions { StartIndex = startIndex },
+			input,
+			new RegularExpressionByteMatchOptions { StartByteOffset = startIndex },
 			cancellationToken
 		);
 		EnsureMatchSucceeded( result );
 		if ( !result.IsMatch || null == result.Match ) {
 			return null;
 		}
-		if ( 0 == result.Match.Length ) {
+		if ( 0 == result.Match.ByteLength ) {
 			throw new InvalidDataException( string.Concat(
 				"error: regular expression has a match of length zero: '",
 				this.sentenceExpression.Pattern,
 				"'"
 			) );
 		}
-		return new PtxWordSpan( result.Match.Index, result.Match.Length );
+		return new PtxWordSpan( result.Match.ByteIndex, result.Match.ByteLength );
 	}
 
 	/// <summary>Advances over one word match or one nonword byte, matching GNU field planning.</summary>
@@ -176,6 +195,11 @@ internal sealed class PtxPatterns {
 			}
 			return index + 1;
 		}
+
+		// The formatter passes an exclusive upper bound. Matching a prepared full
+		// context would allow the regex to inspect bytes beyond that bound and can
+		// change leftmost-longest selection, so preserve the bounded historical
+		// input here until the framework exposes a bounded prepared-match surface.
 		var text = Latin1.GetString( context.Span[ ..limit ] );
 		var result = this.wordExpression.Match(
 			text,
@@ -190,11 +214,6 @@ internal sealed class PtxPatterns {
 			? checked( index + result.Match.Length )
 			: index + 1;
 	}
-
-	/// <summary>Decodes byte-oriented GNU input one-to-one for the managed regular-expression engine.</summary>
-	/// <param name="value">The source bytes.</param>
-	/// <returns>A Latin-1 string whose UTF-16 indices are identical to byte offsets.</returns>
-	internal static string DecodeForRegularExpression( ReadOnlySpan<byte> value ) => Latin1.GetString( value );
 
 	/// <summary>Compares byte words in GNU <c>ptx</c> order.</summary>
 	/// <param name="left">The left word.</param>
@@ -239,6 +258,14 @@ internal sealed class PtxPatterns {
 	}
 
 	private static void EnsureMatchSucceeded( RegularExpressionMatchResult result ) {
+		if ( !result.IsSuccess ) {
+			throw new InvalidDataException(
+				result.Diagnostic?.Message ?? "error in regular expression matcher"
+			);
+		}
+	}
+
+	private static void EnsureMatchSucceeded( RegularExpressionByteMatchResult result ) {
 		if ( !result.IsSuccess ) {
 			throw new InvalidDataException(
 				result.Diagnostic?.Message ?? "error in regular expression matcher"

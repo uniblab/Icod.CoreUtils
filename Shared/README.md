@@ -4,7 +4,7 @@
 
 ## External foundation dependencies
 
-- `Icod.CommandFramework` 2.1.0 owns neutral command infrastructure, general text/time mechanism, process and terminal mechanism, filesystem traversal and metadata, inode-pool observation, current-process creation-mask observation, and host file-clone/reflink mechanism consumed by Coreutils.
+- `Icod.CommandFramework` 2.2.1 owns neutral command infrastructure, general text/time mechanism, process and terminal mechanism, filesystem traversal and metadata, inode-pool observation, current-process creation-mask observation, host file-clone/reflink mechanism, and the immutable prepared-byte regular-expression input surface consumed by Coreutils.
 - `Icod.Path` 1.1.0 owns canonical and platform-aware pathname behavior used by the suite.
 - `Icod.Terminal` 0.3.0 provides the terminal foundation consumed by shared command infrastructure.
 

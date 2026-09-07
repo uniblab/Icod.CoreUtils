@@ -85,14 +85,14 @@ internal static class PtxContextReader {
 	) {
 		var bytes = await ReadAllAsync( source, cancellationToken ).ConfigureAwait( false );
 		statistics.LineCount = checked( CountLineFeeds( bytes ) + 1 );
-		var text = PtxPatterns.DecodeForRegularExpression( bytes );
+		var prepared = PtxPatterns.PrepareByteInput( bytes, cancellationToken );
 		var cursor = 0;
 		var currentLineStart = 0;
 		long line = 1;
 		var atLineStart = true;
 		while ( cursor < bytes.Length ) {
 			cancellationToken.ThrowIfCancellationRequested();
-			var separator = patterns.FindSentenceSeparator( text, cursor, cancellationToken );
+			var separator = patterns.FindSentenceSeparator( prepared, cursor, cancellationToken );
 			var next = null == separator
 				? bytes.Length
 				: checked( separator.Value.Start + separator.Value.Length );

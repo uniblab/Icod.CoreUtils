@@ -42,13 +42,10 @@ jobs:
       - name: Build and validate representative release archive
         shell: pwsh
         run: |
-          [xml]$project = Get-Content -LiteralPath 'coreutils/Icod.CoreUtils.Router.csproj' -Raw
-          $versionNode = $project.SelectSingleNode('/Project/PropertyGroup/PackageVersion')
-          if ($null -eq $versionNode -or [string]::IsNullOrWhiteSpace($versionNode.InnerText)) {
-              throw 'coreutils router project must declare PackageVersion.'
-          }
+          Import-Module ./packaging/CoreUtilsVersion.psm1 -Force
+          $version = Get-CoreUtilsVersion
 
           ./packaging/BuildReleaseArchive.ps1 `
               -Configuration Release `
               -RuntimeIdentifier '${{ matrix.rid }}' `
-              -Version $versionNode.InnerText
+              -Version $version
