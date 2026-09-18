@@ -1,6 +1,6 @@
 # Icod.CoreUtils
 
-![Icod TUI Toolchain](https://raw.githubusercontent.com/uniblab/Icod.CoreUtils/v1.0.1/Icod.CoreUtils.banner.png)
+![Icod Coreutils](https://raw.githubusercontent.com/uniblab/Icod.CoreUtils/v1.0.1/Icod.CoreUtils.banner.png)
 
 [![Pull request validation](https://github.com/uniblab/Icod.CoreUtils/actions/workflows/pull-request.yaml/badge.svg)](https://github.com/uniblab/Icod.CoreUtils/actions/workflows/pull-request.yaml)
 [![Main validation](https://github.com/uniblab/Icod.CoreUtils/actions/workflows/main.yaml/badge.svg?branch=main)](https://github.com/uniblab/Icod.CoreUtils/actions/workflows/main.yaml)
