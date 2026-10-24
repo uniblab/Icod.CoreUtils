@@ -51,6 +51,13 @@ A leading `--` ends option interpretation. `--help` and `--version` are recogniz
 
 Basic regular expressions use the fully managed GNU-compatible engine in `Icod.Expressions`. Lexical comparison and logical-character behavior are supplied through the expression locale provider.
 
+Beginning with the 2.0.0 prerelease line, the public `Command.RunAsync` overload
+that accepts an `IRegularExpressionProvider` takes the type from
+`Icod.Expressions`. In-process callers compiled against the former
+`Icod.CommandFramework` provider signature must rebuild and update their
+provider references. The command-line interface is unchanged. Later 2.0.0
+prereleases may include further API refactoring.
+
 ## PATHNAME GLOBBING
 
 `expr` does not perform `Icod.CommandFramework` pathname glob expansion. Its operands form an expression grammar in which tokens such as `*` can be operators or data; expanding pathname patterns internally would change the expression being evaluated. An invoking shell or other caller may still expand arguments before the program receives them.

@@ -81,7 +81,7 @@ public static class Command {
 	/// </remarks>
 	/// <param name="args">The command-line arguments, excluding the executable name.</param>
 	/// <param name="context">The command context that supplies standard streams, diagnostics, and cancellation.</param>
-	/// <param name="regularExpressionProvider">The shared GNU basic-regular-expression provider used by match operations.</param>
+	/// <param name="regularExpressionProvider">The Icod.Expressions GNU basic-regular-expression provider used by match operations.</param>
 	/// <param name="localeProvider">The provider used for collation and logical-character operations.</param>
 	/// <returns>The GNU <c>expr</c> status: 0 for a non-null result, 1 for a null result, 2 for an invalid expression, or 3 for an internal failure.</returns>
 	/// <exception cref="ArgumentNullException"><paramref name="context"/> is <see langword="null"/>.</exception>

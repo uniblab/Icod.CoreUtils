@@ -75,6 +75,14 @@ coreutils COMMAND --help
 
 for the selected utility's command-specific help.
 
+## 2.0.0 prerelease API
+
+The 2.0.0-alpha.1 line begins the migration of regular-expression callers to
+`Icod.Expressions`. The public `expr` command overload that accepts an injected
+regex provider now expects the type from that package. Existing in-process
+callers must rebuild and update that provider reference; command-line usage is
+unchanged. Further API refactoring may follow before the 2.0.0 stable release.
+
 ## Compatibility baseline
 
 The authoritative upstream baseline for the current CoreUtils command family is **GNU Coreutils 9.11**.
