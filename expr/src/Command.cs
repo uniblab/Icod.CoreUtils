@@ -1,7 +1,9 @@
+extern alias Expressions;
+
 namespace Icod.CoreUtils.Expr;
 
 using Icod.CommandFramework.Diagnostics;
-using Icod.CommandFramework.RegularExpressions;
+using Expressions::Icod.CommandFramework.RegularExpressions;
 
 /// <summary>Implements <c>expr EXPRESSION</c> according to GNU Coreutils.</summary>
 public static class Command {

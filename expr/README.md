@@ -49,7 +49,7 @@ A leading `--` ends option interpretation. `--help` and `--version` are recogniz
 
 ## PLATFORM NOTES
 
-Basic regular expressions use the shared fully managed GNU-compatible engine. Lexical comparison and logical-character behavior are supplied through the expression locale provider.
+Basic regular expressions use the fully managed GNU-compatible engine in `Icod.Expressions`. Lexical comparison and logical-character behavior are supplied through the expression locale provider.
 
 ## PATHNAME GLOBBING
 

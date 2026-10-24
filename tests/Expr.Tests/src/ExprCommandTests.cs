@@ -1,10 +1,12 @@
+extern alias Expressions;
+
 namespace Icod.CoreUtils.Expr.Tests;
 
 using System.Globalization;
 using System.Numerics;
 using System.Text;
 using Icod.CommandFramework.Diagnostics;
-using Icod.CommandFramework.RegularExpressions;
+using Expressions::Icod.CommandFramework.RegularExpressions;
 using Xunit;
 
 public sealed class ExprCommandTests {
