@@ -1,11 +1,20 @@
 namespace Icod.CoreUtils.NL.Tests;
 
+using System.Reflection;
 using System.Text;
 using Icod.CommandFramework.Diagnostics;
 using Xunit;
 
 /// <summary>Tests documented <c>nl</c> option and numbering behavior.</summary>
 public sealed class CommandTests {
+	/// <summary>Verifies that pattern numbering uses the published Expressions type.</summary>
+	[Fact]
+	public void PatternStyleUsesExpressionsAssembly() {
+		var style = typeof( Command ).Assembly.GetType( "Icod.CoreUtils.NL.NlNumberingStyle", throwOnError: true )!;
+		var expression = style.GetProperty( "Expression", BindingFlags.Instance | BindingFlags.NonPublic )!;
+		Assert.Equal( "Icod.Expressions", expression.PropertyType.Assembly.GetName().Name );
+	}
+
 	/// <summary>Verifies default nonempty body numbering and blank prefixes.</summary>
 	/// <returns>A task that represents the asynchronous test.</returns>
 	[Fact]
