@@ -1,5 +1,6 @@
 namespace Icod.CoreUtils.Tac.Tests;
 
+using System.Reflection;
 using System.Text;
 using Icod.CommandFramework.Diagnostics;
 using TacCommand = Icod.CoreUtils.Tac.Command;
@@ -7,6 +8,14 @@ using Xunit;
 
 /// <summary>Exercises GNU-compatible tac command behavior.</summary>
 public sealed class CommandTests {
+	/// <summary>Verifies regex indexing uses the published Expressions interface.</summary>
+	[Fact]
+	public void RegexIndexUsesExpressionsAssembly() {
+		var method = typeof( TacCommand ).GetMethod( "BuildRegexReverseIndexAsync", BindingFlags.Static | BindingFlags.NonPublic )!;
+		var expression = Assert.Single( method.GetParameters().Where( parameter => parameter.Name == "expression" ) );
+		Assert.Equal( "Icod.Expressions", expression.ParameterType.Assembly.GetName().Name );
+	}
+
 	/// <summary>Verifies default newline records are reversed without normalizing bytes.</summary>
 	[Fact]
 	public async Task ReversesNewlineRecords() {
