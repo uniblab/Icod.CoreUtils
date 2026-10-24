@@ -49,7 +49,26 @@ A leading `--` ends option interpretation. `--help` and `--version` are recogniz
 
 ## PLATFORM NOTES
 
-Basic regular expressions use the shared fully managed GNU-compatible engine. Lexical comparison and logical-character behavior are supplied through the expression locale provider.
+Basic regular expressions use the fully managed GNU-compatible engine in `Icod.Expressions`. Lexical comparison and logical-character behavior are supplied through the expression locale provider.
+
+Beginning with the 2.0.0 prerelease line, the public `Command.RunAsync` overload
+that accepts an `IRegularExpressionProvider` takes the type from
+`Icod.Expressions`. In-process callers compiled against the former
+`Icod.CommandFramework` provider signature must rebuild and update their
+provider references. The command-line interface is unchanged. Later 2.0.0
+prereleases may include further API refactoring.
+
+When the caller still references `Icod.CommandFramework`, alias the new package
+to distinguish the inherited type names:
+
+```xml
+<PackageReference Include="Icod.Expressions" Version="0.1.0-alpha.1" Aliases="Expressions" />
+```
+
+```csharp
+extern alias Expressions;
+using Expressions::Icod.CommandFramework.RegularExpressions;
+```
 
 ## PATHNAME GLOBBING
 

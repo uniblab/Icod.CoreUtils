@@ -1,13 +1,15 @@
+extern alias Expressions;
+
 namespace Icod.CoreUtils.Expr;
 
 using System.Numerics;
-using Icod.CommandFramework.RegularExpressions;
+using Expressions::Icod.CommandFramework.RegularExpressions;
 
 /// <summary>
 /// Parses and immediately evaluates a tokenized GNU <c>expr</c> expression.
 /// </summary>
 /// <remarks>
-/// The recursive-descent evaluator implements GNU precedence, left associativity, Boolean short-circuit parsing, arbitrary-precision arithmetic, locale-sensitive text operations, and Gate C1 basic regular expressions.
+/// The recursive-descent evaluator implements GNU precedence, left associativity, Boolean short-circuit parsing, arbitrary-precision arithmetic, locale-sensitive text operations, and Icod.Expressions basic regular expressions.
 /// </remarks>
 internal sealed class ExpressionEvaluator {
 	private const int InvalidExpressionStatus = 2;
@@ -25,7 +27,7 @@ internal sealed class ExpressionEvaluator {
 	/// Initializes an evaluator over the supplied tokens and injectable regular-expression and locale services.
 	/// </summary>
 	/// <param name="arguments">The expression tokens in command-line order.</param>
-	/// <param name="regularExpressionProvider">The Gate C1 provider used to compile GNU basic regular expressions.</param>
+	/// <param name="regularExpressionProvider">The Icod.Expressions provider used to compile GNU basic regular expressions.</param>
 	/// <param name="localeProvider">The provider used for collation and logical-character operations.</param>
 	/// <param name="cancellationToken">The token observed throughout parsing and evaluation.</param>
 	/// <exception cref="ArgumentNullException">A required token collection or provider is <see langword="null"/>.</exception>

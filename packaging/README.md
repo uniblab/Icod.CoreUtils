@@ -54,7 +54,9 @@ Defines the authoritative standalone-command/project map used by distribution an
 
 ### `VerifyLocalPackage.ps1`
 
-Requires the expected `Icod.CoreUtils.<version>.nupkg`, then verifies its NuGet package ID and version against the centralized repository version.
+Requires the expected `Icod.CoreUtils.<version>.nupkg`, then verifies its NuGet
+package ID and version against the centralized repository version. It also
+requires `Icod.Expressions.dll` in the packaged .NET tool runtime payload.
 
 ### `VerifyDistribution.ps1`
 
