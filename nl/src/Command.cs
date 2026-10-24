@@ -1,3 +1,5 @@
+extern alias Expressions;
+
 namespace Icod.CoreUtils.NL;
 
 using System.Globalization;
@@ -5,7 +7,7 @@ using System.Numerics;
 using Icod.CommandFramework.CommandLine;
 using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.IO;
-using Icod.CommandFramework.RegularExpressions;
+using Expressions::Icod.CommandFramework.RegularExpressions;
 using Icod.CommandFramework.Text;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
 

@@ -1,6 +1,8 @@
+extern alias Expressions;
+
 namespace Icod.CoreUtils.NL;
 
-using Icod.CommandFramework.RegularExpressions;
+using Expressions::Icod.CommandFramework.RegularExpressions;
 
 /// <summary>Represents a validated section-numbering style.</summary>
 internal sealed class NlNumberingStyle {
