@@ -7,6 +7,14 @@ using Xunit;
 
 /// <summary>Exercises GNU-compatible csplit command behavior.</summary>
 public sealed class CommandTests {
+	/// <summary>Verifies that compiled split controls use the published Expressions type.</summary>
+	[Fact]
+	public void RegexControlUsesExpressionsAssembly() {
+		var control = typeof( CSplitCommand ).Assembly.GetType( "Icod.CoreUtils.CSplit.Command+RegexControl", throwOnError: true )!;
+		var expression = control.GetProperty( "Expression" )!;
+		Assert.Equal( "Icod.Expressions", expression.PropertyType.Assembly.GetName().Name );
+	}
+
 	/// <summary>Verifies numeric addresses split before the selected line and report byte counts.</summary>
 	[Fact]
 	public async Task SplitsAtNumericAddress() {
