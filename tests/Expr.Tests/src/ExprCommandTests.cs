@@ -8,6 +8,16 @@ using Icod.CommandFramework.RegularExpressions;
 using Xunit;
 
 public sealed class ExprCommandTests {
+	[Fact]
+	public void RegexProviderParameterUsesExpressionsAssembly() {
+		var run = typeof( Command ).GetMethods().Single( method =>
+			method.Name == "RunAsync"
+			&& method.GetParameters().Any( parameter => parameter.Name == "regularExpressionProvider" )
+		);
+		var provider = run.GetParameters().Single( parameter => parameter.Name == "regularExpressionProvider" );
+		Assert.Equal( "Icod.Expressions", provider.ParameterType.Assembly.GetName().Name );
+	}
+
 	[Theory]
 	[InlineData( "hello", 0 )]
 	[InlineData( "0", 1 )]
