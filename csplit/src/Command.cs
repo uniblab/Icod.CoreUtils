@@ -1,6 +1,8 @@
 // Original behavior/reference: GNU coreutils csplit 9.11
 // Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
 
+extern alias Expressions;
+
 namespace Icod.CoreUtils.CSplit;
 
 using System.Buffers.Binary;
@@ -10,7 +12,7 @@ using Icod.CommandFramework.CommandLine;
 using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.FileSystem.Traversal;
 using Icod.CommandFramework.IO;
-using Icod.CommandFramework.RegularExpressions;
+using Expressions::Icod.CommandFramework.RegularExpressions;
 
 /// <summary>Implements GNU-compatible pattern-directed byte-preserving file splitting.</summary>
 public static class Command {

@@ -1,10 +1,12 @@
+extern alias Expressions;
+
 namespace Icod.CoreUtils.Ptx;
 
 using System.Text;
-using Icod.CommandFramework.RegularExpressions;
-using Icod.CommandFramework.Text;
+using Expressions::Icod.CommandFramework.RegularExpressions;
+using Expressions::Icod.CommandFramework.Text;
 
-/// <summary>Provides byte-oriented keyword and context matching over the Shared GNU Emacs regular-expression engine.</summary>
+/// <summary>Provides byte-oriented keyword and context matching over the Icod.Expressions GNU Emacs regular-expression engine.</summary>
 internal sealed class PtxPatterns {
 	private static readonly Encoding Latin1 = Encoding.Latin1;
 	private static readonly RegularExpressionInputOptions ByteInputOptions = new() {

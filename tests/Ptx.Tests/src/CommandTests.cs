@@ -1,11 +1,20 @@
 namespace Icod.CoreUtils.Ptx.Tests;
 
+using System.Reflection;
 using System.Text;
 using Icod.CommandFramework.Diagnostics;
 using Xunit;
 
 /// <summary>Exercises GNU Coreutils 9.11-compatible command behavior.</summary>
 public sealed class CommandTests {
+	/// <summary>Verifies that custom word matching uses the published Expressions type.</summary>
+	[Fact]
+	public void WordPatternUsesExpressionsAssembly() {
+		var patterns = typeof( Command ).Assembly.GetType( "Icod.CoreUtils.Ptx.PtxPatterns", throwOnError: true )!;
+		var expression = patterns.GetField( "wordExpression", BindingFlags.Instance | BindingFlags.NonPublic )!;
+		Assert.Equal( "Icod.Expressions", expression.FieldType.Assembly.GetName().Name );
+	}
+
 	private static string Lines( params string[] values ) => string.Concat(
 		values.Select( value => string.Concat( value, Environment.NewLine ) )
 	);

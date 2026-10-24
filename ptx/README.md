@@ -37,7 +37,7 @@ No command project references this project, and this project references no other
 
 ## MEMORY BOUNDARY
 
-Default GNU sentence recognition and traditional line recognition stream their source contexts. Custom sentence regular expressions require whole-source matching because the Shared managed GNU engine operates on a complete searchable string; occurrence ordering and context storage remain externally spooled and bounded.
+Default GNU sentence recognition and traditional line recognition stream their source contexts. Custom sentence regular expressions require whole-source matching because the managed GNU engine in `Icod.Expressions` operates on a complete searchable string; occurrence ordering and context storage remain externally spooled and bounded.
 
 ## AUTHORS
 
