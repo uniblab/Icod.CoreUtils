@@ -1,6 +1,8 @@
 // Original behavior/reference: GNU coreutils tac
 // Ported to .NET by Timothy J. Bruce <uniblab@hotmail.com>
 
+extern alias Expressions;
+
 namespace Icod.CoreUtils.Tac;
 
 using System.Buffers;
@@ -9,7 +11,7 @@ using System.Text;
 using Icod.CommandFramework.CommandLine;
 using Icod.CommandFramework.Diagnostics;
 using Icod.CommandFramework.IO;
-using Icod.CommandFramework.RegularExpressions;
+using Expressions::Icod.CommandFramework.RegularExpressions;
 using Icod.CoreUtils.Shared.FileSystem.Traversal;
 
 /// <summary>Implements GNU-compatible byte-preserving reverse-record output.</summary>

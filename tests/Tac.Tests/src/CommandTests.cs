@@ -1,5 +1,6 @@
 namespace Icod.CoreUtils.Tac.Tests;
 
+using System.Reflection;
 using System.Text;
 using Icod.CommandFramework.Diagnostics;
 using TacCommand = Icod.CoreUtils.Tac.Command;
@@ -7,6 +8,14 @@ using Xunit;
 
 /// <summary>Exercises GNU-compatible tac command behavior.</summary>
 public sealed class CommandTests {
+	/// <summary>Verifies regex indexing uses the published Expressions interface.</summary>
+	[Fact]
+	public void RegexIndexUsesExpressionsAssembly() {
+		var method = typeof( TacCommand ).GetMethod( "BuildRegexReverseIndexAsync", BindingFlags.Static | BindingFlags.NonPublic )!;
+		var expression = method.GetParameters().Single( parameter => parameter.Name == "expression" );
+		Assert.Equal( "Icod.Expressions", expression.ParameterType.Assembly.GetName().Name );
+	}
+
 	/// <summary>Verifies default newline records are reversed without normalizing bytes.</summary>
 	[Fact]
 	public async Task ReversesNewlineRecords() {
@@ -87,6 +96,16 @@ public sealed class CommandTests {
 
 		Assert.Equal( CommandExitCodes.Success, result.Status );
 		Assert.Equal( "cbX2aX1"u8.ToArray(), result.Output );
+	}
+
+	/// <summary>Verifies regex separators do not normalize non-UTF-8 record bytes.</summary>
+	[Fact]
+	public async Task RegexSeparatorPreservesArbitraryBytes() {
+		var input = new byte[] { 0xFF, (byte)'X', 0x80, (byte)'X' };
+		var result = await RunAsync( new[] { "-r", "-s", "X" }, new MemoryStream( input, writable: false ) );
+
+		Assert.Equal( CommandExitCodes.Success, result.Status );
+		Assert.Equal( new byte[] { 0x80, (byte)'X', 0xFF, (byte)'X' }, result.Output );
 	}
 
 	/// <summary>Verifies GNU Emacs alternation and newline bracket behavior.</summary>
