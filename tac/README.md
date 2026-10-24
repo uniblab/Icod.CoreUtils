@@ -20,7 +20,7 @@ The operand `-` is preserved and retains its standard-input meaning.
 
 `Icod.CoreUtils.Tac` is a managed .NET implementation of GNU Coreutils `tac(1)`, modeled on GNU Coreutils 9.11.
 
-For each input, records are located according to the selected separator and emitted in reverse order. With no operands, standard input is used. Fixed separators are matched as bytes; with `--regex`, the shared GNU-compatible regular-expression engine is used.
+For each input, records are located according to the selected separator and emitted in reverse order. With no operands, standard input is used. Fixed separators are matched as bytes; with `--regex`, the GNU-compatible regular-expression engine in `Icod.Expressions` is used.
 
 ## OPTIONS
 
