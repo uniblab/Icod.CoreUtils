@@ -46,6 +46,9 @@ try {
     if ($version -ne "$($metadata.version)") {
         throw "Package '$packagePath' declares version '$($metadata.version)'; expected '$version'."
     }
+    if ($null -eq $archive.GetEntry('tools/net10.0/any/Icod.Expressions.dll')) {
+        throw "Package '$packagePath' is missing the Icod.Expressions runtime assembly."
+    }
 } finally {
     $archive.Dispose()
 }
