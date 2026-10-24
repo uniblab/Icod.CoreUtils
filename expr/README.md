@@ -58,6 +58,18 @@ that accepts an `IRegularExpressionProvider` takes the type from
 provider references. The command-line interface is unchanged. Later 2.0.0
 prereleases may include further API refactoring.
 
+When the caller still references `Icod.CommandFramework`, alias the new package
+to distinguish the inherited type names:
+
+```xml
+<PackageReference Include="Icod.Expressions" Version="0.1.0-alpha.1" Aliases="Expressions" />
+```
+
+```csharp
+extern alias Expressions;
+using Expressions::Icod.CommandFramework.RegularExpressions;
+```
+
 ## PATHNAME GLOBBING
 
 `expr` does not perform `Icod.CommandFramework` pathname glob expansion. Its operands form an expression grammar in which tokens such as `*` can be operators or data; expanding pathname patterns internally would change the expression being evaluated. An invoking shell or other caller may still expand arguments before the program receives them.
